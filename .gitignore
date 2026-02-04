@@ -1,0 +1,48 @@
+# Environment and secrets (use .env.example as template)
+.env
+.env.local
+.env.*.local
+.cursor/.env.mcp
+
+# Database (SQLite local files)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE and editors
+.idea/
+*.swp
+*.swo
+.vscode/
+*.sublime-*
+
+# Logs
+*.log
+.cursor/hooks.log
+logs/
+
+# Build and artifacts
+dist/
+build/
+out/
+*.local
+
+# Dependencies (if added later)
+node_modules/
+.venv/
+venv/
+
+# Docker local overrides
+docker-compose.override.yml
+.docker/
+
+# Backup and cache
+*.bak
+.cache/
+
+# Filesystem MCP server workspace (profile reference)
+workspace/

@@ -1,0 +1,24 @@
+# Local translate services (reachable by the gateway). Start with ./start.sh then run this script.
+sequential-thinking|http://sequential-thinking:8013/sse
+chrome-devtools|http://chrome-devtools:8014/sse
+playwright|http://playwright:8015/sse
+magicuidesign-mcp|http://magicuidesign-mcp:8016/sse
+desktop-commander|http://desktop-commander:8017/sse
+puppeteer|http://puppeteer:8018/sse
+browser-tools|http://browser-tools:8019/sse
+tavily|http://tavily:8020/sse
+filesystem|http://filesystem:8021/sse
+reactbits|http://reactbits:8022/sse
+snyk|http://snyk:8023/sse
+sqlite|http://sqlite:8024/sse
+github|http://github:8025/sse
+
+# Remote URL-based servers: uncomment and add to EXTRA_GATEWAYS or register in Admin UI.
+# Auth (v0, apify): add in Admin UI and set Passthrough Headers or OAuth.
+# Context7|https://mcp.context7.com/mcp
+# context-awesome|https://www.context-awesome.com/api/mcp
+# prisma-remote|https://mcp.prisma.io/mcp
+# cloudflare-observability|https://observability.mcp.cloudflare.com/mcp
+# cloudflare-bindings|https://bindings.mcp.cloudflare.com/mcp
+# v0|https://mcp.v0.dev
+# apify-dribbble|https://mcp.apify.com/sse?actors=practicaltools/apify-dribbble-scraper

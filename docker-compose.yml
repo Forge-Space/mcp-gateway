@@ -1,0 +1,149 @@
+x-translate: &translate
+  image: mcp-gateway-translate:latest
+  restart: unless-stopped
+
+services:
+  gateway:
+    image: ghcr.io/ibm/mcp-context-forge:latest
+    container_name: mcpgateway
+    restart: unless-stopped
+    ports:
+      - "${PORT:-4444}:4444"
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4444
+      DATABASE_URL: sqlite:////data/mcp.db
+    volumes:
+      - ./data:/data
+
+  sequential-thinking:
+    <<: *translate
+    build:
+      context: .
+      dockerfile: Dockerfile.translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-sequential-thinking" --expose-sse --port 8013 --host 0.0.0.0'
+    ports:
+      - "${SEQUENTIAL_THINKING_PORT:-8013}:8013"
+
+  chrome-devtools:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y chrome-devtools-mcp@latest" --expose-sse --port 8014 --host 0.0.0.0'
+    ports:
+      - "${CHROME_DEVTOOLS_PORT:-8014}:8014"
+
+  playwright:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @playwright/mcp@latest" --expose-sse --port 8015 --host 0.0.0.0'
+    ports:
+      - "${PLAYWRIGHT_PORT:-8015}:8015"
+
+  magicuidesign-mcp:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @magicuidesign/mcp@latest" --expose-sse --port 8016 --host 0.0.0.0'
+    ports:
+      - "${MAGICUIDESIGN_PORT:-8016}:8016"
+
+  desktop-commander:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @wonderwhy-er/desktop-commander@latest" --expose-sse --port 8017 --host 0.0.0.0'
+    ports:
+      - "${DESKTOP_COMMANDER_PORT:-8017}:8017"
+
+  puppeteer:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-puppeteer" --expose-sse --port 8018 --host 0.0.0.0'
+    ports:
+      - "${PUPPETEER_PORT:-8018}:8018"
+
+  browser-tools:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @agentdeskai/browser-tools-mcp" --expose-sse --port 8019 --host 0.0.0.0'
+    ports:
+      - "${BROWSER_TOOLS_PORT:-8019}:8019"
+
+  tavily:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y tavily-mcp@latest" --expose-sse --port 8020 --host 0.0.0.0'
+    ports:
+      - "${TAVILY_PORT:-8020}:8020"
+
+  filesystem:
+    <<: *translate
+    environment:
+      FILESYSTEM_PATH: "${FILESYSTEM_PATH:-/workspace}"
+    volumes:
+      - "${FILESYSTEM_VOLUME:-./workspace}:/workspace"
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-filesystem ${FILESYSTEM_PATH:-/workspace}" --expose-sse --port 8021 --host 0.0.0.0'
+    ports:
+      - "${FILESYSTEM_PORT:-8021}:8021"
+
+  reactbits:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y reactbits-dev-mcp-server" --expose-sse --port 8022 --host 0.0.0.0'
+    ports:
+      - "${REACTBITS_PORT:-8022}:8022"
+
+  snyk:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y snyk mcp -t stdio --experimental" --expose-sse --port 8023 --host 0.0.0.0'
+    ports:
+      - "${SNYK_PORT:-8023}:8023"
+
+  sqlite:
+    <<: *translate
+    environment:
+      SQLITE_DB_PATH: "${SQLITE_DB_PATH:-/data/sqlite.db}"
+    volumes:
+      - "${SQLITE_VOLUME:-./data}:/data"
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y mcp-sqlite ${SQLITE_DB_PATH:-/data/sqlite.db}" --expose-sse --port 8024 --host 0.0.0.0'
+    ports:
+      - "${SQLITE_PORT:-8024}:8024"
+
+  github:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-github" --expose-sse --port 8025 --host 0.0.0.0'
+    ports:
+      - "${GITHUB_PORT:-8025}:8025"
