@@ -147,3 +147,20 @@ services:
       - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-github" --expose-sse --port 8025 --host 0.0.0.0'
     ports:
       - "${GITHUB_PORT:-8025}:8025"
+
+  tool-router:
+    build:
+      context: .
+      dockerfile: Dockerfile.tool-router
+    image: mcp-gateway-tool-router:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      GATEWAY_URL: "${GATEWAY_URL:-http://gateway:4444}"
+      GATEWAY_JWT: "${GATEWAY_JWT:-}"
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "python3 -m tool_router" --expose-sse --port 8030 --host 0.0.0.0'
+    ports:
+      - "${TOOL_ROUTER_PORT:-8030}:8030"

@@ -8,6 +8,7 @@
 data/*.db
 data/*.db-shm
 data/*.db-wal
+data/.cursor-mcp-url
 
 # OS
 .DS_Store

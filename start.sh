@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -e
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+# shellcheck source=scripts/lib/log.sh
+source "$ROOT/scripts/lib/log.sh" 2>/dev/null || true
 
-echo "MCP Gateway – checking environment..."
+log_section "MCP Gateway"
+log_step "Checking environment..."
 if ! command -v docker &>/dev/null; then
-  echo "Docker is required. Install Docker and run ./start.sh again."
+  log_err "Docker is required. Install Docker and run ./start.sh again."
   exit 1
 fi
 
@@ -13,13 +17,13 @@ if docker compose version &>/dev/null 2>&1; then
 elif command -v docker-compose &>/dev/null; then
   COMPOSE="docker-compose"
 else
-  echo "Docker Compose is required (docker compose or docker-compose)."
+  log_err "Docker Compose is required (docker compose or docker-compose)."
   exit 1
 fi
-echo "Using: $COMPOSE"
+log_info "Using: $COMPOSE"
 
 if [[ ! -f .env ]]; then
-  echo "Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD, JWT_SECRET_KEY"
+  log_err "Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD, JWT_SECRET_KEY, AUTH_ENCRYPTION_SECRET (run: make generate-secrets)"
   exit 1
 fi
 set -a
@@ -30,24 +34,27 @@ mkdir -p data
 
 case "${1:-}" in
   stop)
-    echo "Stopping gateway and translate services..."
+    log_step "Stopping gateway and translate services..."
     $COMPOSE down --remove-orphans
-    echo "Gateway stopped."
+    log_ok "Gateway stopped."
     ;;
   gateway-only)
-    echo "Starting gateway only (no translate services)..."
+    log_step "Starting gateway only (no translate services)..."
     $COMPOSE up -d gateway --remove-orphans
     echo ""
-    echo "Gateway running. Admin UI: http://localhost:${PORT:-4444}/admin"
-    echo "To stop: ./start.sh stop"
+    log_line
+    log_ok "Gateway running."
+    log_info "Admin UI: http://localhost:${PORT:-4444}/admin"
+    log_info "To stop: ./start.sh stop"
     ;;
   *)
-    echo "Building and starting gateway + translate services (first run may take 1–2 min)..."
+    log_step "Building and starting gateway + translate services (first run may take 1–2 min)..."
     $COMPOSE up -d --build --remove-orphans
     echo ""
-    echo "Gateway and translate services running."
-    echo "Admin UI: http://localhost:${PORT:-4444}/admin"
-    echo "Register gateways: ./scripts/register-gateways.sh"
-    echo "Stop: ./start.sh stop"
+    log_line
+    log_ok "Gateway and translate services running."
+    log_info "Admin UI: http://localhost:${PORT:-4444}/admin"
+    log_info "Register gateways: ./scripts/register-gateways.sh"
+    log_info "Stop: ./start.sh stop"
     ;;
 esac

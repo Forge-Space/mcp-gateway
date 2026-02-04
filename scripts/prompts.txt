@@ -1,0 +1,3 @@
+# Format: name|description|template (use {{arg}} for variables, \n for newlines). Set REGISTER_PROMPTS=true to register.
+task-breakdown|Break a goal into ordered steps with deliverables|Goal: {{goal}}\n\nBreak into ordered steps. For each step: short title, deliverable, and any dependencies.
+code-review|Review code for best practices and suggest improvements|Review the following code and suggest improvements:\n\n{{code}}

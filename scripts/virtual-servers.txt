@@ -1,0 +1,14 @@
+# Virtual servers: Name|gateway1,gateway2,... (one per line). Used to stay under Cursor's ~60-tool limit per connection.
+# Gateways must match names in gateways.txt exactly (e.g. sequential-thinking, filesystem, tavily). Max 60 tools per server.
+# If two lines would attach the same tool set, only the first server is created/updated; the other is skipped to avoid duplicates.
+# After editing, run: make register
+# Connect Cursor to one server URL (e.g. .../servers/<UUID>/mcp) from the script output.
+#
+# cursor-default: core dev + search + browser (under 60 tools)
+cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools
+# cursor-search: search and docs only
+cursor-search|tavily
+# cursor-browser: browser automation
+cursor-browser|playwright,puppeteer,browser-tools,chrome-devtools,desktop-commander
+# cursor-router: single entry point; routes tasks to the best upstream tool (requires GATEWAY_JWT)
+cursor-router|tool-router

@@ -3,9 +3,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
+# shellcheck source=scripts/lib/log.sh
+source "$SCRIPT_DIR/lib/log.sh" 2>/dev/null || true
 
 if [[ ! -f .env ]]; then
-  echo "Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY."
+  log_err "Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY."
   exit 1
 fi
 
@@ -13,7 +15,8 @@ set -a
 source .env
 set +a
 
-echo "Register gateways – checking environment..."
+log_section "Register gateways"
+log_step "Checking environment..."
 
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:${PORT:-4444}}"
 max_wait="${REGISTER_GATEWAY_MAX_WAIT:-90}"
@@ -48,24 +51,41 @@ else
   second_url=""
 fi
 
-echo "Waiting for gateway at $first_url (up to ${max_wait}s)..."
+log_info "Waiting for gateway at $first_url (up to ${max_wait}s)..."
 code=$(try_health "$first_url" "$max_wait")
 if [[ "$code" != "200" ]] && [[ -n "$second_url" ]]; then
-  echo "Trying alternate URL: $second_url"
+  log_info "Trying alternate URL: $second_url"
   code=$(try_health "$second_url" "$max_wait")
   [[ "$code" == "200" ]] && GATEWAY_URL="$second_url"
 elif [[ "$code" == "200" ]] && [[ "$first_url" != "$GATEWAY_URL" ]]; then
   GATEWAY_URL="$first_url"
 fi
 if [[ "$code" != "200" ]]; then
-  echo "Gateway not reachable at $GATEWAY_URL (health got ${code} after ${max_wait}s)."
-  echo "Start with ./start.sh. If already started: docker compose ps gateway && docker compose logs gateway"
+  log_err "Gateway not reachable at $GATEWAY_URL (health got ${code} after ${max_wait}s)."
+  log_err "Start with ./start.sh. If already started: docker compose ps gateway && docker compose logs gateway"
   exit 1
 fi
-echo "Gateway ready at $GATEWAY_URL"
+log_ok "Gateway ready at $GATEWAY_URL"
+
+write_cursor_mcp_url() {
+  local id="$1" name="$2"
+  local want="${REGISTER_CURSOR_MCP_SERVER_NAME:-}"
+  if [[ -n "$want" ]]; then
+    if [[ "$name" != "$want" ]]; then
+      return
+    fi
+  else
+    if [[ -n "${CURSOR_MCP_URL_WRITTEN:-}" ]]; then
+      return
+    fi
+  fi
+  mkdir -p "$REPO_ROOT/data"
+  printf '%s' "http://host.docker.internal:${PORT:-4444}/servers/$id/mcp" > "$REPO_ROOT/data/.cursor-mcp-url"
+  CURSOR_MCP_URL_WRITTEN="$name|$id"
+}
 
 if [[ -n "${REGISTER_WAIT_SECONDS:-}" ]] && [[ "${REGISTER_WAIT_SECONDS}" -gt 0 ]] 2>/dev/null; then
-  echo "Waiting ${REGISTER_WAIT_SECONDS}s for translate containers to be ready..."
+  log_info "Waiting ${REGISTER_WAIT_SECONDS}s for translate containers to be ready..."
   left="${REGISTER_WAIT_SECONDS}"
   while [[ "$left" -gt 0 ]]; do
     printf "\r  %ds remaining...   " "$left"
@@ -76,7 +96,7 @@ if [[ -n "${REGISTER_WAIT_SECONDS:-}" ]] && [[ "${REGISTER_WAIT_SECONDS}" -gt 0 
   echo ""
 fi
 
-echo "Generating JWT for admin API..."
+log_step "Generating JWT for admin API..."
 if docker compose version &>/dev/null 2>&1; then
   COMPOSE="docker compose"
 elif command -v docker-compose &>/dev/null; then
@@ -91,29 +111,51 @@ if [[ -n "$COMPOSE" ]] && $COMPOSE ps gateway -q 2>/dev/null | grep -q .; then
 else
   CONTAINER="${MCPGATEWAY_CONTAINER:-mcpgateway}"
   if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then
-    echo "Gateway is not running. Start with ./start.sh (from repo root)."
+    log_err "Gateway is not running. Start with ./start.sh (from repo root)."
     exit 1
   fi
   JWT=$(docker exec "$CONTAINER" python3 -m mcpgateway.utils.create_jwt_token \
     --username "${PLATFORM_ADMIN_EMAIL:?}" --exp 10080 --secret "${JWT_SECRET_KEY:?}" 2>/dev/null)
 fi
 if [[ -z "$JWT" ]]; then
-  echo "Failed to generate JWT."
+  log_err "Failed to generate JWT."
   exit 1
 fi
-echo "JWT generated."
+log_ok "JWT generated."
+
+infer_transport() {
+  local url="$1"
+  if [[ "$url" == *"/sse"* ]]; then
+    echo "SSE"
+  elif [[ "$url" == *"/mcp"* ]]; then
+    echo "STREAMABLEHTTP"
+  else
+    echo ""
+  fi
+}
+
+is_local_sse() {
+  [[ "$1" =~ ^https?://[^./:]+:(801[3-9]|802[0-9])/sse$ ]]
+}
 
 register() {
-  local name="$1" url="$2"
+  local name="$1" url="$2" transport="$3" retried="${4:-0}"
   if [[ "$url" =~ ^https?://([^:/]+):[0-9]+ ]]; then
     local host="${BASH_REMATCH[1]}"
     if [[ -n "$COMPOSE" ]] && ! $COMPOSE ps "$host" -q 2>/dev/null | grep -q .; then
-      echo "SKIP $name ($host not running; start with ./start.sh)"
+      log_warn "SKIP $name ($host not running; start with ./start.sh)"
       return
     fi
   fi
+  if [[ -z "$transport" ]]; then
+    transport=$(infer_transport "$url")
+  fi
   local json
-  json=$(printf '{"name":"%s","url":"%s"}' "$name" "$url")
+  if [[ -n "$transport" ]] && [[ "$transport" =~ ^(SSE|STREAMABLEHTTP|STDIO|WEBSOCKET)$ ]]; then
+    json=$(printf '{"name":"%s","url":"%s","transport":"%s"}' "$name" "$url" "$transport")
+  else
+    json=$(printf '{"name":"%s","url":"%s"}' "$name" "$url")
+  fi
   local out
   out=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 45 \
     -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
@@ -121,55 +163,215 @@ register() {
   local code
   code=$(echo "$out" | tail -n1)
   if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then
-    echo "OK $name"
+    log_ok "$name"
     return
   fi
   body=$(echo "$out" | sed '$d')
   msg=$(echo "$body" | sed -n 's/.*"message":"\([^"]*\)".*/\1/p')
   detail=$(echo "$body" | sed -n 's/.*"detail":"\([^"]*\)".*/\1/p')
   if [[ "$msg" =~ already\ exists ]] || [[ "$detail" =~ already\ exists ]]; then
-    echo "OK $name (already registered)"
+    log_ok "$name (already registered)"
     return
   fi
-  echo "FAIL $name ($url)"
+  if [[ $retried -eq 0 ]] && is_local_sse "$url" && \
+    { [[ "$msg" =~ [Uu]nable\ to\ connect ]] || [[ "$detail" =~ [Uu]nable\ to\ connect ]] || \
+      [[ "$msg" =~ [Uu]nexpected\ error ]] || [[ "$detail" =~ [Uu]nexpected\ error ]]; }; then
+    log_info "$name: first attempt failed, retrying in 15s..."
+    sleep 15
+    register "$name" "$url" "$transport" 1
+    return
+  fi
+  log_fail "$name ($url)"
   if [[ -n "${REGISTER_VERBOSE:-}" ]]; then
     echo "$body"
   else
-    [[ -n "$msg" ]] && echo "  $msg"
-    [[ -n "$detail" ]] && echo "  detail: $detail"
+    [[ -n "$msg" ]] && log_info "$msg"
+    [[ -n "$detail" ]] && log_info "detail: $detail"
   fi
-  if [[ "$url" =~ :801[0-9]/sse|:802[0-1]/sse ]]; then
+  if is_local_sse "$url"; then
     HAS_LOCAL_FAIL=1
-    echo "  → docker compose logs gateway; docker compose logs <service>"
+    log_info "→ docker compose logs gateway; docker compose logs <service>"
   fi
 }
 
 HAS_LOCAL_FAIL=0
 if [[ -n "$EXTRA_GATEWAYS" ]]; then
-  echo "Registering gateways from EXTRA_GATEWAYS..."
+  log_step "Registering gateways from EXTRA_GATEWAYS..."
   while IFS= read -r line; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
-    IFS='|' read -r name url _ <<< "$line"
-    register "$name" "$url"
+    IFS='|' read -r name url transport <<< "$line"
+    transport=$(echo "${transport:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    register "$name" "$url" "$transport"
   done <<< "$(echo "$EXTRA_GATEWAYS" | tr ',' '\n')"
 fi
 
 if [[ -f "$SCRIPT_DIR/gateways.txt" ]]; then
-  echo "Registering gateways from scripts/gateways.txt..."
+  log_step "Registering gateways from scripts/gateways.txt..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
-    IFS='|' read -r name url _ <<< "$line"
-    register "$name" "$url"
+    IFS='|' read -r name url transport <<< "$line"
+    transport=$(echo "${transport:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    register "$name" "$url" "$transport"
   done < "$SCRIPT_DIR/gateways.txt"
 fi
 
-if [[ -z "$EXTRA_GATEWAYS" && ! -f "$SCRIPT_DIR/gateways.txt" ]]; then
-  echo "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to scripts/gateways.txt (Name|URL|Transport)."
-else
-  echo "Done."
-  if [[ "${HAS_LOCAL_FAIL:-0}" -eq 1 ]]; then
-    echo "If local gateways failed: REGISTER_VERBOSE=1 for full API response; REGISTER_WAIT_SECONDS=30 if translate containers were still starting; docker compose ps to confirm all services are up."
+if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &>/dev/null; then
+  log_step "Syncing tools and updating virtual server(s)..."
+  sleep 3
+  tools_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 60 \
+    -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/tools?limit=0&include_pagination=false" 2>/dev/null)
+  tools_code=$(echo "$tools_resp" | tail -n1)
+  tools_body=$(echo "$tools_resp" | sed '$d')
+  if [[ "$tools_code" != "200" ]] || [[ -z "$tools_body" ]]; then
+    :
+  elif [[ -f "$SCRIPT_DIR/virtual-servers.txt" ]]; then
+    tools_arr=$(echo "$tools_body" | jq -c 'if type == "array" then . else .tools? // [] end' 2>/dev/null)
+    servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
+      -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
+    servers_code=$(echo "$servers_resp" | tail -n1)
+    servers_body=$(echo "$servers_resp" | sed '$d')
+    used_tool_sets=""
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      [[ -z "$line" || "$line" =~ ^# ]] && continue
+      server_name=$(echo "$line" | cut -d'|' -f1)
+      gateways_str=$(echo "$line" | cut -d'|' -f2- | tr -d ' ')
+      [[ -z "$server_name" || -z "$gateways_str" ]] && continue
+      gates_json=$(echo "$gateways_str" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length > 0))' 2>/dev/null)
+      [[ -z "$gates_json" || "$gates_json" == "null" ]] && continue
+      tool_ids_json=$(echo "$tools_arr" | jq -c --argjson gates "$gates_json" '
+        map(select(
+          (.gatewaySlug // .gateway_slug // .gateway.slug // .gateway.name // "") as $g
+          | ($g != "" and ($gates | index($g)) != null)
+        ))
+        | .[0:60]
+        | [.[].id]
+      ' 2>/dev/null)
+      if [[ -z "$tool_ids_json" || "$tool_ids_json" == "[]" ]]; then
+        log_warn "No tools for server $server_name (gateways: $gateways_str)"
+        continue
+      fi
+      tool_set_sig=$(echo "$tool_ids_json" | jq -c 'sort' 2>/dev/null)
+      if [[ -n "$used_tool_sets" ]] && echo "$used_tool_sets" | grep -qFx "$tool_set_sig"; then
+        log_warn "Skipping $server_name (same tool set as an existing server)"
+        continue
+      fi
+      used_tool_sets="${used_tool_sets:+$used_tool_sets$'\n'}$tool_set_sig"
+      desc="Tools from: ${gateways_str//,/, }"
+      existing_id=$(echo "$servers_body" | jq -r --arg n "$server_name" 'if type == "array" then .[] else .servers[]? // empty end | select(.name == $n) | .id' 2>/dev/null | head -1)
+      if [[ "$servers_code" == "200" ]] && [[ -n "$existing_id" ]] && [[ "$existing_id" != "null" ]]; then
+        put_body=$(jq -n --argjson ids "$tool_ids_json" '{name: $name, description: $desc, associated_tools: $ids}' --arg name "$server_name" --arg desc "$desc")
+        put_resp=$(curl -s -w "\n%{http_code}" -X PUT -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+          -d "$put_body" "${GATEWAY_URL}/servers/${existing_id}" 2>/dev/null)
+        if [[ "$(echo "$put_resp" | tail -n1)" =~ ^2[0-9][0-9]$ ]]; then
+          log_ok "virtual server updated: $server_name ($existing_id)"
+          log_info "Cursor (mcp): $GATEWAY_URL/servers/$existing_id/mcp"
+          log_info "Cursor (sse): $GATEWAY_URL/servers/$existing_id/sse"
+          write_cursor_mcp_url "$existing_id" "$server_name"
+        fi
+      else
+        post_body=$(jq -n --argjson ids "$tool_ids_json" '{server: {name: $name, description: $desc, associated_tools: $ids}}' --arg name "$server_name" --arg desc "$desc")
+        post_resp=$(curl -s -w "\n%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+          -d "$post_body" "${GATEWAY_URL}/servers" 2>/dev/null)
+        post_code=$(echo "$post_resp" | tail -n1)
+        post_body_resp=$(echo "$post_resp" | sed '$d')
+        if [[ "$post_code" =~ ^2[0-9][0-9]$ ]]; then
+          new_id=$(echo "$post_body_resp" | jq -r '.id // empty' 2>/dev/null)
+          if [[ -n "$new_id" ]]; then
+            log_ok "virtual server created: $server_name ($new_id)"
+            log_info "Cursor (mcp): $GATEWAY_URL/servers/$new_id/mcp"
+            log_info "Cursor (sse): $GATEWAY_URL/servers/$new_id/sse"
+            write_cursor_mcp_url "$new_id" "$server_name"
+          fi
+        fi
+      fi
+    done < "$SCRIPT_DIR/virtual-servers.txt"
+  else
+    tool_ids=$(echo "$tools_body" | jq -r 'if type == "array" then .[] else .tools[]? // empty end | .id // empty' 2>/dev/null)
+    if [[ -n "$tool_ids" ]]; then
+      tool_ids_json=$(echo "$tool_ids" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+      servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
+        -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
+      servers_code=$(echo "$servers_resp" | tail -n1)
+      servers_body=$(echo "$servers_resp" | sed '$d')
+      server_name="${REGISTER_VIRTUAL_SERVER_NAME:-default}"
+      existing_id=$(echo "$servers_body" | jq -r --arg n "$server_name" 'if type == "array" then .[] else .servers[]? // empty end | select(.name == $n) | .id' 2>/dev/null | head -1)
+      if [[ "$servers_code" == "200" ]] && [[ -n "$existing_id" ]] && [[ "$existing_id" != "null" ]]; then
+        put_body=$(jq -n --argjson ids "$tool_ids_json" '{name: $name, description: $desc, associated_tools: $ids}' --arg name "$server_name" --arg desc "All registered tools")
+        put_resp=$(curl -s -w "\n%{http_code}" -X PUT -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+          -d "$put_body" "${GATEWAY_URL}/servers/${existing_id}" 2>/dev/null)
+        if [[ "$(echo "$put_resp" | tail -n1)" =~ ^2[0-9][0-9]$ ]]; then
+          log_ok "virtual server updated: $server_name ($existing_id)"
+          log_info "Cursor (mcp): $GATEWAY_URL/servers/$existing_id/mcp"
+          log_info "Cursor (sse): $GATEWAY_URL/servers/$existing_id/sse"
+          write_cursor_mcp_url "$existing_id" "$server_name"
+        fi
+      else
+        post_body=$(jq -n --argjson ids "$tool_ids_json" '{server: {name: $name, description: $desc, associated_tools: $ids}}' --arg name "$server_name" --arg desc "All registered tools")
+        post_resp=$(curl -s -w "\n%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+          -d "$post_body" "${GATEWAY_URL}/servers" 2>/dev/null)
+        post_code=$(echo "$post_resp" | tail -n1)
+        post_body_resp=$(echo "$post_resp" | sed '$d')
+        if [[ "$post_code" =~ ^2[0-9][0-9]$ ]]; then
+          new_id=$(echo "$post_body_resp" | jq -r '.id // empty' 2>/dev/null)
+          if [[ -n "$new_id" ]]; then
+            log_ok "virtual server created: $server_name ($new_id)"
+            log_info "Cursor (mcp): $GATEWAY_URL/servers/$new_id/mcp"
+            log_info "Cursor (sse): $GATEWAY_URL/servers/$new_id/sse"
+            write_cursor_mcp_url "$new_id" "$server_name"
+          fi
+        fi
+      fi
+    fi
   fi
+  if [[ -n "${CURSOR_MCP_URL_WRITTEN:-}" ]]; then
+    log_info "data/.cursor-mcp-url → ${CURSOR_MCP_URL_WRITTEN%|*} (wrapper uses this server)"
+  fi
+fi
+
+if [[ "${REGISTER_PROMPTS:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/prompts.txt" ]]; then
+  log_step "Registering prompts from scripts/prompts.txt..."
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    [[ -z "$line" || "$line" =~ ^# ]] && continue
+    name=$(echo "$line" | cut -d'|' -f1)
+    desc=$(echo "$line" | cut -d'|' -f2)
+    template=$(echo "$line" | cut -d'|' -f3- | sed 's/\\n/\n/g')
+    if [[ -z "$name" || -z "$template" ]]; then continue; fi
+    args_json=$(echo "$template" | grep -oE '\{\{[^}]+\}\}' | sed 's/{{//;s/}}//' | sort -u | while read -r arg; do
+      echo "{\"name\":\"$arg\",\"description\":\"$arg\",\"required\":true}"
+    done | jq -s . 2>/dev/null)
+    [[ -z "$args_json" ]] && args_json="[]"
+    payload=$(jq -n --arg n "$name" --arg d "$desc" --arg t "$template" --argjson a "$args_json" '{prompt: {name: $n, description: $d, template: $t, arguments: $a}}')
+    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/prompts" 2>/dev/null)
+    if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "prompt $name"; fi
+  done < "$SCRIPT_DIR/prompts.txt"
+fi
+
+if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/resources.txt" ]]; then
+  log_step "Registering resources from scripts/resources.txt..."
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    [[ -z "$line" || "$line" =~ ^# ]] && continue
+    IFS='|' read -r name uri desc mime <<< "$line"
+    desc=$(echo "${desc:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    mime=$(echo "${mime:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    if [[ -z "$name" || -z "$uri" ]]; then continue; fi
+    payload=$(jq -n --arg n "$name" --arg u "$uri" --arg d "$desc" --arg m "${mime:-text/plain}" '{resource: {name: $n, uri: $u, description: $d, mime_type: $m}}')
+    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/resources" 2>/dev/null)
+    if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "resource $name"; fi
+  done < "$SCRIPT_DIR/resources.txt"
+fi
+
+if [[ -z "$EXTRA_GATEWAYS" && ! -f "$SCRIPT_DIR/gateways.txt" ]]; then
+  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to scripts/gateways.txt (Name|URL|Transport)."
+else
+  log_line
+  log_ok "Done."
+  if [[ "${HAS_LOCAL_FAIL:-0}" -eq 1 ]]; then
+    log_info "If local gateways failed: REGISTER_VERBOSE=1 for full API response; REGISTER_WAIT_SECONDS=30 if translate containers were still starting; docker compose ps to confirm all services are up."
+  fi
+  log_info "Auth: gateways that need API keys or OAuth (Context7, v0, apify-dribbble, etc.) → configure in Admin UI. See docs/ADMIN_UI_MANUAL_REGISTRATION.md"
 fi
