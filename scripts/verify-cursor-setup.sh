@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-cd "$REPO_ROOT"
-# shellcheck source=scripts/lib/log.sh
-source "$SCRIPT_DIR/lib/log.sh" 2>/dev/null || true
+source "$SCRIPT_DIR/lib/bootstrap.sh"
+load_env || { log_err ".env not found. Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY."; exit 1; }
+source "$SCRIPT_DIR/lib/gateway.sh"
 
 ok=0
 fail=0
@@ -23,26 +22,13 @@ check() {
 log_section "Cursor (wrapper) setup"
 log_step "Checking environment..."
 
-if [[ ! -f .env ]]; then
-  log_err ".env not found. Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY."
-  exit 1
-fi
-set -a
-source .env
-set +a
-
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:${PORT:-4444}}"
-code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "$GATEWAY_URL/health" 2>/dev/null || true)
-if [[ "$code" != "200" ]] && [[ "$GATEWAY_URL" =~ 127\.0\.0\.1 ]]; then
-  alt="${GATEWAY_URL//127.0.0.1/localhost}"
-  code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "$alt/health" 2>/dev/null || true)
-  [[ "$code" == "200" ]] && GATEWAY_URL="$alt"
-elif [[ "$code" != "200" ]] && [[ "$GATEWAY_URL" =~ localhost ]]; then
-  alt="${GATEWAY_URL//localhost/127.0.0.1}"
-  code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "$alt/health" 2>/dev/null || true)
-  [[ "$code" == "200" ]] && GATEWAY_URL="$alt"
+normalize_gateway_url || true
+if [[ "$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "$GATEWAY_URL/health" 2>/dev/null || true)" == "200" ]]; then
+  check 1 "Gateway reachable at $GATEWAY_URL (health=200)"
+else
+  check 0 "Gateway reachable at $GATEWAY_URL. Run: make start"
 fi
-if [[ "$code" == "200" ]]; then check 1 "Gateway reachable at $GATEWAY_URL (health=$code)"; else check 0 "Gateway reachable at $GATEWAY_URL (health=$code). Run: make start"; fi
 
 url_file="$REPO_ROOT/data/.cursor-mcp-url"
 if [[ ! -f "$url_file" || ! -s "$url_file" ]]; then
@@ -62,14 +48,7 @@ if [[ ! "$MCP_URL" =~ /servers/([a-f0-9-]+)/mcp ]]; then
 fi
 SERVER_ID="${BASH_REMATCH[1]}"
 
-JWT=$(python3 "$SCRIPT_DIR/create_jwt_token_standalone.py" 2>/dev/null) || true
-if [[ -z "$JWT" ]]; then
-  CONTAINER="${MCPGATEWAY_CONTAINER:-mcpgateway}"
-  if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then
-    JWT=$(docker exec "$CONTAINER" python3 -m mcpgateway.utils.create_jwt_token \
-      --username "${PLATFORM_ADMIN_EMAIL:?}" --exp 10080 --secret "${JWT_SECRET_KEY:?}" 2>/dev/null)
-  fi
-fi
+JWT=$(get_jwt) || true
 if [[ -z "$JWT" ]]; then
   check 0 "Could not generate JWT (need PyJWT or running gateway container)"
 else
@@ -79,14 +58,30 @@ fi
 if [[ -n "$JWT" ]]; then
   servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 5 --max-time 15 \
     -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
-  servers_code=$(echo "$servers_resp" | tail -n1)
-  servers_body=$(echo "$servers_resp" | sed '$d')
+  servers_code=$(parse_http_code "$servers_resp")
+  servers_body=$(parse_http_body "$servers_resp")
   if [[ "$servers_code" != "200" ]]; then
     check 0 "GET /servers returned $servers_code (expected 200)"
   else
     found=$(echo "$servers_body" | jq -r --arg id "$SERVER_ID" 'if type == "array" then .[] else .servers[]? // empty end | select(.id == $id) | .id' 2>/dev/null | head -1)
     if [[ "$found" == "$SERVER_ID" ]]; then
       check 1 "Server ID $SERVER_ID exists on gateway"
+      server_json=$(curl -s --connect-timeout 5 --max-time 10 -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers/${SERVER_ID}" 2>/dev/null)
+      server_name=$(echo "$server_json" | jq -r '.name // empty' 2>/dev/null)
+      tool_count=$(echo "$server_json" | jq -r '[.associated_tools[]? // .associatedTools[]? // empty] | length' 2>/dev/null | tr -d '\n\r')
+      if [[ -n "$server_name" ]]; then
+        if [[ "$tool_count" =~ ^[0-9]+$ ]]; then
+          log_info "  → URL points to server \"$server_name\" ($tool_count tools)."
+        else
+          log_info "  → URL points to server \"$server_name\"."
+        fi
+        if [[ "$tool_count" =~ ^[0-9]+$ ]] && [[ "$tool_count" -eq 0 ]]; then
+          log_warn "  → Server has no tools. For cursor-router: set GATEWAY_JWT in .env, run make start, then make register."
+        fi
+        if [[ "$server_name" == "cursor-default" ]]; then
+          log_info "  → To use default cursor-router (tool-router), remove REGISTER_CURSOR_MCP_SERVER_NAME from .env and run make register."
+        fi
+      fi
     else
       check 0 "Server ID $SERVER_ID not found on gateway (stale URL? run: make register)"
     fi
@@ -104,4 +99,5 @@ log_line
 log_ok "All checks passed."
 log_info "If context-forge still shows Error:"
 log_info "  → Fully quit Cursor (Cmd+Q / Alt+F4) and reopen. Reload Window is not enough."
-log_info "  → If logs show 'No server info found': run make register (refreshes URL); or set REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default in .env, run make register, then quit and reopen Cursor."
+log_info "  → To use default cursor-router: remove REGISTER_CURSOR_MCP_SERVER_NAME from .env, run make register, then quit and reopen Cursor."
+log_info "  → If logs show 'No server info found': ensure gateway is reachable from Docker (host.docker.internal:${PORT:-4444}); run make start, make register, then quit and reopen Cursor."

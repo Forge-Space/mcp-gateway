@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-cd "$REPO_ROOT"
-# shellcheck source=scripts/lib/log.sh
-source "$SCRIPT_DIR/lib/log.sh" 2>/dev/null || true
+source "$SCRIPT_DIR/lib/bootstrap.sh"
+load_env || { log_err ".env not found in $REPO_ROOT"; exit 1; }
 
 if ! command -v jq &>/dev/null; then
   log_err "jq is required. Install with: brew install jq or apt-get install jq"
@@ -14,11 +12,6 @@ fi
 MCP_JSON="${CURSOR_MCP_JSON:-$HOME/.cursor/mcp.json}"
 if [[ ! -f "$MCP_JSON" ]]; then
   log_err "$MCP_JSON not found"
-  exit 1
-fi
-
-if [[ ! -f .env ]]; then
-  log_err ".env not found in $REPO_ROOT"
   exit 1
 fi
 
@@ -34,16 +27,9 @@ if [[ -z "${CURSOR_MCP_SERVER_URL:-}" && (! -f "$url_file" || ! -s "$url_file") 
   exit 1
 fi
 
-KEY=""
-for k in ${CONTEXT_FORGE_MCP_KEY:-context-forge user-context-forge}; do
-  if jq -e --arg k "$k" '.mcpServers[$k] // .[$k]' "$MCP_JSON" &>/dev/null; then
-    KEY="$k"
-    break
-  fi
-done
-if [[ -z "$KEY" ]]; then
-  KEY="context-forge"
-fi
+source "$SCRIPT_DIR/lib/gateway.sh"
+KEY=$(get_context_forge_key "$MCP_JSON") || true
+[[ -z "$KEY" ]] && KEY="context-forge"
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT

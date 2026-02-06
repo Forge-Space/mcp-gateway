@@ -5,50 +5,14 @@
 # Optional: CLEANUP_CURL_CONNECT=10, CLEANUP_CURL_MAX_TIME=60 (increase if gateway is slow or times out).
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-cd "$REPO_ROOT"
-# shellcheck source=scripts/lib/log.sh
-source "$SCRIPT_DIR/lib/log.sh" 2>/dev/null || true
-
-if [[ ! -f .env ]]; then
-  log_err "Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY."
-  exit 1
-fi
-
-set -a
-source .env
-set +a
+source "$SCRIPT_DIR/lib/bootstrap.sh"
+load_env || { log_err "Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY."; exit 1; }
+source "$SCRIPT_DIR/lib/gateway.sh"
 
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:${PORT:-4444}}"
 DRY_RUN="${CLEANUP_DRY_RUN:-0}"
-
-log_section "Cleanup duplicate virtual servers"
-log_step "Connecting to gateway..."
-
-if docker compose version &>/dev/null 2>&1; then
-  COMPOSE="docker compose"
-elif command -v docker-compose &>/dev/null; then
-  COMPOSE="docker-compose"
-else
-  COMPOSE=""
-fi
-
-if [[ -n "$COMPOSE" ]] && $COMPOSE ps gateway -q 2>/dev/null | grep -q .; then
-  JWT=$($COMPOSE exec -T gateway python3 -m mcpgateway.utils.create_jwt_token \
-    --username "${PLATFORM_ADMIN_EMAIL:?}" --exp 10080 --secret "${JWT_SECRET_KEY:?}" 2>/dev/null)
-else
-  CONTAINER="${MCPGATEWAY_CONTAINER:-mcpgateway}"
-  if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then
-    log_err "Gateway is not running. Start with ./start.sh (from repo root)."
-    exit 1
-  fi
-  JWT=$(docker exec "$CONTAINER" python3 -m mcpgateway.utils.create_jwt_token \
-    --username "${PLATFORM_ADMIN_EMAIL:?}" --exp 10080 --secret "${JWT_SECRET_KEY:?}" 2>/dev/null)
-fi
-if [[ -z "$JWT" ]]; then
-  log_err "Failed to generate JWT."
-  exit 1
-fi
+COMPOSE=$(compose_cmd)
+JWT=$(get_jwt) || { log_err "Failed to generate JWT."; exit 1; }
 
 if ! command -v jq &>/dev/null; then
   log_err "jq is required. Install jq to run this script."
@@ -57,6 +21,9 @@ fi
 
 CURL_CONNECT="${CLEANUP_CURL_CONNECT:-10}"
 CURL_MAX_TIME="${CLEANUP_CURL_MAX_TIME:-60}"
+
+log_section "Cleanup duplicate virtual servers"
+log_step "Connecting to gateway..."
 
 servers_resp=$(curl -s -w "\n%{http_code}" --connect-timeout "$CURL_CONNECT" --max-time "$CURL_MAX_TIME" \
   -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers?limit=0&include_pagination=false" 2>/dev/null)
@@ -69,8 +36,8 @@ if [[ "$curl_rc" -eq 7 ]]; then
   log_err "Could not reach gateway at $GATEWAY_URL. Is it running? (make start)"
   exit 7
 fi
-servers_code=$(echo "$servers_resp" | tail -n1)
-servers_body=$(echo "$servers_resp" | sed '$d')
+servers_code=$(parse_http_code "$servers_resp")
+servers_body=$(parse_http_body "$servers_resp")
 if [[ "$servers_code" != "200" ]] || [[ -z "$servers_body" ]]; then
   log_err "GET /servers failed (HTTP ${servers_code:-none}). Check gateway and JWT."
   exit 1
@@ -107,8 +74,8 @@ while IFS= read -r obj; do
   if [[ -z "$tools" || "$tools" == "null" ]]; then
     get_resp=$(curl -s -w "\n%{http_code}" --connect-timeout "$CURL_CONNECT" --max-time "$CURL_MAX_TIME" \
       -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/servers/${id}" 2>/dev/null) || true
-    get_code=$(echo "$get_resp" | tail -n1)
-    get_body=$(echo "$get_resp" | sed '$d')
+    get_code=$(parse_http_code "$get_resp")
+    get_body=$(parse_http_body "$get_resp")
     if [[ "$get_code" == "200" ]]; then
       tools=$(echo "$get_body" | jq -c '(.server // .).associated_tools // []' 2>/dev/null)
     fi

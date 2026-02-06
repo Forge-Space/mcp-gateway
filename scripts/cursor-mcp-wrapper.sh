@@ -1,18 +1,9 @@
 #!/usr/bin/env bash
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-cd "$REPO_ROOT"
-# shellcheck source=scripts/lib/log.sh
-source "$SCRIPT_DIR/lib/log.sh" 2>/dev/null || true
-
-if [[ ! -f .env ]]; then
-  log_err ".env not found in $REPO_ROOT"
-  exit 1
-fi
-set -a
-source .env
-set +a
+source "$SCRIPT_DIR/lib/bootstrap.sh"
+load_env || { log_err ".env not found in $REPO_ROOT"; exit 1; }
+source "$SCRIPT_DIR/lib/gateway.sh"
 
 if [[ -n "${CURSOR_MCP_SERVER_URL:-}" ]]; then
   MCP_SERVER_URL="$CURSOR_MCP_SERVER_URL"
@@ -34,18 +25,7 @@ else
   fi
 fi
 
-JWT=$(python3 "$SCRIPT_DIR/create_jwt_token_standalone.py" 2>/dev/null) || true
-if [[ -z "$JWT" ]]; then
-  CONTAINER="${MCPGATEWAY_CONTAINER:-mcpgateway}"
-  if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then
-    JWT=$(docker exec "$CONTAINER" python3 -m mcpgateway.utils.create_jwt_token \
-      --username "${PLATFORM_ADMIN_EMAIL:?}" --exp 10080 --secret "${JWT_SECRET_KEY:?}" 2>/dev/null)
-  fi
-fi
-if [[ -z "$JWT" ]]; then
-  log_err "Failed to generate JWT (need PyJWT or running gateway container)."
-  exit 1
-fi
+JWT=$(get_jwt) || { log_err "Failed to generate JWT (need PyJWT or running gateway container)."; exit 1; }
 
 docker_args=(run --rm -i
   -e "MCP_SERVER_URL=$MCP_SERVER_URL"
