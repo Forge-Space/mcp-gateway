@@ -1,4 +1,4 @@
-.PHONY: start stop gateway-only register register-wait jwt list-prompts refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup reset-db cleanup-duplicates generate-secrets
+.PHONY: start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup reset-db cleanup-duplicates generate-secrets
 
 generate-secrets:
 	@echo "# Add these to .env (min 32 chars; weak secrets cause 'Server disconnected' / context-forge errors):"
@@ -32,6 +32,9 @@ jwt:
 
 list-prompts:
 	./scripts/list-prompts.sh
+
+list-servers:
+	./scripts/list-servers.sh
 
 refresh-cursor-jwt:
 	./scripts/refresh-cursor-jwt.sh
