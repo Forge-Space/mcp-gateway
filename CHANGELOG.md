@@ -8,9 +8,23 @@ All notable changes to this project are documented here.
 
 - **generate-secrets**
 
+- **list-servers** – `make list-servers` and `scripts/list-servers.sh`: list virtual MCP servers (id, name, tool count) via the gateway API. Use when the Admin UI "Virtual MCP Servers" page shows "No tags found" or 0 items but servers were created via `make register` or the API; see [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md).
+
+### Changed
+
+- **Scripts refactor** – Scripts now use shared `scripts/lib/bootstrap.sh` and `scripts/lib/gateway.sh`: single place for bootstrap (SCRIPT_DIR, REPO_ROOT, load_env), JWT generation, Docker Compose detection, gateway URL normalization, and HTTP response parsing. Reduced duplication across register-gateways, list-servers, list-prompts, verify-cursor-setup, refresh-cursor-jwt, use-cursor-wrapper, cursor-mcp-wrapper, and cleanup-duplicate-servers. `register-gateways.sh` virtual server create/update and 400 flat-body retry logic extracted into `create_or_update_virtual_server` and reused for both the virtual-servers.txt loop and the single default server branch. See scripts/README.md "Lib / shared behavior".
+
+- **Default virtual server for context-forge wrapper** – When `REGISTER_CURSOR_MCP_SERVER_NAME` is unset, `make register` now writes `data/.cursor-mcp-url` for **cursor-router** (tool-router) instead of cursor-default. Users who want the full tool set must set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` and run `make register`. cursor-router requires `GATEWAY_JWT` in `.env`.
+
 ### Fixed
 
-- **context-forge "No server info found"** – When `REGISTER_CURSOR_MCP_SERVER_NAME` is unset, `make register` now writes `data/.cursor-mcp-url` for the **first** virtual server in `virtual-servers.txt` (e.g. cursor-default) instead of the last (cursor-router). Avoids stale or wrong server UUID after DB reset or first run. Wrapper validates URL format and suggests `make start && make register` when the file is missing; README and verify-cursor-setup troubleshooting updated.
+- **GET /servers HTTP 500 and virtual server create failures** – `list-servers.sh` retries `GET /servers` without query params when the gateway returns 500/502/503 (some Context Forge versions fail on `limit=0&include_pagination=false`). `register-gateways.sh` does the same retry for the servers list and logs when virtual server create/update fails (HTTP code and, for 5xx, first lines of response and a hint to check gateway logs). See [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md#troubleshooting-get-servers-returns-500-or-virtual-server-create-fails).
+
+- **Virtual server create HTTP 400** – On 400, the script prints the gateway response (validation error) and retries with a flat request body and `associatedTools` (camelCase), for gateway versions that do not accept the nested `{"server": {"associated_tools": ...}}` shape. When the gateway returns "This transaction is inactive", the script skips the flat-body retry and prints a workaround (Admin UI or retry later). Docs now note that the same error can appear in the Admin UI when clicking Add Server, with workarounds (fewer servers/tools, restart gateway, report upstream). When GET /servers returns non-200, the script skips virtual server create/update and suggests Admin UI or retry (no delay/retry).
+
+- **context-forge "No server info found"** – When `REGISTER_CURSOR_MCP_SERVER_NAME` is unset, `make register` writes `data/.cursor-mcp-url` for the default virtual server (cursor-router). Avoids stale or wrong server UUID after DB reset or first run. Wrapper validates URL format and suggests `make start && make register` when the file is missing; README and verify-cursor-setup troubleshooting updated.
+
+- **verify-cursor-setup and context-forge troubleshooting** – `make verify-cursor-setup` now fetches the server by ID and shows which server the URL points to (name and tool count). If the server has 0 tools, it warns to set GATEWAY_JWT and run make register (for cursor-router). If the URL points to cursor-default, it suggests removing REGISTER_CURSOR_MCP_SERVER_NAME from .env to use default cursor-router. README troubleshooting updated: clear steps to use cursor-router (remove REGISTER_CURSOR_MCP_SERVER_NAME, make register, full Cursor restart) and to fix "No server info found" (gateway reachable from Docker, make register, GATEWAY_JWT for cursor-router).
 
 ### Added
 

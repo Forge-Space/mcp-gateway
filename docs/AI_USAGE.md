@@ -16,7 +16,7 @@ If `virtual-servers.txt` is absent, the script creates a single virtual server (
 
 ### Single entry point (router)
 
-The **cursor-router** virtual server exposes only the **tool-router** gateway (1–2 tools: `execute_task`, optional `search_tools`). When you call `execute_task` with a task description, the router fetches all tools from the gateway, picks the best match by keyword scoring (name + description), and invokes it via the gateway API. Use this when you want one Cursor connection that routes to the best tool without hitting the 60-tool limit. Set `GATEWAY_JWT` in `.env` (run `make jwt` and paste; refresh periodically). Tool selection in v1 is keyword-based (no LLM/embeddings).
+The **cursor-router** virtual server exposes only the **tool-router** gateway (1–2 tools: `execute_task`, optional `search_tools`). The Cursor wrapper uses cursor-router by default; ensure `GATEWAY_JWT` is set in `.env` (run `make jwt` and paste; refresh periodically) so the router can call the gateway API. When you call `execute_task` with a task description, the router fetches all tools from the gateway, picks the best match by keyword scoring (name + description), and invokes it via the gateway API. Use this when you want one Cursor connection that routes to the best tool without hitting the 60-tool limit. Tool selection in v1 is keyword-based (no LLM/embeddings).
 
 | Use case                                | Gateway / tool                                                                                            |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------- |

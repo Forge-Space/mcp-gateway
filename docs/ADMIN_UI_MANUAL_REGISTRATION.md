@@ -168,8 +168,11 @@ In the Admin UI you typically select the server, then add/remove tools by ID or 
 
 - **Admin UI:** **Servers** (or **Virtual servers**) → select the server → copy the **ID** or the URL path containing the UUID.
 - **API:** `GET /servers?include_pagination=false` and read `id` for the desired server.
+- **CLI:** From repo root run `make list-servers` to list virtual servers (id, name, tool count) via the API.
 
 Use this UUID in Cursor’s `mcp.json` as `.../servers/<UUID>/mcp` or `.../servers/<UUID>/sse`.
+
+**Note:** The Admin UI “Virtual MCP Servers” page may show “No tags found” or “Showing 0 - 0 of 0 items” even when virtual servers exist (e.g. created via `make register` or `POST /servers`). That can be a display bug in the Admin UI. To confirm servers exist, use `make list-servers` or call `GET /servers` with an admin JWT.
 
 ---
 
@@ -246,6 +249,28 @@ Copy-paste–friendly list for **remote gateways** you add in Admin UI. Fill aut
 | apify-dribbble           | `https://mcp.apify.com/sse?actors=practicaltools/apify-dribbble-scraper` | SSE            |
 
 **Auth:** v0 and apify-dribbble require token/API key or OAuth; configure in the gateway edit screen. Context7 often requires an API key (Passthrough Header `Authorization: Bearer <key>`). See [Context Forge OAuth](https://ibm.github.io/mcp-context-forge/manage/oauth/) for OAuth setup.
+
+---
+
+## Troubleshooting: GET /servers returns 500 or virtual server create fails
+
+If `make list-servers` returns **HTTP 500** or `make register` reports **virtual server create failed (HTTP 500)**:
+
+- **Scripts now retry** – `list-servers.sh` and `register-gateways.sh` retry `GET /servers` without query params when the first request returns 500; some gateway versions fail on `limit=0&include_pagination=false`.
+- **Check gateway logs** – Run `docker compose logs gateway` and look for Python tracebacks or errors around the `/servers` route. Report issues to [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge/issues).
+- **Verbose register** – Run `REGISTER_VERBOSE=1 make register` to see the first few lines of failed POST/PUT response bodies.
+
+If virtual server create fails with **HTTP 400**:
+
+- The script prints the gateway’s response body (validation error). It then retries with a flat body and `associatedTools` (camelCase), unless the response contains "This transaction is inactive" (see below).
+- If both attempts fail, check that tool IDs are valid (e.g. run `curl -s -H "Authorization: Bearer $(make jwt)" "$GATEWAY_URL/tools?include_pagination=false" | jq '.[0:3]'` and confirm each tool has an `id`).
+
+If the gateway returns **"Failed to register server: This transaction is inactive"** (HTTP 400):
+
+- This is a known upstream issue in some mcp-context-forge versions: the gateway DB session/transaction is not active when `POST /servers` is called (often when `GET /servers` has already returned 500).
+- **Workarounds:** (1) Create virtual servers manually in the Admin UI: open the gateway URL (e.g. `http://localhost:4444`), go to Virtual MCP Servers, add a server and attach tools by gateway or tool ID. (2) Retry `make register` after a minute. When `GET /servers` returns non-200, the script skips virtual server create/update and prints the same guidance.
+
+**Same error in the Admin UI:** If you see "Failed to register server: This transaction is inactive" when clicking **Add Server** in the Virtual Servers page, the same upstream bug is affecting the UI. Try: (1) **Use fewer servers and tools** — the UI warns that more than 12 MCP servers or more than 6 tools can impact performance; start with one gateway and a small set of tools, then add more. (2) Refresh the page and try again. (3) Restart the gateway (`docker compose restart gateway`), wait ~30s, then try adding a minimal virtual server (one MCP server, few tools). If it still fails, report at [IBM/mcp-context-forge issues](https://github.com/IBM/mcp-context-forge/issues) with your gateway version and that the error occurs both via API and in the Admin UI.
 
 ---
 
