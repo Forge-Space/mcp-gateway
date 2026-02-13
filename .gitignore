@@ -3,9 +3,6 @@
 .env.local
 .env.*.local
 
-# Cursor IDE (local rules, skills, hooks; do not commit)
-.cursor/
-
 # Database (SQLite local files)
 data/*.db
 data/*.db-shm
@@ -22,6 +19,8 @@ Thumbs.db
 *.swo
 .vscode/
 *.sublime-*
+.cursor/
+.windsurf/
 
 # Logs
 *.log
