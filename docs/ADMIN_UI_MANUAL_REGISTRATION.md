@@ -130,6 +130,8 @@ A virtual server groups tools (from one or more gateways) into a single endpoint
 - Streamable HTTP: `http://localhost:4444/servers/<SERVER_UUID>/mcp`
 - SSE: `http://localhost:4444/servers/<SERVER_UUID>/sse`
 
+**Which server to use:** See [AI_USAGE.md – Which virtual server should I use?](AI_USAGE.md#which-virtual-server-should-i-use) for a short guide (router vs default vs search vs browser).
+
 ### 2.1 Create server (API)
 
 `POST /servers`:
@@ -252,11 +254,23 @@ Copy-paste–friendly list for **remote gateways** you add in Admin UI. Fill aut
 
 ---
 
+## Troubleshooting: Virtual MCP Servers page stuck on "Loading servers..."
+
+If the Admin UI **Virtual MCP Servers** page shows a spinner and "Loading servers..." indefinitely:
+
+- **Common cause: corrupted SQLite database.** The gateway’s GET /servers request fails with 500 and the UI never gets a valid response. Check gateway logs: `docker compose logs gateway --tail 80`. If you see `sqlite3.DatabaseError: database disk image is malformed`, the DB is corrupted.
+- **Fix:** Run `make reset-db` (stops the stack and removes `./data/mcp.db` and WAL/SHM files), then `make start` and `make register`. The gateway will create a fresh DB and you can re-add gateways; the Virtual MCP Servers page should then load (empty or with servers). See [data/README.md](data/README.md) and README troubleshooting.
+- If the logs show a different error, follow **Troubleshooting: GET /servers returns 500** below; you can still use the **Add New Server** form on the same page to create a server manually.
+
+---
+
 ## Troubleshooting: GET /servers returns 500 or virtual server create fails
 
 If `make list-servers` returns **HTTP 500** or `make register` reports **virtual server create failed (HTTP 500)**:
 
 - **Scripts now retry** – `list-servers.sh` and `register-gateways.sh` retry `GET /servers` without query params when the first request returns 500; some gateway versions fail on `limit=0&include_pagination=false`.
+- **Delayed retries** – For 5xx or 408, `register-gateways.sh` does up to 2 extra attempts after a configurable delay (default 5s). Set `REGISTER_GET_SERVERS_RETRY_DELAY=5` in `.env` (or `0` to disable).
+- **Create when GET fails (opt-in)** – If GET /servers is still non-200 after all retries, set `REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS=true` to attempt create-only (POST) for virtual servers; no update, possible duplicates if you run register again. See `.env.example`.
 - **Check gateway logs** – Run `docker compose logs gateway` and look for Python tracebacks or errors around the `/servers` route. Report issues to [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge/issues).
 - **Verbose register** – Run `REGISTER_VERBOSE=1 make register` to see the first few lines of failed POST/PUT response bodies.
 

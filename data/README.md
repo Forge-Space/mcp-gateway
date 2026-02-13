@@ -7,7 +7,7 @@ Used at runtime by the gateway container. SQLite database: `mcp.db` (created on 
 If the gateway logs `database disk image is malformed` or `FileLock health check failed` (sqlite3.DatabaseError), the DB file is corrupted. Fix:
 
 1. Stop the stack: `./start.sh stop`
-2. Remove the DB (and WAL/SHM if present):  
+2. Remove the DB (and WAL/SHM if present):
    `rm -f ./data/mcp.db ./data/mcp.db-shm ./data/mcp.db-wal`
 3. Start again: `./start.sh`
 

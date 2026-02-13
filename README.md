@@ -2,10 +2,14 @@
 
 Self-hosted MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge). One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.
 
+**License:** [MIT](LICENSE)
+
 ## Prerequisites
 
 - Docker
 - Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
+
+**Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#dev-container-optional).
 
 ## Quick start
 
@@ -81,7 +85,7 @@ After start, run `make register` to register them (or add in Admin UI with the U
 
 The gateway requires a **Bearer JWT** on every request.
 
-**Automatic JWT (recommended)**  
+**Automatic JWT (recommended)**
 Use the wrapper script so no token is stored in mcp.json and no weekly refresh is needed. From the repo: ensure `.env` is set, run `make register` once (this writes `data/.cursor-mcp-url`), then run **`make use-cursor-wrapper`** to set the context-forge entry in `~/.cursor/mcp.json` to the wrapper (replacing any URL/headers or docker-args config). Restart Cursor. The wrapper uses the **cursor-router** (tool-router) virtual server by default; set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` in `.env` and run `make register` to use the full tool set instead. The wrapper generates a fresh JWT on each connection and runs the gateway Docker image. On Linux the script adds `--add-host=host.docker.internal:host-gateway` automatically. Optional: set `CURSOR_MCP_SERVER_URL` in `.env` if you prefer not to use `data/.cursor-mcp-url`. To configure manually instead, set the entry to `{"command": "/absolute/path/to/mcp-gateway/scripts/cursor-mcp-wrapper.sh"}` (use your clone path).
 
 **Manual JWT (URL-based or docker args)**
@@ -112,7 +116,7 @@ Use the wrapper script so no token is stored in mcp.json and no weekly refresh i
            "MCP_AUTH=Bearer YOUR_JWT_TOKEN",
            "-e",
            "MCP_TOOL_CALL_TIMEOUT=120",
-           "ghcr.io/ibm/mcp-context-forge:latest",
+           "ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1",
            "python3",
            "-m",
            "mcpgateway.wrapper"
@@ -124,7 +128,7 @@ Use the wrapper script so no token is stored in mcp.json and no weekly refresh i
 
    On Linux add after `"-i"`: `"--add-host=host.docker.internal:host-gateway"`. Restart Cursor after changing the config.
 
-   **Alternative: URL-based (Streamable HTTP or SSE)**  
+   **Alternative: URL-based (Streamable HTTP or SSE)**
    Example with your server UUID and a token in headers:
 
    ```json
@@ -194,6 +198,10 @@ Some gateways are commented out in `scripts/gateways.txt` so `make register` suc
 - **Commented remote (Context7, context-awesome, prisma-remote, cloudflare-\*, v0, apify-dribbble):** Uncomment in `scripts/gateways.txt` and run `make register`, or add the gateway via Admin UI (MCP Servers → Add New MCP Server or Gateway). For **Context7, v0, apify-dribbble, cloudflare-\***: after adding the gateway, edit it in Admin UI and set **Passthrough Headers** (e.g. `Authorization`) or **Authentication type** OAuth so the gateway can call the upstream. See [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md).
 
 **Authentication checklist:** Local gateways that need keys: **Tavily** → `TAVILY_API_KEY` in `.env`; **Snyk** → `SNYK_TOKEN`; **GitHub** → `GITHUB_PERSONAL_ACCESS_TOKEN`. Remote gateways **Context7, v0, apify-dribbble, cloudflare-\*** → configure Passthrough Headers or OAuth in Admin UI (do not put secrets in `gateways.txt` or the repo).
+
+## Contributing / Forking
+
+You can fork this repo to run your own MCP gateway stack. After forking: copy `.env.example` to `.env`, set secrets (`make generate-secrets`), then `make start` and `make register`. To contribute back: run `make lint` and `make test`, open a PR with a clear description; see [CHANGELOG.md](CHANGELOG.md) for the project’s change conventions.
 
 ## References
 

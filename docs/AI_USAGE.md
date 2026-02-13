@@ -30,3 +30,48 @@ The **cursor-router** virtual server exposes only the **tool-router** gateway (1
 | Single entry point (route to best tool) | cursor-router virtual server (tool-router gateway; requires `GATEWAY_JWT`)                                |
 
 Auth-required gateways (v0, apify-dribbble, Context7 API key, etc.) must be configured in Admin UI with Passthrough Headers or OAuth; see [ADMIN_UI_MANUAL_REGISTRATION.md](ADMIN_UI_MANUAL_REGISTRATION.md).
+
+### Which virtual server should I use?
+
+| If you want…                                         | Use this virtual server                   | Notes                                                                                                                                                                                                             |
+| ---------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **One connection that picks the right tool for you** | **cursor-router** (tool-router, ~2 tools) | Default for the Cursor wrapper. Set `GATEWAY_JWT` in `.env` (run `make jwt`). No 60-tool limit; router calls the gateway for you.                                                                                 |
+| **General dev: files, search, browser, reasoning**   | **cursor-default**                        | sequential-thinking, filesystem, tavily, playwright, desktop-commander, chrome-devtools (under 60 tools). Set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` and run `make register` to point the wrapper here. |
+| **Only web/search and docs**                         | **cursor-search**                         | tavily (and similar). Lightweight.                                                                                                                                                                                |
+| **Only browser and UI automation**                   | **cursor-browser**                        | playwright, puppeteer, browser-tools, chrome-devtools, desktop-commander (~80 tools; may hit limits in some clients).                                                                                             |
+
+Server names in the Admin UI may differ if you changed them (e.g. custom-default, custom-browser); use the **Description** column (“Tools from: …”) to match. Use **View Details** on a server to see its exact tool list.
+
+### How to add the gateway to Cursor (`~/.cursor/mcp.json`)
+
+**Option A – Wrapper (recommended, no JWT in mcp.json)**
+From the mcp-gateway repo (with `.env` set and gateway running):
+
+1. Run `make register` so `data/.cursor-mcp-url` exists (optionally set `REGISTER_CURSOR_MCP_SERVER_NAME` for a server other than cursor-router).
+2. Run **`make use-cursor-wrapper`**. This sets the context-forge (or user-context-forge) entry in `~/.cursor/mcp.json` to use `scripts/cursor-mcp-wrapper.sh`; the wrapper reads the URL from `data/.cursor-mcp-url` and uses a fresh JWT.
+3. For **cursor-router**: set `GATEWAY_JWT` in `.env` (run `make jwt`, paste the token). Refresh it periodically (e.g. weekly).
+4. Fully quit Cursor (Cmd+Q / Alt+F4) and reopen.
+
+**Option B – Manual URL + JWT**
+Add an entry with the server URL and a Bearer token. Get the URL from the Admin UI (Virtual Servers → server → URL, e.g. `http://localhost:4444/servers/fa8ef86945da4b399fed241a8d0bfd4f`) and append `/mcp` or `/sse`. Get a JWT with `make jwt`. Example (Streamable HTTP):
+
+```json
+"context-forge": {
+  "type": "streamableHttp",
+  "url": "http://localhost:4444/servers/YOUR_SERVER_UUID/mcp",
+  "headers": { "Authorization": "Bearer YOUR_JWT_TOKEN" }
+}
+```
+
+Refresh the token regularly (e.g. `make refresh-cursor-jwt` or paste a new `make jwt`). Full details and docker-wrapper variant: [README – Connect Cursor](../README.md#connect-cursor).
+
+make### Context-forge shows "Error" or logs "NO SERVER INFO FOUND" / "Server not yet created"
+
+Those messages mean the MCP client (Cursor) could not get server info from the gateway. Fix in order:
+
+1. **Check setup:** From the repo run `make verify-cursor-setup`. It checks gateway health, `data/.cursor-mcp-url`, and that the server ID exists.
+2. **Ensure URL file and server exist:** Run `make start` then `make register`. That (re)creates virtual servers and writes `data/.cursor-mcp-url`. If you ran `make reset-db` earlier, the old server UUID is gone—register again.
+3. **cursor-router only:** Set `GATEWAY_JWT` in `.env` (run `make jwt`, paste the token). Without it the server has 0 tools and the gateway can report no server info.
+4. **Reconnect Cursor:** Fully quit Cursor (Cmd+Q / Alt+F4) and reopen. Reload Window is not enough.
+
+If it still fails: from the repo run `make verify-cursor-setup` and follow its output; see also [README troubleshooting](../README.md#troubleshooting) and [ADMIN_UI_MANUAL_REGISTRATION.md](ADMIN_UI_MANUAL_REGISTRATION.md).
