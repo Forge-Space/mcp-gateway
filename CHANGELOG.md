@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented here.
 
+## [1.4.3] - 2026-02-13
+
+### Fixed
+
+- **tool-router GATEWAY_JWT** – Updated `GATEWAY_JWT` in `.env` with fresh token (7-day expiry) so the tool-router container can authenticate with the gateway API. The tool-router now successfully fetches all 134 tools and routes tasks to the best matching upstream tool via `execute_task` and `search_tools`.
+- **tool-router container restart** – Restarted tool-router container after JWT update to pick up the new environment variable.
+
+### Changed
+
+- **Virtual environment setup** – Created `.venv` with PyJWT and ruff for local development. Container fallback for JWT generation still works when venv is not activated.
+
+### Verified
+
+- **cursor-router virtual server** – Confirmed 2 tools (`execute_task`, `search_tools`) are registered and exposed through the gateway at `/servers/ec088b9ca9e04fd0bdf353e9d2df1501/mcp`.
+- **Windsurf IDE configuration** – Verified `context-forge` entry in `~/.codeium/windsurf/mcp_config.json` points to `cursor-mcp-wrapper.sh` for auto-JWT connection.
+- **Quality checks** – All 22 pytest tests pass, shellcheck clean, ruff clean.
+
+## [1.4.2] - 2026-02-13
+
+### Added
+
+- **Cursor MCP timeout and cursor-pull** – `make use-cursor-wrapper` now sets `"timeout": 120000` (2 min) in `~/.cursor/mcp.json` for the context-forge entry to reduce MCP error -32001 (Request timed out). Optional `CURSOR_MCP_TIMEOUT_MS` in `.env` (e.g. 180000) overrides the value. New `make cursor-pull` pulls the Context Forge Docker image so the first Cursor start does not timeout while the image downloads.
+- **verify-cursor-setup: image and Docker→gateway checks** – `make verify-cursor-setup` now checks that the Context Forge image is present and that the gateway is reachable from inside a container at `host.docker.internal:PORT`. Adds hint for -32001 (run `make cursor-pull`, re-run `make use-cursor-wrapper`, restart Cursor).
+
+### Documentation
+
+- **Cursor IDE + tool router** – [docs/AI_USAGE.md](docs/AI_USAGE.md) now has a step-by-step section "Using the MCP Gateway with the tool router in Cursor IDE" (prerequisites, start, register, GATEWAY_JWT, use-cursor-wrapper, cursor-pull, restart). New subsection "Context-forge logs Request timed out (MCP error -32001)" with fix steps. Fixed typo: "make###" → "###" in troubleshooting heading. README Connect Cursor and troubleshooting updated for timeout, cursor-pull, and verify checks.
+
 ## [1.4.1] - 2026-02-13
 
 ### Changed
