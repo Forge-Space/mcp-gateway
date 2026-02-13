@@ -1,6 +1,9 @@
 # Cursor Agent Commands (MCP Gateway)
 
-This project is Bash/Docker only. There is no npm, lint, or test suite; use Make (or the scripts below).
+This project is Bash/Docker only (no Node at repo root). Use Make for run, lint, and test.
+
+- **Lint:** `make lint` (shellcheck on scripts + ruff on tool_router). CI runs on push/PR (see [.github/workflows/ci.yml](../.github/workflows/ci.yml)).
+- **Test:** `make test` (pytest on tool_router). CI runs tests.
 
 ## Verify / run
 

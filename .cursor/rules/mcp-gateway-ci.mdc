@@ -1,0 +1,18 @@
+---
+description: MCP Gateway project CI/lint/test. This repo has no Node at root; use Make, shellcheck, ruff, pytest, Docker.
+globs: .github/**/*.yml, Makefile, tool_router/**/*.py, scripts/**/*.sh
+alwaysApply: false
+---
+# MCP Gateway – CI, Lint, Test
+
+This project is **Bash/Docker + Python** (tool_router). There is no npm, TypeScript, or React at repo root.
+
+**Pipeline (align with .cursor/rules/ci-cd.mdc shape, adapted):**
+
+1. **Setup** – Docker available; Python 3.11+ for tool_router.
+2. **Lint** – `make lint`: shellcheck (bash) on `start.sh` and `scripts/**/*.sh`; ruff on `tool_router/`.
+3. **Build** – `docker compose build` (e.g. sequential-thinking, tool-router); gateway image is pre-built (ghcr.io).
+4. **Test** – `make test`: pytest on `tool_router/`. CI runs this.
+5. **Quality** – Optional: secret scanning, Docker image scan (e.g. trivy).
+
+**Commands:** Prefer `make lint`, `make test`; do not run npm/typecheck/build at repo root. CI runs on push/PR (see [.github/workflows/ci.yml](../../.github/workflows/ci.yml)).

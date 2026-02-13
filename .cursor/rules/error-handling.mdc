@@ -56,4 +56,3 @@ When to apply: adding/modifying error handling, exceptions, user-visible error m
 * Prefer the simplest consistent approach that fits project size.
 * Introduce custom error types incrementally; do not over-abstract small codebases.
 * Document decisions briefly when introducing new error categories.
-

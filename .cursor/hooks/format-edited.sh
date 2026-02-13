@@ -8,6 +8,10 @@ case "$FILE" in
   *) exit 0 ;;
 esac
 [ ! -f "$FILE" ] && exit 0
+[ ! -f "$ROOT/package.json" ] && exit 0
+case "$FILE" in
+  *"/scripts/"*|*"/tool_router/"*) exit 0 ;;
+esac
 npx prettier --write "$FILE" >/dev/null 2>&1 || true
 case "$FILE" in
   *.ts|*.tsx) npx eslint --fix -c eslint.config.js "$FILE" >/dev/null 2>&1 || true ;;
