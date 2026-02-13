@@ -29,11 +29,12 @@ repos:
         args: [--fix]
         files: ^tool_router/
 
+  # Local hooks: shellcheck only here; ruff runs above (no duplicate ruff).
   - repo: local
     hooks:
-      - id: lint
-        name: Lint (shellcheck + ruff)
-        entry: make lint
+      - id: shellcheck
+        name: Lint (shellcheck)
+        entry: make shellcheck
         language: system
         pass_filenames: false
       - id: test

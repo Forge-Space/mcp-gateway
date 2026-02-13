@@ -17,6 +17,7 @@ All notable changes to this project are documented here.
 - **Gateway image** – Image `ghcr.io/ibm/mcp-context-forge:1.0.0-RC-1` not found; pin to `1.0.0-BETA-2` in docker-compose.yml, .github/workflows/ci.yml, scripts/cursor-mcp-wrapper.sh, README, and docs/DEVELOPMENT.md.
 - **CI Trivy** – Tool-router scan now uses `ignore-unfixed: true` so unfixed base-image CVEs do not fail CI; re-check periodically for upstream fixes.
 - **Ruff** – Removed unused `import pytest` from `tool_router/test_scoring.py` (ruff auto-fix).
+- **Pre-commit** – Removed overlap between ruff hooks: local hook now runs only `make shellcheck` (ruff runs once via astral-sh/ruff-pre-commit). Added Makefile target `shellcheck`; `make lint` still runs shellcheck + ruff for CI.
 
 ### Documentation
 
