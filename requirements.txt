@@ -1,0 +1,3 @@
+# Runtime deps for tool_router and Docker build. See pyproject.toml for optional dev deps.
+mcp
+mcp-contextforge-gateway
