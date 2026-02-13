@@ -21,8 +21,9 @@ Scripts use shared libs under `lib/`. Prefer **make** targets; script paths belo
 | `make list-servers` / `./scripts/list-servers.sh`                  | List virtual servers (id, name, tools) via API; use when Admin UI shows 0 servers |
 | `make jwt` / `scripts/create_jwt_token_standalone.py`              | Print JWT (needs PyJWT or running gateway)                                        |
 | `make refresh-cursor-jwt` / `scripts/refresh-cursor-jwt.sh`        | Update Bearer in ~/.cursor/mcp.json (manual JWT config)                           |
-| `make use-cursor-wrapper` / `scripts/use-cursor-wrapper.sh`        | Set context-forge in mcp.json to wrapper (needs jq, make register)                |
-| `make verify-cursor-setup` / `scripts/verify-cursor-setup.sh`      | Check gateway, .cursor-mcp-url, server UUID                                       |
+| `make use-cursor-wrapper` / `scripts/use-cursor-wrapper.sh`        | Set context-forge in mcp.json to wrapper + 2min timeout (needs jq, make register) |
+| `make verify-cursor-setup` / `scripts/verify-cursor-setup.sh`      | Check gateway, .cursor-mcp-url, server UUID, Context Forge image, Docker→gateway  |
+| `make cursor-pull`                                                  | Pull Context Forge image (avoids first Cursor start timeout)                      |
 | `make cleanup-duplicates` / `scripts/cleanup-duplicate-servers.sh` | Remove duplicate virtual servers (CLEANUP_DRY_RUN=1 to report only)               |
 | `scripts/cursor-mcp-wrapper.sh`                                    | Cursor MCP command for context-forge (JWT per connection)                         |
 

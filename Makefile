@@ -1,4 +1,4 @@
-.PHONY: start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup reset-db cleanup-duplicates generate-secrets lint shellcheck test pre-commit-install
+.PHONY: start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint shellcheck test pre-commit-install
 
 generate-secrets:
 	@echo "# Add these to .env (min 32 chars; weak secrets cause 'Server disconnected' / context-forge errors):"
@@ -44,6 +44,10 @@ use-cursor-wrapper:
 
 verify-cursor-setup:
 	./scripts/verify-cursor-setup.sh
+
+cursor-pull:
+	@echo "Pulling Context Forge image (used by Cursor wrapper; avoids first-start timeout)..."
+	docker pull ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
 
 cleanup-duplicates:
 	./scripts/cleanup-duplicate-servers.sh
