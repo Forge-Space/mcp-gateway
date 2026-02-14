@@ -30,10 +30,24 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import fetch from "node-fetch";
 
+// Helper function to parse CLI arguments safely
+function parseCliArg(argName: string): string | undefined {
+  const arg = process.argv.find(a => a.startsWith(`--${argName}=`));
+  if (!arg) return undefined;
+  const value = arg.split("=").slice(1).join("="); // Handle URLs with = in them
+  return value || undefined;
+}
+
 // Configuration from environment variables or CLI args
-const GATEWAY_URL = process.env.MCP_GATEWAY_URL || process.argv.find(arg => arg.startsWith("--url="))?.split("=")[1];
-const GATEWAY_TOKEN = process.env.MCP_GATEWAY_TOKEN || process.argv.find(arg => arg.startsWith("--token="))?.split("=")[1];
-const TIMEOUT_MS = parseInt(process.env.MCP_GATEWAY_TIMEOUT || "120000", 10);
+const GATEWAY_URL = process.env.MCP_GATEWAY_URL || parseCliArg("url");
+const GATEWAY_TOKEN = process.env.MCP_GATEWAY_TOKEN || parseCliArg("token");
+const REQUEST_TIMEOUT_MILLISECONDS = parseInt(process.env.MCP_GATEWAY_TIMEOUT || "120000", 10);
+
+// Validate timeout is reasonable
+if (isNaN(REQUEST_TIMEOUT_MILLISECONDS) || REQUEST_TIMEOUT_MILLISECONDS < 1000 || REQUEST_TIMEOUT_MILLISECONDS > 600000) {
+  console.error("Error: MCP_GATEWAY_TIMEOUT must be between 1000 and 600000 ms");
+  process.exit(1);
+}
 
 if (!GATEWAY_URL) {
   console.error("Error: MCP_GATEWAY_URL is required");
@@ -63,10 +77,10 @@ const server = new Server(
 );
 
 // Helper function to make requests to gateway (with optional authentication)
-async function gatewayRequest(method: string, endpoint: string, body?: any): Promise<any> {
+async function sendGatewayRequest(method: string, endpoint: string, body?: any): Promise<any> {
   const url = `${GATEWAY_URL}${endpoint}`;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MILLISECONDS);
 
   try {
     const headers: Record<string, string> = {
@@ -92,11 +106,23 @@ async function gatewayRequest(method: string, endpoint: string, body?: any): Pro
       throw new Error(`Gateway request failed: ${response.status} ${response.statusText}\n${errorText}`);
     }
 
-    return await response.json();
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error(`Gateway returned non-JSON response: ${contentType}`);
+    }
+
+    const responseData = await response.json();
+
+    // Validate JSON-RPC response structure
+    if (responseData && typeof responseData === "object" && "error" in responseData && responseData.error) {
+      throw new Error(`Gateway returned error: ${JSON.stringify(responseData.error)}`);
+    }
+
+    return responseData;
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`Gateway request timeout after ${TIMEOUT_MS}ms`);
+      throw new Error(`Gateway request timeout after ${REQUEST_TIMEOUT_MILLISECONDS}ms`);
     }
     throw error;
   }
@@ -105,11 +131,16 @@ async function gatewayRequest(method: string, endpoint: string, body?: any): Pro
 // List available tools from gateway
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   try {
-    const response = await gatewayRequest("POST", "", {
+    const response = await sendGatewayRequest("POST", "", {
       jsonrpc: "2.0",
       id: Date.now(),
       method: "tools/list",
     });
+
+    if (!response || typeof response !== "object") {
+      throw new Error("Invalid response from gateway");
+    }
+
     return response.result || { tools: [] };
   } catch (error) {
     console.error("Error listing tools:", error);
@@ -120,7 +151,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 // Call a tool via gateway
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
-    const response = await gatewayRequest("POST", "", {
+    const response = await sendGatewayRequest("POST", "", {
       jsonrpc: "2.0",
       id: Date.now(),
       method: "tools/call",
@@ -129,6 +160,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         arguments: request.params.arguments,
       },
     });
+
+    if (!response || typeof response !== "object" || !response.result) {
+      throw new Error("Invalid response from gateway: missing result");
+    }
+
     return response.result;
   } catch (error) {
     console.error("Error calling tool:", error);
@@ -139,7 +175,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 // List available resources from gateway
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
   try {
-    const response = await gatewayRequest("POST", "", {
+    const response = await sendGatewayRequest("POST", "", {
       jsonrpc: "2.0",
       id: Date.now(),
       method: "resources/list",
@@ -154,7 +190,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
 // Read a resource via gateway
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   try {
-    const response = await gatewayRequest("POST", "", {
+    const response = await sendGatewayRequest("POST", "", {
       jsonrpc: "2.0",
       id: Date.now(),
       method: "resources/read",
@@ -172,7 +208,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 // List available prompts from gateway
 server.setRequestHandler(ListPromptsRequestSchema, async () => {
   try {
-    const response = await gatewayRequest("POST", "", {
+    const response = await sendGatewayRequest("POST", "", {
       jsonrpc: "2.0",
       id: Date.now(),
       method: "prompts/list",
@@ -187,7 +223,7 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
 // Get a specific prompt via gateway
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   try {
-    const response = await gatewayRequest("POST", "", {
+    const response = await sendGatewayRequest("POST", "", {
       jsonrpc: "2.0",
       id: Date.now(),
       method: "prompts/get",
@@ -210,7 +246,7 @@ async function main() {
 
   console.error(`MCP Gateway Client connected to: ${GATEWAY_URL}`);
   console.error(`Authentication: ${GATEWAY_TOKEN ? 'Enabled (JWT)' : 'Disabled (Local mode)'}`);
-  console.error(`Timeout: ${TIMEOUT_MS}ms`);
+  console.error(`Timeout: ${REQUEST_TIMEOUT_MILLISECONDS}ms`);
 }
 
 main().catch((error) => {
