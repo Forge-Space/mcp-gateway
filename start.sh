@@ -54,7 +54,7 @@ case "${1:-}" in
     log_line
     log_ok "Gateway and translate services running."
     log_info "Admin UI: http://localhost:${PORT:-4444}/admin"
-    log_info "Register gateways: ./scripts/register-gateways.sh"
+    log_info "Register gateways: ./scripts/gateway/register.sh"
     log_info "Stop: ./start.sh stop"
     ;;
 esac

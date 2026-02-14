@@ -57,7 +57,7 @@ lint:
 	ruff check tool_router/
 
 shellcheck:
-	shellcheck -s bash -S warning start.sh scripts/*.sh scripts/lib/*.sh
+	shellcheck -s bash -S warning start.sh scripts/lib/*.sh scripts/gateway/*.sh scripts/cursor/*.sh scripts/virtual-servers/*.sh scripts/utils/*.sh
 
 test:
 	pytest tool_router/ -v

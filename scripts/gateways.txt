@@ -13,14 +13,18 @@ filesystem|http://filesystem:8021/sse|SSE
 reactbits|http://reactbits:8022/sse|SSE
 snyk|http://snyk:8023/sse|SSE
 memory|http://memory:8027/sse|SSE
-git-mcp|http://git-mcp:8028/sse|SSE
+# git-mcp|http://git-mcp:8028/sse|SSE  # Temporarily commented: connection reset errors
 fetch|http://fetch:8029/sse|SSE
 postgres|http://postgres:8031/sse|SSE
 mongodb|http://mongodb:8032/sse|SSE
+uiforge|http://uiforge:8026/sse|SSE
 tool-router|http://tool-router:8030/sse|SSE
 # sqlite/github often fail with "Unable to connect" or "Unexpected error"; uncomment after checking docker compose logs sqlite|github, or add via Admin UI.
 # sqlite|http://sqlite:8024/sse|SSE
-# github|http://github:8025/sse|SSE
+github|http://github:8025/sse|SSE
+# NOTE: github gateway is required for most stack profiles (nodejs-typescript, react-nextjs, etc.)
+# Configure GITHUB_PERSONAL_ACCESS_TOKEN in your IDE's mcp.json, NOT in .env
+# See docs/IDE_SETUP_GUIDE.md for configuration examples
 
 # Remote (stack): uncomment to register via script, or add to EXTRA_GATEWAYS in .env. Context7 needs API key in Admin UI (Passthrough Headers).
 Context7|https://mcp.context7.com/mcp|STREAMABLEHTTP

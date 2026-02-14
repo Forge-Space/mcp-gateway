@@ -1,6 +1,16 @@
 # Scripts
 
-Scripts use shared libs under `lib/`. Prefer **make** targets; script paths below are alternatives.
+Scripts for managing the MCP gateway stack, organized by functional domain:
+
+- **gateway/**: Gateway registration and management
+- **cursor/**: Cursor IDE integration scripts
+- **virtual-servers/**: Virtual server management
+- **utils/**: Utility scripts (JWT, Docker checks, MCP registry)
+- **lib/**: Shared libraries (bootstrap, gateway, logging)
+
+All scripts source `lib/bootstrap.sh` (sets `SCRIPT_DIR`, `REPO_ROOT`, `CONFIG_DIR`, loads `.env`) and `lib/gateway.sh` (JWT generation, API helpers). Use `make` targets when available (see [Makefile](../Makefile)).
+
+**Backward compatibility:** Symlinks exist at the old script locations for compatibility during transition.
 
 **Lib / shared behavior**
 

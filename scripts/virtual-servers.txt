@@ -4,6 +4,9 @@
 # After editing, run: make register
 # Connect Cursor to one server URL (e.g. .../servers/<UUID>/mcp) from the script output.
 #
+# ============================================================================
+# LEGACY PROFILES (kept for backward compatibility)
+# ============================================================================
 # cursor-default: core dev + search + browser (aim for under 60 tools; verify with make register)
 cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,memory,fetch
 # cursor-search: search and docs only
@@ -18,3 +21,58 @@ cursor-router|tool-router
 database|postgres,mongodb,prisma-remote
 # fullstack: database + memory + git + fetch for complete dev workflows (client-agnostic)
 fullstack|postgres,mongodb,prisma-remote,memory,git-mcp,fetch
+
+# ============================================================================
+# OPTIMAL STACK CONFIGURATIONS (via tool-router)
+# All profiles route through tool-router for IDE compatibility (requires GATEWAY_JWT)
+# Each stack has Full and Minimal variants for performance tuning
+# See docs/MCP_STACK_CONFIGURATIONS.md for detailed descriptions
+# ============================================================================
+
+# Node.js/TypeScript Development
+nodejs-typescript|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7
+nodejs-typescript-minimal|tool-router,github,filesystem,git-mcp
+
+# React/Next.js Development
+react-nextjs|tool-router,github,filesystem,memory,git-mcp,chrome-devtools,playwright,snyk,tavily,Context7
+react-nextjs-minimal|tool-router,github,filesystem,chrome-devtools
+
+# Mobile Development (React Native/Flutter)
+mobile-dev|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7
+mobile-dev-minimal|tool-router,github,filesystem,git-mcp
+
+# Database Development (PostgreSQL/MongoDB)
+database-dev|tool-router,postgres,mongodb,prisma-remote,memory,filesystem,git-mcp
+database-dev-minimal|tool-router,postgres,mongodb,prisma-remote
+
+# Java/Spring Boot Development
+java-spring|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7
+java-spring-minimal|tool-router,github,filesystem,git-mcp
+
+# Python Development
+python-dev|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7
+python-dev-minimal|tool-router,github,filesystem,git-mcp
+
+# AWS Cloud Development
+aws-cloud|tool-router,github,filesystem,memory,git-mcp,snyk,tavily
+aws-cloud-minimal|tool-router,github,filesystem,git-mcp
+
+# Testing & QA
+testing-qa|tool-router,github,filesystem,playwright,chrome-devtools,snyk,memory,git-mcp
+testing-qa-minimal|tool-router,github,playwright,snyk
+
+# Code Quality & Security
+code-quality|tool-router,github,snyk,filesystem,memory,git-mcp,tavily
+code-quality-minimal|tool-router,github,snyk,git-mcp
+
+# Full-Stack Universal (comprehensive)
+fullstack-universal|tool-router,github,postgres,mongodb,prisma-remote,filesystem,memory,git-mcp,snyk,tavily,Context7
+fullstack-universal-minimal|tool-router,github,postgres,mongodb,filesystem,git-mcp
+
+# Monorepo Universal (optimized for monorepos)
+monorepo-universal|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7,playwright
+monorepo-universal-minimal|tool-router,github,filesystem,git-mcp,memory
+
+# DevOps & CI/CD
+devops-cicd|tool-router,github,filesystem,memory,git-mcp,snyk,tavily
+devops-cicd-minimal|tool-router,github,filesystem,git-mcp
