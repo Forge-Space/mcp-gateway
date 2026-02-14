@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **CodeQL Security Scanning** - Added GitHub CodeQL workflow for automated security analysis
+  - Scans JavaScript/TypeScript and Python code
+  - Runs on push, pull requests, and weekly schedule
+  - Uses security-extended and security-and-quality query suites
+  - Satisfies branch protection requirements for Code Scanning
+
 ## [0.1.1] - 2025-02-14
 
 ### Changed
