@@ -8,9 +8,11 @@ RUN apt-get update -qq && \
 WORKDIR /app
 
 ARG UIFORGE_REPO=https://github.com/LucasSantana-Dev/uiforge-mcp.git
-ARG UIFORGE_BRANCH=main
+# Pin to v0.2.0 release commit for reproducible builds
+ARG UIFORGE_REF=87ec89d44cf92a501b94f6df9c4776e9ad02914d
 
-RUN git clone --depth 1 --branch "$UIFORGE_BRANCH" "$UIFORGE_REPO" .
+RUN git clone --depth 1 "$UIFORGE_REPO" . && \
+    git checkout "$UIFORGE_REF"
 
 RUN npm ci --ignore-scripts --legacy-peer-deps && \
     npm rebuild @resvg/resvg-js && \
@@ -22,19 +24,29 @@ RUN cp -r src/assets dist/assets
 # ── Stage 2: Runtime with mcpgateway.translate ───────────────
 FROM python:3.12-slim
 
+# Enable pipefail to catch failures in piped commands
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y --no-install-recommends nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir mcp-contextforge-gateway
+# Pin mcp-contextforge-gateway to latest stable version
+RUN pip install --no-cache-dir "mcp-contextforge-gateway>=0.1.0,<1.0.0"
 
 WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+
+# Create non-root user for security
+RUN useradd -r -u 10001 -g root appuser && \
+    chown -R appuser:root /app
+
+USER appuser
 
 EXPOSE 8026
 
