@@ -23,10 +23,10 @@ else
 fi
 
 log_info "Waiting for gateway at $first_url (up to ${max_wait}s)..."
-code=$(wait_for_health "$first_url" "$max_wait" "$interval") || true
+code=$(wait_for_healthy_gateway_status "$first_url" "$max_wait" "$interval") || true
 if [[ "$code" != "200" ]] && [[ -n "$second_url" ]]; then
   log_info "Trying alternate URL: $second_url"
-  code=$(wait_for_health "$second_url" "$max_wait" "$interval") || true
+  code=$(wait_for_healthy_gateway_status "$second_url" "$max_wait" "$interval") || true
   [[ "$code" == "200" ]] && GATEWAY_URL="$second_url"
 elif [[ "$code" == "200" ]] && [[ "$first_url" != "$GATEWAY_URL" ]]; then
   GATEWAY_URL="$first_url"
@@ -38,15 +38,15 @@ if [[ "$code" != "200" ]]; then
 fi
 log_ok "Gateway ready at $GATEWAY_URL"
 
-write_cursor_mcp_url() {
+write_mcp_client_url() {
   local id="$1" name="$2"
-  local want="${REGISTER_CURSOR_MCP_SERVER_NAME:-cursor-router}"
+  local want="${REGISTER_MCP_CLIENT_SERVER_NAME:-${REGISTER_CURSOR_MCP_SERVER_NAME:-mcp-router}}"
   if [[ "$name" != "$want" ]]; then
     return
   fi
   mkdir -p "$REPO_ROOT/data"
-  printf '%s' "http://host.docker.internal:${PORT:-4444}/servers/$id/mcp" > "$REPO_ROOT/data/.cursor-mcp-url"
-  CURSOR_MCP_URL_WRITTEN="$name|$id"
+  printf '%s' "http://host.docker.internal:${PORT:-4444}/servers/$id/mcp" > "$REPO_ROOT/data/.mcp-client-url"
+  MCP_CLIENT_URL_WRITTEN="$name|$id"
 }
 
 if [[ -n "${REGISTER_WAIT_SECONDS:-}" ]] && [[ "${REGISTER_WAIT_SECONDS}" -gt 0 ]] 2>/dev/null; then
@@ -62,9 +62,9 @@ if [[ -n "${REGISTER_WAIT_SECONDS:-}" ]] && [[ "${REGISTER_WAIT_SECONDS}" -gt 0 
 fi
 
 log_step "Generating JWT for admin API..."
-COMPOSE=$(compose_cmd)
+COMPOSE=$(detect_docker_compose_command)
 export COMPOSE
-JWT=$(get_jwt) || { log_err "Failed to generate JWT."; exit 1; }
+JWT=$(generate_or_retrieve_jwt_token) || { log_err "Failed to generate JWT."; exit 1; }
 log_ok "JWT generated."
 
 infer_transport() {
@@ -148,9 +148,9 @@ create_or_update_virtual_server() {
     put_code=$(parse_http_code "$put_resp")
     if [[ "$put_code" =~ ^2[0-9][0-9]$ ]]; then
       log_ok "virtual server updated: $server_name ($existing_id)"
-      log_info "Cursor (mcp): $GATEWAY_URL/servers/$existing_id/mcp"
-      log_info "Cursor (sse): $GATEWAY_URL/servers/$existing_id/sse"
-      write_cursor_mcp_url "$existing_id" "$server_name"
+      log_info "MCP client (mcp): $GATEWAY_URL/servers/$existing_id/mcp"
+      log_info "MCP client (sse): $GATEWAY_URL/servers/$existing_id/sse"
+      write_mcp_client_url "$existing_id" "$server_name"
       return 0
     fi
     log_warn "virtual server update failed: $server_name (HTTP $put_code)"
@@ -168,9 +168,9 @@ create_or_update_virtual_server() {
     new_id=$(echo "$post_body_resp" | jq -r '.id // empty' 2>/dev/null)
     if [[ -n "$new_id" ]]; then
       log_ok "virtual server created: $server_name ($new_id)"
-      log_info "Cursor (mcp): $GATEWAY_URL/servers/$new_id/mcp"
-      log_info "Cursor (sse): $GATEWAY_URL/servers/$new_id/sse"
-      write_cursor_mcp_url "$new_id" "$server_name"
+      log_info "MCP client (mcp): $GATEWAY_URL/servers/$new_id/mcp"
+      log_info "MCP client (sse): $GATEWAY_URL/servers/$new_id/sse"
+      write_mcp_client_url "$new_id" "$server_name"
     fi
     return 0
   fi
@@ -193,9 +193,9 @@ create_or_update_virtual_server() {
       new_id=$(echo "$post_body_resp2" | jq -r '.id // empty' 2>/dev/null)
       if [[ -n "$new_id" ]]; then
         log_ok "virtual server created: $server_name ($new_id) [flat body]"
-        log_info "Cursor (mcp): $GATEWAY_URL/servers/$new_id/mcp"
-        log_info "Cursor (sse): $GATEWAY_URL/servers/$new_id/sse"
-        write_cursor_mcp_url "$new_id" "$server_name"
+        log_info "MCP client (mcp): $GATEWAY_URL/servers/$new_id/mcp"
+        log_info "MCP client (sse): $GATEWAY_URL/servers/$new_id/sse"
+        write_mcp_client_url "$new_id" "$server_name"
       fi
     fi
   elif [[ "$post_code" =~ ^5 ]] || [[ "${REGISTER_VERBOSE:-0}" -eq 1 ]]; then
@@ -343,8 +343,8 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
       fi
     fi
   fi
-  if [[ -n "${CURSOR_MCP_URL_WRITTEN:-}" ]]; then
-    log_info "data/.cursor-mcp-url → ${CURSOR_MCP_URL_WRITTEN%|*} (wrapper uses this server)"
+  if [[ -n "${MCP_CLIENT_URL_WRITTEN:-}" ]]; then
+    log_info "data/.mcp-client-url → ${MCP_CLIENT_URL_WRITTEN%|*} (wrapper uses this server)"
   fi
 fi
 
