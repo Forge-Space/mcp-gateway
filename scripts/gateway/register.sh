@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$SCRIPT_DIR/lib/bootstrap.sh"
 load_env || { log_err "Copy .env.example to .env and set PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY."; exit 1; }
 source "$SCRIPT_DIR/lib/gateway.sh"
@@ -23,10 +23,10 @@ else
 fi
 
 log_info "Waiting for gateway at $first_url (up to ${max_wait}s)..."
-code=$(wait_for_health "$first_url" "$max_wait" "$interval") || true
+code=$(wait_for_healthy_gateway_status "$first_url" "$max_wait" "$interval") || true
 if [[ "$code" != "200" ]] && [[ -n "$second_url" ]]; then
   log_info "Trying alternate URL: $second_url"
-  code=$(wait_for_health "$second_url" "$max_wait" "$interval") || true
+  code=$(wait_for_healthy_gateway_status "$second_url" "$max_wait" "$interval") || true
   [[ "$code" == "200" ]] && GATEWAY_URL="$second_url"
 elif [[ "$code" == "200" ]] && [[ "$first_url" != "$GATEWAY_URL" ]]; then
   GATEWAY_URL="$first_url"
@@ -38,15 +38,15 @@ if [[ "$code" != "200" ]]; then
 fi
 log_ok "Gateway ready at $GATEWAY_URL"
 
-write_cursor_mcp_url() {
+write_mcp_client_url() {
   local id="$1" name="$2"
-  local want="${REGISTER_CURSOR_MCP_SERVER_NAME:-cursor-router}"
+  local want="${REGISTER_MCP_CLIENT_SERVER_NAME:-${REGISTER_CURSOR_MCP_SERVER_NAME:-mcp-router}}"
   if [[ "$name" != "$want" ]]; then
     return
   fi
   mkdir -p "$REPO_ROOT/data"
-  printf '%s' "http://host.docker.internal:${PORT:-4444}/servers/$id/mcp" > "$REPO_ROOT/data/.cursor-mcp-url"
-  CURSOR_MCP_URL_WRITTEN="$name|$id"
+  printf '%s' "http://host.docker.internal:${PORT:-4444}/servers/$id/mcp" > "$REPO_ROOT/data/.mcp-client-url"
+  MCP_CLIENT_URL_WRITTEN="$name|$id"
 }
 
 if [[ -n "${REGISTER_WAIT_SECONDS:-}" ]] && [[ "${REGISTER_WAIT_SECONDS}" -gt 0 ]] 2>/dev/null; then
@@ -62,9 +62,9 @@ if [[ -n "${REGISTER_WAIT_SECONDS:-}" ]] && [[ "${REGISTER_WAIT_SECONDS}" -gt 0 
 fi
 
 log_step "Generating JWT for admin API..."
-COMPOSE=$(compose_cmd)
+COMPOSE=$(detect_docker_compose_command)
 export COMPOSE
-JWT=$(get_jwt) || { log_err "Failed to generate JWT."; exit 1; }
+JWT=$(generate_or_retrieve_jwt_token) || { log_err "Failed to generate JWT."; exit 1; }
 log_ok "JWT generated."
 
 infer_transport() {
@@ -148,9 +148,9 @@ create_or_update_virtual_server() {
     put_code=$(parse_http_code "$put_resp")
     if [[ "$put_code" =~ ^2[0-9][0-9]$ ]]; then
       log_ok "virtual server updated: $server_name ($existing_id)"
-      log_info "Cursor (mcp): $GATEWAY_URL/servers/$existing_id/mcp"
-      log_info "Cursor (sse): $GATEWAY_URL/servers/$existing_id/sse"
-      write_cursor_mcp_url "$existing_id" "$server_name"
+      log_info "MCP client (mcp): $GATEWAY_URL/servers/$existing_id/mcp"
+      log_info "MCP client (sse): $GATEWAY_URL/servers/$existing_id/sse"
+      write_mcp_client_url "$existing_id" "$server_name"
       return 0
     fi
     log_warn "virtual server update failed: $server_name (HTTP $put_code)"
@@ -168,9 +168,9 @@ create_or_update_virtual_server() {
     new_id=$(echo "$post_body_resp" | jq -r '.id // empty' 2>/dev/null)
     if [[ -n "$new_id" ]]; then
       log_ok "virtual server created: $server_name ($new_id)"
-      log_info "Cursor (mcp): $GATEWAY_URL/servers/$new_id/mcp"
-      log_info "Cursor (sse): $GATEWAY_URL/servers/$new_id/sse"
-      write_cursor_mcp_url "$new_id" "$server_name"
+      log_info "MCP client (mcp): $GATEWAY_URL/servers/$new_id/mcp"
+      log_info "MCP client (sse): $GATEWAY_URL/servers/$new_id/sse"
+      write_mcp_client_url "$new_id" "$server_name"
     fi
     return 0
   fi
@@ -193,9 +193,9 @@ create_or_update_virtual_server() {
       new_id=$(echo "$post_body_resp2" | jq -r '.id // empty' 2>/dev/null)
       if [[ -n "$new_id" ]]; then
         log_ok "virtual server created: $server_name ($new_id) [flat body]"
-        log_info "Cursor (mcp): $GATEWAY_URL/servers/$new_id/mcp"
-        log_info "Cursor (sse): $GATEWAY_URL/servers/$new_id/sse"
-        write_cursor_mcp_url "$new_id" "$server_name"
+        log_info "MCP client (mcp): $GATEWAY_URL/servers/$new_id/mcp"
+        log_info "MCP client (sse): $GATEWAY_URL/servers/$new_id/sse"
+        write_mcp_client_url "$new_id" "$server_name"
       fi
     fi
   elif [[ "$post_code" =~ ^5 ]] || [[ "${REGISTER_VERBOSE:-0}" -eq 1 ]]; then
@@ -217,27 +217,61 @@ if [[ -n "$EXTRA_GATEWAYS" ]]; then
   done <<< "$(echo "$EXTRA_GATEWAYS" | tr ',' '\n')"
 fi
 
-if [[ -f "$SCRIPT_DIR/gateways.txt" ]]; then
-  log_step "Registering gateways from scripts/gateways.txt..."
+gateways_file="${CONFIG_DIR:-$SCRIPT_DIR}/gateways.txt"
+if [[ -f "$gateways_file" ]]; then
+  log_step "Registering gateways from $gateways_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
     IFS='|' read -r name url transport <<< "$line"
     transport=$(echo "${transport:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     register "$name" "$url" "$transport"
-  done < "$SCRIPT_DIR/gateways.txt"
+  done < "$gateways_file"
 fi
 
 if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &>/dev/null; then
   log_step "Syncing tools and updating virtual server(s)..."
   sleep "${REGISTER_VIRTUAL_SERVER_DELAY:-3}"
-  tools_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 60 \
-    -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/tools?limit=0&include_pagination=false" 2>/dev/null)
+
+  # Retry logic to ensure tools are fully synced
+  tools_retry_count=0
+  tools_retry_max="${REGISTER_TOOLS_SYNC_RETRIES:-3}"
+  tools_retry_delay="${REGISTER_TOOLS_SYNC_DELAY:-5}"
+  expected_gateways=0
+
+  # Count expected gateways from config
+  [[ -n "$EXTRA_GATEWAYS" ]] && expected_gateways=$((expected_gateways + $(echo "$EXTRA_GATEWAYS" | tr ',' '\n' | grep -v '^[[:space:]]*$' | grep -v '^#' | wc -l)))
+  [[ -f "$gateways_file" ]] && expected_gateways=$((expected_gateways + $(grep -v '^[[:space:]]*$' "$gateways_file" | grep -v '^#' | wc -l)))
+
+  while [[ $tools_retry_count -lt $tools_retry_max ]]; do
+    tools_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 60 \
+      -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/tools?limit=0&include_pagination=false" 2>/dev/null)
+    tools_code=$(parse_http_code "$tools_resp")
+    tools_body=$(parse_http_body "$tools_resp")
+
+    if [[ "$tools_code" == "200" ]] && [[ -n "$tools_body" ]]; then
+      tool_count=$(echo "$tools_body" | jq -r 'if type == "array" then length else (.tools? // [] | length) end' 2>/dev/null || echo "0")
+      if [[ "$tool_count" -gt 0 ]] && [[ "$expected_gateways" -gt 0 ]] && [[ "$tool_count" -ge "$expected_gateways" ]]; then
+        log_info "Tools synced: $tool_count tools from $expected_gateways gateways"
+        break
+      elif [[ "$tool_count" -gt 0 ]]; then
+        log_info "Tools synced: $tool_count tools available"
+        break
+      fi
+    fi
+
+    tools_retry_count=$((tools_retry_count + 1))
+    if [[ $tools_retry_count -lt $tools_retry_max ]]; then
+      log_info "Waiting for tools to sync (attempt $((tools_retry_count + 1))/$tools_retry_max)..."
+      sleep "$tools_retry_delay"
+    fi
+  done
+
   tools_code=$(parse_http_code "$tools_resp")
   tools_body=$(parse_http_body "$tools_resp")
   if [[ "$tools_code" != "200" ]] || [[ -z "$tools_body" ]]; then
     :
-  elif [[ -f "$SCRIPT_DIR/virtual-servers.txt" ]]; then
+  elif [[ -f "${CONFIG_DIR:-$SCRIPT_DIR}/virtual-servers.txt" ]]; then
     tools_arr=$(echo "$tools_body" | jq -c 'if type == "array" then . else .tools? // [] end' 2>/dev/null)
     servers_code=""
     servers_body=""
@@ -283,7 +317,7 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
       existing_id=$(echo "$servers_body" | jq -r --arg n "$server_name" 'if type == "array" then .[] else .servers[]? // empty end | select(.name == $n) | .id' 2>/dev/null | head -1)
       [[ "$existing_id" == "null" ]] && existing_id=""
       create_or_update_virtual_server "$server_name" "$desc" "$tool_ids_json" "$existing_id" || break
-      done < "$SCRIPT_DIR/virtual-servers.txt"
+      done < "${CONFIG_DIR:-$SCRIPT_DIR}/virtual-servers.txt"
     fi
   else
     tool_ids=$(echo "$tools_body" | jq -r 'if type == "array" then .[] else .tools[]? // empty end | .id // empty' 2>/dev/null)
@@ -309,13 +343,14 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
       fi
     fi
   fi
-  if [[ -n "${CURSOR_MCP_URL_WRITTEN:-}" ]]; then
-    log_info "data/.cursor-mcp-url → ${CURSOR_MCP_URL_WRITTEN%|*} (wrapper uses this server)"
+  if [[ -n "${MCP_CLIENT_URL_WRITTEN:-}" ]]; then
+    log_info "data/.mcp-client-url → ${MCP_CLIENT_URL_WRITTEN%|*} (wrapper uses this server)"
   fi
 fi
 
-if [[ "${REGISTER_PROMPTS:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/prompts.txt" ]]; then
-  log_step "Registering prompts from scripts/prompts.txt..."
+prompts_file="${CONFIG_DIR:-$SCRIPT_DIR}/prompts.txt"
+if [[ "${REGISTER_PROMPTS:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$prompts_file" ]]; then
+  log_step "Registering prompts from $prompts_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
@@ -330,11 +365,12 @@ if [[ "${REGISTER_PROMPTS:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/pr
     payload=$(jq -n --arg n "$name" --arg d "$desc" --arg t "$template" --argjson a "$args_json" '{prompt: {name: $n, description: $d, template: $t, arguments: $a}}')
     code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/prompts" 2>/dev/null)
     if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "prompt $name"; fi
-  done < "$SCRIPT_DIR/prompts.txt"
+  done < "$prompts_file"
 fi
 
-if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/resources.txt" ]]; then
-  log_step "Registering resources from scripts/resources.txt..."
+resources_file="${CONFIG_DIR:-$SCRIPT_DIR}/resources.txt"
+if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$resources_file" ]]; then
+  log_step "Registering resources from $resources_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
@@ -345,11 +381,11 @@ if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/
     payload=$(jq -n --arg n "$name" --arg u "$uri" --arg d "$desc" --arg m "${mime:-text/plain}" '{resource: {name: $n, uri: $u, description: $desc, mime_type: $m}}')
     code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/resources" 2>/dev/null)
     if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "resource $name"; fi
-  done < "$SCRIPT_DIR/resources.txt"
+  done < "$resources_file"
 fi
 
-if [[ -z "$EXTRA_GATEWAYS" && ! -f "$SCRIPT_DIR/gateways.txt" ]]; then
-  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to scripts/gateways.txt (Name|URL|Transport)."
+if [[ -z "$EXTRA_GATEWAYS" && ! -f "$gateways_file" ]]; then
+  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to $gateways_file (Name|URL|Transport)."
 else
   log_line
   log_ok "Done."

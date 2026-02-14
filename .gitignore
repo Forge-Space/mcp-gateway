@@ -15,9 +15,9 @@ Thumbs.db
 
 # IDE and editors
 .idea/
+.vscode/
 *.swp
 *.swo
-.vscode/
 *.sublime-*
 .cursor/
 .windsurf/

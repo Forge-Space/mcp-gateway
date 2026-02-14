@@ -17,21 +17,21 @@ This matches the pattern used by [IBM MCP Context Forge](https://github.com/IBM/
 
 ## Local dev loop
 
-1. Edit `scripts/gateways.txt`, `scripts/prompts.txt`, or `.env`.
+1. Edit `config/gateways.txt`, `config/prompts.txt`, or `.env`.
 2. `make start` (or `make gateway-only` for gateway only).
 3. `make register`; optionally `make list-prompts` to verify prompts.
 4. Test in Cursor with the URL from `make register` or Admin UI. Use the [Automatic JWT wrapper](../README.md#connect-cursor) for context-forge.
 
 ## Adding a gateway
 
-- **No auth:** Add `Name|URL` or `Name|URL|Transport` to `scripts/gateways.txt`, or `EXTRA_GATEWAYS` in `.env`. Run `make register`.
+- **No auth:** Add `Name|URL` or `Name|URL|Transport` to `config/gateways.txt`, or `EXTRA_GATEWAYS` in `.env`. Run `make register`.
 - **Auth (API key, OAuth):** Add in Admin UI → edit gateway → Passthrough Headers or OAuth. See [ADMIN_UI_MANUAL_REGISTRATION.md](ADMIN_UI_MANUAL_REGISTRATION.md).
 
-~60 tools per Cursor connection: use `scripts/virtual-servers.txt` (one server per line: `ServerName|gateway1,gateway2,...`), then `make register`. See [AI_USAGE.md – Tool limit](AI_USAGE.md#tool-limit-and-virtual-servers). Duplicate servers: `make cleanup-duplicates` (`CLEANUP_DRY_RUN=1` to report only).
+~60 tools per Cursor connection: use `config/virtual-servers.txt` (one server per line: `ServerName|gateway1,gateway2,...`), then `make register`. See [AI_USAGE.md – Tool limit](AI_USAGE.md#tool-limit-and-virtual-servers). Duplicate servers: `make cleanup-duplicates` (`CLEANUP_DRY_RUN=1` to report only).
 
 ## Prompts / resources
 
-Format: prompts `name|description|template` ({{arg}}, `\n`); resources `name|uri|description|mime_type`. Set `REGISTER_PROMPTS=true` or `REGISTER_RESOURCES=true`, edit `scripts/prompts.txt` or `scripts/resources.txt`, run `make register`. See [scripts/README.md](../scripts/README.md) and `.env.example`.
+Format: prompts `name|description|template` ({{arg}}, `\n`); resources `name|uri|description|mime_type`. Set `REGISTER_PROMPTS=true` or `REGISTER_RESOURCES=true`, edit `config/prompts.txt` or `config/resources.txt`, run `make register`. See [scripts/README.md](../scripts/README.md) and `.env.example`.
 
 ## Troubleshooting
 
@@ -46,6 +46,95 @@ Pre-commit runs secret detection (gitleaks), private-key detection, YAML/JSON ch
 3. (Optional) Run on the whole repo once: `pre-commit run --all-files`.
 
 The gitleaks hook uses the default `gitleaks` id so pre-commit installs the binary; no need to install gitleaks on the system. To use a system-installed gitleaks instead, change the hook id to `gitleaks-system` in `.pre-commit-config.yaml` and install gitleaks (e.g. `brew install gitleaks` on macOS).
+
+## Automated Maintenance
+
+This repository includes three automated workflows that run weekly to minimize manual maintenance.
+
+### Renovate (Dependency Updates)
+
+**Schedule:** Monday 2 AM UTC
+**Workflow:** `.github/workflows/renovate.yml`
+**Config:** `.github/renovate.json`
+
+Automatically updates:
+- Python dependencies (`requirements.txt`)
+- Docker images (Context Forge gateway)
+- GitHub Actions
+
+**Auto-merge behavior:**
+- Patch/minor: Auto-merge after 3-day stabilization + passing CI
+- Major: Manual review required (labeled `breaking-change`)
+- Security: Immediate auto-merge
+
+**Setup:**
+1. Go to repository Settings → Secrets → Actions
+2. Add `RENOVATE_TOKEN` secret (GitHub PAT with `repo` and `workflow` scopes)
+3. Renovate will run on schedule or via manual workflow dispatch
+
+**Monitoring:**
+- Check the "Dependency Dashboard" issue for pending updates
+- Review auto-merged PRs in the PR history
+- Major updates appear as PRs requiring review
+
+### MCP Server Registry Check
+
+**Schedule:** Monday 3 AM UTC
+**Workflow:** `.github/workflows/mcp-server-check.yml`
+**Script:** `scripts/utils/check-mcp-registry.py`
+
+Scans the MCP Registry API for:
+- New servers not in `gateways.txt`
+- Updates to existing servers
+- Status of commented servers
+
+Creates/updates a GitHub issue with findings. No secrets required.
+
+**Manual run:**
+```bash
+python3 scripts/utils/check-mcp-registry.py
+cat mcp-registry-report.md
+```
+
+### Docker Image Updates
+
+**Schedule:** Monday 4 AM UTC
+**Workflow:** `.github/workflows/docker-updates.yml`
+**Script:** `scripts/utils/check-docker-updates.sh`
+
+Checks IBM/mcp-context-forge for new releases and creates PRs with:
+- Updated image tags in all files
+- Link to release changelog
+- Testing checklist
+
+**Manual run:**
+```bash
+./scripts/utils/check-docker-updates.sh
+cat docker-update-report.md
+```
+
+**Files updated by automation:**
+- `docker-compose.yml`
+- `scripts/cursor-mcp-wrapper.sh`
+- `.github/workflows/ci.yml`
+- `Makefile`
+- `README.md`
+- `docs/DEVELOPMENT.md`
+
+### Modifying Automation
+
+**Change schedule:**
+Edit the `cron` expression in workflow files:
+```yaml
+schedule:
+  - cron: '0 2 * * 1'  # Monday 2 AM UTC
+```
+
+**Disable auto-merge:**
+In `.github/renovate.json`, set `automerge: false` for specific package rules.
+
+**Add MCP servers to monitoring:**
+Add to `gateways.txt` (active) or keep commented (monitoring only).
 
 ## Next steps (after setup)
 

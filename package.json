@@ -1,0 +1,49 @@
+{
+  "name": "@mcp-gateway/client",
+  "version": "0.1.1",
+  "description": "MCP Gateway client - Connect to your MCP Gateway instance via NPX",
+  "type": "module",
+  "bin": {
+    "mcp-gateway": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node --input-type=module -e \"import fs from 'fs'; fs.chmodSync('build/index.js', 0o755)\"",
+    "build:watch": "tsc --watch",
+    "clean": "rimraf build/ node_modules/.cache/",
+    "dev": "tsc --watch",
+    "lint": "tsc --noEmit",
+    "test": "echo 'TypeScript tests not yet implemented'",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "mcp-gateway",
+    "ai",
+    "llm"
+  ],
+  "author": "MCP Gateway Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lucassantana/mcp-gateway.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "rimraf": "^5.0.10",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

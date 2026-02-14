@@ -28,6 +28,50 @@ Then run `make register` to register gateways and get the Cursor URL.
 - **Admin UI:** http://localhost:4444/admin
 - **Stop:** `make stop` (or `./start.sh stop`)
 
+### NPX Client (Standard MCP Server Pattern)
+
+Use the gateway like any other MCP server with `npx`:
+
+**Local usage (no authentication needed):**
+```json
+{
+  "mcpServers": {
+    "mcp-gateway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcp-gateway/client",
+        "--url=http://localhost:4444/servers/<UUID>/mcp"
+      ]
+    }
+  }
+}
+```
+
+**Remote/secured usage (with JWT):**
+```json
+{
+  "mcpServers": {
+    "mcp-gateway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcp-gateway/client",
+        "--url=https://gateway.example.com/servers/<UUID>/mcp",
+        "--token=<JWT>"
+      ]
+    }
+  }
+}
+```
+
+**Get your configuration:**
+1. Start gateway: `make start`
+2. Register servers: `make register` (saves URL to `data/.cursor-mcp-url`)
+3. Add to your IDE's `mcp.json` with the URL (token only needed if `AUTH_REQUIRED=true` in `.env`)
+
+See [NPM_PACKAGE_README.md](NPM_PACKAGE_README.md) for detailed NPX client documentation.
+
 Default `make start` (or `./start.sh`) starts the gateway and all local servers (e.g. sequential-thinking). Use `make gateway-only` (or `./start.sh gateway-only`) for the gateway alone. Data is stored in `./data` (SQLite). Add gateways in Admin UI or run `make register` after start; create a virtual server, attach tools, note its UUID.
 
 ### Registering URL-based MCP servers
@@ -42,7 +86,7 @@ make register
 
 `make register` reads `scripts/gateways.txt` (one line per gateway: `Name|URL` or `Name|URL|Transport`) or the `EXTRA_GATEWAYS` env var (comma-separated). Default `gateways.txt` registers **local** servers up to snyk (sequential-thinking through snyk). sqlite, github, and Context7 are commented out (they often fail with "Unable to connect" or "Unexpected error"; uncomment after checking `docker compose logs sqlite|github` or add Context7/sqlite/github via Admin UI). `.env.example` sets `REGISTER_WAIT_SECONDS=30` so translate containers are ready before registration. After `make start`, run `make register` (or `make register-wait` to force a 30s wait). After registering gateways, the script creates or updates **virtual server(s)** and prints Cursor URLs. Cursor (and some other MCP clients) can only handle about **60 tools per connection**; if you register many gateways, a single virtual server with all tools can trigger a warning. To stay under the limit, use **multiple virtual servers**, each with a subset of gateways:
 
-- **With `scripts/virtual-servers.txt`:** One line per server: `ServerName|gateway1,gateway2,...`. The script creates or updates each named server with up to 60 tools from those gateways and prints one URL per server. Connect Cursor to one URL (e.g. `cursor-default` for general dev, `cursor-search` for search/docs). See [scripts/README.md](scripts/README.md) and [docs/AI_USAGE.md](docs/AI_USAGE.md#tool-limit-and-virtual-servers).
+- **With `config/virtual-servers.txt`:** One line per server: `ServerName|gateway1,gateway2,...`. The script creates or updates each named server with up to 60 tools from those gateways and prints one URL per server. Connect Cursor to one URL (e.g. `cursor-default` for general dev, `cursor-search` for search/docs). See [scripts/README.md](scripts/README.md) and [docs/AI_USAGE.md](docs/AI_USAGE.md#tool-limit-and-virtual-servers).
 - **Single entry point (router):** The **cursor-router** virtual server is the default for the wrapper. It exposes only the tool-router gateway (1–2 tools). Set `GATEWAY_JWT` in `.env` (run `make jwt` and paste the token; refresh periodically, e.g. weekly) so the router can call the gateway API. See [docs/AI_USAGE.md](docs/AI_USAGE.md#single-entry-point-router).
 - **Without `virtual-servers.txt`:** A single virtual server (name `default` or `REGISTER_VIRTUAL_SERVER_NAME`) gets all tools; fine if you have few gateways. Example remote entries:
 
@@ -75,14 +119,19 @@ The default `./start.sh` starts the gateway and these local translate services (
 | filesystem          | http://filesystem:8021/sse          | Set `FILESYSTEM_VOLUME` (host path) in .env; default `./workspace` |
 | reactbits           | http://reactbits:8022/sse           | reactbits-dev-mcp-server                                           |
 | snyk                | http://snyk:8023/sse                | Set `SNYK_TOKEN` in .env (Snyk CLI auth)                           |
+| memory              | http://memory:8027/sse              | Persistent knowledge graph; data in `./data/memory` (no API key)   |
+| git-mcp             | http://git-mcp:8028/sse             | Local git operations: commit, branch, diff, log (no API key)       |
+| fetch               | http://fetch:8029/sse               | Web content fetching to markdown for LLM use (no API key)          |
+| postgres            | http://postgres:8031/sse            | Set `POSTGRES_CONNECTION_STRING` in .env; see [Multi-User Config](docs/MULTI_USER_DATABASE_CONFIG.md) |
+| mongodb             | http://mongodb:8032/sse             | Set `MONGODB_CONNECTION_STRING` in .env; see [Multi-User Config](docs/MULTI_USER_DATABASE_CONFIG.md) |
 | tool-router         | http://tool-router:8030/sse         | Single entry point; set `GATEWAY_JWT` in .env (see cursor-router)  |
 | sqlite              | http://sqlite:8024/sse              | Set `SQLITE_DB_PATH` / `SQLITE_VOLUME` in .env; default `./data`   |
 | github              | http://github:8025/sse              | Set `GITHUB_PERSONAL_ACCESS_TOKEN` in .env                         |
 | uiforge             | http://uiforge:8026/sse             | AI-driven UI generation (7 tools); set `FIGMA_ACCESS_TOKEN` in .env for Figma sync |
 
-After start, run `make register` to register them (or add in Admin UI with the URLs above, Transport **SSE**). This creates or updates a virtual server and prints its Cursor URL. Attach tools in Admin UI if you skip that step. Optional: set `REGISTER_PROMPTS=true` and add `scripts/prompts.txt` (format: `name|description|template` with `{{arg}}` and `\n` for newlines), then run `make register`. Use `make gateway-only` to run only the gateway (no translate services).
+After start, run `make register` to register them (or add in Admin UI with the URLs above, Transport **SSE**). This creates or updates a virtual server and prints its Cursor URL. Attach tools in Admin UI if you skip that step. Optional: set `REGISTER_PROMPTS=true` and add `config/prompts.txt` (format: `name|description|template` with `{{arg}}` and `\n` for newlines), then run `make register`. Use `make gateway-only` to run only the gateway (no translate services).
 
-**Stack-focused gateways (React, Node, TypeScript, Java, Spring, Prisma, etc.):** `scripts/gateways.txt` includes local SSE servers and optional remote entries (Context7, context-awesome, prisma-remote). Add more via `EXTRA_GATEWAYS` in `.env`. Next.js (`next-devtools-mcp`) is project-local; run it inside your Next app. Spring AI MCP runs on the host; add its URL to `EXTRA_GATEWAYS` if you expose it.
+**Stack-focused gateways (React, Node, TypeScript, Java, Spring, Prisma, etc.):** `config/gateways.txt` includes local SSE servers and optional remote entries (Context7, context-awesome, prisma-remote). Add more via `EXTRA_GATEWAYS` in `.env`. Next.js (`next-devtools-mcp`) is project-local; run it inside your Next app. Spring AI MCP runs on the host; add its URL to `EXTRA_GATEWAYS` if you expose it.
 
 **Servers that stay in Cursor or as remote gateways:** context-forge (gateway wrapper), browserstack, infisical-lukbot use custom scripts or tokens; run them on the host or add their HTTP URL in Admin UI if you expose them. Remote-only servers (Context7, context-awesome, prisma, cloudflare-\*, v0, apify-dribbble) add as gateways with URL; v0 and apify need Passthrough Headers or OAuth in Admin UI.
 
@@ -152,10 +201,54 @@ Use the wrapper script so no token is stored in mcp.json and no weekly refresh i
 
 See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, `AUTH_ENCRYPTION_SECRET` (each at least 32 chars; run `make generate-secrets`). Never commit `.env` or secrets.
 
+## Automated Maintenance
+
+This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
+
+### Dependency Updates (Renovate)
+
+**Schedule:** Every Monday at 2 AM UTC
+
+Renovate automatically checks for updates to:
+- Python dependencies (`requirements.txt`)
+- Docker images (Context Forge gateway)
+- GitHub Actions
+
+**Auto-merge policy:**
+- ✅ Patch/minor updates: Auto-merge after 3-day stabilization + passing CI
+- ❌ Major updates: Require manual review (labeled `breaking-change`)
+- 🔒 Security vulnerabilities: Immediate auto-merge
+
+**Setup:** Add `RENOVATE_TOKEN` secret to repository settings (GitHub PAT with `repo` and `workflow` scopes).
+
+**Dashboard:** Check the Dependency Dashboard issue for pending updates.
+
+### MCP Server Registry Check
+
+**Schedule:** Every Monday at 3 AM UTC
+
+Automatically scans the MCP Registry for:
+- New servers not in `gateways.txt`
+- Status of commented servers (auth requirements, etc.)
+
+Creates/updates a GitHub issue with findings. No secrets required.
+
+### Docker Image Updates
+
+**Schedule:** Every Monday at 4 AM UTC
+
+Checks IBM/mcp-context-forge for new releases and automatically creates PRs with:
+- Updated image tags in all files
+- Changelog link
+- Testing checklist
+
+PRs require manual review before merge.
+
 ## Development
 
 - **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - **Script index:** [scripts/README.md](scripts/README.md)
+- **Maintenance automation:** See [Automated Maintenance](#automated-maintenance) above
 
 ## Using the gateway with AI
 
@@ -197,12 +290,12 @@ The SQLite database in `./data/mcp.db` is corrupted (e.g. after a hard shutdown 
 The Context Forge admin UI at `/admin/#prompts` can hang due to an upstream frontend/API mismatch or slow response. Workarounds: (1) **Use the API**: run `make list-prompts` (lists prompts via GET /prompts with JWT). (2) **Register prompts via Make**: set `REGISTER_PROMPTS=true` in `.env` and add lines to `scripts/prompts.txt` (format: `name|description|template`), then run `make register`. (3) **Inspect in browser**: DevTools → Network, filter by "prompts" or XHR; check the request URL, status, and response body. If the API returns 200 with valid JSON and the UI still spins, report to [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge/issues). A CSP error in the console for `fonts.googleapis.com` is unrelated to prompts loading.
 
 **Missing servers and authentication**
-Some gateways are commented out in `scripts/gateways.txt` so `make register` succeeds by default. To enable them:
+Some gateways are commented out in `config/gateways.txt` so `make register` succeeds by default. To enable them:
 
-- **Commented local (sqlite, github):** Uncomment the corresponding lines in `scripts/gateways.txt`, set the required env vars in `.env` (e.g. `GITHUB_PERSONAL_ACCESS_TOKEN` for github), run `make register` or `make register-wait`. If they fail, see the "Failed to initialize gateway" / "Unable to connect" bullets above and `docker compose logs sqlite` or `docker compose logs github`.
+- **Commented local (sqlite, github):** Uncomment the corresponding lines in `config/gateways.txt`, set the required env vars in `.env` (e.g. `GITHUB_PERSONAL_ACCESS_TOKEN` for github), run `make register` or `make register-wait`. If they fail, see the "Failed to initialize gateway" / "Unable to connect" bullets above and `docker compose logs sqlite` or `docker compose logs github`.
 - **Commented remote (Context7, context-awesome, prisma-remote, cloudflare-\*, v0, apify-dribbble):** Uncomment in `scripts/gateways.txt` and run `make register`, or add the gateway via Admin UI (MCP Servers → Add New MCP Server or Gateway). For **Context7, v0, apify-dribbble, cloudflare-\***: after adding the gateway, edit it in Admin UI and set **Passthrough Headers** (e.g. `Authorization`) or **Authentication type** OAuth so the gateway can call the upstream. See [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md).
 
-**Authentication checklist:** Local gateways that need keys: **Tavily** → `TAVILY_API_KEY` in `.env`; **Snyk** → `SNYK_TOKEN`; **GitHub** → `GITHUB_PERSONAL_ACCESS_TOKEN`. Remote gateways **Context7, v0, apify-dribbble, cloudflare-\*** → configure Passthrough Headers or OAuth in Admin UI (do not put secrets in `gateways.txt` or the repo).
+**Authentication checklist:** Local gateways that need keys: **Tavily** → `TAVILY_API_KEY` in `.env`; **Snyk** → `SNYK_TOKEN`; **GitHub** → `GITHUB_PERSONAL_ACCESS_TOKEN`. Remote gateways **Context7, v0, apify-dribbble, cloudflare-\*** → configure Passthrough Headers or OAuth in Admin UI (do not put secrets in `config/gateways.txt` or the repo).
 
 ## Contributing / Forking
 

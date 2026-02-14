@@ -1,0 +1,130 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# CodeRabbit Configuration
+# Documentation: https://docs.coderabbit.ai/getting-started/yaml-configuration
+# This configuration works for IDE extension, GitHub integration, and CLI
+
+# General Settings
+language: "en-US"
+early_access: false
+tone_instructions: "Be concise, technical, and focus on actionable feedback. Prioritize security, performance, and maintainability."
+
+# Code Reviews Configuration
+reviews:
+  # Review profile: "chill" (balanced) or "assertive" (strict)
+  profile: "assertive"
+
+  # Request changes workflow - blocks PR merge until issues resolved
+  request_changes_workflow: true
+
+  # High-level summary of changes
+  high_level_summary: true
+
+  # Add poem to reviews (fun feature)
+  poem: false
+
+  # Show review status
+  review_status: true
+
+  # Collapse detailed walkthrough by default
+  collapse_walkthrough: false
+
+  # Auto-review settings
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - master
+      - develop
+
+  # Path-based instructions for specific file types
+  path_instructions:
+    - path: "**/*.sh"
+      instructions: "Check for shellcheck compliance, proper error handling, and POSIX compatibility where possible."
+    - path: "**/*.py"
+      instructions: "Verify PEP 8 compliance, type hints, docstrings, and proper error handling."
+    - path: "**/Dockerfile*"
+      instructions: "Check for security best practices, multi-stage builds, minimal layers, and proper base image selection."
+    - path: "**/*.yml"
+      instructions: "Validate YAML syntax, check for security issues in CI/CD workflows."
+    - path: "**/*.md"
+      instructions: "Check for broken links, proper formatting, and clear documentation."
+
+  # Tools configuration - enable relevant linters for this project
+  tools:
+    shellcheck:
+      enabled: true
+
+    ruff:
+      enabled: true
+
+    markdownlint:
+      enabled: true
+
+    yamllint:
+      enabled: true
+
+    hadolint:
+      enabled: true
+
+    gitleaks:
+      enabled: true
+
+    trufflehog:
+      enabled: true
+
+    actionlint:
+      enabled: true
+
+# Chat Configuration
+chat:
+  auto_reply: true
+
+  # Integration with issue trackers
+  integrations:
+    jira:
+      usage: "auto"
+    linear:
+      usage: "auto"
+
+# Knowledge Base Configuration
+knowledge_base:
+  opt_out: false
+
+  web_search:
+    enabled: true
+
+  code_guidelines:
+    enabled: true
+
+  learnings:
+    scope: "auto"
+
+  issues:
+    scope: "auto"
+
+  pull_requests:
+    scope: "auto"
+
+# Code Generation Configuration
+code_generation:
+  docstrings:
+    language: "en-US"
+    path_instructions:
+      - path: "**/*.py"
+        instructions: "Generate Google-style docstrings with Args, Returns, Raises sections."
+      - path: "**/*.sh"
+        instructions: "Add brief function descriptions and parameter explanations."
+
+  unit_tests:
+    path_instructions:
+      - path: "**/*.py"
+        instructions: "Generate pytest tests with fixtures, parametrize where applicable, and include edge cases."
+
+# Issue Enrichment Configuration
+issue_enrichment:
+  auto_enrich:
+    enabled: true
+  planning:
+    enabled: true

@@ -2,11 +2,310 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
 ## [1.5.0] - 2026-02-14
 
 ### Added
 
 - **uiforge-mcp server** – New local translate service (port 8026) providing 7 AI-driven UI generation tools: `scaffold_full_application` (React/Next.js/Vue/Angular + Tailwind + Shadcn/ui), `generate_ui_component` (style-aware components with audit), `generate_prototype` (interactive HTML prototypes with navigation), `generate_design_image` (SVG/PNG mockups via satori + resvg), `fetch_design_inspiration` (extract colors/typography from URLs), `figma_context_parser` (read Figma nodes → Tailwind mapping), `figma_push_variables` (write design tokens to Figma Variables API). Plus 1 MCP resource: `application://current-styles` (session-scoped design context). Set `FIGMA_ACCESS_TOKEN` in `.env` for Figma tools. Added to `cursor-default` virtual server. Built from [uiforge-mcp](https://github.com/LucasSantana-Dev/uiforge-mcp) via `Dockerfile.uiforge`.
+
+## [0.1.1] - 2025-02-14
+
+### Changed
+
+- **Clean Code Refactoring: Improved Naming Conventions**
+  - Refactored Python codebase for better readability and maintainability
+    - `tool_router/core/config.py`: Renamed `jwt` → `jwt_auth_token`, `from_env()` → `load_from_environment()`, `timeout_ms` → `timeout_milliseconds`, `max_retries` → `maximum_retry_attempts`
+    - `tool_router/core/server.py`: Improved variable names in `execute_task` and `search_tools` functions
+    - `tool_router/gateway/client.py`: Renamed `_headers()` → `_build_authentication_headers()`, `_make_request()` → `_execute_http_request_with_retry()`
+    - `tool_router/args/builder.py`: Renamed `TASK_PARAM_NAMES` → `COMMON_TASK_PARAMETER_NAMES`, improved variable clarity
+    - `tool_router/scoring/matcher.py`: Renamed `_tokens()` → `_extract_normalized_tokens()`, `_expand_with_synonyms()` → `_enrich_tokens_with_synonyms()`, `score_tool()` → `calculate_tool_relevance_score()`, `pick_best_tools()` → `select_top_matching_tools()`
+    - `tool_router/observability/health.py`: Updated to use new config property names
+    - `tool_router/observability/metrics.py`: Renamed `duration_ms` → `duration_milliseconds`, improved variable names
+  - Refactored TypeScript client for consistency
+    - `src/index.ts`: Renamed `TIMEOUT_MS` → `REQUEST_TIMEOUT_MILLISECONDS`, `gatewayRequest()` → `sendGatewayRequest()`, improved variable names
+  - Refactored shell scripts for better clarity
+    - `scripts/lib/gateway.sh`: Renamed `compose_cmd()` → `detect_docker_compose_command()`, `get_jwt()` → `generate_or_retrieve_jwt_token()`, `wait_for_health()` → `wait_for_healthy_gateway_status()`, `fetch_servers_list()` → `fetch_registered_servers_list()`
+    - `scripts/gateway/register.sh`: Updated to use renamed functions
+  - Maintained backward compatibility with aliases where appropriate
+  - All changes follow Clean Code principles: intention-revealing names, pronounceable names, searchable names, no mental mapping
+
+### Added
+
+- **Phase 3.3: Observability and Health Checks**
+  - Comprehensive observability module (`tool_router/observability/`)
+  - Health check system with component-level monitoring
+    - Gateway connectivity checks with latency tracking
+    - Configuration validation
+    - Readiness and liveness probes
+    - JSON-serializable health check results
+  - Structured logging infrastructure
+    - Configurable log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    - Structured log formatting for easy parsing
+    - Log context manager for adding contextual fields
+  - Metrics collection system
+    - Thread-safe metrics collector
+    - Timing metrics with statistical summaries (avg, min, max)
+    - Counter metrics for tracking events
+    - Timing context manager for automatic duration tracking
+    - Global metrics singleton for application-wide tracking
+  - Server instrumentation
+    - Integrated logging and metrics into `execute_task` and `search_tools`
+    - Detailed performance tracking for all operations
+    - Error tracking with categorized counters
+    - Tool selection metrics
+  - Comprehensive test coverage (25 tests, 100% pass rate)
+  - Monitoring documentation (`docs/operations/MONITORING.md`)
+    - Health check usage examples
+    - Metrics collection patterns
+    - Integration examples (FastAPI, Prometheus, Docker)
+    - Troubleshooting guides
+
+- **Phase 3.2: Hierarchical Documentation Structure**
+  - Created organized documentation hierarchy with 7 categories
+  - Added comprehensive documentation index (`docs/README.md`)
+  - New documentation structure:
+    - `docs/setup/` - Installation and IDE configuration
+    - `docs/architecture/` - System architecture and design
+    - `docs/configuration/` - Configuration and deployment
+    - `docs/development/` - Development and contributing
+    - `docs/operations/` - Operations and maintenance
+    - `docs/migration/` - Migration and upgrade guides
+    - `docs/tools/` - CI/CD and automation tools
+  - New documentation files:
+    - `docs/setup/INSTALLATION.md` - Complete installation guide
+    - `docs/architecture/OVERVIEW.md` - System architecture overview
+    - `docs/architecture/VIRTUAL_SERVERS.md` - Virtual servers guide
+  - Reorganized existing documentation into logical categories
+  - Added quick links and common tasks sections
+  - Improved navigation with cross-references
+
+- **Test Coverage Boost to 100%**
+  - Added 10 comprehensive error path tests for gateway client
+  - Coverage for all testable code modules: 100%
+  - Total test suite: 55 tests (45 existing + 10 new)
+  - Error scenarios covered:
+    - HTTP 5xx server errors with retry logic
+    - HTTP 4xx client errors (no retry)
+    - Network errors (URLError) with exponential backoff
+    - Timeout errors with retry
+    - JSON decode errors (immediate failure)
+    - Mixed error scenarios across retries
+    - Successful retry after transient failures
+  - Updated coverage configuration to exclude MCP runtime (tested via integration)
+
+- **Phase 3.1: Monorepo Build System**
+  - Unified build system coordinating TypeScript and Python packages
+  - Makefile targets for cross-platform development workflow
+    - `make build`: Build both TypeScript client and Python package
+    - `make clean`: Clean all build artifacts
+    - `make install`: Install all dependencies
+    - `make dev`: Complete development environment setup
+    - `make check`: Run all quality checks (lint + test)
+    - `make ci`: Full CI pipeline simulation
+  - Enhanced CI/CD workflow with dedicated build job
+  - NPM configuration (`.npmrc`) for strict engine and exact versions
+  - Build system configuration in `pyproject.toml`
+  - Cross-platform compatibility using `python3 -m` for all Python tools
+
+- **Phase 1: Foundation Architecture Improvements**
+  - Restructured `tool_router` package with modular organization:
+    - `tool_router/core/` - Server and configuration
+    - `tool_router/gateway/` - Gateway client
+    - `tool_router/tools/` - Tool execution logic
+    - `tool_router/scoring/` - Tool matching and scoring
+    - `tool_router/args/` - Argument building
+    - `tool_router/tests/unit/` - Unit tests
+    - `tool_router/tests/integration/` - Integration tests
+  - Created centralized configuration management (`tool_router/core/config.py`)
+    - Type-safe `GatewayConfig` and `ToolRouterConfig` dataclasses
+    - Environment variable validation with clear error messages
+    - Configurable timeouts, retries, and tool selection parameters
+  - Standardized shell script error handling (`scripts/lib/errors.sh`)
+    - Standard exit codes for common failure scenarios
+    - Dependency checking utilities
+    - Gateway and Docker health checks
+    - Environment and file validation helpers
+- **Phase 2: Quality & Testing Improvements**
+  - Implemented dependency injection for gateway client
+    - Created `HTTPGatewayClient` class with constructor injection
+    - Added `GatewayClient` protocol for interface abstraction
+    - Removed direct `os.environ` access from client code
+    - Maintained backward compatibility with module-level functions
+  - Comprehensive integration test suite (12 tests)
+    - End-to-end workflow tests (tool selection → argument building → execution)
+    - Gateway client integration tests with retry logic validation
+    - Configuration validation and error handling tests
+    - Mock-based tests for network failures and edge cases
+  - Enhanced CI/CD pipeline
+    - Multi-version Python testing (3.9, 3.10, 3.11, 3.12)
+    - Code coverage reporting with pytest-cov (67% coverage)
+    - Codecov integration for coverage tracking
+    - Coverage configuration in `pyproject.toml`
+  - Comprehensive unit test coverage (45 total tests)
+    - Configuration management tests (11 tests for GatewayConfig and ToolRouterConfig)
+    - 100% coverage for args, scoring, and config modules
+    - 79% coverage for gateway client with error path testing
+
+### Changed
+
+- Moved test files to `tool_router/tests/unit/` directory
+- Updated all imports to use new module structure
+- Updated `pyproject.toml` test paths to `tool_router/tests`
+- Enhanced `.env.example` with tool-router configuration variables
+- **IDE-Agnostic Refactoring** – Removed Cursor-specific coupling to support any MCP-compatible IDE:
+  - Renamed `scripts/cursor/` → `scripts/mcp-client/`
+  - Environment variables: `CURSOR_*` → `MCP_CLIENT_*` (backward compatible)
+  - File paths: `data/.cursor-mcp-url` → `data/.mcp-client-url`
+  - Makefile targets: `cursor-pull` → `mcp-client-pull` (aliased for compatibility)
+  - Virtual servers: `cursor-router` → `mcp-router`, `cursor-default` → `mcp-default`
+  - Function names: `get_context_forge_key()` → `get_mcp_client_key()` (aliased)
+  - All old variables and targets continue to work via backward compatibility
+  - See [docs/IDE_AGNOSTIC_MIGRATION.md](docs/IDE_AGNOSTIC_MIGRATION.md) for migration guide
+- **Scripts Cleanup** – Removed all backward compatibility symlinks from scripts root directory:
+  - Removed 12 symlinks that were pointing to subdirectory scripts
+  - Updated Makefile to use subdirectory paths directly
+  - Updated all documentation and workflow files with new paths
+  - Result: Clean scripts directory with only essential subdirectories (gateway/, cursor/, virtual-servers/, utils/, lib/)
+- **Scripts Reorganization** – Reorganized scripts directory by functional domain:
+  - Created subdirectories: `gateway/`, `cursor/`, `virtual-servers/`, `utils/`
+  - Moved scripts to appropriate domains (e.g., `register-gateways.sh` → `gateway/register.sh`)
+  - Updated all script internals to calculate `SCRIPT_DIR` as parent directory
+  - Created backward compatibility symlinks at old script locations
+  - Updated `Makefile` shellcheck target to check subdirectories
+  - Updated `start.sh` to reference new script paths
+  - Updated `scripts/README.md` with new organization structure
+- **Config Files Migration** – Completed migration of configuration files to `/config`:
+  - Removed old config files from `scripts/` directory (`gateways.txt`, `virtual-servers.txt`, `prompts.txt`, `resources.txt`)
+  - All scripts now use `CONFIG_DIR` variable pointing to `/config`
+  - Updated `data/README.md` to reference new config locations
+  - Backward compatibility maintained via fallback paths during transition
+- **NPX Client Package** – Standard MCP server NPX wrapper for connecting to gateway:
+  - Created `@mcp-gateway/client` NPM package with TypeScript source
+  - Enables standard `npx` usage pattern like other MCP servers
+  - Users can configure gateway in IDE's `mcp.json` using `npx -y @mcp-gateway/client`
+  - **JWT authentication is optional** - not required for local development (`AUTH_REQUIRED=false`)
+  - Supports both CLI arguments (`--url`, `--token`) and environment variables
+  - Cross-platform Node.js client (no Docker/Bash dependencies)
+  - Comprehensive documentation in `NPM_PACKAGE_README.md` and `PUBLISHING.md`
+  - Added TypeScript build configuration (`tsconfig.json`, `package.json`)
+  - Updated main README with NPX usage section showing local (no auth) and remote (with auth) examples
+  - Updated `.env.example` and `.env` with comments explaining `AUTH_REQUIRED` setting
+
+### Changed
+
+- **uiforge Dynamic Configuration** – Converted uiforge to use translate pattern for per-user FIGMA_ACCESS_TOKEN configuration:
+  - Modified `docker-compose.yml` to use translate pattern instead of standalone image
+  - Removed hardcoded `FIGMA_ACCESS_TOKEN` from container environment
+  - Users now configure `FIGMA_ACCESS_TOKEN` in IDE's `mcp.json` env object (per-user, not in .env)
+  - Updated `.env.example` to document FIGMA_ACCESS_TOKEN as IDE-configured key
+  - Added UI/Design Development configuration example in `docs/IDE_SETUP_GUIDE.md`
+  - Enables multi-user setup without sharing Figma tokens in repository
+
+- **CodeRabbit Configuration** – Comprehensive AI code review setup for IDE, GitHub, and CLI:
+  - `.coderabbit.yaml` – Centralized configuration with assertive review profile, enabled linters (shellcheck, ruff, markdownlint, yamllint, hadolint, gitleaks, trufflehog, actionlint), path-based instructions for shell scripts, Python, Dockerfiles, YAML, and Markdown files
+  - `docs/CODERABBIT_SETUP.md` – Complete setup guide covering GitHub integration, IDE extension installation, and CLI usage with authentication, review commands, and troubleshooting
+- **Optimal MCP Stack Configurations** – 26 new stack profiles (13 stacks × 2 variants each) optimized for various tech stacks, all using tool-router for IDE compatibility:
+  - **Node.js/TypeScript** (Full + Minimal) – JavaScript/TypeScript development with Node.js runtime
+  - **React/Next.js** (Full + Minimal) – Modern web application development with React and Next.js
+  - **Mobile Development** (Full + Minimal) – React Native and Flutter mobile application development
+  - **Database Development** (Full + Minimal) – Database design, queries, and ORM management
+  - **Java/Spring Boot** (Full + Minimal) – Enterprise Java development with Spring Boot framework
+  - **Python Development** (Full + Minimal) – Python application development and data science
+  - **AWS Cloud** (Full + Minimal) – AWS cloud infrastructure and serverless development
+  - **Testing & QA** (Full + Minimal) – Comprehensive testing and quality assurance
+  - **Code Quality & Security** (Full + Minimal) – Code analysis, security scanning, and quality enforcement
+  - **Full-Stack Universal** (Full + Minimal) – Comprehensive full-stack development with all tools
+  - **Monorepo Universal** (Full + Minimal) – Optimized for monorepo architectures (Nx, Turborepo, Lerna)
+  - **DevOps & CI/CD** (Full + Minimal) – DevOps workflows, CI/CD pipelines, and infrastructure automation
+- **Comprehensive Documentation** – 5 new documentation files with clear, step-by-step guides:
+  - `docs/MCP_STACK_CONFIGURATIONS.md` – Complete guide to all stack profiles with use cases, required API keys, and configuration examples
+  - `docs/IDE_SETUP_GUIDE.md` – IDE-specific configuration examples for Cursor, VSCode, Windsurf, and JetBrains with copy-paste ready configs
+  - `docs/ENVIRONMENT_CONFIGURATION.md` – Minimal .env approach guide with migration instructions and security best practices
+  - `docs/TOOL_ROUTER_GUIDE.md` – How tool-router works, architecture diagrams, and performance details
+  - `docs/MONOREPO_VS_SINGLE_REPO.md` – Choosing the right profile based on project architecture
+- **Minimal .env Configuration Philosophy** – Stack-specific API keys now configured in IDE's mcp.json instead of .env file for better security and portability
+- **Environment Configuration** – Updated `.env.example` and `.env` with minimal configuration approach:
+  - Added philosophy header explaining gateway infrastructure vs. stack-specific credentials separation
+  - Moved stack-specific API keys (GitHub, Snyk, Tavily, database connections) to IDE configuration
+  - Added clear documentation references and migration instructions
+- **Virtual Server Definitions** – Updated `scripts/virtual-servers.txt` with 26 new stack profiles, all using tool-router for IDE compatibility
+- **Gateway Registration** – Added notes to `scripts/gateways.txt` indicating GitHub gateway configuration requirements and IDE setup references
+
+### Documentation
+
+- **Documentation Principles** – All new documentation follows 6 core principles:
+  1. **Clarity First** – Simple language, no jargon, explain technical terms
+  2. **Step-by-Step** – Numbered steps with clear outcomes
+  3. **Visual Aids** – Code examples, ASCII/mermaid diagrams, tables
+  4. **Quick Start** – "5-minute setup" paths for common use cases
+  5. **Troubleshooting** – Common errors and solutions included
+  6. **Copy-Paste Ready** – All commands and configs ready to use
+
+## [1.6.1] - 2026-02-14
+
+### Fixed
+
+- **Tool router HTTP error handling** – Added proper exception handling with retry logic for transient failures in `gateway_client.py`. Network errors (5xx, timeouts, connection failures) now retry up to 3 times with exponential backoff. Specific exceptions (HTTPError, URLError, TimeoutError, JSONDecodeError) are caught and handled appropriately instead of broad Exception catches.
+- **JWT validation** – Enhanced `get_jwt()` in `scripts/lib/gateway.sh` to validate JWT format (three base64 segments separated by dots) and strip whitespace before validation. Prevents empty or malformed tokens from being used in API calls, which previously caused cryptic authentication failures.
+- **Virtual server registration race condition** – Added retry logic with configurable attempts (`REGISTER_TOOLS_SYNC_RETRIES`, default 3) and delay (`REGISTER_TOOLS_SYNC_DELAY`, default 5s) in `register-gateways.sh` to ensure tools are fully synced before creating virtual servers. Counts expected gateways and waits for tool list to stabilize, preventing incomplete virtual servers.
+- **Tool argument building** – Improved `build_arguments()` in `args.py` to handle multiple required parameters intelligently. Added support for common parameter names (prompt, question, input, text, message, command) and validates parameter types before assignment. Only fills string-type parameters to avoid type mismatches.
+- **Tool scoring algorithm** – Enhanced scoring in `scoring.py` with synonym expansion (search/find/lookup, create/make/add, etc.), partial substring matching, and weighted scoring (name matches × 10, description × 3, gateway × 2). Improved tool selection accuracy for ambiguous queries.
+- **Error handling in server.py** – Replaced broad `except Exception` with specific exception types (ValueError, ConnectionError) and added exception type names to error messages for better debugging. Programming errors now propagate instead of being silently caught.
+
+### Changed
+
+- **Tool router retry configuration** – Added constants `MAX_RETRIES=3` and `RETRY_DELAY=2` in `gateway_client.py` for configurable retry behavior.
+- **Token extraction** – Modified `_tokens()` in `scoring.py` to include single-character tokens for better matching (previously filtered out tokens with length ≤ 1).
+
+## [1.6.0] - 2026-02-14
+
+### Added
+
+- **Database MCP servers** – 3 new database servers for TypeScript/Node.js development:
+  - **postgres** (port 8031) – Anthropic reference server (`@modelcontextprotocol/server-postgres`). Read-only PostgreSQL queries and schema inspection. Requires `POSTGRES_CONNECTION_STRING` in `.env`.
+  - **mongodb** (port 8032) – Official MongoDB server (`mongodb-mcp-server`). Comprehensive database operations for collections, documents, and indexes. Requires `MONGODB_CONNECTION_STRING` in `.env`.
+  - **prisma-remote** (remote) – Prisma ORM server (`https://mcp.prisma.io/mcp`). Type-safe database queries and migrations for PostgreSQL, MongoDB, MySQL, SQLite. Uncommented in `gateways.txt`.
+- **Client-agnostic virtual servers** – Two new virtual servers that work with any MCP client (Cursor, Windsurf, VSCode, Antigravity, etc.):
+  - **database** – PostgreSQL, MongoDB, Prisma ORM tools for database-focused workflows.
+  - **fullstack** – Complete dev workflow with database tools + memory + git-mcp + fetch.
+- **Connection string examples** – `.env` includes commented examples for `POSTGRES_CONNECTION_STRING` and `MONGODB_CONNECTION_STRING` with placeholder values.
+- **Automated dependency updates** – Renovate integration for weekly automated dependency updates with breaking change detection. Auto-merges patch/minor updates after 3-day stabilization period when all CI checks pass. Major updates require manual review. Configuration in `.github/renovate.json` and workflow in `.github/workflows/renovate.yml`.
+- **MCP Server Registry monitoring** – Weekly automated check for new MCP servers from the official registry. Creates/updates GitHub issues with new server discoveries and status of commented servers. Script: `scripts/utils/check-mcp-registry.py`, workflow: `.github/workflows/mcp-server-check.yml`.
+- **Docker image update automation** – Weekly check for Context Forge updates from IBM/mcp-context-forge releases. Automatically creates PRs with version bumps across all relevant files (docker-compose.yml, scripts, CI, docs). Script: `scripts/utils/check-docker-updates.sh`, workflow: `.github/workflows/docker-updates.yml`.
+
+### Changed
+
+- **MCP server cleanup** – Removed problematic servers from `scripts/gateways.txt`: context-awesome (HTTP 406 upstream bug), apify-dribbble (niche use case). Updated comments to explain why servers are commented (auth required, timing issues, etc.).
+- **Prisma remote server** – Uncommented `prisma-remote` in `gateways.txt` for TypeScript ORM support.
+
+### Documentation
+
+- **Multi-user database configuration guide** – New `docs/MULTI_USER_DATABASE_CONFIG.md` explaining deployment-level vs per-user configuration options for PostgreSQL and MongoDB. Covers per-deployment instances (recommended), Admin UI Passthrough Headers (advanced), and environment-based multi-tenancy patterns.
+- **Database connection string documentation** – Enhanced `.env` comments to clarify that connection strings are deployment-level configuration shared across all users of a gateway instance. Added guidance for multi-user/multi-tenant scenarios.
+- **README database entries** – Updated PostgreSQL and MongoDB table entries to link to multi-user configuration guide.
+- **Automated Maintenance section** – Added comprehensive documentation for automation workflows in README.md, including setup instructions, schedule details, and how to configure secrets.
+- **Development guide updates** – Updated docs/DEVELOPMENT.md with maintenance automation section covering Renovate configuration, MCP registry checks, and Docker update process.
+
+## [1.5.0] - 2026-02-14
+
+### Added
+
+- **uiforge-mcp server** – New local translate service (port 8026) providing 7 AI-driven UI generation tools: `scaffold_full_application` (React/Next.js/Vue/Angular + Tailwind + Shadcn/ui), `generate_ui_component` (style-aware components with audit), `generate_prototype` (interactive HTML prototypes with navigation), `generate_design_image` (SVG/PNG mockups via satori + resvg), `fetch_design_inspiration` (extract colors/typography from URLs), `figma_context_parser` (read Figma nodes → Tailwind mapping), `figma_push_variables` (write design tokens to Figma Variables API). Plus 1 MCP resource: `application://current-styles` (session-scoped design context). Set `FIGMA_ACCESS_TOKEN` in `.env` for Figma tools. Added to `cursor-default` virtual server. Built from [uiforge-mcp](https://github.com/LucasSantana-Dev/uiforge-mcp) via `Dockerfile.uiforge`.
+- **MCP servers for AI development** – 5 new free MCP servers added to the gateway for enhanced AI-assisted development workflows:
+  - **memory** (port 8027) – Anthropic reference server (`@modelcontextprotocol/server-memory`). Persistent knowledge graph that stores and retrieves context across sessions. No API key required.
+  - **git-mcp** (port 8028) – Anthropic reference server (`@modelcontextprotocol/server-git`). Local git operations (commit, branch, diff, log) complementing the GitHub gateway. No API key required.
+  - **fetch** (port 8029) – Anthropic reference server (`@modelcontextprotocol/server-fetch`). Web content fetching and markdown conversion for LLM consumption. No API key required.
+  - **Context7** (remote) – Up-to-date library/framework documentation lookup (`https://mcp.context7.com/mcp`). Free tier works without API key; configure key in Admin UI Passthrough Headers for higher rate limits. Uncommented in `gateways.txt`.
+  - **DeepWiki** (remote) – AI-powered codebase documentation for any public GitHub repo (`https://mcp.deepwiki.com/mcp`). Free, no authentication required.
+- **cursor-default expanded** – `virtual-servers.txt` cursor-default now includes memory and fetch gateways alongside existing ones. `git-mcp` moved to dedicated `cursor-git` virtual server to stay under Cursor's 60-tool limit.
+- **Port overrides** – `.env` optional vars: `MEMORY_PORT`, `GIT_MCP_PORT`, `FETCH_PORT`.
+
+### Fixed
+
+- **memory persistence** – Mount `./data/memory` volume and set `MEMORY_FILE_PATH=/data/memory.jsonl` so the knowledge graph survives container restarts. Added `MEMORY_VOLUME` to `.env.example`.
+- **git-mcp volume** – Mount `GIT_REPO_VOLUME` (default `./workspace`) into the container and pass `--repository /repos` so the server can access a git repository. Added `GIT_REPO_VOLUME` to `.env.example` and updated README.
 
 ## [1.4.3] - 2026-02-13
 

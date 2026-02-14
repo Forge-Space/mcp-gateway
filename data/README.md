@@ -11,11 +11,11 @@ If the gateway logs `database disk image is malformed` or `FileLock health check
    `rm -f ./data/mcp.db ./data/mcp.db-shm ./data/mcp.db-wal`
 3. Start again: `./start.sh`
 
-The gateway will create a new empty database. Re-register gateways via Admin UI or `./scripts/register-gateways.sh`. Any previously configured gateways and virtual servers are lost; backup `./data` before deleting if you need to attempt recovery elsewhere.
+The gateway will create a new empty database. Re-register gateways via Admin UI or `./scripts/gateway/register.sh`. Any previously configured gateways and virtual servers are lost; backup `./data` before deleting if you need to attempt recovery elsewhere.
 
 ## Local Docker translate services
 
-These run with `./start.sh` and are registered via `./scripts/register-gateways.sh` (see `scripts/gateways.txt`).
+These run with `./start.sh` and are registered via `./scripts/gateway/register.sh` (see `config/gateways.txt`).
 
 | Service             | Port | Internal URL                        |
 | ------------------- | ---- | ----------------------------------- |

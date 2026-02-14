@@ -10,7 +10,7 @@ To use the **MCP Gateway with the tool router** in Cursor (one connection that r
 2. **Start the stack:** From the repo run `make start` (gateway + tool-router and other services).
 3. **Register gateways and virtual server:** Run `make register`. This registers the tool-router and creates the **cursor-router** virtual server; it writes `data/.cursor-mcp-url` for the wrapper. Do not set `REGISTER_CURSOR_MCP_SERVER_NAME` if you want the default cursor-router.
 4. **Set GATEWAY_JWT:** Run `make jwt`, copy the token, and add `GATEWAY_JWT=<token>` to `.env`. The tool-router needs this to call the gateway API. Refresh periodically (e.g. weekly).
-5. **Point Cursor at the wrapper:** Run `make use-cursor-wrapper` so `~/.cursor/mcp.json` uses `scripts/cursor-mcp-wrapper.sh` (generates a fresh JWT per connection; no token in mcp.json; sets 2-minute MCP timeout).
+5. **Point Cursor at the wrapper:** Run `make use-cursor-wrapper` so `~/.cursor/mcp.json` uses `scripts/cursor/mcp-wrapper.sh` (generates a fresh JWT per connection; no token in mcp.json; sets 2-minute MCP timeout).
 6. **Pre-pull image (recommended):** Run `make cursor-pull` once so the first Cursor connection does not time out while the Context Forge image downloads.
 7. **Restart Cursor:** Fully quit Cursor (Cmd+Q / Alt+F4) and reopen.
 
@@ -20,9 +20,9 @@ In Cursor you will see the **context-forge** (or **user-context-forge**) MCP ser
 
 Cursor (and some MCP clients) warn or misbehave when a single connection exposes **more than ~60 tools**. With many gateways registered, one virtual server that includes every tool can exceed this.
 
-**Approach:** Use **multiple virtual servers**, each with a subset of gateways (up to 60 tools per server). Define them in `scripts/virtual-servers.txt`:
+**Approach:** Use **multiple virtual servers**, each with a subset of gateways (up to 60 tools per server). Define them in `config/virtual-servers.txt`:
 
-- Format: one line per server, `ServerName|gateway1,gateway2,...` (gateway names must match `gateways.txt`).
+- Format: one line per server, `ServerName|gateway1,gateway2,...` (gateway names must match `config/gateways.txt`).
 - After editing, run `make register`. The script creates or updates each server and prints a Cursor URL per server.
 - In Cursor, connect to **one** URL depending on the task (e.g. `cursor-default` for general dev, `cursor-search` for search/docs, `cursor-browser` for browser automation). You can add more than one virtual server as separate MCP entries in Cursor if you want to switch between them.
 
@@ -62,7 +62,7 @@ Server names in the Admin UI may differ if you changed them (e.g. custom-default
 From the mcp-gateway repo (with `.env` set and gateway running):
 
 1. Run `make register` so `data/.cursor-mcp-url` exists (optionally set `REGISTER_CURSOR_MCP_SERVER_NAME` for a server other than cursor-router).
-2. Run **`make use-cursor-wrapper`**. This sets the context-forge (or user-context-forge) entry in `~/.cursor/mcp.json` to use `scripts/cursor-mcp-wrapper.sh`; the wrapper reads the URL from `data/.cursor-mcp-url` and uses a fresh JWT.
+2. Run **`make use-cursor-wrapper`**. This sets the context-forge (or user-context-forge) entry in `~/.cursor/mcp.json` to use `scripts/cursor/mcp-wrapper.sh`; the wrapper reads the URL from `data/.cursor-mcp-url` and uses a fresh JWT.
 3. For **cursor-router**: set `GATEWAY_JWT` in `.env` (run `make jwt`, paste the token). Refresh it periodically (e.g. weekly).
 4. Fully quit Cursor (Cmd+Q / Alt+F4) and reopen.
 

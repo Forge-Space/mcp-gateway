@@ -9,7 +9,7 @@ This document describes **registrations that must be done manually** in the Cont
 ## When to use the Admin UI
 
 - **Gateways that need auth:** v0, apify-dribbble, Context7 (API key), or any server that expects `Authorization` or custom headers. Configure Passthrough Headers or OAuth in the gateway edit screen.
-- **Remote gateways** you prefer not to put in `EXTRA_GATEWAYS` or `scripts/gateways.txt` (e.g. to avoid committing URLs).
+- **Remote gateways** you prefer not to put in `EXTRA_GATEWAYS` or `config/gateways.txt` (e.g. to avoid committing URLs).
 - **Virtual server:** create or edit a server and attach tools; Cursor connects to `.../servers/<SERVER_UUID>/mcp` or `.../sse`.
 - **Prompts / resources:** optional; add via Admin UI or API if you use them.
 
@@ -293,5 +293,5 @@ If the gateway returns **"Failed to register server: This transaction is inactiv
 If the Admin UI **Prompts** page stays on "Loading prompts...", the frontend may be failing to handle the API response (upstream Context Forge). You can:
 
 - **List prompts via script:** from repo root run `./scripts/list-prompts.sh` (uses .env and gateway JWT; works in any shell). **Create prompts via API:** `POST /prompts` (see [Context Forge API Usage](https://ibm.github.io/mcp-context-forge/manage/api-usage/)); JWT from gateway container as in `register-gateways.sh`.
-- **Register prompts via script:** set `REGISTER_PROMPTS=true` in `.env`, add lines to `scripts/prompts.txt`, run `./scripts/register-gateways.sh`.
+- **Register prompts via script:** set `REGISTER_PROMPTS=true` in `.env`, add lines to `config/prompts.txt`, run `./scripts/register-gateways.sh`.
 - **Check Network tab:** In DevTools → Network, find the prompts request; confirm URL, status code, and response shape. If the API returns 200 with valid JSON and the UI still spins, report to [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge/issues).

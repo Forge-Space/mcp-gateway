@@ -20,44 +20,44 @@ gateway-only:
 	./start.sh gateway-only
 
 register:
-	./scripts/register-gateways.sh
+	./scripts/gateway/register.sh
 
 register-wait:
-	REGISTER_WAIT_SECONDS=30 ./scripts/register-gateways.sh
+	REGISTER_WAIT_SECONDS=30 ./scripts/gateway/register.sh
 
 jwt:
 	@bash -c 'set -a; [ -f .env ] && . ./.env; set +a; \
-	  python3 "$(CURDIR)/scripts/create_jwt_token_standalone.py" 2>/dev/null || \
+	  python3 "$(CURDIR)/scripts/utils/create-jwt.py" 2>/dev/null || \
 	  docker exec "$${MCPGATEWAY_CONTAINER:-mcpgateway}" python3 -m mcpgateway.utils.create_jwt_token --username "$$PLATFORM_ADMIN_EMAIL" --exp 10080 --secret "$$JWT_SECRET_KEY" 2>/dev/null'
 
 list-prompts:
-	./scripts/list-prompts.sh
+	./scripts/gateway/list-prompts.sh
 
 list-servers:
-	./scripts/list-servers.sh
+	./scripts/virtual-servers/list.sh
 
 refresh-cursor-jwt:
-	./scripts/refresh-cursor-jwt.sh
+	./scripts/cursor/refresh-jwt.sh
 
 use-cursor-wrapper:
-	./scripts/use-cursor-wrapper.sh
+	./scripts/cursor/use-wrapper.sh
 
 verify-cursor-setup:
-	./scripts/verify-cursor-setup.sh
+	./scripts/cursor/verify-setup.sh
 
 cursor-pull:
 	@echo "Pulling Context Forge image (used by Cursor wrapper; avoids first-start timeout)..."
 	docker pull ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
 
 cleanup-duplicates:
-	./scripts/cleanup-duplicate-servers.sh
+	./scripts/virtual-servers/cleanup-duplicates.sh
 
 lint:
 	$(MAKE) shellcheck
 	ruff check tool_router/
 
 shellcheck:
-	shellcheck -s bash -S warning start.sh scripts/*.sh scripts/lib/*.sh
+	shellcheck -s bash -S warning start.sh scripts/lib/*.sh scripts/gateway/*.sh scripts/cursor/*.sh scripts/virtual-servers/*.sh scripts/utils/*.sh
 
 test:
 	pytest tool_router/ -v
