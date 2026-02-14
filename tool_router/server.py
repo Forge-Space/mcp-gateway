@@ -17,22 +17,34 @@ def execute_task(task: str, context: str = "") -> str:
     """Run the best matching gateway tool for the given task. Describe what you want (e.g. 'search the web for X', 'list files in /tmp'). Optional context can narrow the choice."""
     try:
         tools = get_tools()
-    except Exception as e:
+    except (ValueError, ConnectionError) as e:
         return f"Failed to list tools: {e}"
+    except Exception as e:
+        return f"Unexpected error listing tools: {type(e).__name__}: {e}"
+
     if not tools:
         return "No tools registered in the gateway."
-    best = pick_best_tools(tools, task, context, top_n=1)
+
+    try:
+        best = pick_best_tools(tools, task, context, top_n=1)
+    except Exception as e:
+        return f"Error selecting tool: {type(e).__name__}: {e}"
+
     if not best:
         return "No matching tool found; try describing the task differently."
+
     tool = best[0]
     name = tool.get("name") or ""
     if not name:
         return "Chosen tool has no name."
-    args = build_arguments(tool, task)
+
     try:
-        return call_tool(name, args)
+        args = build_arguments(tool, task)
     except Exception as e:
-        return f"Tool invocation failed: {e}"
+        return f"Error building arguments: {type(e).__name__}: {e}"
+
+    result = call_tool(name, args)
+    return result
 
 
 @mcp.tool()
@@ -40,13 +52,22 @@ def search_tools(query: str) -> str:
     """List gateway tools whose name or description matches the query. Use this to discover tools before calling execute_task."""
     try:
         tools = get_tools()
-    except Exception as e:
+    except (ValueError, ConnectionError) as e:
         return f"Failed to list tools: {e}"
+    except Exception as e:
+        return f"Unexpected error listing tools: {type(e).__name__}: {e}"
+
     if not tools:
         return "No tools registered in the gateway."
-    best = pick_best_tools(tools, query, "", top_n=10)
+
+    try:
+        best = pick_best_tools(tools, query, "", top_n=10)
+    except Exception as e:
+        return f"Error searching tools: {type(e).__name__}: {e}"
+
     if not best:
         return "No tools match the query."
+
     lines = []
     for t in best:
         name = t.get("name", "")

@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-02-14
+
+### Fixed
+
+- **Tool router HTTP error handling** – Added proper exception handling with retry logic for transient failures in `gateway_client.py`. Network errors (5xx, timeouts, connection failures) now retry up to 3 times with exponential backoff. Specific exceptions (HTTPError, URLError, TimeoutError, JSONDecodeError) are caught and handled appropriately instead of broad Exception catches.
+- **JWT validation** – Enhanced `get_jwt()` in `scripts/lib/gateway.sh` to validate JWT format (three base64 segments separated by dots) and strip whitespace before validation. Prevents empty or malformed tokens from being used in API calls, which previously caused cryptic authentication failures.
+- **Virtual server registration race condition** – Added retry logic with configurable attempts (`REGISTER_TOOLS_SYNC_RETRIES`, default 3) and delay (`REGISTER_TOOLS_SYNC_DELAY`, default 5s) in `register-gateways.sh` to ensure tools are fully synced before creating virtual servers. Counts expected gateways and waits for tool list to stabilize, preventing incomplete virtual servers.
+- **Tool argument building** – Improved `build_arguments()` in `args.py` to handle multiple required parameters intelligently. Added support for common parameter names (prompt, question, input, text, message, command) and validates parameter types before assignment. Only fills string-type parameters to avoid type mismatches.
+- **Tool scoring algorithm** – Enhanced scoring in `scoring.py` with synonym expansion (search/find/lookup, create/make/add, etc.), partial substring matching, and weighted scoring (name matches × 10, description × 3, gateway × 2). Improved tool selection accuracy for ambiguous queries.
+- **Error handling in server.py** – Replaced broad `except Exception` with specific exception types (ValueError, ConnectionError) and added exception type names to error messages for better debugging. Programming errors now propagate instead of being silently caught.
+
+### Changed
+
+- **Tool router retry configuration** – Added constants `MAX_RETRIES=3` and `RETRY_DELAY=2` in `gateway_client.py` for configurable retry behavior.
+- **Token extraction** – Modified `_tokens()` in `scoring.py` to include single-character tokens for better matching (previously filtered out tokens with length ≤ 1).
+
 ## [1.6.0] - 2026-02-14
 
 ### Added

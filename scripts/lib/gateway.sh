@@ -14,7 +14,8 @@ compose_cmd() {
 get_jwt() {
   local j
   j=$(python3 "$SCRIPT_DIR/create_jwt_token_standalone.py" 2>/dev/null) || true
-  if [[ -n "$j" ]]; then
+  j=$(echo "$j" | tr -d '[:space:]')
+  if [[ -n "$j" ]] && [[ "$j" =~ ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$ ]]; then
     echo "$j"
     return 0
   fi
@@ -23,11 +24,13 @@ get_jwt() {
   if [[ -n "$compose" ]] && $compose ps gateway -q 2>/dev/null | grep -q .; then
     j=$($compose exec -T gateway python3 -m mcpgateway.utils.create_jwt_token \
       --username "${PLATFORM_ADMIN_EMAIL:?}" --exp 10080 --secret "${JWT_SECRET_KEY:?}" 2>/dev/null) || true
+    j=$(echo "$j" | tr -d '[:space:]')
   elif docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$container"; then
     j=$(docker exec "$container" python3 -m mcpgateway.utils.create_jwt_token \
       --username "${PLATFORM_ADMIN_EMAIL:?}" --exp 10080 --secret "${JWT_SECRET_KEY:?}" 2>/dev/null) || true
+    j=$(echo "$j" | tr -d '[:space:]')
   fi
-  if [[ -n "$j" ]]; then
+  if [[ -n "$j" ]] && [[ "$j" =~ ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$ ]]; then
     echo "$j"
     return 0
   fi

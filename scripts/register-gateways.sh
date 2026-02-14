@@ -231,8 +231,41 @@ fi
 if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &>/dev/null; then
   log_step "Syncing tools and updating virtual server(s)..."
   sleep "${REGISTER_VIRTUAL_SERVER_DELAY:-3}"
-  tools_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 60 \
-    -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/tools?limit=0&include_pagination=false" 2>/dev/null)
+
+  # Retry logic to ensure tools are fully synced
+  tools_retry_count=0
+  tools_retry_max="${REGISTER_TOOLS_SYNC_RETRIES:-3}"
+  tools_retry_delay="${REGISTER_TOOLS_SYNC_DELAY:-5}"
+  expected_gateways=0
+
+  # Count expected gateways from config
+  [[ -n "$EXTRA_GATEWAYS" ]] && expected_gateways=$((expected_gateways + $(echo "$EXTRA_GATEWAYS" | tr ',' '\n' | grep -v '^[[:space:]]*$' | grep -v '^#' | wc -l)))
+  [[ -f "$SCRIPT_DIR/gateways.txt" ]] && expected_gateways=$((expected_gateways + $(grep -v '^[[:space:]]*$' "$SCRIPT_DIR/gateways.txt" | grep -v '^#' | wc -l)))
+
+  while [[ $tools_retry_count -lt $tools_retry_max ]]; do
+    tools_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 60 \
+      -H "Authorization: Bearer $JWT" "${GATEWAY_URL}/tools?limit=0&include_pagination=false" 2>/dev/null)
+    tools_code=$(parse_http_code "$tools_resp")
+    tools_body=$(parse_http_body "$tools_resp")
+
+    if [[ "$tools_code" == "200" ]] && [[ -n "$tools_body" ]]; then
+      tool_count=$(echo "$tools_body" | jq -r 'if type == "array" then length else (.tools? // [] | length) end' 2>/dev/null || echo "0")
+      if [[ "$tool_count" -gt 0 ]] && [[ "$expected_gateways" -gt 0 ]] && [[ "$tool_count" -ge "$expected_gateways" ]]; then
+        log_info "Tools synced: $tool_count tools from $expected_gateways gateways"
+        break
+      elif [[ "$tool_count" -gt 0 ]]; then
+        log_info "Tools synced: $tool_count tools available"
+        break
+      fi
+    fi
+
+    tools_retry_count=$((tools_retry_count + 1))
+    if [[ $tools_retry_count -lt $tools_retry_max ]]; then
+      log_info "Waiting for tools to sync (attempt $((tools_retry_count + 1))/$tools_retry_max)..."
+      sleep "$tools_retry_delay"
+    fi
+  done
+
   tools_code=$(parse_http_code "$tools_resp")
   tools_body=$(parse_http_body "$tools_resp")
   if [[ "$tools_code" != "200" ]] || [[ -z "$tools_body" ]]; then

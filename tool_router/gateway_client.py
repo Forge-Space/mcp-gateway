@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 from typing import Any
 
 DEFAULT_TIMEOUT = 30
+MAX_RETRIES = 3
+RETRY_DELAY = 2
 
 
 def _headers(jwt: str) -> dict[str, str]:
@@ -15,15 +19,57 @@ def _headers(jwt: str) -> dict[str, str]:
     }
 
 
+def _make_request(
+    url: str, jwt: str, method: str = "GET", data: bytes | None = None
+) -> dict[str, Any]:
+    """Make HTTP request with retry logic for transient failures."""
+    req = urllib.request.Request(url, headers=_headers(jwt), method=method)
+    if data:
+        req.data = data
+
+    last_error = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code >= 500:
+                last_error = f"Gateway server error (HTTP {e.code})"
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(RETRY_DELAY * (attempt + 1))
+                    continue
+            else:
+                raise ValueError(f"Gateway HTTP error {e.code}: {e.read().decode()}")
+        except urllib.error.URLError as e:
+            last_error = f"Network error: {e.reason}"
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY * (attempt + 1))
+                continue
+        except TimeoutError:
+            last_error = f"Request timeout after {DEFAULT_TIMEOUT}s"
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY * (attempt + 1))
+                continue
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON response from gateway: {e}")
+
+    raise ConnectionError(
+        f"Failed after {MAX_RETRIES} attempts. Last error: {last_error}"
+    )
+
+
 def get_tools() -> list[dict[str, Any]]:
     base = os.environ.get("GATEWAY_URL", "http://gateway:4444").rstrip("/")
     jwt = os.environ.get("GATEWAY_JWT", "")
     if not jwt:
         raise ValueError("GATEWAY_JWT is not set")
     url = f"{base}/tools?limit=0&include_pagination=false"
-    req = urllib.request.Request(url, headers=_headers(jwt), method="GET")
-    with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as resp:
-        data = json.loads(resp.read().decode())
+
+    try:
+        data = _make_request(url, jwt, method="GET")
+    except (ValueError, ConnectionError) as e:
+        raise ValueError(f"Failed to fetch tools: {e}") from e
+
     if isinstance(data, list):
         return data
     if isinstance(data, dict) and "tools" in data:
@@ -43,14 +89,12 @@ def call_tool(name: str, arguments: dict[str, Any]) -> str:
         "method": "tools/call",
         "params": {"name": name, "arguments": arguments},
     }
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(body).encode(),
-        headers=_headers(jwt),
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as resp:
-        out = json.loads(resp.read().decode())
+
+    try:
+        out = _make_request(url, jwt, method="POST", data=json.dumps(body).encode())
+    except (ValueError, ConnectionError) as e:
+        return f"Failed to call tool: {e}"
+
     if "error" in out:
         return f"Gateway error: {out['error']}"
     content = out.get("result", {}).get("content", [])
