@@ -3,12 +3,14 @@
 # Run all: pre-commit run --all-files
 
 repos:
+  # Security: Secret detection
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.1
     hooks:
       - id: gitleaks
         name: Detect hardcoded secrets
 
+  # Standard pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -16,6 +18,7 @@ repos:
         name: Detect private keys
       - id: check-yaml
       - id: check-json
+      - id: check-toml
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-added-large-files
@@ -24,24 +27,70 @@ repos:
       - id: check-ast
         name: Check Python syntax
         files: ^tool_router/
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
 
+  # Python: Ruff linter and formatter
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4
     hooks:
       - id: ruff
+        name: Ruff lint (Python)
         args: [--fix]
         files: ^tool_router/
+      - id: ruff-format
+        name: Ruff format (Python)
+        files: ^tool_router/
 
-  # Local hooks: shellcheck only here; ruff runs above (no duplicate ruff).
+  # TypeScript/JavaScript: Prettier formatter
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        name: Prettier format (TS/JS/JSON/YAML)
+        files: \.(ts|js|json|ya?ml)$
+        exclude: ^(package-lock\.json|node_modules/)
+
+  # Local hooks: Project-specific checks
   - repo: local
     hooks:
+      # Shell: shellcheck
       - id: shellcheck
         name: Lint (shellcheck)
         entry: make shellcheck
         language: system
         pass_filenames: false
-      - id: test
+        files: \.sh$
+
+      # Python: pytest
+      - id: test-python
         name: Test (pytest)
         entry: bash -c 'command -v pytest >/dev/null 2>&1 && make test || echo "pytest not found, skipping tests"'
         language: system
         pass_filenames: false
+        files: ^tool_router/
+
+      # TypeScript: ESLint
+      - id: eslint
+        name: Lint (ESLint)
+        entry: bash -c 'command -v npm >/dev/null 2>&1 && npm run lint:eslint:fix || echo "npm not found, skipping ESLint"'
+        language: system
+        pass_filenames: false
+        files: ^src/.*\.ts$
+
+      # TypeScript: Type checking
+      - id: typescript
+        name: Type check (TypeScript)
+        entry: bash -c 'command -v npm >/dev/null 2>&1 && npm run lint:types || echo "npm not found, skipping type check"'
+        language: system
+        pass_filenames: false
+        files: ^src/.*\.ts$
+
+      # Dependencies: Check for outdated packages (non-blocking)
+      - id: npm-check-updates
+        name: Check dependencies (npm-check-updates)
+        entry: bash -c 'command -v npm >/dev/null 2>&1 && npm run deps:check || echo "npm not found, skipping dependency check"'
+        language: system
+        pass_filenames: false
+        files: ^package\.json$
+        stages: [manual] # Run manually with: pre-commit run npm-check-updates --hook-stage manual

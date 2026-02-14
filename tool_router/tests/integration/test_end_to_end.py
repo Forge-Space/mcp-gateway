@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tool_router.args.builder import build_arguments
-from tool_router.gateway.client import HTTPGatewayClient
 from tool_router.core.config import GatewayConfig
+from tool_router.gateway.client import HTTPGatewayClient
 from tool_router.scoring.matcher import select_top_matching_tools
 
 
@@ -78,11 +78,7 @@ class TestEndToEndWorkflows:
             {
                 "jsonrpc": "2.0",
                 "id": 1,
-                "result": {
-                    "content": [
-                        {"type": "text", "text": "Found 10 Python tutorial results"}
-                    ]
-                },
+                "result": {"content": [{"type": "text", "text": "Found 10 Python tutorial results"}]},
             }
         ).encode()
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+
 # Common parameter names that typically accept task descriptions
 COMMON_TASK_PARAMETER_NAMES = [
     "query",

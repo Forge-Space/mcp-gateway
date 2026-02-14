@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+
 # Common synonyms for better matching
 SYNONYMS = {
     "search": {"find", "lookup", "query", "seek"},
@@ -70,7 +71,13 @@ def calculate_tool_relevance_score(task: str, context: str, tool: dict[str, Any]
     name_partial_score = _calculate_substring_match_score(combined_tokens, tool_name) * 5
     description_partial_score = _calculate_substring_match_score(combined_tokens, tool_description) * 1
 
-    total_score = name_exact_score + description_exact_score + gateway_exact_score + name_partial_score + description_partial_score
+    total_score = (
+        name_exact_score
+        + description_exact_score
+        + gateway_exact_score
+        + name_partial_score
+        + description_partial_score
+    )
 
     return float(total_score)
 
@@ -86,5 +93,4 @@ def select_top_matching_tools(
     scored_tools.sort(key=lambda x: -x[1])
 
     # Only return tools with positive scores
-    best_tools = [tool for tool, score in scored_tools if score > 0][:top_n]
-    return best_tools
+    return [tool for tool, score in scored_tools if score > 0][:top_n]

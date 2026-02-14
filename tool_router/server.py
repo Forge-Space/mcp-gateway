@@ -4,10 +4,12 @@ from tool_router.args import build_arguments
 from tool_router.gateway_client import call_tool, get_tools
 from tool_router.scoring import pick_best_tools
 
+
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
-    raise ImportError("Install the MCP SDK: pip install mcp") from None
+    msg = "Install the MCP SDK: pip install mcp"
+    raise ImportError(msg) from None
 
 mcp = FastMCP("tool-router", json_response=True)
 
@@ -43,8 +45,7 @@ def execute_task(task: str, context: str = "") -> str:
     except Exception as e:
         return f"Error building arguments: {type(e).__name__}: {e}"
 
-    result = call_tool(name, args)
-    return result
+    return call_tool(name, args)
 
 
 @mcp.tool()

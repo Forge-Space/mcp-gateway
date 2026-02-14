@@ -6,10 +6,12 @@ from tool_router.observability import get_logger, get_metrics
 from tool_router.observability.metrics import TimingContext
 from tool_router.scoring.matcher import select_top_matching_tools
 
+
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
-    raise ImportError("Install the MCP SDK: pip install mcp") from None
+    msg = "Install the MCP SDK: pip install mcp"
+    raise ImportError(msg) from None
 
 mcp = FastMCP("tool-router", json_response=True)
 logger = get_logger(__name__)
@@ -27,11 +29,11 @@ def execute_task(task: str, context: str = "") -> str:
             with TimingContext("execute_task.get_tools"):
                 tools = get_tools()
         except (ValueError, ConnectionError) as error:
-            logger.error(f"Failed to list tools: {error}")
+            logger.exception(f"Failed to list tools: {error}")
             metrics.increment_counter("execute_task.errors.get_tools")
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
-            logger.error(f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}")
+            logger.exception(f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}")
             metrics.increment_counter("execute_task.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
 
@@ -44,7 +46,7 @@ def execute_task(task: str, context: str = "") -> str:
             with TimingContext("execute_task.pick_best_tools"):
                 best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
         except Exception as selection_error:
-            logger.error(f"Error picking tool: {type(selection_error).__name__}: {selection_error}")
+            logger.exception(f"Error picking tool: {type(selection_error).__name__}: {selection_error}")
             metrics.increment_counter("execute_task.errors.pick_tools")
             return f"Error picking tool: {type(selection_error).__name__}: {selection_error}"
 
@@ -67,7 +69,7 @@ def execute_task(task: str, context: str = "") -> str:
             with TimingContext("execute_task.build_arguments"):
                 tool_arguments = build_arguments(tool, task)
         except Exception as build_error:
-            logger.error(f"Error building arguments: {type(build_error).__name__}: {build_error}")
+            logger.exception(f"Error building arguments: {type(build_error).__name__}: {build_error}")
             metrics.increment_counter("execute_task.errors.build_args")
             return f"Error building arguments: {type(build_error).__name__}: {build_error}"
 
@@ -90,11 +92,11 @@ def search_tools(query: str, limit: int = 10) -> str:
             with TimingContext("search_tools.get_tools"):
                 tools = get_tools()
         except (ValueError, ConnectionError) as error:
-            logger.error(f"Failed to list tools: {error}")
+            logger.exception(f"Failed to list tools: {error}")
             metrics.increment_counter("search_tools.errors.get_tools")
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
-            logger.error(f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}")
+            logger.exception(f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}")
             metrics.increment_counter("search_tools.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
 
@@ -107,7 +109,7 @@ def search_tools(query: str, limit: int = 10) -> str:
             with TimingContext("search_tools.pick_best_tools"):
                 matching_tools = select_top_matching_tools(tools, query, "", top_n=limit)
         except Exception as search_error:
-            logger.error(f"Error searching tools: {type(search_error).__name__}: {search_error}")
+            logger.exception(f"Error searching tools: {type(search_error).__name__}: {search_error}")
             metrics.increment_counter("search_tools.errors.search")
             return f"Error searching tools: {type(search_error).__name__}: {search_error}"
 

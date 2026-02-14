@@ -1,6 +1,6 @@
 {
   "name": "@mcp-gateway/client",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "MCP Gateway client - Connect to your MCP Gateway instance via NPX",
   "type": "module",
   "bin": {
@@ -11,9 +11,18 @@
     "build:watch": "tsc --watch",
     "clean": "rimraf build/ node_modules/.cache/",
     "dev": "tsc --watch",
-    "lint": "tsc --noEmit",
+    "lint": "npm run lint:types && npm run lint:eslint && npm run lint:prettier",
+    "lint:types": "tsc --noEmit",
+    "lint:eslint": "eslint src/**/*.ts",
+    "lint:eslint:fix": "eslint src/**/*.ts --fix",
+    "lint:prettier": "prettier --check \"src/**/*.{ts,json}\"",
+    "format": "prettier --write \"src/**/*.{ts,json}\" && eslint src/**/*.ts --fix",
+    "deps:check": "npm-check-updates",
+    "deps:update": "npm-check-updates -u && npm install",
+    "deps:update:interactive": "npm-check-updates -i",
     "test": "echo 'TypeScript tests not yet implemented'",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "precommit": "npm run lint && npm run test"
   },
   "files": [
     "build",
@@ -40,8 +49,17 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0",
+    "npm-check-updates": "^17.1.14",
+    "prettier": "^3.4.2",
     "rimraf": "^5.0.10",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.55.0"
   },
   "engines": {
     "node": ">=18.0.0"

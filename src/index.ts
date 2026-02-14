@@ -32,24 +32,30 @@ import fetch from "node-fetch";
 
 // Helper function to parse CLI arguments safely
 function parseCliArg(argName: string): string | undefined {
-  const arg = process.argv.find(a => a.startsWith(`--${argName}=`));
-  if (!arg) return undefined;
+  const arg = process.argv.find((a) => a.startsWith(`--${argName}=`));
+  if (arg === undefined) {
+    return undefined;
+  }
   const value = arg.split("=").slice(1).join("="); // Handle URLs with = in them
-  return value || undefined;
+  return value.length > 0 ? value : undefined;
 }
 
 // Configuration from environment variables or CLI args
-const GATEWAY_URL = process.env.MCP_GATEWAY_URL || parseCliArg("url");
-const GATEWAY_TOKEN = process.env.MCP_GATEWAY_TOKEN || parseCliArg("token");
-const REQUEST_TIMEOUT_MILLISECONDS = parseInt(process.env.MCP_GATEWAY_TIMEOUT || "120000", 10);
+const GATEWAY_URL = process.env.MCP_GATEWAY_URL ?? parseCliArg("url");
+const GATEWAY_TOKEN = process.env.MCP_GATEWAY_TOKEN ?? parseCliArg("token");
+const REQUEST_TIMEOUT_MILLISECONDS = parseInt(process.env.MCP_GATEWAY_TIMEOUT ?? "120000", 10);
 
 // Validate timeout is reasonable
-if (isNaN(REQUEST_TIMEOUT_MILLISECONDS) || REQUEST_TIMEOUT_MILLISECONDS < 1000 || REQUEST_TIMEOUT_MILLISECONDS > 600000) {
+if (
+  isNaN(REQUEST_TIMEOUT_MILLISECONDS) ||
+  REQUEST_TIMEOUT_MILLISECONDS < 1000 ||
+  REQUEST_TIMEOUT_MILLISECONDS > 600000
+) {
   console.error("Error: MCP_GATEWAY_TIMEOUT must be between 1000 and 600000 ms");
   process.exit(1);
 }
 
-if (!GATEWAY_URL) {
+if (GATEWAY_URL === undefined || GATEWAY_URL.length === 0) {
   console.error("Error: MCP_GATEWAY_URL is required");
   console.error("\nUsage (Local):");
   console.error("  npx @mcp-gateway/client --url=http://localhost:4444/servers/<UUID>/mcp");
@@ -76,8 +82,24 @@ const server = new Server(
   }
 );
 
+// Define response type for gateway requests
+interface GatewayResponse {
+  jsonrpc: string;
+  id: number;
+  result?: unknown;
+  error?: {
+    code: number;
+    message: string;
+    data?: unknown;
+  };
+}
+
 // Helper function to make requests to gateway (with optional authentication)
-async function sendGatewayRequest(method: string, endpoint: string, body?: any): Promise<any> {
+async function sendGatewayRequest(
+  method: string,
+  endpoint: string,
+  body?: unknown
+): Promise<GatewayResponse> {
   const url = `${GATEWAY_URL}${endpoint}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MILLISECONDS);
@@ -88,14 +110,14 @@ async function sendGatewayRequest(method: string, endpoint: string, body?: any):
     };
 
     // Only add Authorization header if token is provided
-    if (GATEWAY_TOKEN) {
-      headers["Authorization"] = `Bearer ${GATEWAY_TOKEN}`;
+    if (GATEWAY_TOKEN !== undefined && GATEWAY_TOKEN.length > 0) {
+      headers.Authorization = `Bearer ${GATEWAY_TOKEN}`;
     }
 
     const response = await fetch(url, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
 
@@ -103,18 +125,25 @@ async function sendGatewayRequest(method: string, endpoint: string, body?: any):
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Gateway request failed: ${response.status} ${response.statusText}\n${errorText}`);
+      throw new Error(
+        `Gateway request failed: ${response.status} ${response.statusText}\n${errorText}`
+      );
     }
 
     const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error(`Gateway returned non-JSON response: ${contentType}`);
+    if (contentType === null || contentType.includes("application/json") === false) {
+      throw new Error(`Gateway returned non-JSON response: ${contentType ?? "null"}`);
     }
 
-    const responseData = await response.json();
+    const responseData = (await response.json()) as GatewayResponse;
 
     // Validate JSON-RPC response structure
-    if (responseData && typeof responseData === "object" && "error" in responseData && responseData.error) {
+    if (
+      typeof responseData === "object" &&
+      responseData !== null &&
+      "error" in responseData &&
+      responseData.error !== undefined
+    ) {
       throw new Error(`Gateway returned error: ${JSON.stringify(responseData.error)}`);
     }
 
@@ -137,11 +166,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       method: "tools/list",
     });
 
-    if (!response || typeof response !== "object") {
+    if (typeof response !== "object" || response === null) {
       throw new Error("Invalid response from gateway");
     }
 
-    return response.result || { tools: [] };
+    return (response.result ?? { tools: [] }) as { tools: unknown[] };
   } catch (error) {
     console.error("Error listing tools:", error);
     return { tools: [] };
@@ -161,11 +190,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       },
     });
 
-    if (!response || typeof response !== "object" || !response.result) {
+    if (typeof response !== "object" || response?.result === undefined) {
       throw new Error("Invalid response from gateway: missing result");
     }
 
-    return response.result;
+    return response.result as {
+      content: { type: string; text?: string; [key: string]: unknown }[];
+      isError?: boolean;
+    };
   } catch (error) {
     console.error("Error calling tool:", error);
     throw error;
@@ -180,7 +212,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
       id: Date.now(),
       method: "resources/list",
     });
-    return response.result || { resources: [] };
+    return (response.result ?? { resources: [] }) as { resources: unknown[] };
   } catch (error) {
     console.error("Error listing resources:", error);
     return { resources: [] };
@@ -198,7 +230,15 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
         uri: request.params.uri,
       },
     });
-    return response.result;
+    return response.result as {
+      contents: {
+        uri: string;
+        mimeType?: string;
+        text?: string;
+        blob?: string;
+        [key: string]: unknown;
+      }[];
+    };
   } catch (error) {
     console.error("Error reading resource:", error);
     throw error;
@@ -213,7 +253,7 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
       id: Date.now(),
       method: "prompts/list",
     });
-    return response.result || { prompts: [] };
+    return (response.result ?? { prompts: [] }) as { prompts: unknown[] };
   } catch (error) {
     console.error("Error listing prompts:", error);
     return { prompts: [] };
@@ -232,7 +272,14 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
         arguments: request.params.arguments,
       },
     });
-    return response.result;
+    return response.result as {
+      description?: string;
+      messages: {
+        role: string;
+        content: { type: string; text?: string; [key: string]: unknown };
+        [key: string]: unknown;
+      }[];
+    };
   } catch (error) {
     console.error("Error getting prompt:", error);
     throw error;
@@ -240,12 +287,14 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 });
 
 // Start the server with stdio transport
-async function main() {
+async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
   console.error(`MCP Gateway Client connected to: ${GATEWAY_URL}`);
-  console.error(`Authentication: ${GATEWAY_TOKEN ? 'Enabled (JWT)' : 'Disabled (Local mode)'}`);
+  console.error(
+    `Authentication: ${GATEWAY_TOKEN !== undefined && GATEWAY_TOKEN.length > 0 ? "Enabled (JWT)" : "Disabled (Local mode)"}`
+  );
   console.error(`Timeout: ${REQUEST_TIMEOUT_MILLISECONDS}ms`);
 }
 
