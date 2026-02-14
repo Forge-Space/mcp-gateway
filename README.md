@@ -78,6 +78,8 @@ The default `./start.sh` starts the gateway and these local translate services (
 | memory              | http://memory:8027/sse              | Persistent knowledge graph; data in `./data/memory` (no API key)   |
 | git-mcp             | http://git-mcp:8028/sse             | Local git operations: commit, branch, diff, log (no API key)      |
 | fetch               | http://fetch:8029/sse               | Web content fetching to markdown for LLM use (no API key)          |
+| postgres            | http://postgres:8031/sse            | Set `POSTGRES_CONNECTION_STRING` in .env (read-only queries)       |
+| mongodb             | http://mongodb:8032/sse             | Set `MONGODB_CONNECTION_STRING` in .env (full DB operations)       |
 | tool-router         | http://tool-router:8030/sse         | Single entry point; set `GATEWAY_JWT` in .env (see cursor-router)  |
 | sqlite              | http://sqlite:8024/sse              | Set `SQLITE_DB_PATH` / `SQLITE_VOLUME` in .env; default `./data`   |
 | github              | http://github:8025/sse              | Set `GITHUB_PERSONAL_ACCESS_TOKEN` in .env                         |
@@ -154,10 +156,54 @@ Use the wrapper script so no token is stored in mcp.json and no weekly refresh i
 
 See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, `AUTH_ENCRYPTION_SECRET` (each at least 32 chars; run `make generate-secrets`). Never commit `.env` or secrets.
 
+## Automated Maintenance
+
+This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
+
+### Dependency Updates (Renovate)
+
+**Schedule:** Every Monday at 2 AM UTC
+
+Renovate automatically checks for updates to:
+- Python dependencies (`requirements.txt`)
+- Docker images (Context Forge gateway)
+- GitHub Actions
+
+**Auto-merge policy:**
+- ✅ Patch/minor updates: Auto-merge after 3-day stabilization + passing CI
+- ❌ Major updates: Require manual review (labeled `breaking-change`)
+- 🔒 Security vulnerabilities: Immediate auto-merge
+
+**Setup:** Add `RENOVATE_TOKEN` secret to repository settings (GitHub PAT with `repo` and `workflow` scopes).
+
+**Dashboard:** Check the Dependency Dashboard issue for pending updates.
+
+### MCP Server Registry Check
+
+**Schedule:** Every Monday at 3 AM UTC
+
+Automatically scans the MCP Registry for:
+- New servers not in `gateways.txt`
+- Status of commented servers (auth requirements, etc.)
+
+Creates/updates a GitHub issue with findings. No secrets required.
+
+### Docker Image Updates
+
+**Schedule:** Every Monday at 4 AM UTC
+
+Checks IBM/mcp-context-forge for new releases and automatically creates PRs with:
+- Updated image tags in all files
+- Changelog link
+- Testing checklist
+
+PRs require manual review before merge.
+
 ## Development
 
 - **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - **Script index:** [scripts/README.md](scripts/README.md)
+- **Maintenance automation:** See [Automated Maintenance](#automated-maintenance) above
 
 ## Using the gateway with AI
 

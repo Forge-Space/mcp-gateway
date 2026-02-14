@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+### Added
+
+- **Database MCP servers** – 3 new database servers for TypeScript/Node.js development:
+  - **postgres** (port 8031) – Anthropic reference server (`@modelcontextprotocol/server-postgres`). Read-only PostgreSQL queries and schema inspection. Requires `POSTGRES_CONNECTION_STRING` in `.env`.
+  - **mongodb** (port 8032) – Official MongoDB server (`mongodb-mcp-server`). Comprehensive database operations for collections, documents, and indexes. Requires `MONGODB_CONNECTION_STRING` in `.env`.
+  - **prisma-remote** (remote) – Prisma ORM server (`https://mcp.prisma.io/mcp`). Type-safe database queries and migrations for PostgreSQL, MongoDB, MySQL, SQLite. Uncommented in `gateways.txt`.
+- **Client-agnostic virtual servers** – Two new virtual servers that work with any MCP client (Cursor, Windsurf, VSCode, Antigravity, etc.):
+  - **database** – PostgreSQL, MongoDB, Prisma ORM tools for database-focused workflows.
+  - **fullstack** – Complete dev workflow with database tools + memory + git-mcp + fetch.
+- **Connection string examples** – `.env` includes commented examples for `POSTGRES_CONNECTION_STRING` and `MONGODB_CONNECTION_STRING` with placeholder values.
+- **Automated dependency updates** – Renovate integration for weekly automated dependency updates with breaking change detection. Auto-merges patch/minor updates after 3-day stabilization period when all CI checks pass. Major updates require manual review. Configuration in `.github/renovate.json` and workflow in `.github/workflows/renovate.yml`.
+- **MCP Server Registry monitoring** – Weekly automated check for new MCP servers from the official registry. Creates/updates GitHub issues with new server discoveries and status of commented servers. Script: `scripts/check-mcp-registry.py`, workflow: `.github/workflows/mcp-server-check.yml`.
+- **Docker image update automation** – Weekly check for Context Forge updates from IBM/mcp-context-forge releases. Automatically creates PRs with version bumps across all relevant files (docker-compose.yml, scripts, CI, docs). Script: `scripts/check-docker-updates.sh`, workflow: `.github/workflows/docker-updates.yml`.
+
+### Changed
+
+- **MCP server cleanup** – Removed problematic servers from `scripts/gateways.txt`: context-awesome (HTTP 406 upstream bug), apify-dribbble (niche use case). Updated comments to explain why servers are commented (auth required, timing issues, etc.).
+- **Prisma remote server** – Uncommented `prisma-remote` in `gateways.txt` for TypeScript ORM support.
+
+### Documentation
+
+- **Automated Maintenance section** – Added comprehensive documentation for automation workflows in README.md, including setup instructions, schedule details, and how to configure secrets.
+- **Development guide updates** – Updated docs/DEVELOPMENT.md with maintenance automation section covering Renovate configuration, MCP registry checks, and Docker update process.
+
 ## [1.5.0] - 2026-02-14
 
 ### Added
@@ -12,8 +38,13 @@ All notable changes to this project are documented here.
   - **fetch** (port 8029) – Anthropic reference server (`@modelcontextprotocol/server-fetch`). Web content fetching and markdown conversion for LLM consumption. No API key required.
   - **Context7** (remote) – Up-to-date library/framework documentation lookup (`https://mcp.context7.com/mcp`). Free tier works without API key; configure key in Admin UI Passthrough Headers for higher rate limits. Uncommented in `gateways.txt`.
   - **DeepWiki** (remote) – AI-powered codebase documentation for any public GitHub repo (`https://mcp.deepwiki.com/mcp`). Free, no authentication required.
-- **cursor-default expanded** – `virtual-servers.txt` cursor-default now includes memory, git-mcp, and fetch gateways alongside existing ones.
+- **cursor-default expanded** – `virtual-servers.txt` cursor-default now includes memory and fetch gateways alongside existing ones. `git-mcp` moved to dedicated `cursor-git` virtual server to stay under Cursor's 60-tool limit.
 - **Port overrides** – `.env` optional vars: `MEMORY_PORT`, `GIT_MCP_PORT`, `FETCH_PORT`.
+
+### Fixed
+
+- **memory persistence** – Mount `./data/memory` volume and set `MEMORY_FILE_PATH=/data/memory.jsonl` so the knowledge graph survives container restarts. Added `MEMORY_VOLUME` to `.env.example`.
+- **git-mcp volume** – Mount `GIT_REPO_VOLUME` (default `./workspace`) into the container and pass `--repository /repos` so the server can access a git repository. Added `GIT_REPO_VOLUME` to `.env.example` and updated README.
 
 ## [1.4.3] - 2026-02-13
 

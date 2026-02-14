@@ -15,6 +15,8 @@ snyk|http://snyk:8023/sse|SSE
 memory|http://memory:8027/sse|SSE
 git-mcp|http://git-mcp:8028/sse|SSE
 fetch|http://fetch:8029/sse|SSE
+postgres|http://postgres:8031/sse|SSE
+mongodb|http://mongodb:8032/sse|SSE
 tool-router|http://tool-router:8030/sse|SSE
 # sqlite/github often fail with "Unable to connect" or "Unexpected error"; uncomment after checking docker compose logs sqlite|github, or add via Admin UI.
 # sqlite|http://sqlite:8024/sse|SSE
@@ -23,12 +25,17 @@ tool-router|http://tool-router:8030/sse|SSE
 # Remote (stack): uncomment to register via script, or add to EXTRA_GATEWAYS in .env. Context7 needs API key in Admin UI (Passthrough Headers).
 Context7|https://mcp.context7.com/mcp|STREAMABLEHTTP
 DeepWiki|https://mcp.deepwiki.com/mcp|STREAMABLEHTTP
+prisma-remote|https://mcp.prisma.io/mcp|STREAMABLEHTTP
 # Often unreachable or 406 from gateway; add via Admin UI if needed.
 # context-awesome|https://www.context-awesome.com/api/mcp|STREAMABLEHTTP
-# prisma-remote|https://mcp.prisma.io/mcp|STREAMABLEHTTP
-
-# Remote (auth required): add in Admin UI and set Passthrough Headers or OAuth. Do not put secrets in this file.
 # cloudflare-observability|https://observability.mcp.cloudflare.com/mcp|STREAMABLEHTTP
 # cloudflare-bindings|https://bindings.mcp.cloudflare.com/mcp|STREAMABLEHTTP
 # v0|https://mcp.v0.dev|STREAMABLEHTTP
-# apify-dribbble|https://mcp.apify.com/sse?actors=practicaltools/apify-dribbble-scraper|SSE
+
+# Remote (auth required): add in Admin UI and set Passthrough Headers or OAuth. Do not put secrets in this file.
+# Commented: require manual authentication setup in Admin UI (Passthrough Headers or OAuth)
+
+# Removed servers (not recommended):
+# - context-awesome: Returns HTTP 406 due to upstream Context Forge limitation (missing Accept header)
+# - prisma-remote: Unreliable, similar upstream issues
+# - apify-dribbble: Niche use case, low value for general development

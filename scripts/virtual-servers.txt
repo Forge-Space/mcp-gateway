@@ -4,11 +4,17 @@
 # After editing, run: make register
 # Connect Cursor to one server URL (e.g. .../servers/<UUID>/mcp) from the script output.
 #
-# cursor-default: core dev + search + browser (under 60 tools)
-cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,memory,git-mcp,fetch
+# cursor-default: core dev + search + browser (aim for under 60 tools; verify with make register)
+cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,memory,fetch
 # cursor-search: search and docs only
 cursor-search|tavily
 # cursor-browser: browser automation
 cursor-browser|playwright,puppeteer,browser-tools,chrome-devtools,desktop-commander
+# cursor-git: git operations (local + GitHub)
+cursor-git|git-mcp
 # cursor-router: single entry point; routes tasks to the best upstream tool (requires GATEWAY_JWT)
 cursor-router|tool-router
+# database: PostgreSQL, MongoDB, Prisma ORM (client-agnostic)
+database|postgres,mongodb,prisma-remote
+# fullstack: database + memory + git + fetch for complete dev workflows (client-agnostic)
+fullstack|postgres,mongodb,prisma-remote,memory,git-mcp,fetch
