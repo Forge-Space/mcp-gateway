@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here.
 
+## [1.5.0] - 2026-02-14
+
+### Added
+
+- **MCP servers for AI development** – 5 new free MCP servers added to the gateway for enhanced AI-assisted development workflows:
+  - **memory** (port 8027) – Anthropic reference server (`@modelcontextprotocol/server-memory`). Persistent knowledge graph that stores and retrieves context across sessions. No API key required.
+  - **git-mcp** (port 8028) – Anthropic reference server (`@modelcontextprotocol/server-git`). Local git operations (commit, branch, diff, log) complementing the GitHub gateway. No API key required.
+  - **fetch** (port 8029) – Anthropic reference server (`@modelcontextprotocol/server-fetch`). Web content fetching and markdown conversion for LLM consumption. No API key required.
+  - **Context7** (remote) – Up-to-date library/framework documentation lookup (`https://mcp.context7.com/mcp`). Free tier works without API key; configure key in Admin UI Passthrough Headers for higher rate limits. Uncommented in `gateways.txt`.
+  - **DeepWiki** (remote) – AI-powered codebase documentation for any public GitHub repo (`https://mcp.deepwiki.com/mcp`). Free, no authentication required.
+- **cursor-default expanded** – `virtual-servers.txt` cursor-default now includes memory, git-mcp, and fetch gateways alongside existing ones.
+- **Port overrides** – `.env` optional vars: `MEMORY_PORT`, `GIT_MCP_PORT`, `FETCH_PORT`.
+
 ## [1.4.3] - 2026-02-13
 
 ### Fixed

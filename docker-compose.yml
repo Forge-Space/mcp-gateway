@@ -148,6 +148,33 @@ services:
     ports:
       - "${GITHUB_PORT:-8025}:8025"
 
+  memory:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-memory" --expose-sse --port 8027 --host 0.0.0.0'
+    ports:
+      - "${MEMORY_PORT:-8027}:8027"
+
+  git-mcp:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-git" --expose-sse --port 8028 --host 0.0.0.0'
+    ports:
+      - "${GIT_MCP_PORT:-8028}:8028"
+
+  fetch:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-fetch" --expose-sse --port 8029 --host 0.0.0.0'
+    ports:
+      - "${FETCH_PORT:-8029}:8029"
+
   tool-router:
     build:
       context: .
