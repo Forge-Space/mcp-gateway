@@ -4,6 +4,7 @@
 _BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_DIR="$(cd "$_BOOTSTRAP_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CONFIG_DIR="${CONFIG_DIR:-$REPO_ROOT/config}"
 cd "$REPO_ROOT" || true
 # shellcheck source=scripts/lib/log.sh
 source "$SCRIPT_DIR/lib/log.sh" 2>/dev/null || true

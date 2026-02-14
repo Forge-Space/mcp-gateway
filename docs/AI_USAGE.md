@@ -20,9 +20,9 @@ In Cursor you will see the **context-forge** (or **user-context-forge**) MCP ser
 
 Cursor (and some MCP clients) warn or misbehave when a single connection exposes **more than ~60 tools**. With many gateways registered, one virtual server that includes every tool can exceed this.
 
-**Approach:** Use **multiple virtual servers**, each with a subset of gateways (up to 60 tools per server). Define them in `scripts/virtual-servers.txt`:
+**Approach:** Use **multiple virtual servers**, each with a subset of gateways (up to 60 tools per server). Define them in `config/virtual-servers.txt`:
 
-- Format: one line per server, `ServerName|gateway1,gateway2,...` (gateway names must match `gateways.txt`).
+- Format: one line per server, `ServerName|gateway1,gateway2,...` (gateway names must match `config/gateways.txt`).
 - After editing, run `make register`. The script creates or updates each server and prints a Cursor URL per server.
 - In Cursor, connect to **one** URL depending on the task (e.g. `cursor-default` for general dev, `cursor-search` for search/docs, `cursor-browser` for browser automation). You can add more than one virtual server as separate MCP entries in Cursor if you want to switch between them.
 

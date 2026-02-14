@@ -51,13 +51,14 @@ if [[ -z "$server_list" ]]; then
 fi
 
 preferred_names=""
-if [[ -f "$SCRIPT_DIR/virtual-servers.txt" ]]; then
+virtual_servers_file="${CONFIG_DIR:-$SCRIPT_DIR}/virtual-servers.txt"
+if [[ -f "$virtual_servers_file" ]]; then
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
     name=$(echo "$line" | cut -d'|' -f1)
     [[ -n "$name" ]] && preferred_names="${preferred_names:+$preferred_names$'\n'}$name"
-  done < "$SCRIPT_DIR/virtual-servers.txt"
+  done < "$virtual_servers_file"
 fi
 
 declare -A sig_to_ids

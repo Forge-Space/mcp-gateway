@@ -133,7 +133,7 @@ def generate_report(current: Dict[str, Set[str]], registry: List[Dict]) -> str:
         "---",
         "",
         "To add a new server:",
-        "1. Add to `scripts/gateways.txt` with format: `Name|URL|Transport`",
+        "1. Add to `config/gateways.txt` with format: `Name|URL|Transport`",
         "2. Run `make register` to register the gateway",
         "3. For remote servers requiring auth, configure in Admin UI",
     ])

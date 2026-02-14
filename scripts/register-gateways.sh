@@ -217,15 +217,16 @@ if [[ -n "$EXTRA_GATEWAYS" ]]; then
   done <<< "$(echo "$EXTRA_GATEWAYS" | tr ',' '\n')"
 fi
 
-if [[ -f "$SCRIPT_DIR/gateways.txt" ]]; then
-  log_step "Registering gateways from scripts/gateways.txt..."
+gateways_file="${CONFIG_DIR:-$SCRIPT_DIR}/gateways.txt"
+if [[ -f "$gateways_file" ]]; then
+  log_step "Registering gateways from $gateways_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
     IFS='|' read -r name url transport <<< "$line"
     transport=$(echo "${transport:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     register "$name" "$url" "$transport"
-  done < "$SCRIPT_DIR/gateways.txt"
+  done < "$gateways_file"
 fi
 
 if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &>/dev/null; then
@@ -240,7 +241,7 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
 
   # Count expected gateways from config
   [[ -n "$EXTRA_GATEWAYS" ]] && expected_gateways=$((expected_gateways + $(echo "$EXTRA_GATEWAYS" | tr ',' '\n' | grep -v '^[[:space:]]*$' | grep -v '^#' | wc -l)))
-  [[ -f "$SCRIPT_DIR/gateways.txt" ]] && expected_gateways=$((expected_gateways + $(grep -v '^[[:space:]]*$' "$SCRIPT_DIR/gateways.txt" | grep -v '^#' | wc -l)))
+  [[ -f "$gateways_file" ]] && expected_gateways=$((expected_gateways + $(grep -v '^[[:space:]]*$' "$gateways_file" | grep -v '^#' | wc -l)))
 
   while [[ $tools_retry_count -lt $tools_retry_max ]]; do
     tools_resp=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 60 \
@@ -270,7 +271,7 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
   tools_body=$(parse_http_body "$tools_resp")
   if [[ "$tools_code" != "200" ]] || [[ -z "$tools_body" ]]; then
     :
-  elif [[ -f "$SCRIPT_DIR/virtual-servers.txt" ]]; then
+  elif [[ -f "${CONFIG_DIR:-$SCRIPT_DIR}/virtual-servers.txt" ]]; then
     tools_arr=$(echo "$tools_body" | jq -c 'if type == "array" then . else .tools? // [] end' 2>/dev/null)
     servers_code=""
     servers_body=""
@@ -316,7 +317,7 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
       existing_id=$(echo "$servers_body" | jq -r --arg n "$server_name" 'if type == "array" then .[] else .servers[]? // empty end | select(.name == $n) | .id' 2>/dev/null | head -1)
       [[ "$existing_id" == "null" ]] && existing_id=""
       create_or_update_virtual_server "$server_name" "$desc" "$tool_ids_json" "$existing_id" || break
-      done < "$SCRIPT_DIR/virtual-servers.txt"
+      done < "${CONFIG_DIR:-$SCRIPT_DIR}/virtual-servers.txt"
     fi
   else
     tool_ids=$(echo "$tools_body" | jq -r 'if type == "array" then .[] else .tools[]? // empty end | .id // empty' 2>/dev/null)
@@ -347,8 +348,9 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
   fi
 fi
 
-if [[ "${REGISTER_PROMPTS:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/prompts.txt" ]]; then
-  log_step "Registering prompts from scripts/prompts.txt..."
+prompts_file="${CONFIG_DIR:-$SCRIPT_DIR}/prompts.txt"
+if [[ "${REGISTER_PROMPTS:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$prompts_file" ]]; then
+  log_step "Registering prompts from $prompts_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
@@ -363,11 +365,12 @@ if [[ "${REGISTER_PROMPTS:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/pr
     payload=$(jq -n --arg n "$name" --arg d "$desc" --arg t "$template" --argjson a "$args_json" '{prompt: {name: $n, description: $d, template: $t, arguments: $a}}')
     code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/prompts" 2>/dev/null)
     if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "prompt $name"; fi
-  done < "$SCRIPT_DIR/prompts.txt"
+  done < "$prompts_file"
 fi
 
-if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/resources.txt" ]]; then
-  log_step "Registering resources from scripts/resources.txt..."
+resources_file="${CONFIG_DIR:-$SCRIPT_DIR}/resources.txt"
+if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$resources_file" ]]; then
+  log_step "Registering resources from $resources_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [[ -z "$line" || "$line" =~ ^# ]] && continue
@@ -378,11 +381,11 @@ if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$SCRIPT_DIR/
     payload=$(jq -n --arg n "$name" --arg u "$uri" --arg d "$desc" --arg m "${mime:-text/plain}" '{resource: {name: $n, uri: $u, description: $desc, mime_type: $m}}')
     code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/resources" 2>/dev/null)
     if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "resource $name"; fi
-  done < "$SCRIPT_DIR/resources.txt"
+  done < "$resources_file"
 fi
 
-if [[ -z "$EXTRA_GATEWAYS" && ! -f "$SCRIPT_DIR/gateways.txt" ]]; then
-  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to scripts/gateways.txt (Name|URL|Transport)."
+if [[ -z "$EXTRA_GATEWAYS" && ! -f "$gateways_file" ]]; then
+  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to $gateways_file (Name|URL|Transport)."
 else
   log_line
   log_ok "Done."
