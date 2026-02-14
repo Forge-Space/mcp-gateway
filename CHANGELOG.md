@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [1.5.0] - 2026-02-14
+
+### Added
+
+- **uiforge-mcp server** – New local translate service (port 8026) providing 7 AI-driven UI generation tools: `scaffold_full_application` (React/Next.js/Vue/Angular + Tailwind + Shadcn/ui), `generate_ui_component` (style-aware components with audit), `generate_prototype` (interactive HTML prototypes with navigation), `generate_design_image` (SVG/PNG mockups via satori + resvg), `fetch_design_inspiration` (extract colors/typography from URLs), `figma_context_parser` (read Figma nodes → Tailwind mapping), `figma_push_variables` (write design tokens to Figma Variables API). Plus 1 MCP resource: `application://current-styles` (session-scoped design context). Set `FIGMA_ACCESS_TOKEN` in `.env` for Figma tools. Added to `cursor-default` virtual server. Built from [uiforge-mcp](https://github.com/LucasSantana-Dev/uiforge-mcp) via `Dockerfile.uiforge`.
+
 ## [1.4.3] - 2026-02-13
 
 ### Fixed

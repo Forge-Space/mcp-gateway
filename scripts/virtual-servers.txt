@@ -5,7 +5,7 @@
 # Connect Cursor to one server URL (e.g. .../servers/<UUID>/mcp) from the script output.
 #
 # cursor-default: core dev + search + browser (under 60 tools)
-cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools
+cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,uiforge
 # cursor-search: search and docs only
 cursor-search|tavily
 # cursor-browser: browser automation

@@ -148,6 +148,16 @@ services:
     ports:
       - "${GITHUB_PORT:-8025}:8025"
 
+  uiforge:
+    build:
+      context: .
+      dockerfile: Dockerfile.uiforge
+    image: mcp-gateway-uiforge:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${UIFORGE_PORT:-8026}:8026"
+
   tool-router:
     build:
       context: .

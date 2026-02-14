@@ -78,6 +78,7 @@ The default `./start.sh` starts the gateway and these local translate services (
 | tool-router         | http://tool-router:8030/sse         | Single entry point; set `GATEWAY_JWT` in .env (see cursor-router)  |
 | sqlite              | http://sqlite:8024/sse              | Set `SQLITE_DB_PATH` / `SQLITE_VOLUME` in .env; default `./data`   |
 | github              | http://github:8025/sse              | Set `GITHUB_PERSONAL_ACCESS_TOKEN` in .env                         |
+| uiforge             | http://uiforge:8026/sse             | AI-driven UI generation (7 tools); set `FIGMA_ACCESS_TOKEN` in .env for Figma sync |
 
 After start, run `make register` to register them (or add in Admin UI with the URLs above, Transport **SSE**). This creates or updates a virtual server and prints its Cursor URL. Attach tools in Admin UI if you skip that step. Optional: set `REGISTER_PROMPTS=true` and add `scripts/prompts.txt` (format: `name|description|template` with `{{arg}}` and `\n` for newlines), then run `make register`. Use `make gateway-only` to run only the gateway (no translate services).
 
