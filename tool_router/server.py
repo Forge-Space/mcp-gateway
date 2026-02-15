@@ -21,7 +21,7 @@ def execute_task(task: str, context: str = "") -> str:
         tools = get_tools()
     except (ValueError, ConnectionError) as e:
         return f"Failed to list tools: {e}"
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         return f"Unexpected error listing tools: {type(e).__name__}: {e}"
 
     if not tools:
@@ -29,7 +29,7 @@ def execute_task(task: str, context: str = "") -> str:
 
     try:
         best = pick_best_tools(tools, task, context, top_n=1)
-    except Exception as e:
+    except (ValueError, KeyError, TypeError) as e:
         return f"Error selecting tool: {type(e).__name__}: {e}"
 
     if not best:
@@ -42,7 +42,7 @@ def execute_task(task: str, context: str = "") -> str:
 
     try:
         args = build_arguments(tool, task)
-    except Exception as e:
+    except (ValueError, KeyError, TypeError) as e:
         return f"Error building arguments: {type(e).__name__}: {e}"
 
     return call_tool(name, args)
@@ -55,7 +55,7 @@ def search_tools(query: str) -> str:
         tools = get_tools()
     except (ValueError, ConnectionError) as e:
         return f"Failed to list tools: {e}"
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         return f"Unexpected error listing tools: {type(e).__name__}: {e}"
 
     if not tools:
@@ -63,7 +63,7 @@ def search_tools(query: str) -> str:
 
     try:
         best = pick_best_tools(tools, query, "", top_n=10)
-    except Exception as e:
+    except (ValueError, KeyError, TypeError) as e:
         return f"Error searching tools: {type(e).__name__}: {e}"
 
     if not best:

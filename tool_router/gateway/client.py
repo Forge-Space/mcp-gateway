@@ -62,7 +62,7 @@ class HTTPGatewayClient:
                     # Safely read error response body
                     try:
                         error_body = http_error.read().decode("utf-8")
-                    except Exception:
+                    except (OSError, UnicodeDecodeError):
                         error_body = "<unable to read response body>"
                     msg = f"Gateway HTTP error {http_error.code}: {error_body}"
                     raise ValueError(msg)
