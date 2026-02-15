@@ -21,7 +21,7 @@ jobs:
       latest_version: ${{ steps.check.outputs.latest_version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Make script executable
         run: chmod +x scripts/utils/check-docker-updates.sh
@@ -33,7 +33,7 @@ jobs:
 
       - name: Upload report
         if: steps.check.outputs.status == 'update-available'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: docker-update-report
           path: docker-update-report.md
@@ -46,10 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: docker-update-report
 
@@ -78,7 +78,7 @@ jobs:
           sed -i "s|ghcr.io/ibm/mcp-context-forge:[^ ]*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" docs/DEVELOPMENT.md
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore(docker): update Context Forge to ${{ needs.check-updates.outputs.latest_version }}"
