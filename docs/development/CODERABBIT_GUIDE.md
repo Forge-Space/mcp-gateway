@@ -1,7 +1,7 @@
 # CodeRabbit Configuration Guide
 
 **Version:** 1.0.0
-**Last Updated:** 2025-02-14
+**Last Updated:** 2026-02-14
 **Audience:** Contributors, Maintainers, AI Agents
 
 ---
