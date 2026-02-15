@@ -1,4 +1,6 @@
-"""AI-powered tool selector using Ollama LLM."""
+"""AI-powered tool selector using Ollama local LLM."""
+
+from __future__ import annotations
 
 import json
 import logging
@@ -114,9 +116,9 @@ class AIToolSelector:
 
         except requests.HTTPError as e:
             if e.response.status_code == 404:
-                logger.error(f"Model {self.model} not found. Pull it with: ollama pull {self.model}")
+                logger.error(f"Model {self.model} not found. Pull it with: ollama pull {self.model}")  # noqa: TRY400
             else:
-                logger.error(f"Ollama HTTP error: {e}")
+                logger.exception("Ollama HTTP error")
             return None
 
     def _parse_response(self, response: str, tools: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -206,6 +208,6 @@ class AIToolSelector:
                 timeout=300.0,  # Model pull can take time
             )
             return response.status_code == 200
-        except requests.RequestException as e:
-            logger.error(f"Failed to pull model: {e}")
+        except requests.RequestException:
+            logger.exception("Failed to pull model")
             return False

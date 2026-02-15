@@ -22,7 +22,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tool_router/tests"]
+testpaths = ["tool_router/tests", "tool_router/ai/tests"]
 pythonpath = ["."]
 addopts = "-v --strict-markers"
 
@@ -131,6 +131,16 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "ANN",     # Don't require type hints in tests
     "SIM117",  # Allow nested with statements in tests
 ]
+"tool_router/ai/tests/**/*.py" = [
+    "S101",    # Allow assert in tests
+    "ANN",     # Don't require type hints in tests
+    "PLR2004", # Allow magic values in tests
+    "ARG",     # Allow unused arguments in test fixtures
+    "SIM117",  # Allow nested with statements in tests
+    "PT011",   # Allow broad exception types in pytest.raises
+    "B017",    # Allow asserting on Exception in tests
+    "PLC0415", # Allow imports inside test functions
+]
 "tool_router/server.py" = [
     "PLR0911", # Allow more return statements in main routing function
     "E501",    # Allow long lines in docstrings
@@ -148,6 +158,11 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 ]
 "tool_router/scoring/matcher.py" = [
     "E501",    # Allow long lines in scoring calculations
+]
+"tool_router/ai/selector.py" = [
+    "PLR0911", # Allow more return statements in parser logic
+    "TRY300",  # Allow direct returns in try blocks for readability
+    "ANN204",  # Skip __init__ return type annotation
 ]
 
 [tool.ruff.lint.isort]
