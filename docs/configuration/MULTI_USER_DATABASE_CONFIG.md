@@ -27,6 +27,7 @@ By default, database connection strings in `.env` are **deployment-level** confi
 - Standard practice for self-hosted tools
 
 **Setup:**
+
 ```bash
 # Team A deployment
 POSTGRES_CONNECTION_STRING=postgresql://team_a_user:pass@db-team-a:5432/team_a_db
@@ -58,7 +59,8 @@ To support per-user credentials, you would need to:
    - Proxy server handles per-user database connections
 
 **Example proxy architecture:**
-```
+
+```text
 User Request → Gateway (with X-Database-Connection-String header)
             → Proxy MCP Server
             → Spawns @modelcontextprotocol/server-postgres with user's credentials
@@ -100,7 +102,8 @@ postgres-prod:
 ```
 
 **gateways.txt:**
-```
+
+```text
 postgres-dev|http://postgres-dev:8031/sse|SSE
 postgres-prod|http://postgres-prod:8033/sse|SSE
 ```
