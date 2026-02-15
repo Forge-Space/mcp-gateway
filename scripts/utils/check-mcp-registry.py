@@ -76,9 +76,7 @@ def generate_report(current: Dict[str, Set[str]], registry: List[Dict]) -> str:
     report_lines = ["# MCP Server Update Report", ""]
 
     # Extract current server names (all categories combined)
-    current_all = (
-        current["active_local"] | current["active_remote"] | current["commented"]
-    )
+    current_all = current["active_local"] | current["active_remote"] | current["commented"]
     current_all_lower = {name.lower() for name in current_all}
 
     # Find new servers
@@ -106,37 +104,33 @@ def generate_report(current: Dict[str, Set[str]], registry: List[Dict]) -> str:
         report_lines.extend(["## Commented Servers Status", ""])
         for name in sorted(current["commented"]):
             if name.lower() in ["sqlite", "github"]:
-                report_lines.append(
-                    f"- **{name}**: Local server, requires environment variables"
-                )
+                report_lines.append(f"- **{name}**: Local server, requires environment variables")
             elif name.lower() in ["cloudflare-observability", "cloudflare-bindings"]:
-                report_lines.append(
-                    f"- **{name}**: Requires Cloudflare authentication in Admin UI"
-                )
+                report_lines.append(f"- **{name}**: Requires Cloudflare authentication in Admin UI")
             elif name.lower() == "v0":
-                report_lines.append(
-                    f"- **{name}**: Requires Vercel authentication in Admin UI"
-                )
+                report_lines.append(f"- **{name}**: Requires Vercel authentication in Admin UI")
             else:
                 report_lines.append(f"- **{name}**: Commented, check documentation")
         report_lines.append("")
 
     # Summary
-    report_lines.extend([
-        "## Summary",
-        "",
-        f"- **Active Local Servers**: {len(current['active_local'])}",
-        f"- **Active Remote Servers**: {len(current['active_remote'])}",
-        f"- **Commented Servers**: {len(current['commented'])}",
-        f"- **New Servers Available**: {len(new_servers)}",
-        "",
-        "---",
-        "",
-        "To add a new server:",
-        "1. Add to `config/gateways.txt` with format: `Name|URL|Transport`",
-        "2. Run `make register` to register the gateway",
-        "3. For remote servers requiring auth, configure in Admin UI",
-    ])
+    report_lines.extend(
+        [
+            "## Summary",
+            "",
+            f"- **Active Local Servers**: {len(current['active_local'])}",
+            f"- **Active Remote Servers**: {len(current['active_remote'])}",
+            f"- **Commented Servers**: {len(current['commented'])}",
+            f"- **New Servers Available**: {len(new_servers)}",
+            "",
+            "---",
+            "",
+            "To add a new server:",
+            "1. Add to `config/gateways.txt` with format: `Name|URL|Transport`",
+            "2. Run `make register` to register the gateway",
+            "3. For remote servers requiring auth, configure in Admin UI",
+        ]
+    )
 
     return "\n".join(report_lines)
 

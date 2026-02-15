@@ -5,6 +5,7 @@ Uses PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY (and optional JWT_ISSUER, JWT_AUDIENCE
 from the environment. Run with .env sourced (e.g. make jwt) or pass vars explicitly.
 Requires: PyJWT (pip install pyjwt).
 """
+
 from __future__ import annotations
 
 import os

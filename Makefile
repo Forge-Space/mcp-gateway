@@ -1,4 +1,4 @@
-.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update pre-commit-install help
+.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update pre-commit-install ide-config ide-windsurf ide-cursor help
 
 # Default target
 .DEFAULT_GOAL := help
@@ -143,3 +143,18 @@ pre-commit-run: ## Run pre-commit hooks on all files
 
 pre-commit-update: ## Update pre-commit hook versions
 	pre-commit autoupdate
+
+# === IDE Configuration ===
+ide-config: ## Generate IDE config (IDE=windsurf|cursor SERVER=name [TOKEN=jwt])
+	@if [ -z "$(IDE)" ] || [ -z "$(SERVER)" ]; then \
+		echo "Usage: make ide-config IDE=windsurf|cursor SERVER=server-name [TOKEN=jwt]"; \
+		echo "Example: make ide-config IDE=windsurf SERVER=cursor-router"; \
+		exit 1; \
+	fi; \
+	./scripts/ide/generate-config.sh --ide=$(IDE) --server=$(SERVER) $(if $(TOKEN),--token=$(TOKEN))
+
+ide-windsurf: ## Generate Windsurf config (SERVER=name [TOKEN=jwt])
+	@$(MAKE) ide-config IDE=windsurf SERVER=$(SERVER) $(if $(TOKEN),TOKEN=$(TOKEN))
+
+ide-cursor: ## Generate Cursor config (SERVER=name [TOKEN=jwt])
+	@$(MAKE) ide-config IDE=cursor SERVER=$(SERVER) $(if $(TOKEN),TOKEN=$(TOKEN))

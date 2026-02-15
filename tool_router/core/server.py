@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import json
+
 from tool_router.ai.selector import AIToolSelector
+from tool_router.api.health import get_ai_router_health
+from tool_router.api.ide_config import generate_ide_config
+from tool_router.api.metrics import get_ai_router_metrics
 from tool_router.args.builder import build_arguments
 from tool_router.core.config import ToolRouterConfig
 from tool_router.gateway.client import call_tool, get_tools
@@ -186,6 +191,74 @@ def search_tools(query: str, limit: int = 10) -> str:
             lines.append(f"{index}. {name}: {description}")
 
         return "\n".join(lines)
+
+
+@mcp.tool()
+def get_ai_router_metrics_tool() -> str:
+    """Get AI router performance metrics and statistics.
+
+    Returns real-time metrics including selection methods, confidence scores, and usage rates.
+    """
+    try:
+        metrics_data = get_ai_router_metrics()
+        return json.dumps(metrics_data, indent=2)
+    except Exception as e:
+        logger.exception("Failed to get AI router metrics")
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+def get_ai_router_health_tool() -> str:
+    """Check AI router health status and configuration.
+
+    Returns health status, AI availability, and any issues detected.
+    """
+    try:
+        health_data = get_ai_router_health(config, ai_selector)
+        return json.dumps(health_data, indent=2)
+    except Exception as e:
+        logger.exception("Failed to get AI router health")
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+@mcp.tool()
+def generate_ide_config_tool(
+    ide: str,
+    server_name: str,
+    server_uuid: str,
+    gateway_url: str = "http://localhost:4444",
+) -> str:
+    """Generate IDE configuration for MCP Gateway connection.
+
+    Args:
+        ide: Target IDE (windsurf or cursor)
+        server_name: Name for the MCP server entry
+        server_uuid: UUID of the virtual server
+        gateway_url: Gateway base URL (default: http://localhost:4444)
+
+    Returns:
+        JSON configuration snippet for the IDE's mcp.json file
+
+    Example:
+        generate_ide_config_tool("windsurf", "my-server", "abc-123")
+    """
+    try:
+        if ide not in ("windsurf", "cursor"):
+            return json.dumps(
+                {"error": f"Invalid IDE '{ide}'. Must be 'windsurf' or 'cursor'"},
+                indent=2,
+            )
+
+        config_data = generate_ide_config(
+            ide=ide,  # type: ignore[arg-type]
+            server_name=server_name,
+            server_uuid=server_uuid,
+            gateway_url=gateway_url,
+        )
+        return json.dumps(config_data, indent=2)
+    except Exception as e:
+        logger.exception("Failed to generate IDE config")
+        return json.dumps({"error": str(e)}, indent=2)
 
 
 def main() -> None:

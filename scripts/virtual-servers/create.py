@@ -3,6 +3,7 @@
 Create virtual servers from virtual-servers.txt using the gateway API.
 Bypasses the tools sync requirement that causes 500 errors.
 """
+
 import os
 import sys
 import json
@@ -13,7 +14,11 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent.parent
 REPO_ROOT = SCRIPT_DIR.parent
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", REPO_ROOT / "config"))
-VIRTUAL_SERVERS_FILE = CONFIG_DIR / "virtual-servers.txt" if (CONFIG_DIR / "virtual-servers.txt").exists() else REPO_ROOT / "config" / "virtual-servers.txt"
+VIRTUAL_SERVERS_FILE = (
+    CONFIG_DIR / "virtual-servers.txt"
+    if (CONFIG_DIR / "virtual-servers.txt").exists()
+    else REPO_ROOT / "config" / "virtual-servers.txt"
+)
 GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://localhost:4444")
 
 # Timeout configuration (in seconds)
@@ -26,18 +31,20 @@ except ValueError:
     print(f"Warning: Invalid GATEWAY_TIMEOUT value '{_timeout_env}', using default 30 seconds", file=sys.stderr)
     DEFAULT_TIMEOUT = 30
 
+
 def get_jwt():
     """Generate JWT using the gateway.sh script."""
     result = subprocess.run(
         ["bash", "-c", f"cd {SCRIPT_DIR.parent} && source .env && source {SCRIPT_DIR}/lib/gateway.sh && get_jwt"],
         capture_output=True,
         text=True,
-        cwd=SCRIPT_DIR.parent
+        cwd=SCRIPT_DIR.parent,
     )
     if result.returncode != 0:
         print(f"Error generating JWT: {result.stderr}", file=sys.stderr)
         sys.exit(1)
     return result.stdout.strip()
+
 
 def create_virtual_server(jwt, name, gateways):
     """Create a virtual server via the gateway API."""
@@ -45,14 +52,13 @@ def create_virtual_server(jwt, name, gateways):
 
     # First, get all tools and filter by gateway
     tools_req = urllib.request.Request(
-        f"{GATEWAY_URL}/tools?limit=0&include_pagination=false",
-        headers={"Authorization": f"Bearer {jwt}"}
+        f"{GATEWAY_URL}/tools?limit=0&include_pagination=false", headers={"Authorization": f"Bearer {jwt}"}
     )
 
     try:
         with urllib.request.urlopen(tools_req, timeout=DEFAULT_TIMEOUT) as response:
-            tools_data = json.loads(response.read().decode('utf-8'))
-            all_tools = tools_data if isinstance(tools_data, list) else tools_data.get('tools', [])
+            tools_data = json.loads(response.read().decode("utf-8"))
+            all_tools = tools_data if isinstance(tools_data, list) else tools_data.get("tools", [])
     except Exception as e:
         print(f"  ✗ {name} (error fetching tools: {e})")
         return False
@@ -60,12 +66,14 @@ def create_virtual_server(jwt, name, gateways):
     # Filter tools by gateway
     tool_ids = []
     for tool in all_tools:
-        gateway_slug = (tool.get('gatewaySlug') or
-                       tool.get('gateway_slug') or
-                       tool.get('gateway', {}).get('slug') or
-                       tool.get('gateway', {}).get('name', ''))
+        gateway_slug = (
+            tool.get("gatewaySlug")
+            or tool.get("gateway_slug")
+            or tool.get("gateway", {}).get("slug")
+            or tool.get("gateway", {}).get("name", "")
+        )
         if gateway_slug in gateways:
-            tool_ids.append(tool.get('id'))
+            tool_ids.append(tool.get("id"))
 
     if not tool_ids:
         print(f"  ⚠ {name} (no tools found for gateways: {', '.join(gateways)})")
@@ -75,32 +83,23 @@ def create_virtual_server(jwt, name, gateways):
     tool_ids = tool_ids[:60]
 
     # Create virtual server with correct API format
-    data = {
-        "server": {
-            "name": name,
-            "description": f"Tools from: {', '.join(gateways)}",
-            "associated_tools": tool_ids
-        }
-    }
+    data = {"server": {"name": name, "description": f"Tools from: {', '.join(gateways)}", "associated_tools": tool_ids}}
 
     req = urllib.request.Request(
         f"{GATEWAY_URL}/servers",
-        data=json.dumps(data).encode('utf-8'),
-        headers={
-            "Authorization": f"Bearer {jwt}",
-            "Content-Type": "application/json"
-        },
-        method="POST"
+        data=json.dumps(data).encode("utf-8"),
+        headers={"Authorization": f"Bearer {jwt}", "Content-Type": "application/json"},
+        method="POST",
     )
 
     try:
         with urllib.request.urlopen(req, timeout=DEFAULT_TIMEOUT) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            server_id = result.get('id', 'unknown')
+            result = json.loads(response.read().decode("utf-8"))
+            server_id = result.get("id", "unknown")
             print(f"  ✓ {name} (created, {len(tool_ids)} tools, id: {server_id})")
             return True
     except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8')
+        error_body = e.read().decode("utf-8")
         if "already exists" in error_body.lower() or "duplicate" in error_body.lower():
             print(f"  ✓ {name} (already exists)")
             return True
@@ -112,6 +111,7 @@ def create_virtual_server(jwt, name, gateways):
     except urllib.error.URLError as ue:
         print(f"  ✗ {name} (network error: {ue.reason if hasattr(ue, 'reason') else str(ue)})")
         return False
+
 
 def main():
     if not VIRTUAL_SERVERS_FILE.exists():
@@ -131,15 +131,15 @@ def main():
     with open(VIRTUAL_SERVERS_FILE) as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
 
-            parts = line.split('|')
+            parts = line.split("|")
             if len(parts) != 2:
                 continue
 
             name = parts[0].strip()
-            gateways = [g.strip() for g in parts[1].split(',')]
+            gateways = [g.strip() for g in parts[1].split(",")]
 
             if create_virtual_server(jwt, name, gateways):
                 created += 1
@@ -151,6 +151,7 @@ def main():
 
     if failed > 0:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

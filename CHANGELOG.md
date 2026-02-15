@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **IDE Configuration Generator**: Automated IDE setup for Windsurf and Cursor
+  - Python API `generate_ide_config()` for programmatic config generation
+  - CLI tool `scripts/ide/generate-config.sh` for command-line usage
+  - Makefile commands: `make ide-config`, `make ide-windsurf`, `make ide-cursor`
+  - MCP tool `generate_ide_config_tool` for IDE integration
+  - Supports both local (no auth) and remote (JWT) gateway connections
+  - Generates ready-to-use JSON snippets for `mcp.json` files
+  - Comprehensive test coverage (100%) for IDE config API
+
 ### Fixed
 
 - **AI Router robustness improvements** - Multiple bug fixes and enhancements to AI-powered tool selection:

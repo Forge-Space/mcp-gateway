@@ -141,6 +141,11 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "B017",    # Allow asserting on Exception in tests
     "PLC0415", # Allow imports inside test functions
 ]
+"tool_router/api/tests/test_ide_config.py" = [
+    "S101",    # Allow assert statements in tests
+    "S106",    # Allow hardcoded test tokens/passwords in tests
+    "PLR2004", # Allow magic values in tests
+]
 "tool_router/api/tests/**/*.py" = [
     "S101",    # Allow assert in tests
     "ANN",     # Don't require type hints in tests
