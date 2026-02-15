@@ -2,10 +2,62 @@
 
 from __future__ import annotations
 
-import fcntl
 import os
+import sys
+import time
 from pathlib import Path
 from typing import Any
+
+
+# Cross-platform file locking
+try:
+    import fcntl
+    from typing import IO
+
+    def lock_file(file_obj: IO[bytes], timeout: float = 5.0) -> bool:
+        """Acquire exclusive lock with timeout (Unix)."""
+        start_time = time.time()
+        while True:
+            try:
+                fcntl.flock(file_obj.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return True
+            except OSError:
+                if time.time() - start_time >= timeout:
+                    return False
+                time.sleep(0.1)
+
+    def unlock_file(file_obj: IO[bytes]) -> None:
+        """Release file lock (Unix)."""
+        fcntl.flock(file_obj.fileno(), fcntl.LOCK_UN)
+
+except ImportError:
+    # Windows fallback using msvcrt
+    if sys.platform == "win32":
+        import msvcrt
+
+        def lock_file(file_obj: IO[bytes], timeout: float = 5.0) -> bool:
+            """Acquire exclusive lock with timeout (Windows)."""
+            start_time = time.time()
+            while True:
+                try:
+                    msvcrt.locking(file_obj.fileno(), msvcrt.LK_NBLCK, 1)
+                    return True
+                except OSError:
+                    if time.time() - start_time >= timeout:
+                        return False
+                    time.sleep(0.1)
+
+        def unlock_file(file_obj: IO[bytes]) -> None:
+            """Release file lock (Windows)."""
+            msvcrt.locking(file_obj.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        # No locking available
+        def lock_file(file_obj: IO[bytes], timeout: float = 5.0) -> bool:  # noqa: ARG001
+            """No-op lock for unsupported platforms."""
+            return True
+
+        def unlock_file(file_obj: IO[bytes]) -> None:
+            """No-op unlock for unsupported platforms."""
 
 
 def get_virtual_servers_file() -> Path:
@@ -148,13 +200,27 @@ def update_server_status(server_name: str, enabled: bool) -> dict[str, Any]:
 
     # Use file locking for concurrent safety
     with config_file.open("r+") as f:
-        # Acquire exclusive lock
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        try:
-            # Read all lines
-            lines = f.readlines()
+        # Acquire exclusive lock with timeout
+        if not lock_file(f, timeout=5.0):
+            return {
+                "success": False,
+                "error": "Failed to acquire lock on config file (timeout after 5s)",
+            }
 
-            # Update the target server
+        try:
+            # Read original content for backup
+            original_lines = f.readlines()
+
+            # Create backup of original content before any modifications
+            backup_file = config_file.with_suffix(".txt.bak")
+            if backup_file.exists():
+                backup_file.unlink()
+
+            with backup_file.open("w") as backup_f:
+                backup_f.writelines(original_lines)
+
+            # Now modify the lines
+            lines = original_lines.copy()
             server_found = False
             for i, line in enumerate(lines):
                 server = parse_server_line(line)
@@ -175,15 +241,6 @@ def update_server_status(server_name: str, enabled: bool) -> dict[str, Any]:
                     "error": f"Server '{server_name}' not found",
                 }
 
-            # Create backup
-            backup_file = config_file.with_suffix(".txt.bak")
-            if backup_file.exists():
-                backup_file.unlink()
-
-            # Write backup atomically
-            with backup_file.open("w") as backup_f:
-                backup_f.writelines(lines)
-
             # Atomic write: truncate and write updated content
             f.seek(0)
             f.truncate()
@@ -193,7 +250,7 @@ def update_server_status(server_name: str, enabled: bool) -> dict[str, Any]:
 
         finally:
             # Release lock
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            unlock_file(f)
 
     action = "enabled" if enabled else "disabled"
     return {

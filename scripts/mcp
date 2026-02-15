@@ -20,8 +20,16 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Load environment variables
 if [ -f "$PROJECT_ROOT/.env" ]; then
+    # Validate .env syntax before sourcing
+    if ! bash -n "$PROJECT_ROOT/.env" 2>/dev/null; then
+        echo "ERROR: .env file has syntax errors. Please fix before continuing." >&2
+        exit 1
+    fi
     # shellcheck disable=SC1091
-    source "$PROJECT_ROOT/.env"
+    if ! source "$PROJECT_ROOT/.env"; then
+        echo "ERROR: Failed to source .env file" >&2
+        exit 1
+    fi
 fi
 
 # Default values
@@ -208,7 +216,25 @@ cmd_server_info() {
 
     # Use REST API to get server status
     if command -v curl &> /dev/null; then
-        curl -s "$GATEWAY_URL/api/virtual-servers/$server_name" | jq '.' || echo "Server not found or API not available"
+        # Capture HTTP status and response body separately
+        response=$(mktemp)
+        http_status=$(curl -sS -w "%{http_code}" -o "$response" "$GATEWAY_URL/api/virtual-servers/$server_name")
+
+        if [[ "$http_status" =~ ^2[0-9][0-9]$ ]]; then
+            # Success - parse JSON response
+            if command -v jq &> /dev/null; then
+                jq '.' "$response" || cat "$response"
+            else
+                cat "$response"
+            fi
+        else
+            # Error - show status and raw response
+            echo "ERROR: HTTP $http_status" >&2
+            echo "Response:" >&2
+            head -c 500 "$response" >&2
+            echo "" >&2
+        fi
+        rm -f "$response"
     else
         warn "curl not found, cannot fetch server info"
         echo "Install curl or check server status in config/virtual-servers.txt"
@@ -319,7 +345,9 @@ EOF
     read -rp "Start the gateway now? [Y/n]: " start_now
     start_now="${start_now:-Y}"
 
-    if [[ "$start_now" =~ ^[Yy]$ ]]; then
+    # Normalize to lowercase and accept common variations
+    start_now_lower=$(echo "$start_now" | tr '[:upper:]' '[:lower:]')
+    if [[ "$start_now_lower" == "y" || "$start_now_lower" == "yes" ]]; then
         cmd_start
         echo ""
         info "Waiting for gateway to be ready..."

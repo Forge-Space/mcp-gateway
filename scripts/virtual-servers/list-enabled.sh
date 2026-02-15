@@ -32,18 +32,18 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     IFS='|' read -r name _ enabled_flag <<< "$line"
 
     # Count total servers
-    ((total_count++))
+    total_count=$((total_count + 1))
 
     # Normalize enabled_flag: trim whitespace and convert to lowercase using parameter expansion
-    enabled_flag="${enabled_flag//[[:space:]]/}"  # Remove all whitespace
-    enabled_flag="${enabled_flag,,}"              # Convert to lowercase
+    enabled_flag="${enabled_flag//[[:space:]]/}"        # Convert to lowercase for comparison (portable way)
+    enabled_flag=$(echo "$enabled_flag" | tr '[:upper:]' '[:lower:]')
 
     # Check enabled status (default is enabled if no flag, anything other than "false" is enabled)
-    if [[ -z "$enabled_flag" ]] || [[ "$enabled_flag" != "false" ]]; then
+    if [ -z "$enabled_flag" ] || [ "$enabled_flag" != "false" ]; then
         echo "✓ $name"
-        ((enabled_count++))
+        enabled_count=$((enabled_count + 1))
     else
-        ((disabled_count++))
+        disabled_count=$((disabled_count + 1))
     fi
 done < "$VIRTUAL_SERVERS_FILE"
 

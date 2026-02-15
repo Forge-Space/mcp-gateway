@@ -322,50 +322,6 @@ These tools are automatically available when connecting to the tool-router MCP s
 
 ---
 
-## Authentication
-
-### Overview
-
-API endpoints require authentication to ensure secure access. The recommended approach is to use JSON Web Tokens (JWT) for authentication.
-
-### JWT Authentication
-
-To use JWT authentication, follow these steps:
-
-1. Obtain a JWT token by making a `POST` request to the `/auth` endpoint with your credentials.
-2. Include the obtained JWT token in the `Authorization` header of subsequent requests.
-
-**Example:**
-```bash
-curl -X POST http://localhost:4444/auth \
-  -H "Content-Type: application/json" \
-  -d '{"username": "your_username", "password": "your_password"}'
-```
-
-**Response:**
-```json
-{
-  "token": "your_jwt_token"
-}
-```
-
-**Subsequent Request:**
-```bash
-curl -X GET http://localhost:4444/api/virtual-servers \
-  -H "Authorization: Bearer your_jwt_token"
-```
-
-### Production Guidance
-
-In production environments, consider the following best practices:
-
-* Use a secure connection (HTTPS) to encrypt communication between clients and the API.
-* Implement rate limiting to prevent abuse and denial-of-service attacks.
-* Use a secure secret key for signing JWT tokens.
-* Store JWT tokens securely on the client-side, such as using a secure cookie or local storage.
-
----
-
 ## Troubleshooting
 
 ### Connection Failures

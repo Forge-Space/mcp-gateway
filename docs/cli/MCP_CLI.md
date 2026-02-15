@@ -402,8 +402,8 @@ To add new commands:
 ## Support
 
 - **Documentation**: [docs/](../README.md)
-- **Issues**: [GitHub Issues](https://github.com/lucassantana/mcp-gateway/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/lucassantana/mcp-gateway/discussions)
+- **Issues**: [GitHub Issues](https://github.com/LucasSantana-Dev/mcp-gateway/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/LucasSantana-Dev/mcp-gateway/discussions)
 
 ---
 

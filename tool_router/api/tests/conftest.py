@@ -3,14 +3,25 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 
 @pytest.fixture
-def temp_config_file(monkeypatch) -> Path:
-    """Create a temporary virtual-servers.txt file for testing."""
+def temp_config_file(monkeypatch: MonkeyPatch) -> Iterator[Path]:
+    """Create a temporary virtual-servers.txt file for testing.
+
+    Args:
+        monkeypatch: Pytest fixture for mocking/patching during tests.
+
+    Yields:
+        Path to the temporary virtual-servers.txt configuration file.
+        The file contains test server configurations and is automatically
+        cleaned up (along with any .bak backup files) after the test completes.
+    """
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         f.write("# Test configuration\n")
         f.write("cursor-default|sequential-thinking,filesystem|true\n")
