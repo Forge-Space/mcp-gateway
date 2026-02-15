@@ -1,7 +1,11 @@
-.PHONY: start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update pre-commit-install help
+.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update pre-commit-install help
 
 # Default target
 .DEFAULT_GOAL := help
+
+all: help ## Default target (shows help)
+
+clean: reset-db cleanup-duplicates ## Clean up database and duplicates
 
 help: ## Show this help message
 	@echo "MCP Gateway - Available Make targets:"
@@ -37,8 +41,18 @@ register-wait: ## Register with 30s wait for gateway readiness
 
 jwt: ## Generate JWT token for API access
 	@bash -c 'set -a; [ -f .env ] && . ./.env; set +a; \
-	  python3 "$(CURDIR)/scripts/utils/create-jwt.py" 2>/dev/null || \
-	  docker exec "$${MCPGATEWAY_CONTAINER:-mcpgateway}" python3 -m mcpgateway.utils.create_jwt_token --username "$$PLATFORM_ADMIN_EMAIL" --exp 10080 --secret "$$JWT_SECRET_KEY" 2>/dev/null'
+	if python3 "$(CURDIR)/scripts/utils/create-jwt.py"; then \
+		exit 0; \
+	fi; \
+	echo "Local JWT generation failed, trying Docker fallback..."; \
+	if docker exec "$${MCPGATEWAY_CONTAINER:-mcpgateway}" python3 -m mcpgateway.utils.create_jwt_token --username "$$PLATFORM_ADMIN_EMAIL" --exp 10080 --secret "$$JWT_SECRET_KEY"; then \
+		exit 0; \
+	fi; \
+	echo "ERROR: JWT generation failed. Check:" >&2; \
+	echo "  - PLATFORM_ADMIN_EMAIL=$$PLATFORM_ADMIN_EMAIL" >&2; \
+	echo "  - JWT_SECRET_KEY is set (length: $${#JWT_SECRET_KEY})" >&2; \
+	echo "  - Container: $${MCPGATEWAY_CONTAINER:-mcpgateway}" >&2; \
+	exit 1'
 
 list-prompts: ## List available prompts
 	./scripts/gateway/list-prompts.sh
@@ -79,7 +93,13 @@ lint-all: lint ## Alias for 'lint' target
 
 shellcheck: ## Lint shell scripts with shellcheck
 	@echo "==> Linting shell scripts..."
-	shellcheck -s bash -S warning start.sh scripts/lib/*.sh scripts/gateway/*.sh scripts/cursor/*.sh scripts/virtual-servers/*.sh scripts/utils/*.sh
+	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
+	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
+	if [ -n "$$SCRIPTS" ]; then \
+		shellcheck -s bash -S warning $$SCRIPTS; \
+	else \
+		echo "No shell scripts found to check."; \
+	fi
 
 # === Formatting ===
 format: format-python format-typescript ## Format all code (Python, TypeScript)

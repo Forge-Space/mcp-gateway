@@ -13,16 +13,16 @@
     "dev": "tsc --watch",
     "lint": "npm run lint:types && npm run lint:eslint && npm run lint:prettier",
     "lint:types": "tsc --noEmit",
-    "lint:eslint": "eslint src/**/*.ts",
-    "lint:eslint:fix": "eslint src/**/*.ts --fix",
+    "lint:eslint": "eslint 'src/**/*.ts'",
+    "lint:eslint:fix": "eslint 'src/**/*.ts' --fix",
     "lint:prettier": "prettier --check \"src/**/*.{ts,json}\"",
-    "format": "prettier --write \"src/**/*.{ts,json}\" && eslint src/**/*.ts --fix",
+    "format": "prettier --write \"src/**/*.{ts,json}\" && eslint 'src/**/*.ts' --fix",
     "deps:check": "npm-check-updates",
     "deps:update": "npm-check-updates -u && npm install",
     "deps:update:interactive": "npm-check-updates -i",
-    "test": "echo 'TypeScript tests not yet implemented'",
+    "test": "echo 'No tests configured yet'",
     "prepare": "npm run build",
-    "precommit": "npm run lint && npm run test"
+    "precommit": "npm run lint"
   },
   "files": [
     "build",

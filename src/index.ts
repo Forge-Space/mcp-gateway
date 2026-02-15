@@ -107,6 +107,7 @@ async function sendGatewayRequest(
   try {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      Accept: "application/json",
     };
 
     // Only add Authorization header if token is provided
@@ -138,12 +139,15 @@ async function sendGatewayRequest(
     const responseData = (await response.json()) as GatewayResponse;
 
     // Validate JSON-RPC response structure
-    if (
-      typeof responseData === "object" &&
-      responseData !== null &&
-      "error" in responseData &&
-      responseData.error !== undefined
-    ) {
+    if (typeof responseData !== "object" || responseData === null) {
+      throw new Error("Gateway returned invalid response: not an object");
+    }
+
+    if (typeof responseData.jsonrpc !== "string" || responseData.jsonrpc !== "2.0") {
+      throw new Error(`Gateway returned invalid JSON-RPC version: ${String(responseData.jsonrpc)}`);
+    }
+
+    if ("error" in responseData && responseData.error !== undefined) {
       throw new Error(`Gateway returned error: ${JSON.stringify(responseData.error)}`);
     }
 
@@ -190,7 +194,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       },
     });
 
-    if (typeof response !== "object" || response?.result === undefined) {
+    if (typeof response !== "object" || response.result === undefined) {
       throw new Error("Invalid response from gateway: missing result");
     }
 
@@ -230,6 +234,10 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
         uri: request.params.uri,
       },
     });
+    if (response.result === undefined) {
+      throw new Error("Invalid response from gateway: missing result");
+    }
+
     return response.result as {
       contents: {
         uri: string;
@@ -272,6 +280,10 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
         arguments: request.params.arguments,
       },
     });
+    if (response.result === undefined) {
+      throw new Error("Invalid response from gateway: missing result");
+    }
+
     return response.result as {
       description?: string;
       messages: {
@@ -293,7 +305,11 @@ async function main(): Promise<void> {
 
   console.error(`MCP Gateway Client connected to: ${GATEWAY_URL}`);
   console.error(
-    `Authentication: ${GATEWAY_TOKEN !== undefined && GATEWAY_TOKEN.length > 0 ? "Enabled (JWT)" : "Disabled (Local mode)"}`
+    `Authentication: ${
+      GATEWAY_TOKEN !== undefined && GATEWAY_TOKEN.length > 0
+        ? "Enabled (JWT)"
+        : "Disabled (Local mode)"
+    }`
   );
   console.error(`Timeout: ${REQUEST_TIMEOUT_MILLISECONDS}ms`);
 }

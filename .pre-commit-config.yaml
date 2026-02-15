@@ -44,7 +44,7 @@ repos:
 
   # TypeScript/JavaScript: Prettier formatter
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
+    rev: v3.1.0
     hooks:
       - id: prettier
         name: Prettier format (TS/JS/JSON/YAML)
@@ -62,13 +62,13 @@ repos:
         pass_filenames: false
         files: \.sh$
 
-      # Python: pytest
-      - id: test-python
-        name: Test (pytest)
-        entry: bash -c 'command -v pytest >/dev/null 2>&1 && make test || echo "pytest not found, skipping tests"'
-        language: system
-        pass_filenames: false
-        files: ^tool_router/
+      # Python: pytest (disabled - run in CI instead)
+      # - id: test-python
+      #   name: Test (pytest)
+      #   entry: bash -c 'command -v pytest >/dev/null 2>&1 && make test || echo "pytest not found, skipping tests"'
+      #   language: system
+      #   pass_filenames: false
+      #   files: ^tool_router/
 
       # TypeScript: ESLint
       - id: eslint
