@@ -50,4 +50,7 @@ USER appuser
 
 EXPOSE 8026
 
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8026/health || exit 1
+
 CMD ["python3", "-m", "mcpgateway.translate", "--stdio", "node /app/dist/index.js", "--expose-sse", "--port", "8026", "--host", "0.0.0.0"]
