@@ -73,9 +73,6 @@ class AIRouterConfig:
     def load_from_environment(cls) -> AIRouterConfig:
         """Load AI router configuration from environment variables.
 
-        Args:
-            No parameters.
-
         Returns:
             AIRouterConfig with settings from environment or defaults.
 

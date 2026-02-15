@@ -30,6 +30,9 @@ ai_selector = None
 @mcp.tool()
 def execute_task(task: str, context: str = "") -> str:
     """Run the best matching gateway tool for the given task. Describe what you want (e.g. 'search the web for X', 'list files in /tmp'). Optional context can narrow the choice."""
+    if config is None:
+        return "Service not initialized. Please wait for startup to complete."
+
     logger.info(f"Executing task: {task[:100]}")
     metrics.increment_counter("execute_task.calls")
 
@@ -87,7 +90,7 @@ def execute_task(task: str, context: str = "") -> str:
                     metrics.increment_counter("execute_task.ai_selection.low_confidence")
 
             except Exception as ai_error:
-                logger.warning(f"AI selection failed: {ai_error}, falling back to keyword matching")
+                logger.warning("AI selection failed: %s, falling back to keyword matching", ai_error, exc_info=True)
                 metrics.increment_counter("execute_task.ai_selection.error")
 
         # Fallback to keyword matching if AI not used or failed
@@ -136,6 +139,9 @@ def execute_task(task: str, context: str = "") -> str:
 @mcp.tool()
 def search_tools(query: str, limit: int = 10) -> str:
     """Search available tools by name or description. Returns a list of matching tools with their details."""
+    if config is None:
+        return "Service not initialized. Please wait for startup to complete."
+
     logger.info(f"Searching tools: {query[:100]}")
     metrics.increment_counter("search_tools.calls")
 

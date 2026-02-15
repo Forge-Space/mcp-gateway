@@ -153,6 +153,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 ]
 "tool_router/core/server.py" = [
     "PLR0911", # Allow more return statements in main routing function
+    "PLR0912", # Allow more branches in execute_task (AI + keyword logic)
     "PLR0915", # Allow more statements in execute_task
     "PLW0603", # Allow global statement for config/ai_selector initialization
     "BLE001",  # Allow broad exception catching for fallback logic

@@ -37,7 +37,9 @@ class TestMetricsAPI:
         assert "performance" in result
         assert result["performance"]["avg_ai_confidence"] == 0.85
         assert "statistics" in result
-        assert result["statistics"]["ai_usage_rate"] > 0
+        # Exact calculation: 100 / (100 + 20) = 0.833333...
+        expected_rate = 100.0 / (100.0 + 20.0) * 100.0
+        assert abs(result["statistics"]["ai_usage_rate"] - expected_rate) < 0.01
 
     @patch("tool_router.api.metrics.get_metrics")
     def test_get_ai_router_metrics_no_selections(self, mock_get_metrics):

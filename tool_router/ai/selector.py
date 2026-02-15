@@ -139,24 +139,13 @@ class AIToolSelector:
                 logger.warning("No JSON found in AI response")
                 return None
 
-            # Walk string with brace counter to find matching closing brace
-            brace_count = 0
-            json_end = -1
-            for i in range(json_start, len(response)):
-                if response[i] == "{":
-                    brace_count += 1
-                elif response[i] == "}":
-                    brace_count -= 1
-                    if brace_count == 0:
-                        json_end = i + 1
-                        break
-
-            if json_end == -1:
+            # Use JSONDecoder to robustly parse JSON and get consumed length
+            try:
+                decoder = json.JSONDecoder()
+                selection, _consumed_length = decoder.raw_decode(response[json_start:])
+            except json.JSONDecodeError:
                 logger.warning("No matching closing brace found in AI response")
                 return None
-
-            json_str = response[json_start:json_end]
-            selection = json.loads(json_str)
 
             # Validate required fields
             tool_name = selection.get("tool_name")
@@ -205,7 +194,7 @@ class AIToolSelector:
         """
         try:
             # Use fraction of request timeout for availability check
-            availability_timeout = getattr(self, "availability_timeout_seconds", max(0.2, self.timeout_seconds * 0.5))
+            availability_timeout = max(0.2, self.timeout_seconds * 0.5)
             response = requests.get(f"{self.endpoint}/api/tags", timeout=availability_timeout)
             return response.status_code == 200
         except requests.RequestException:

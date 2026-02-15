@@ -7,20 +7,23 @@ All notable changes to this project are documented here.
 ### Fixed
 
 - **AI Router robustness improvements** - Multiple bug fixes and enhancements to AI-powered tool selection:
-  - **Ollama version pinning**: Pin Ollama image to `0.5.6` in docker-compose.yml for reproducible deployments
+  - **Ollama upgrade**: Update Ollama image from `0.5.6` to `0.16.1` for latest features and security fixes
+  - **Timeout alignment**: Align `ROUTER_AI_TIMEOUT_MS` default to 5000ms across docker-compose.yml and .env.example
   - **Model persistence**: Add `OLLAMA_KEEP_ALIVE=24h` environment variable to prevent model unloading and cold-start latency
-  - **Timeout configuration**: Increase default AI timeout from 2000ms to 5000ms to accommodate Ollama model cold starts
   - **Configurable confidence threshold**: Add `ROUTER_AI_MIN_CONFIDENCE` config field (default 0.3) for tunable AI selection threshold
   - **Brace escaping in prompts**: Escape literal braces in user input to prevent KeyError in prompt formatting
   - **HTTPError response handling**: Guard against AttributeError when `e.response` is None in Ollama error handling
-  - **Improved JSON extraction**: Use brace-counting algorithm to correctly extract nested JSON from AI responses
+  - **Improved JSON extraction**: Replace fragile brace-counting with `json.JSONDecoder().raw_decode()` for robust nested JSON parsing
   - **Centralized logging**: Replace stdlib logger with project's centralized `get_logger()` in selector.py
-  - **Dynamic availability timeout**: Use configurable timeout (50% of request timeout) for Ollama health checks
+  - **Simplified availability timeout**: Remove unnecessary `getattr()` call, compute timeout directly as `max(0.2, timeout_seconds * 0.5)`
   - **Config initialization safety**: Move `ToolRouterConfig.load_from_environment()` to `main()` to prevent import-time crashes
+  - **Initialization guards**: Add defensive checks in `execute_task()` and `search_tools()` to prevent AttributeError on uninitialized config
+  - **Enhanced exception logging**: Add `exc_info=True` to broad exception handlers in server.py for full stack traces
   - **Lazy logging**: Replace f-string logs with %-style formatting to avoid unnecessary string evaluation
   - **Input validation**: Clamp `ai_confidence` and `ai_weight` to [0.0, 1.0] range in `calculate_hybrid_score()`
   - **Error handling refactor**: Separate parse and range validation for `ROUTER_AI_WEIGHT` to preserve specific ValueError messages
-  - **Improved docstrings**: Add Google-style Args/Raises sections to `AIRouterConfig.load_from_environment()`
+  - **Health status consistency**: Use `HealthStatus` enum instead of string literals in health.py API responses
+  - **Improved docstrings**: Remove redundant "Args: No parameters" section from `AIRouterConfig.load_from_environment()`
 
 - **Documentation improvements**:
   - Add blank lines before code blocks in AI_ROUTER_GUIDE.md to satisfy markdownlint MD031
@@ -30,6 +33,9 @@ All notable changes to this project are documented here.
   - Strengthen truncation assertion in `test_format_tool_list_truncate_long_description` to verify exact 150-char limit
   - Add response object to mocked HTTPError in `test_select_tool_http_error` to match production code
   - Add verification that tool list is truncated to 100 in `test_select_tool_too_many_tools`
+  - Add return type hints (`-> None`) to all test methods in `test_health.py` for strict mypy compliance
+  - Mock `AIToolSelector` creation in `test_get_ai_router_health_no_selector_provided` to avoid network calls
+  - Strengthen `ai_usage_rate` assertion in `test_metrics.py` with exact calculation and tolerance check
 
 ### Added
 

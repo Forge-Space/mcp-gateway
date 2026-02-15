@@ -6,6 +6,7 @@ from typing import Any
 
 from tool_router.ai.selector import AIToolSelector
 from tool_router.core.config import ToolRouterConfig
+from tool_router.observability.health import HealthStatus
 
 
 def get_ai_router_health(
@@ -29,7 +30,7 @@ def get_ai_router_health(
         config = ToolRouterConfig.load_from_environment()
 
     health_status = {
-        "status": "healthy",
+        "status": HealthStatus.HEALTHY.value,
         "ai_enabled": config.ai.enabled,
         "configuration": {
             "provider": config.ai.provider,
@@ -56,7 +57,7 @@ def get_ai_router_health(
         health_status["ollama_available"] = ollama_available
 
         if not ollama_available:
-            health_status["status"] = "degraded"
+            health_status["status"] = HealthStatus.DEGRADED.value
             health_status["issues"].append(
                 f"Ollama service not available at {config.ai.endpoint}. Falling back to keyword matching."
             )

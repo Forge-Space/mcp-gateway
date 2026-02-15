@@ -225,7 +225,7 @@ services:
       ROUTER_AI_PROVIDER: "${ROUTER_AI_PROVIDER:-ollama}"
       ROUTER_AI_MODEL: "${ROUTER_AI_MODEL:-llama3.2:3b}"
       ROUTER_AI_ENDPOINT: "${ROUTER_AI_ENDPOINT:-http://ollama:11434}"
-      ROUTER_AI_TIMEOUT_MS: "${ROUTER_AI_TIMEOUT_MS:-2000}"
+      ROUTER_AI_TIMEOUT_MS: "${ROUTER_AI_TIMEOUT_MS:-5000}"
       ROUTER_AI_WEIGHT: "${ROUTER_AI_WEIGHT:-0.7}"
     command:
       - sh
@@ -238,7 +238,7 @@ services:
         condition: service_healthy
 
   ollama:
-    image: ollama/ollama:0.5.6
+    image: ollama/ollama:0.16.1
     container_name: ollama
     restart: unless-stopped
     ports:
