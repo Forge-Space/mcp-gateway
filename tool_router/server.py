@@ -4,10 +4,12 @@ from tool_router.args import build_arguments
 from tool_router.gateway_client import call_tool, get_tools
 from tool_router.scoring import pick_best_tools
 
+
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
-    raise ImportError("Install the MCP SDK: pip install mcp") from None
+    msg = "Install the MCP SDK: pip install mcp"
+    raise ImportError(msg) from None
 
 mcp = FastMCP("tool-router", json_response=True)
 
@@ -19,7 +21,7 @@ def execute_task(task: str, context: str = "") -> str:
         tools = get_tools()
     except (ValueError, ConnectionError) as e:
         return f"Failed to list tools: {e}"
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         return f"Unexpected error listing tools: {type(e).__name__}: {e}"
 
     if not tools:
@@ -27,7 +29,7 @@ def execute_task(task: str, context: str = "") -> str:
 
     try:
         best = pick_best_tools(tools, task, context, top_n=1)
-    except Exception as e:
+    except (ValueError, KeyError, TypeError) as e:
         return f"Error selecting tool: {type(e).__name__}: {e}"
 
     if not best:
@@ -40,11 +42,10 @@ def execute_task(task: str, context: str = "") -> str:
 
     try:
         args = build_arguments(tool, task)
-    except Exception as e:
+    except (ValueError, KeyError, TypeError) as e:
         return f"Error building arguments: {type(e).__name__}: {e}"
 
-    result = call_tool(name, args)
-    return result
+    return call_tool(name, args)
 
 
 @mcp.tool()
@@ -54,7 +55,7 @@ def search_tools(query: str) -> str:
         tools = get_tools()
     except (ValueError, ConnectionError) as e:
         return f"Failed to list tools: {e}"
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         return f"Unexpected error listing tools: {type(e).__name__}: {e}"
 
     if not tools:
@@ -62,7 +63,7 @@ def search_tools(query: str) -> str:
 
     try:
         best = pick_best_tools(tools, query, "", top_n=10)
-    except Exception as e:
+    except (ValueError, KeyError, TypeError) as e:
         return f"Error searching tools: {type(e).__name__}: {e}"
 
     if not best:

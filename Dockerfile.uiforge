@@ -1,0 +1,56 @@
+# ── Stage 1: Build uiforge-mcp from source ──────────────────
+FROM node:22-slim AS builder
+
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends git ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+ARG UIFORGE_REPO=https://github.com/LucasSantana-Dev/uiforge-mcp.git
+# Pin to v0.2.0 release commit for reproducible builds
+ARG UIFORGE_REF=87ec89d44cf92a501b94f6df9c4776e9ad02914d
+
+RUN git clone --depth 1 "$UIFORGE_REPO" . && \
+    git checkout "$UIFORGE_REF"
+
+RUN npm ci --ignore-scripts --legacy-peer-deps && \
+    npm rebuild @resvg/resvg-js && \
+    npm run build
+
+# Copy font assets into dist for satori (import.meta.url relative path)
+RUN cp -r src/assets dist/assets
+
+# ── Stage 2: Runtime with mcpgateway.translate ───────────────
+FROM python:3.12-slim
+
+# Enable pipefail to catch failures in piped commands
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Pin mcp-contextforge-gateway to latest stable version
+RUN pip install --no-cache-dir "mcp-contextforge-gateway>=0.1.0,<1.0.0"
+
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# Create non-root user for security
+RUN useradd -r -u 10001 -g root appuser && \
+    chown -R appuser:root /app
+
+USER appuser
+
+EXPOSE 8026
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8026/health || exit 1
+
+CMD ["python3", "-m", "mcpgateway.translate", "--stdio", "node /app/dist/index.js", "--expose-sse", "--port", "8026", "--host", "0.0.0.0"]

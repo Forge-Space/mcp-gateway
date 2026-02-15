@@ -41,9 +41,7 @@ class HTTPGatewayClient:
             "Content-Type": "application/json",
         }
 
-    def _make_request(
-        self, url: str, method: str = "GET", data: bytes | None = None
-    ) -> dict[str, Any]:
+    def _make_request(self, url: str, method: str = "GET", data: bytes | None = None) -> dict[str, Any]:
         """Make HTTP request with retry logic for transient failures."""
         req = urllib.request.Request(url, headers=self._headers(), method=method)
         if data:
@@ -52,41 +50,38 @@ class HTTPGatewayClient:
         last_error = None
         for attempt in range(self.config.max_retries):
             try:
-                with urllib.request.urlopen(
-                    req, timeout=self._timeout_seconds
-                ) as resp:
+                with urllib.request.urlopen(req, timeout=self._timeout_seconds) as resp:
                     return json.loads(resp.read().decode())
             except urllib.error.HTTPError as http_error:
                 if http_error.code >= 500:
                     last_error = f"Gateway server error (HTTP {http_error.code})"
                     if attempt < self.config.max_retries - 1:
-                        time.sleep(self._retry_delay_seconds * (2 ** attempt))
+                        time.sleep(self._retry_delay_seconds * (2**attempt))
                         continue
                 else:
                     # Safely read error response body
                     try:
-                        error_body = http_error.read().decode('utf-8')
-                    except Exception:
+                        error_body = http_error.read().decode("utf-8")
+                    except (OSError, UnicodeDecodeError):
                         error_body = "<unable to read response body>"
-                    raise ValueError(
-                        f"Gateway HTTP error {http_error.code}: {error_body}"
-                    )
+                    msg = f"Gateway HTTP error {http_error.code}: {error_body}"
+                    raise ValueError(msg)
             except urllib.error.URLError as network_error:
                 last_error = f"Network error: {network_error.reason}"
                 if attempt < self.config.max_retries - 1:
-                    time.sleep(self._retry_delay_seconds * (2 ** attempt))
+                    time.sleep(self._retry_delay_seconds * (2**attempt))
                     continue
             except TimeoutError:
                 last_error = f"Request timeout after {self._timeout_seconds}s"
                 if attempt < self.config.max_retries - 1:
-                    time.sleep(self._retry_delay_seconds * (2 ** attempt))
+                    time.sleep(self._retry_delay_seconds * (2**attempt))
                     continue
             except json.JSONDecodeError as json_error:
-                raise ValueError(f"Invalid JSON response from gateway: {json_error}")
+                msg = f"Invalid JSON response from gateway: {json_error}"
+                raise ValueError(msg)
 
-        raise ConnectionError(
-            f"Failed after {self.config.max_retries} attempts. Last error: {last_error}"
-        )
+        msg = f"Failed after {self.config.max_retries} attempts. Last error: {last_error}"
+        raise ConnectionError(msg)
 
     def get_tools(self) -> list[dict[str, Any]]:
         """Fetch available tools from the gateway.
@@ -103,7 +98,8 @@ class HTTPGatewayClient:
         try:
             response_data = self._make_request(url, method="GET")
         except (ValueError, ConnectionError) as error:
-            raise ValueError(f"Failed to fetch tools: {error}") from error
+            msg = f"Failed to fetch tools: {error}"
+            raise ValueError(msg) from error
 
         if isinstance(response_data, list):
             return response_data
@@ -130,9 +126,7 @@ class HTTPGatewayClient:
         }
 
         try:
-            json_rpc_response = self._make_request(
-                url, method="POST", data=json.dumps(body).encode()
-            )
+            json_rpc_response = self._make_request(url, method="POST", data=json.dumps(body).encode())
         except (ValueError, ConnectionError) as error:
             return f"Failed to call tool: {error}"
 
@@ -140,7 +134,9 @@ class HTTPGatewayClient:
             return f"Gateway error: {json_rpc_response['error']}"
         content = json_rpc_response.get("result", {}).get("content", [])
         texts = [
-            content_item.get("text", "") for content_item in content if isinstance(content_item, dict) and "text" in content_item
+            content_item.get("text", "")
+            for content_item in content
+            if isinstance(content_item, dict) and "text" in content_item
         ]
         return "\n".join(texts) if texts else json.dumps(json_rpc_response.get("result", {}))
 

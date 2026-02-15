@@ -8,7 +8,7 @@
 # LEGACY PROFILES (kept for backward compatibility)
 # ============================================================================
 # cursor-default: core dev + search + browser (aim for under 60 tools; verify with make register)
-cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,memory,fetch
+cursor-default|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,uiforge,memory,fetch
 # cursor-search: search and docs only
 cursor-search|tavily
 # cursor-browser: browser automation

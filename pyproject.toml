@@ -49,3 +49,126 @@ exclude_lines = [
 ]
 show_missing = true
 precision = 2
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["tool_router"]
+
+[tool.ruff.lint]
+# Enable comprehensive rule sets (similar to TypeScript strict mode)
+select = [
+    "E",      # pycodestyle errors
+    "F",      # Pyflakes
+    "W",      # pycodestyle warnings
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "ANN",    # flake8-annotations (type hints)
+    "ASYNC",  # flake8-async
+    "S",      # flake8-bandit (security)
+    "BLE",    # flake8-blind-except
+    "B",      # flake8-bugbear
+    "A",      # flake8-builtins
+    "C4",     # flake8-comprehensions
+    "DTZ",    # flake8-datetimez
+    "T10",    # flake8-debugger
+    "EM",     # flake8-errmsg
+    "ISC",    # flake8-implicit-str-concat
+    "ICN",    # flake8-import-conventions
+    "G",      # flake8-logging-format
+    "PIE",    # flake8-pie
+    "T20",    # flake8-print
+    "PT",     # flake8-pytest-style
+    "Q",      # flake8-quotes
+    "RSE",    # flake8-raise
+    "RET",    # flake8-return
+    "SIM",    # flake8-simplify
+    "TID",    # flake8-tidy-imports
+    "ARG",    # flake8-unused-arguments
+    "PTH",    # flake8-use-pathlib
+    "ERA",    # eradicate (commented-out code)
+    "PD",     # pandas-vet
+    "PGH",    # pygrep-hooks
+    "PL",     # Pylint
+    "TRY",    # tryceratops
+    "NPY",    # NumPy-specific rules
+    "RUF",    # Ruff-specific rules
+]
+
+# Ignore specific rules that may be too strict or conflict with project style
+ignore = [
+    "ANN401",  # Dynamically typed expressions (Any) are disallowed
+    "S101",    # Use of assert detected (pytest uses assert)
+    "PLR2004", # Magic value used in comparison
+    "S310",    # Audit URL open (urllib is used intentionally for HTTP requests)
+    "B904",    # raise from err (not always needed for simple error wrapping)
+    "G004",    # Logging f-strings (acceptable for structured logging)
+    "TRY401",  # Redundant exception in logging.exception (intentional for clarity)
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]  # Allow unused imports in __init__.py
+"tool_router/tests/**/*.py" = [
+    "S101",    # Allow assert in tests
+    "ANN",     # Don't require type hints in tests
+    "PLR2004", # Allow magic values in tests
+    "ARG",     # Allow unused arguments in test fixtures
+    "SIM117",  # Allow nested with statements in tests
+    "PT011",   # Allow broad exception types in pytest.raises
+    "B017",    # Allow asserting on Exception in tests
+    "PLC0415", # Allow imports inside test functions
+]
+"tool_router/test_*.py" = [
+    "S101",    # Allow assert in tests
+    "ANN",     # Don't require type hints in tests
+    "SIM117",  # Allow nested with statements in tests
+]
+"tool_router/server.py" = [
+    "PLR0911", # Allow more return statements in main routing function
+    "E501",    # Allow long lines in docstrings
+]
+"tool_router/core/server.py" = [
+    "PLR0911", # Allow more return statements in main routing function
+    "E501",    # Allow long lines in docstrings
+]
+"tool_router/gateway/client.py" = [
+    "PLC0415", # Allow conditional imports for backward compatibility
+    "E501",    # Allow long lines in list comprehensions
+]
+"tool_router/gateway_client.py" = [
+    "PLC0415", # Allow conditional imports
+]
+"tool_router/scoring/matcher.py" = [
+    "E501",    # Allow long lines in scoring calculations
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tool_router"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-branches = 12
+max-returns = 6
+max-statements = 50
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

@@ -131,9 +131,7 @@ class TestToolRouterConfig:
     def test_direct_instantiation(self) -> None:
         """Test direct instantiation with GatewayConfig."""
         gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
-        config = ToolRouterConfig(
-            gateway=gateway_config, max_tools_search=15, default_top_n=2
-        )
+        config = ToolRouterConfig(gateway=gateway_config, max_tools_search=15, default_top_n=2)
 
         assert config.gateway == gateway_config
         assert config.max_tools_search == 15

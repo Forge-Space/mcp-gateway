@@ -34,7 +34,7 @@ Each stack profile is optimized for specific development workflows and includes:
 ## Quick Start
 
 1. **Choose your stack profile** from the list below
-2. **Configure API keys** in your IDE's mcp.json (see [IDE Setup Guide](IDE_SETUP_GUIDE.md))
+2. **Configure API keys** in your IDE's mcp.json (see [IDE Setup Guide](../setup/IDE_SETUP_GUIDE.md))
 3. **Register the profile**: `make register`
 4. **Connect your IDE** to the generated URL
 
@@ -363,7 +363,7 @@ Use the URL printed by `make register` to connect your IDE to the stack profile.
 
 ## Next Steps
 
-- [IDE Setup Guide](IDE_SETUP_GUIDE.md) - Configure your IDE
-- [Environment Configuration](ENVIRONMENT_CONFIGURATION.md) - Minimal .env approach
-- [Tool Router Guide](TOOL_ROUTER_GUIDE.md) - How routing works
-- [Monorepo vs Single-Repo](MONOREPO_VS_SINGLE_REPO.md) - Architecture decisions
+- [IDE Setup Guide](../setup/IDE_SETUP_GUIDE.md) - Configure your IDE
+- [Environment Configuration](../setup/ENVIRONMENT_CONFIGURATION.md) - Minimal .env approach
+- [Tool Router Guide](../architecture/TOOL_ROUTER_GUIDE.md) - How routing works
+- [Monorepo vs Single-Repo](../development/MONOREPO_VS_SINGLE_REPO.md) - Architecture decisions

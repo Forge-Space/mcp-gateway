@@ -1,32 +1,34 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
-# CodeRabbit Configuration
+# CodeRabbit Configuration for MCP Gateway
 # Documentation: https://docs.coderabbit.ai/getting-started/yaml-configuration
-# This configuration works for IDE extension, GitHub integration, and CLI
+# Project: Self-hosted MCP aggregation layer with tool routing
+# Tech Stack: Python (FastMCP), TypeScript (NPM client), Docker, Bash
+# Cost Constraint: All features must be costless (self-hosted, open-source)
 
 # General Settings
 language: "en-US"
 early_access: false
-tone_instructions: "Be concise, technical, and focus on actionable feedback. Prioritize security, performance, and maintainability."
+tone_instructions: "Be concise, technical, and focus on actionable feedback. Priority: security, performance, maintainability, cost-free solutions. Enforce: No paid APIs, stdlib-first approach."
 
 # Code Reviews Configuration
 reviews:
-  # Review profile: "chill" (balanced) or "assertive" (strict)
+  # Assertive profile for strict quality gates
   profile: "assertive"
 
-  # Request changes workflow - blocks PR merge until issues resolved
+  # Block PR merge until issues resolved (100% quality requirement)
   request_changes_workflow: true
 
   # High-level summary of changes
   high_level_summary: true
 
-  # Add poem to reviews (fun feature)
+  # No poems (keep professional)
   poem: false
 
   # Show review status
   review_status: true
 
-  # Collapse detailed walkthrough by default
+  # Keep walkthrough expanded for transparency
   collapse_walkthrough: false
 
   # Auto-review settings
@@ -35,58 +37,140 @@ reviews:
     drafts: false
     base_branches:
       - main
-      - master
       - develop
 
-  # Path-based instructions for specific file types
+  # Path-based instructions aligned with project structure
   path_instructions:
-    - path: "**/*.sh"
-      instructions: "Check for shellcheck compliance, proper error handling, and POSIX compatibility where possible."
-    - path: "**/*.py"
-      instructions: "Verify PEP 8 compliance, type hints, docstrings, and proper error handling."
-    - path: "**/Dockerfile*"
-      instructions: "Check for security best practices, multi-stage builds, minimal layers, and proper base image selection."
-    - path: "**/*.yml"
-      instructions: "Validate YAML syntax, check for security issues in CI/CD workflows."
-    - path: "**/*.md"
-      instructions: "Check for broken links, proper formatting, and clear documentation."
+    # Python - Tool Router (core component)
+    - path: "tool_router/**/*.py"
+      instructions: |
+        Critical component - tool routing logic.
+        Requirements:
+        - Type hints required (strict mypy compliance)
+        - Google-style docstrings with Args, Returns, Raises
+        - 100% test coverage for new code
+        - Thread-safe implementations (check locks, race conditions)
+        - No external paid APIs (cost constraint)
+        - Prefer stdlib over dependencies
+        - Error handling with descriptive messages
+        - Performance: <100ms for cached operations
 
-  # Tools configuration - enable relevant linters for this project
+    # Python - Tests
+    - path: "tool_router/tests/**/*.py"
+      instructions: |
+        Test quality requirements:
+        - Use pytest fixtures for reusability
+        - Parametrize tests for edge cases
+        - Mock external dependencies (gateway, network)
+        - Test both success and failure paths
+        - Integration tests for end-to-end flows
+        - Performance tests for latency-critical paths
+        - 100% coverage for testable code
+
+    # Shell Scripts - Gateway management
+    - path: "scripts/**/*.sh"
+      instructions: |
+        Shell script requirements:
+        - Shellcheck compliance (no warnings)
+        - Proper error handling (set -euo pipefail)
+        - POSIX compatibility where possible
+        - Descriptive error messages
+        - No hardcoded secrets
+        - Use lib/ functions for reusability
+
+    # Docker - Container definitions
+    - path: "**/Dockerfile*"
+      instructions: |
+        Docker security and efficiency:
+        - Multi-stage builds for smaller images
+        - Non-root user execution
+        - Minimal base images (alpine preferred)
+        - No secrets in layers
+        - Proper HEALTHCHECK directives
+        - Layer caching optimization
+        - Security scanning compliance
+
+    # GitHub Actions - CI/CD
+    - path: ".github/workflows/**/*.yml"
+      instructions: |
+        CI/CD requirements:
+        - Use GitHub Actions free tier efficiently
+        - No paid services or APIs
+        - Secrets management via GitHub Secrets
+        - Matrix builds for Python versions
+        - Cache dependencies for speed
+        - Fail fast on quality gates
+        - Security scanning (gitleaks, trufflehog)
+
+    # Documentation
+    - path: "docs/**/*.md"
+      instructions: |
+        Documentation standards:
+        - Clear, concise, with examples
+        - Cross-link related docs
+        - Keep CHANGELOG.md updated
+        - Verify technical accuracy
+        - Include troubleshooting sections
+        - AI-agent friendly structure
+
+    # Configuration files
+    - path: "**/*.{yaml,yml,json}"
+      instructions: |
+        Configuration validation:
+        - Valid syntax (yamllint, jsonlint)
+        - No hardcoded secrets
+        - Environment variable usage
+        - Schema validation where applicable
+        - Comments for complex settings
+
+    # TypeScript - NPM Client
+    - path: "src/**/*.ts"
+      instructions: |
+        TypeScript client requirements:
+        - Strict mode enabled
+        - No 'any' types (use unknown + guards)
+        - NPX compatibility maintained
+        - Error handling with proper types
+        - No paid dependencies
+        - ESM module format
+
+  # Tools configuration - comprehensive linting
   tools:
+    # Shell script linting
     shellcheck:
       enabled: true
 
+    # Python linting (primary language)
     ruff:
       enabled: true
 
+    # Markdown documentation
     markdownlint:
       enabled: true
 
+    # YAML configuration
     yamllint:
       enabled: true
 
+    # Docker best practices
     hadolint:
       enabled: true
 
+    # Secret detection (critical for security)
     gitleaks:
       enabled: true
 
+    # Additional secret scanning
     trufflehog:
       enabled: true
 
+    # GitHub Actions validation
     actionlint:
       enabled: true
 
 # Chat Configuration
 chat:
   auto_reply: true
-
-  # Integration with issue trackers
-  integrations:
-    jira:
-      usage: "auto"
-    linear:
-      usage: "auto"
 
 # Knowledge Base Configuration
 knowledge_base:
@@ -112,15 +196,37 @@ code_generation:
   docstrings:
     language: "en-US"
     path_instructions:
-      - path: "**/*.py"
-        instructions: "Generate Google-style docstrings with Args, Returns, Raises sections."
-      - path: "**/*.sh"
-        instructions: "Add brief function descriptions and parameter explanations."
+      - path: "tool_router/**/*.py"
+        instructions: |
+          Generate Google-style docstrings:
+          - Brief one-line summary
+          - Detailed description if needed
+          - Args: parameter descriptions with types
+          - Returns: return value description with type
+          - Raises: exceptions that may be raised
+          - Example usage for complex functions
+
+      - path: "scripts/**/*.sh"
+        instructions: |
+          Generate shell function documentation:
+          - Brief description of purpose
+          - Parameters: name and description
+          - Returns: exit codes and meanings
+          - Example: usage example
 
   unit_tests:
     path_instructions:
-      - path: "**/*.py"
-        instructions: "Generate pytest tests with fixtures, parametrize where applicable, and include edge cases."
+      - path: "tool_router/**/*.py"
+        instructions: |
+          Generate pytest tests following project standards:
+          - Use fixtures for common setup
+          - Parametrize for multiple test cases
+          - Test success and failure paths
+          - Mock external dependencies (HTTPGatewayClient, etc.)
+          - Include edge cases (empty input, invalid types, etc.)
+          - Performance assertions for critical paths
+          - Thread-safety tests for concurrent code
+          - 100% coverage requirement
 
 # Issue Enrichment Configuration
 issue_enrichment:

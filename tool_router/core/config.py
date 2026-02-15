@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -12,7 +11,7 @@ class GatewayConfig:
     """Gateway connection configuration."""
 
     url: str
-    jwt: Optional[str] = None
+    jwt: str | None = None
     timeout_ms: int = 120000
     max_retries: int = 3
     retry_delay_ms: int = 2000
@@ -27,29 +26,27 @@ class GatewayConfig:
         url = os.getenv("GATEWAY_URL", "http://gateway:4444").rstrip("/")
         jwt = os.getenv("GATEWAY_JWT")
         if not jwt:
-            raise ValueError("GATEWAY_JWT environment variable is required")
+            msg = "GATEWAY_JWT environment variable is required"
+            raise ValueError(msg)
 
         # Parse numeric values with descriptive error messages
         try:
             timeout_ms = int(os.getenv("GATEWAY_TIMEOUT_MS", "120000"))
         except ValueError as e:
-            raise ValueError(
-                f"GATEWAY_TIMEOUT_MS must be a valid integer, got: {os.getenv('GATEWAY_TIMEOUT_MS')}"
-            ) from e
+            msg = f"GATEWAY_TIMEOUT_MS must be a valid integer, got: {os.getenv('GATEWAY_TIMEOUT_MS')}"
+            raise ValueError(msg) from e
 
         try:
             max_retries = int(os.getenv("GATEWAY_MAX_RETRIES", "3"))
         except ValueError as e:
-            raise ValueError(
-                f"GATEWAY_MAX_RETRIES must be a valid integer, got: {os.getenv('GATEWAY_MAX_RETRIES')}"
-            ) from e
+            msg = f"GATEWAY_MAX_RETRIES must be a valid integer, got: {os.getenv('GATEWAY_MAX_RETRIES')}"
+            raise ValueError(msg) from e
 
         try:
             retry_delay_ms = int(os.getenv("GATEWAY_RETRY_DELAY_MS", "2000"))
         except ValueError as e:
-            raise ValueError(
-                f"GATEWAY_RETRY_DELAY_MS must be a valid integer, got: {os.getenv('GATEWAY_RETRY_DELAY_MS')}"
-            ) from e
+            msg = f"GATEWAY_RETRY_DELAY_MS must be a valid integer, got: {os.getenv('GATEWAY_RETRY_DELAY_MS')}"
+            raise ValueError(msg) from e
 
         return cls(
             url=url,
@@ -78,16 +75,14 @@ class ToolRouterConfig:
         try:
             max_tools_search = int(os.getenv("MAX_TOOLS_SEARCH", "10"))
         except ValueError as e:
-            raise ValueError(
-                f"MAX_TOOLS_SEARCH must be a valid integer, got: {os.getenv('MAX_TOOLS_SEARCH')}"
-            ) from e
+            msg = f"MAX_TOOLS_SEARCH must be a valid integer, got: {os.getenv('MAX_TOOLS_SEARCH')}"
+            raise ValueError(msg) from e
 
         try:
             default_top_n = int(os.getenv("DEFAULT_TOP_N", "1"))
         except ValueError as e:
-            raise ValueError(
-                f"DEFAULT_TOP_N must be a valid integer, got: {os.getenv('DEFAULT_TOP_N')}"
-            ) from e
+            msg = f"DEFAULT_TOP_N must be a valid integer, got: {os.getenv('DEFAULT_TOP_N')}"
+            raise ValueError(msg) from e
 
         return cls(
             gateway=GatewayConfig.load_from_environment(),

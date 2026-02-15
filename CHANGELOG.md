@@ -12,9 +12,28 @@ All notable changes to this project are documented here.
   - Uses security-extended and security-and-quality query suites
   - Satisfies branch protection requirements for Code Scanning
 
+## [1.5.0] - 2026-02-14
+
+### New Features
+
+- **uiforge-mcp server** – New local translate service (port 8026) providing 7 AI-driven UI generation tools: `scaffold_full_application` (React/Next.js/Vue/Angular + Tailwind + Shadcn/ui), `generate_ui_component` (style-aware components with audit), `generate_prototype` (interactive HTML prototypes with navigation), `generate_design_image` (SVG/PNG mockups via satori + resvg), `fetch_design_inspiration` (extract colors/typography from URLs), `figma_context_parser` (read Figma nodes → Tailwind mapping), `figma_push_variables` (write design tokens to Figma Variables API). Plus 1 MCP resource: `application://current-styles` (session-scoped design context). Set `FIGMA_ACCESS_TOKEN` in `.env` for Figma tools. Added to `cursor-default` virtual server. Built from [uiforge-mcp](https://github.com/LucasSantana-Dev/uiforge-mcp) via `Dockerfile.uiforge`.
+- **MCP servers for AI development** – 5 new free MCP servers added to the gateway for enhanced AI-assisted development workflows:
+  - **memory** (port 8027) – Anthropic reference server (`@modelcontextprotocol/server-memory`). Persistent knowledge graph that stores and retrieves context across sessions. No API key required.
+  - **git-mcp** (port 8028) – Anthropic reference server (`@modelcontextprotocol/server-git`). Local git operations (commit, branch, diff, log) complementing the GitHub gateway. No API key required.
+  - **fetch** (port 8029) – Anthropic reference server (`@modelcontextprotocol/server-fetch`). Web content fetching and markdown conversion for LLM consumption. No API key required.
+  - **Context7** (remote) – Up-to-date library/framework documentation lookup (`https://mcp.context7.com/mcp`). Free tier works without API key; configure key in Admin UI Passthrough Headers for higher rate limits. Uncommented in `gateways.txt`.
+  - **DeepWiki** (remote) – AI-powered codebase documentation for any public GitHub repo (`https://mcp.deepwiki.com/mcp`). Free, no authentication required.
+- **cursor-default expanded** – `virtual-servers.txt` cursor-default now includes memory and fetch gateways alongside existing ones. `git-mcp` moved to dedicated `cursor-git` virtual server to stay under Cursor's 60-tool limit.
+- **Port overrides** – `.env` optional vars: `MEMORY_PORT`, `GIT_MCP_PORT`, `FETCH_PORT`.
+
+### Fixed
+
+- **memory persistence** – Mount `./data/memory` volume and set `MEMORY_FILE_PATH=/data/memory.jsonl` so the knowledge graph survives container restarts. Added `MEMORY_VOLUME` to `.env.example`.
+- **git-mcp volume** – Mount `GIT_REPO_VOLUME` (default `./workspace`) into the container and pass `--repository /repos` so the server can access a git repository. Added `GIT_REPO_VOLUME` to `.env.example` and updated README.
+
 ## [0.1.1] - 2025-02-14
 
-### Changed
+### Code Refactoring
 
 - **Clean Code Refactoring: Improved Naming Conventions**
   - Refactored Python codebase for better readability and maintainability
@@ -289,24 +308,6 @@ All notable changes to this project are documented here.
 - **README database entries** – Updated PostgreSQL and MongoDB table entries to link to multi-user configuration guide.
 - **Automated Maintenance section** – Added comprehensive documentation for automation workflows in README.md, including setup instructions, schedule details, and how to configure secrets.
 - **Development guide updates** – Updated docs/DEVELOPMENT.md with maintenance automation section covering Renovate configuration, MCP registry checks, and Docker update process.
-
-## [1.5.0] - 2026-02-14
-
-### Added
-
-- **MCP servers for AI development** – 5 new free MCP servers added to the gateway for enhanced AI-assisted development workflows:
-  - **memory** (port 8027) – Anthropic reference server (`@modelcontextprotocol/server-memory`). Persistent knowledge graph that stores and retrieves context across sessions. No API key required.
-  - **git-mcp** (port 8028) – Anthropic reference server (`@modelcontextprotocol/server-git`). Local git operations (commit, branch, diff, log) complementing the GitHub gateway. No API key required.
-  - **fetch** (port 8029) – Anthropic reference server (`@modelcontextprotocol/server-fetch`). Web content fetching and markdown conversion for LLM consumption. No API key required.
-  - **Context7** (remote) – Up-to-date library/framework documentation lookup (`https://mcp.context7.com/mcp`). Free tier works without API key; configure key in Admin UI Passthrough Headers for higher rate limits. Uncommented in `gateways.txt`.
-  - **DeepWiki** (remote) – AI-powered codebase documentation for any public GitHub repo (`https://mcp.deepwiki.com/mcp`). Free, no authentication required.
-- **cursor-default expanded** – `virtual-servers.txt` cursor-default now includes memory and fetch gateways alongside existing ones. `git-mcp` moved to dedicated `cursor-git` virtual server to stay under Cursor's 60-tool limit.
-- **Port overrides** – `.env` optional vars: `MEMORY_PORT`, `GIT_MCP_PORT`, `FETCH_PORT`.
-
-### Fixed
-
-- **memory persistence** – Mount `./data/memory` volume and set `MEMORY_FILE_PATH=/data/memory.jsonl` so the knowledge graph survives container restarts. Added `MEMORY_VOLUME` to `.env.example`.
-- **git-mcp volume** – Mount `GIT_REPO_VOLUME` (default `./workspace`) into the container and pass `--repository /repos` so the server can access a git repository. Added `GIT_REPO_VOLUME` to `.env.example` and updated README.
 
 ## [1.4.3] - 2026-02-13
 

@@ -148,6 +148,16 @@ services:
     ports:
       - "${GITHUB_PORT:-8025}:8025"
 
+  uiforge:
+    build:
+      context: .
+      dockerfile: Dockerfile.uiforge
+    image: mcp-gateway-uiforge:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${UIFORGE_PORT:-8026}:8026"
+
   memory:
     <<: *translate
     environment:
@@ -201,16 +211,6 @@ services:
       - 'python3 -m mcpgateway.translate --stdio "npx -y mongodb-mcp-server ${MONGODB_CONNECTION_STRING}" --expose-sse --port 8032 --host 0.0.0.0'
     ports:
       - "${MONGODB_PORT:-8032}:8032"
-
-  uiforge:
-    <<: *translate
-    env_file: .env
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @uiforge/mcp-server" --expose-sse --port 8026 --host 0.0.0.0'
-    ports:
-      - "${UIFORGE_PORT:-8026}:8026"
   tool-router:
     build:
       context: .

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from tool_router.core.config import GatewayConfig
 from tool_router.gateway.client import HTTPGatewayClient
 
 
-class HealthStatus(str, Enum):
+class HealthStatus(StrEnum):
     """Health check status values."""
 
     HEALTHY = "healthy"
@@ -109,7 +109,7 @@ class HealthCheck:
                 message=f"Gateway error: {error}",
                 latency_ms=latency_milliseconds,
             )
-        except Exception as unexpected_error:
+        except (OSError, RuntimeError) as unexpected_error:
             latency_milliseconds = (time.perf_counter() - check_start_time) * 1000
             return ComponentHealth(
                 name="gateway",
@@ -158,7 +158,7 @@ class HealthCheck:
                 },
             )
 
-        except Exception as error:
+        except (ValueError, AttributeError, TypeError) as error:
             return ComponentHealth(
                 name="configuration",
                 status=HealthStatus.UNHEALTHY,
