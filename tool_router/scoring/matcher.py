@@ -101,6 +101,10 @@ def calculate_hybrid_score(
     Returns:
         Hybrid score combining AI and keyword matching
     """
+    # Validate and clamp inputs to [0.0, 1.0] range
+    ai_confidence = max(0.0, min(1.0, ai_confidence))
+    ai_weight = max(0.0, min(1.0, ai_weight))
+
     # Get keyword-based score and normalize to 0-1 range
     keyword_score = calculate_tool_relevance_score(task, context, tool)
     # Normalize keyword score (typical max is around 50-100)
@@ -108,9 +112,7 @@ def calculate_hybrid_score(
 
     # Calculate weighted hybrid score
     keyword_weight = 1.0 - ai_weight
-    hybrid_score = (ai_confidence * ai_weight) + (normalized_keyword_score * keyword_weight)
-
-    return hybrid_score
+    return (ai_confidence * ai_weight) + (normalized_keyword_score * keyword_weight)
 
 
 def select_top_matching_tools(

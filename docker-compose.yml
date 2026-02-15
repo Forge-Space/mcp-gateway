@@ -238,7 +238,7 @@ services:
         condition: service_healthy
 
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.5.6
     container_name: ollama
     restart: unless-stopped
     ports:
@@ -247,6 +247,7 @@ services:
       - ollama_data:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=24h
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 30s

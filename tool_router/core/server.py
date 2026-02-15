@@ -22,30 +22,9 @@ mcp = FastMCP("tool-router", json_response=True)
 logger = get_logger(__name__)
 metrics = get_metrics()
 
-# Initialize configuration and AI selector
-config = ToolRouterConfig.load_from_environment()
+# Configuration and AI selector will be initialized in main()
+config = None
 ai_selector = None
-if config.ai.enabled:
-    try:
-        ai_selector = AIToolSelector(
-            endpoint=config.ai.endpoint,
-            model=config.ai.model,
-            timeout_ms=config.ai.timeout_ms,
-        )
-        if ai_selector.is_available():
-            logger.info(f"AI selector initialized with model: {config.ai.model}")
-            metrics.increment_counter("ai_selector.initialized")
-        else:
-            logger.warning(f"Ollama service not available at {config.ai.endpoint}, using keyword matching fallback")
-            metrics.increment_counter("ai_selector.unavailable")
-            ai_selector = None
-    except Exception as e:
-        logger.warning(f"Failed to initialize AI selector: {e}, using keyword matching fallback")
-        metrics.increment_counter("ai_selector.init_error")
-        ai_selector = None
-else:
-    logger.info("AI selector disabled, using keyword matching only")
-    metrics.increment_counter("ai_selector.disabled")
 
 
 @mcp.tool()
@@ -81,13 +60,13 @@ def execute_task(task: str, context: str = "") -> str:
                 with TimingContext("execute_task.ai_selection"):
                     ai_result = ai_selector.select_tool(task, tools)
 
-                if ai_result and ai_result.get("confidence", 0.0) > 0.3:
+                if ai_result and ai_result.get("confidence", 0.0) > config.ai.min_confidence:
                     # AI selection successful with reasonable confidence
                     ai_tool_name = ai_result["tool_name"]
                     ai_confidence = ai_result["confidence"]
                     ai_reasoning = ai_result.get("reasoning", "")
 
-                    logger.info(f"AI selected: {ai_tool_name} (confidence: {ai_confidence:.2f}) - {ai_reasoning}")
+                    logger.info("AI selected: %s (confidence: %.2f) - %s", ai_tool_name, ai_confidence, ai_reasoning)
                     metrics.increment_counter("execute_task.ai_selection.success")
                     metrics.record_gauge("execute_task.ai_confidence", ai_confidence)
 
@@ -204,6 +183,39 @@ def search_tools(query: str, limit: int = 10) -> str:
 
 
 def main() -> None:
+    global config, ai_selector
+
+    # Initialize configuration and AI selector at startup
+    try:
+        config = ToolRouterConfig.load_from_environment()
+    except Exception as e:
+        logger.exception("Failed to load configuration: %s", e)
+        raise
+
+    if config.ai.enabled:
+        try:
+            ai_selector = AIToolSelector(
+                endpoint=config.ai.endpoint,
+                model=config.ai.model,
+                timeout_ms=config.ai.timeout_ms,
+            )
+            if ai_selector.is_available():
+                logger.info("AI selector initialized with model: %s", config.ai.model)
+                metrics.increment_counter("ai_selector.initialized")
+            else:
+                logger.warning(
+                    "Ollama service not available at %s, using keyword matching fallback", config.ai.endpoint
+                )
+                metrics.increment_counter("ai_selector.unavailable")
+                ai_selector = None
+        except Exception as e:
+            logger.warning("Failed to initialize AI selector: %s, using keyword matching fallback", e)
+            metrics.increment_counter("ai_selector.init_error")
+            ai_selector = None
+    else:
+        logger.info("AI selector disabled, using keyword matching only")
+        metrics.increment_counter("ai_selector.disabled")
+
     mcp.run(transport="stdio")
 
 

@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import json
-import logging
 from typing import Any
 
 import requests
 
 from tool_router.ai.prompts import build_selection_prompt
+from tool_router.observability.logger import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AIToolSelector:
@@ -115,10 +115,11 @@ class AIToolSelector:
             return result.get("response", "")
 
         except requests.HTTPError as e:
-            if e.response.status_code == 404:
+            resp = getattr(e, "response", None)
+            if resp is not None and resp.status_code == 404:
                 logger.error(f"Model {self.model} not found. Pull it with: ollama pull {self.model}")  # noqa: TRY400
             else:
-                logger.exception("Ollama HTTP error")
+                logger.exception("Ollama HTTP error: %s", e)
             return None
 
     def _parse_response(self, response: str, tools: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -134,10 +135,24 @@ class AIToolSelector:
         try:
             # Extract JSON from response (model might add extra text)
             json_start = response.find("{")
-            json_end = response.rfind("}") + 1
-
-            if json_start == -1 or json_end == 0:
+            if json_start == -1:
                 logger.warning("No JSON found in AI response")
+                return None
+
+            # Walk string with brace counter to find matching closing brace
+            brace_count = 0
+            json_end = -1
+            for i in range(json_start, len(response)):
+                if response[i] == "{":
+                    brace_count += 1
+                elif response[i] == "}":
+                    brace_count -= 1
+                    if brace_count == 0:
+                        json_end = i + 1
+                        break
+
+            if json_end == -1:
+                logger.warning("No matching closing brace found in AI response")
                 return None
 
             json_str = response[json_start:json_end]
@@ -189,7 +204,9 @@ class AIToolSelector:
             True if Ollama is available, False otherwise
         """
         try:
-            response = requests.get(f"{self.endpoint}/api/tags", timeout=2.0)
+            # Use fraction of request timeout for availability check
+            availability_timeout = getattr(self, "availability_timeout_seconds", max(0.2, self.timeout_seconds * 0.5))
+            response = requests.get(f"{self.endpoint}/api/tags", timeout=availability_timeout)
             return response.status_code == 200
         except requests.RequestException:
             return False

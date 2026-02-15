@@ -63,4 +63,7 @@ def build_selection_prompt(task: str, tools: list[dict]) -> str:
         Complete formatted prompt
     """
     tool_list = format_tool_list(tools)
-    return TOOL_SELECTION_PROMPT.format(task=task, tool_list=tool_list)
+    # Escape braces in user input to prevent KeyError
+    escaped_task = task.replace("{", "{{").replace("}", "}}")
+    escaped_tool_list = tool_list.replace("{", "{{").replace("}", "}}")
+    return TOOL_SELECTION_PROMPT.format(task=escaped_task, tool_list=escaped_tool_list)

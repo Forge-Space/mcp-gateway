@@ -155,14 +155,14 @@ The tool router exposes metrics for AI selection:
 
 AI selection logs include:
 
-```
+```text
 INFO: AI selected: brave_web_search (confidence: 0.95) - Task requires web search
 INFO: Selected tool: brave_web_search (method: hybrid_ai)
 ```
 
 Fallback logs:
 
-```
+```text
 WARNING: AI selection timeout (2.0s) for task: search...
 INFO: Selected tool: brave_web_search (method: keyword)
 ```
@@ -224,16 +224,19 @@ docker restart tool-router
 To use custom or quantized models:
 
 1. Pull model in Ollama container:
+
    ```bash
    docker exec -it ollama ollama pull your-model:tag
    ```
 
 2. Update `.env`:
+
    ```bash
    ROUTER_AI_MODEL=your-model:tag
    ```
 
 3. Restart tool-router:
+
    ```bash
    docker restart tool-router
    ```

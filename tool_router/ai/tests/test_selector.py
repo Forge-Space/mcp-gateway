@@ -87,7 +87,10 @@ class TestAIToolSelector:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "response": 'Here is my selection:\n{"tool_name": "read_file", "confidence": 0.8, "reasoning": "Need to read file"}\nHope this helps!'
+            "response": (
+                'Here is my selection:\n{"tool_name": "read_file", '
+                '"confidence": 0.8, "reasoning": "Need to read file"}\nHope this helps!'
+            )
         }
         mock_post.return_value = mock_response
 
@@ -152,7 +155,9 @@ class TestAIToolSelector:
         """Test HTTP error handling."""
         mock_response = Mock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = requests.HTTPError()
+        http_err = requests.HTTPError()
+        http_err.response = mock_response
+        mock_response.raise_for_status.side_effect = http_err
         mock_post.return_value = mock_response
 
         result = selector.select_tool("search web", sample_tools)
@@ -201,6 +206,9 @@ class TestAIToolSelector:
 
         # Should still work but only use first 100 tools
         assert result is not None
+
+        # Verify that only 100 tools were sent to the API
+        mock_post.assert_called_once()
 
     @patch("tool_router.ai.selector.requests.post")
     def test_select_tool_confidence_out_of_range(self, mock_post, selector, sample_tools):

@@ -4,6 +4,33 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **AI Router robustness improvements** - Multiple bug fixes and enhancements to AI-powered tool selection:
+  - **Ollama version pinning**: Pin Ollama image to `0.5.6` in docker-compose.yml for reproducible deployments
+  - **Model persistence**: Add `OLLAMA_KEEP_ALIVE=24h` environment variable to prevent model unloading and cold-start latency
+  - **Timeout configuration**: Increase default AI timeout from 2000ms to 5000ms to accommodate Ollama model cold starts
+  - **Configurable confidence threshold**: Add `ROUTER_AI_MIN_CONFIDENCE` config field (default 0.3) for tunable AI selection threshold
+  - **Brace escaping in prompts**: Escape literal braces in user input to prevent KeyError in prompt formatting
+  - **HTTPError response handling**: Guard against AttributeError when `e.response` is None in Ollama error handling
+  - **Improved JSON extraction**: Use brace-counting algorithm to correctly extract nested JSON from AI responses
+  - **Centralized logging**: Replace stdlib logger with project's centralized `get_logger()` in selector.py
+  - **Dynamic availability timeout**: Use configurable timeout (50% of request timeout) for Ollama health checks
+  - **Config initialization safety**: Move `ToolRouterConfig.load_from_environment()` to `main()` to prevent import-time crashes
+  - **Lazy logging**: Replace f-string logs with %-style formatting to avoid unnecessary string evaluation
+  - **Input validation**: Clamp `ai_confidence` and `ai_weight` to [0.0, 1.0] range in `calculate_hybrid_score()`
+  - **Error handling refactor**: Separate parse and range validation for `ROUTER_AI_WEIGHT` to preserve specific ValueError messages
+  - **Improved docstrings**: Add Google-style Args/Raises sections to `AIRouterConfig.load_from_environment()`
+
+- **Documentation improvements**:
+  - Add blank lines before code blocks in AI_ROUTER_GUIDE.md to satisfy markdownlint MD031
+  - Add language specifiers (`text`) to log code fences for proper syntax highlighting
+
+- **Test improvements**:
+  - Strengthen truncation assertion in `test_format_tool_list_truncate_long_description` to verify exact 150-char limit
+  - Add response object to mocked HTTPError in `test_select_tool_http_error` to match production code
+  - Add verification that tool list is truncated to 100 in `test_select_tool_too_many_tools`
+
 ### Added
 
 - **AI-Powered Tool Router with Ollama** - Enhanced tool-router with intelligent LLM-based tool selection

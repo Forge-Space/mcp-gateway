@@ -29,8 +29,13 @@ class TestPrompts:
 
         result = format_tool_list(tools)
 
-        assert len(result) < 200
+        # format_tool_list truncates at 150 chars, replacing last 3 with "..."
+        # Expected format: "1. tool1: " + 147 'A's + "..."
         assert "..." in result
+        # The description part should be exactly 150 chars (147 'A's + "...")
+        description_part = result.split(": ", 1)[1]
+        assert len(description_part) == 150
+        assert description_part == "A" * 147 + "..."
 
     def test_format_tool_list_missing_fields(self):
         """Test handling of missing name/description."""

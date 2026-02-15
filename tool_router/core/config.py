@@ -65,15 +65,22 @@ class AIRouterConfig:
     provider: str = "ollama"
     model: str = "llama3.2:3b"
     endpoint: str = "http://ollama:11434"
-    timeout_ms: int = 2000
+    timeout_ms: int = 5000  # Increased for Ollama model cold starts; use OLLAMA_KEEP_ALIVE to prevent unloading
     weight: float = 0.7  # Weight for AI score in hybrid scoring (0.0-1.0)
+    min_confidence: float = 0.3  # Minimum AI confidence threshold for using AI selection
 
     @classmethod
     def load_from_environment(cls) -> AIRouterConfig:
         """Load AI router configuration from environment variables.
 
+        Args:
+            No parameters.
+
         Returns:
             AIRouterConfig with settings from environment or defaults.
+
+        Raises:
+            ValueError: If numeric values are invalid or out of range.
         """
         enabled = os.getenv("ROUTER_AI_ENABLED", "true").lower() in ("true", "1", "yes")
         provider = os.getenv("ROUTER_AI_PROVIDER", "ollama")
@@ -81,19 +88,32 @@ class AIRouterConfig:
         endpoint = os.getenv("ROUTER_AI_ENDPOINT", "http://ollama:11434").rstrip("/")
 
         try:
-            timeout_ms = int(os.getenv("ROUTER_AI_TIMEOUT_MS", "2000"))
+            timeout_ms = int(os.getenv("ROUTER_AI_TIMEOUT_MS", "5000"))
         except ValueError as e:
             msg = f"ROUTER_AI_TIMEOUT_MS must be a valid integer, got: {os.getenv('ROUTER_AI_TIMEOUT_MS')}"
             raise ValueError(msg) from e
 
+        # Parse weight with separate parse and range validation
         try:
             weight = float(os.getenv("ROUTER_AI_WEIGHT", "0.7"))
-            if not 0.0 <= weight <= 1.0:
-                msg = f"ROUTER_AI_WEIGHT must be between 0.0 and 1.0, got: {weight}"
-                raise ValueError(msg)
         except ValueError as e:
-            msg = f"ROUTER_AI_WEIGHT must be a valid float between 0.0 and 1.0, got: {os.getenv('ROUTER_AI_WEIGHT')}"
+            msg = f"ROUTER_AI_WEIGHT must be a valid float, got: {os.getenv('ROUTER_AI_WEIGHT')}"
             raise ValueError(msg) from e
+
+        if not 0.0 <= weight <= 1.0:
+            msg = f"ROUTER_AI_WEIGHT must be between 0.0 and 1.0, got: {weight}"
+            raise ValueError(msg)
+
+        # Parse min_confidence with separate parse and range validation
+        try:
+            min_confidence = float(os.getenv("ROUTER_AI_MIN_CONFIDENCE", "0.3"))
+        except ValueError as e:
+            msg = f"ROUTER_AI_MIN_CONFIDENCE must be a valid float, got: {os.getenv('ROUTER_AI_MIN_CONFIDENCE')}"
+            raise ValueError(msg) from e
+
+        if not 0.0 <= min_confidence <= 1.0:
+            msg = f"ROUTER_AI_MIN_CONFIDENCE must be between 0.0 and 1.0, got: {min_confidence}"
+            raise ValueError(msg)
 
         return cls(
             enabled=enabled,
@@ -102,6 +122,7 @@ class AIRouterConfig:
             endpoint=endpoint,
             timeout_ms=timeout_ms,
             weight=weight,
+            min_confidence=min_confidence,
         )
 
 
