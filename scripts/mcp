@@ -484,9 +484,25 @@ cmd_ide_setup() {
         exit 1
     fi
 
+    # List available servers
+    echo ""
+    info "Available virtual servers:"
+    if [ -f "$PROJECT_ROOT/config/virtual-servers.txt" ]; then
+        grep -v '^#' "$PROJECT_ROOT/config/virtual-servers.txt" | grep -v '^[[:space:]]*$' | awk '{print "  - " $1}'
+    else
+        warn "No virtual servers configured yet"
+        echo "  Run './scripts/gateway/register.sh' first"
+        exit 1
+    fi
+
+    echo ""
+    read -rp "Which server would you like to connect to? [gateway]: " server
+    server="${server:-gateway}"
+
     # Generate config
     cd "$PROJECT_ROOT"
-    make "ide-$ide"
+    info "Generating $ide configuration for server: $server"
+    make "ide-$ide" SERVER="$server"
 
     success "IDE configuration generated!"
     info "Next steps:"
