@@ -207,6 +207,27 @@ docker compose down -v
 ./scripts/mcp start
 ```
 
+### Ollama Container Unhealthy
+
+**Symptom:** `dependency failed to start: container ollama is unhealthy`
+
+**Cause:** Ollama requires a model to be downloaded first (2GB).
+
+**Quick Fix:**
+```bash
+# Pull the required model (one-time, ~2-7 minutes)
+docker exec ollama ollama pull llama3.2:3b
+
+# Restart gateway
+./scripts/mcp restart
+
+# Or disable AI routing temporarily
+echo "ROUTER_AI_ENABLED=false" >> .env
+./scripts/mcp restart
+```
+
+**See:** `docs/OLLAMA_SETUP.md` for complete Ollama configuration.
+
 ### IDE Not Connecting
 
 ```bash

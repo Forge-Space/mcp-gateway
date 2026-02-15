@@ -21,7 +21,9 @@ _mcp_completions() {
                 COMPREPLY=($(compgen -W "$server_commands" -- "$cur"))
             elif [[ $cword -eq 3 && ("${words[2]}" == "enable" || "${words[2]}" == "disable" || "${words[2]}" == "info") ]]; then
                 # Complete with available server names from config
-                local config_file="$PWD/config/virtual-servers.txt"
+                # Derive script directory from BASH_SOURCE to work from any directory
+                local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+                local config_file="$script_dir/../../config/virtual-servers.txt"
                 if [[ -f "$config_file" ]]; then
                     local servers=$(grep -v '^#' "$config_file" | grep -v '^[[:space:]]*$' | cut -d'|' -f1)
                     COMPREPLY=($(compgen -W "$servers" -- "$cur"))
@@ -38,7 +40,7 @@ _mcp_completions() {
         logs)
             if [[ $cword -eq 2 ]]; then
                 # Complete with service names
-                COMPREPLY=($(compgen -W "gateway tool-router ollama postgres redis all" -- "$cur"))
+                COMPREPLY=($(compgen -W "gateway tool-router ollama postgres redis uiforge all" -- "$cur"))
             fi
             return 0
             ;;

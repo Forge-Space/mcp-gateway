@@ -210,12 +210,12 @@ cmd_doctor() {
         else
             error "Docker is installed but not running"
             echo "   → Start Docker Desktop or Docker daemon"
-            ((issues++))
+            issues=$((issues + 1))
         fi
     else
         error "Docker is not installed"
         echo "   → Install Docker from https://docker.com"
-        ((issues++))
+        issues=$((issues + 1))
     fi
 
     # Check 2: Docker Compose
@@ -225,7 +225,7 @@ cmd_doctor() {
     else
         error "Docker Compose is not installed"
         echo "   → Install Docker Compose"
-        ((issues++))
+        issues=$((issues + 1))
     fi
 
     # Check 3: Python
@@ -246,7 +246,7 @@ cmd_doctor() {
     else
         warn ".env file not found"
         echo "   → Run 'mcp init' to create .env file"
-        ((issues++))
+        issues=$((issues + 1))
     fi
 
     if [ -f "$PROJECT_ROOT/config/virtual-servers.txt" ]; then
@@ -255,7 +255,7 @@ cmd_doctor() {
         success "Virtual servers configured ($server_count servers)"
     else
         warn "Virtual servers configuration not found"
-        ((issues++))
+        issues=$((issues + 1))
     fi
 
     # Check 5: Gateway status
@@ -303,6 +303,19 @@ cmd_doctor() {
 # Command: completion
 cmd_completion() {
     local shell="${1:-bash}"
+
+    # Validate shell against allowlist to prevent path traversal
+    case "$shell" in
+        bash|zsh|fish)
+            # Valid shell
+            ;;
+        *)
+            error "Invalid shell: '$shell'"
+            echo "Available shells: bash, zsh, fish"
+            exit 1
+            ;;
+    esac
+
     local completion_file="$SCRIPT_DIR/completions/mcp.$shell"
 
     if [ ! -f "$completion_file" ]; then

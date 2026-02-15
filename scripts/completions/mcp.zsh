@@ -38,6 +38,7 @@ _mcp() {
         'ollama:Ollama logs'
         'postgres:PostgreSQL logs'
         'redis:Redis logs'
+        'uiforge:UIForge logs'
         'all:All service logs'
     )
 
@@ -46,7 +47,9 @@ _mcp() {
             case $words[3] in
                 enable|disable|info)
                     # Complete with server names from config
-                    local config_file="$PWD/config/virtual-servers.txt"
+                    # Derive script directory to work from any directory
+                    local script_dir="${0:A:h}"
+                    local config_file="$script_dir/../../config/virtual-servers.txt"
                     if [[ -f "$config_file" ]]; then
                         local -a servers
                         servers=(${(f)"$(grep -v '^#' "$config_file" | grep -v '^[[:space:]]*$' | cut -d'|' -f1)"})
