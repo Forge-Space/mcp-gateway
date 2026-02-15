@@ -10,6 +10,6 @@ COPY tool_router /app/tool_router
 ENV PYTHONPATH=/app
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python3 -c "import sys; sys.exit(0)"
+  CMD python3 -c "import tool_router; import sys; sys.exit(0)"
 
 CMD ["python3", "-m", "tool_router"]

@@ -107,7 +107,7 @@ select = ["E", "F", "W", "I", "N", "UP", "ANN", "B", "A", "C4", "DTZ", "T10", "D
 
 ### ESLint
 
-**Configuration:** `@/.eslintrc.json`
+**Configuration:** `eslint.config.js`
 
 ESLint enforces code quality and consistency for the TypeScript NPM client.
 
@@ -621,7 +621,7 @@ npx npm-check-updates --target latest
 
 | File | Purpose | Documentation |
 |------|---------|---------------|
-| `@/.eslintrc.json` | ESLint configuration | [ESLint Docs](https://eslint.org/docs/latest/) |
+| `eslint.config.js` | ESLint configuration (flat config) | [ESLint Docs](https://eslint.org/docs/latest/) |
 | `@/.prettierrc.json` | Prettier configuration | [Prettier Docs](https://prettier.io/docs/en/) |
 | `@/.prettierignore` | Prettier ignore patterns | [Prettier Ignore](https://prettier.io/docs/en/ignore.html) |
 | `@/pyproject.toml` | Ruff configuration | [Ruff Docs](https://docs.astral.sh/ruff/) |

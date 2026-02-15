@@ -38,6 +38,7 @@ Contributing and developing the project.
 - **[Monorepo vs Single Repo](development/MONOREPO_VS_SINGLE_REPO.md)** - Repository structure decisions
 
 ### Operations & Maintenance
+
 Running and maintaining the gateway.
 
 - **[AI Usage Guide](operations/AI_USAGE.md)** - Using AI tools effectively
@@ -45,12 +46,14 @@ Running and maintaining the gateway.
 - **[Monitoring & Observability](operations/MONITORING.md)** - Health checks and metrics
 
 ### Migration & Upgrades
+
 Migrating from older versions or other setups.
 
 - **[IDE Agnostic Migration](migration/IDE_AGNOSTIC_MIGRATION.md)** - Migrate to IDE-agnostic configuration
 - **[Upgrade Guide](migration/UPGRADE_GUIDE.md)** - Version upgrade instructions
 
 ### Tools & Automation
+
 CI/CD, code quality, and automation.
 
 - **[CodeRabbit Setup](tools/CODERABBIT_SETUP.md)** - AI code review configuration
@@ -59,6 +62,7 @@ CI/CD, code quality, and automation.
 ## 🔍 Quick Links
 
 ### Common Tasks
+
 - [Start the gateway](../README.md#quick-start)
 - [Register gateways](../README.md#registering-url-based-mcp-servers)
 - [Connect to Cursor](../README.md#connect-cursor)
@@ -66,6 +70,7 @@ CI/CD, code quality, and automation.
 - [Add new MCP server](configuration/ADMIN_UI_MANUAL_REGISTRATION.md)
 
 ### Troubleshooting
+
 - [Gateway won't start](operations/TROUBLESHOOTING.md#gateway-startup-issues)
 - [Connection timeouts](operations/TROUBLESHOOTING.md#connection-timeouts)
 - [JWT authentication errors](operations/TROUBLESHOOTING.md#jwt-errors)

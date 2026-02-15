@@ -201,7 +201,7 @@ USER appuser
 WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY . .
-HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+HEALTHCHECK --interval=30s --timeout=3s CMD python -c "from urllib.request import urlopen; urlopen('http://localhost:8000/health', timeout=3)"
 CMD ["python", "-m", "tool_router"]
 ```
 
