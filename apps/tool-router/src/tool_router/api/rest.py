@@ -127,6 +127,9 @@ def register_fastapi_routes(app: Any) -> None:
     from fastapi import Body
     from fastapi.responses import JSONResponse
 
+    # Module-level constant to avoid function call in default argument
+    _DEFAULT_BODY = Body(default=None)
+
     @app.get("/api/virtual-servers")
     async def list_servers_endpoint():
         result, status = handle_list_servers()
@@ -138,9 +141,7 @@ def register_fastapi_routes(app: Any) -> None:
         return JSONResponse(content=result, status_code=status)
 
     @app.patch("/api/virtual-servers/{server_name}")
-    async def update_server_endpoint(server_name: str, data: dict[str, Any] = None):
-        if data is None:
-            data = Body(...)
+    async def update_server_endpoint(server_name: str, data: dict[str, Any] = _DEFAULT_BODY):
         result, status = handle_update_server(server_name, data)
         return JSONResponse(content=result, status_code=status)
 
