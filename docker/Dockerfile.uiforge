@@ -8,8 +8,8 @@ RUN apt-get update -qq && \
 WORKDIR /app
 
 ARG UIFORGE_REPO=https://github.com/LucasSantana-Dev/uiforge-mcp.git
-# Pin to v0.4.1 release commit for reproducible builds (Phase 6.8: Full Framework Parity)
-ARG UIFORGE_REF=3deb4916c3b67a1f1bddb4b2ad040c3073002718
+# Pin to v0.4.1 release tag for reproducible builds (Full Framework Parity + Quality Improvements)
+ARG UIFORGE_REF=b88320dc50f79382225ae24a5fb674af92b43326
 
 RUN git clone "$UIFORGE_REPO" . && \
     git checkout "$UIFORGE_REF"
