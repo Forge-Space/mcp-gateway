@@ -164,7 +164,7 @@ jobs:
       - name: Start gateway
         run: |
           mkdir -p data
-          docker compose up -d gateway
+          docker compose -f docker/docker-compose.yml up -d gateway
 
       - name: Wait for gateway health
         run: |
@@ -176,7 +176,7 @@ jobs:
             sleep 2
           done
           echo "Gateway did not become healthy"
-          docker compose logs gateway
+          docker compose -f docker/docker-compose.yml logs gateway
           exit 1
 
       - name: Stop gateway
