@@ -14,11 +14,11 @@ class GatewayClient(Protocol):
 
     def get_tools(self) -> list[dict[str, Any]]:
         """Fetch available tools from the gateway."""
-        ...
+        raise NotImplementedError
 
     def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
         """Execute a tool via the gateway."""
-        ...
+        raise NotImplementedError
 
 
 class HTTPGatewayClient:
