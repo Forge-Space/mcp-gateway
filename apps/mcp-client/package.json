@@ -7,7 +7,7 @@
     "mcp-gateway": "./build/index.js"
   },
   "scripts": {
-    "build": "tsc && node --input-type=module -e \"import fs from 'fs'; fs.chmodSync('build/index.js', 0o755)\"",
+    "build": "tsc && node --input-type=module -e \"import fs from 'fs'; import path from 'path'; const file = 'build/index.js'; if (fs.existsSync(file)) fs.chmodSync(file, 0o755)\"",
     "build:watch": "tsc --watch",
     "clean": "rimraf build/ node_modules/.cache/",
     "dev": "tsc --watch",
