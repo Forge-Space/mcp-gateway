@@ -108,7 +108,7 @@ pytest tests/ --cov=src/tool_router --cov-report=html
 **Current**: 635 linting errors (mostly type annotations)
 
 **Strategy**:
-- Run `make lint-python --fix` to auto-fix 75 errors
+- Run `ruff check --fix` to auto-fix 75 errors
 - Add type annotations incrementally (start with new code)
 - Configure ruff to ignore certain rules if needed
 

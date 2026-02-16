@@ -77,9 +77,9 @@ class FeatureFlags:
                     env_var=feature_config.get("env_var"),
                     backward_compat=feature_config.get("backward_compat"),
                 )
-        except Exception:
+        except Exception as e:
             # Log error but don't fail - use defaults
-            logger.warning("Failed to load features.yaml", exc_info=True)
+            logger.warning(f"Failed to load features.yaml: {e}", exc_info=True)
 
     def _load_from_environment(self) -> None:
         """Override feature flags from environment variables."""
@@ -192,7 +192,7 @@ class FeatureFlags:
 
             return True
         except Exception as e:
-            print(f"Error: Failed to save features.yaml: {e}")
+            logger.error(f"Failed to save features.yaml: {e}", exc_info=True)
             return False
 
     def to_dict(self) -> dict[str, Any]:

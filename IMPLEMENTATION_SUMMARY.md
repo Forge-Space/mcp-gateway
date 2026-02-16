@@ -2,7 +2,6 @@
 
 **Date**: February 15, 2026
 **Status**: ✅ COMPLETE
-**Plan**: `/Users/lucassantana/.windsurf/plans/migration-completion-plan-778fb1.md`
 
 ---
 

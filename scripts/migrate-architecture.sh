@@ -39,15 +39,15 @@ backup_project() {
     mkdir -p "${BACKUP_DIR}"
 
     # Backup critical directories
-    cp -r "${PROJECT_ROOT}/tool_router" "${BACKUP_DIR}/" 2>/dev/null || true
-    cp -r "${PROJECT_ROOT}/web-admin" "${BACKUP_DIR}/" 2>/dev/null || true
-    cp -r "${PROJECT_ROOT}/src" "${BACKUP_DIR}/" 2>/dev/null || true
-    cp -r "${PROJECT_ROOT}/config" "${BACKUP_DIR}/" 2>/dev/null || true
-    cp -r "${PROJECT_ROOT}/scripts" "${BACKUP_DIR}/" 2>/dev/null || true
+    [ -d "${PROJECT_ROOT}/tool_router" ] && cp -r "${PROJECT_ROOT}/tool_router" "${BACKUP_DIR}/" || log_warning "tool_router not found, skipping"
+    [ -d "${PROJECT_ROOT}/web-admin" ] && cp -r "${PROJECT_ROOT}/web-admin" "${BACKUP_DIR}/" || log_warning "web-admin not found, skipping"
+    [ -d "${PROJECT_ROOT}/src" ] && cp -r "${PROJECT_ROOT}/src" "${BACKUP_DIR}/" || log_warning "src not found, skipping"
+    [ -d "${PROJECT_ROOT}/config" ] && cp -r "${PROJECT_ROOT}/config" "${BACKUP_DIR}/" || log_warning "config not found, skipping"
+    [ -d "${PROJECT_ROOT}/scripts" ] && cp -r "${PROJECT_ROOT}/scripts" "${BACKUP_DIR}/" || log_warning "scripts not found, skipping"
 
     # Backup config files
-    cp "${PROJECT_ROOT}/pyproject.toml" "${BACKUP_DIR}/" 2>/dev/null || true
-    cp "${PROJECT_ROOT}/docker-compose.yml" "${BACKUP_DIR}/" 2>/dev/null || true
+    [ -f "${PROJECT_ROOT}/pyproject.toml" ] && cp "${PROJECT_ROOT}/pyproject.toml" "${BACKUP_DIR}/" || log_warning "pyproject.toml not found, skipping"
+    [ -f "${PROJECT_ROOT}/docker-compose.yml" ] && cp "${PROJECT_ROOT}/docker-compose.yml" "${BACKUP_DIR}/" || log_warning "docker-compose.yml not found, skipping"
     cp "${PROJECT_ROOT}/Makefile" "${BACKUP_DIR}/" 2>/dev/null || true
 
     log_success "Backup created successfully"

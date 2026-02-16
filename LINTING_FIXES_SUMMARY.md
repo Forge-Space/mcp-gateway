@@ -45,7 +45,6 @@ ignore = [
     "PLW0603", # Global-statement (intentional)
     "TRY300",  # Try-consider-else (style)
     "BLE001",  # Blind-except (sometimes intentional)
-    "S106",    # Hardcoded-password (false positives)
     "T201",    # Print statements (CLI output)
     "PLR",     # Pylint refactor (too strict)
     "RUF043",  # Pytest pattern warnings
@@ -54,7 +53,10 @@ ignore = [
     "TRY",     # Tryceratops (style)
     "EM",      # Error message rules (style)
     "PTH",     # Pathlib rules (open() acceptable)
-    "S",       # Bandit security (false positives)
+    "S101",    # Assert usage (pytest uses assert)
+    "S106",    # Hardcoded-password (false positives in tests)
+    "S310",    # URL open audit (intentional for HTTP requests)
+    # Note: Critical security checks (S105, S107, S608, etc.) remain active
 ]
 ```
 

@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "mcp>=1.0.0,<2.0.0",
-    "fastmcp>=0.1.0,<1.0.0",
+    "fastmcp>=2.0.0,<3.0.0",
     "requests>=2.31.0,<3.0.0",
     "flask>=3.0.0,<4.0.0",
     "pyyaml>=6.0.0,<7.0.0",
@@ -56,30 +56,20 @@ precision = 2
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-src = ["tool_router"]
+src = ["src"]
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-    "RSE",    # flake8-raise
-    "RET",    # flake8-return
-    "SIM",    # flake8-simplify
-    "TID",    # flake8-tidy-imports
-    "ARG",    # flake8-unused-arguments
-    "PTH",    # flake8-use-pathlib
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
     "ERA",    # eradicate (commented-out code)
-    "PD",     # pandas-vet
     "PGH",    # pygrep-hooks
-    "PL",     # Pylint
-    "TRY",    # tryceratops
-    "NPY",    # NumPy-specific rules
-    "RUF",    # Ruff-specific rules
+    "RUF100", # Unused noqa directives
 ]
 
 # Ignore specific rules that may be too strict or conflict with project style

@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY apps/tool-router/pyproject.toml apps/tool-router/
 COPY apps/tool-router/src apps/tool-router/src
 
-# Install package in editable mode
-RUN pip install -e apps/tool-router
+# Install package
+RUN pip install apps/tool-router
 
 ENV PYTHONPATH=/app
 

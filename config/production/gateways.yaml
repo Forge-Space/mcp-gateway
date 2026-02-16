@@ -2,7 +2,7 @@
 # Defines MCP gateways that can be registered with the system
 # Local gateways use SSE transport, remote gateways use STREAMABLEHTTP
 
-# Technology Stack: React, Node.js, TypeScript, JavaScript, Java, Spring,
+# Technology Stack: React, Node.js, TypeScript, JavaScript, Java, Spring
 # Tailwind, Next.js, Jest, Prisma
 
 local_gateways:
