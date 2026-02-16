@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from tool_router.api.health import get_ai_router_health
 from tool_router.observability.health import HealthStatus
 

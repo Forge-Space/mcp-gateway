@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from tool_router.api.rest import (
     handle_get_server,
     handle_list_servers,

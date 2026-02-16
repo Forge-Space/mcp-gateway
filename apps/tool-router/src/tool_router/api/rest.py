@@ -138,7 +138,9 @@ def register_fastapi_routes(app: Any) -> None:
         return JSONResponse(content=result, status_code=status)
 
     @app.patch("/api/virtual-servers/{server_name}")
-    async def update_server_endpoint(server_name: str, data: dict[str, Any] = Body(...)):
+    async def update_server_endpoint(server_name: str, data: dict[str, Any] = None):
+        if data is None:
+            data = Body(...)
         result, status = handle_update_server(server_name, data)
         return JSONResponse(content=result, status_code=status)
 

@@ -38,7 +38,10 @@ def test_build_arguments_accepts_input_schema_snake_case() -> None:
 # Additional comprehensive tests
 
 
-@pytest.mark.parametrize("param_name", ["query", "q", "search", "task", "prompt", "question", "input", "text", "message", "command"])
+@pytest.mark.parametrize(
+    "param_name",
+    ["query", "q", "search", "task", "prompt", "question", "input", "text", "message", "command"],
+)
 def test_build_arguments_all_task_param_names(param_name: str) -> None:
     """Test that all common task parameter names are recognized."""
     tool = {"inputSchema": {"properties": {param_name: {"type": "string"}}}}

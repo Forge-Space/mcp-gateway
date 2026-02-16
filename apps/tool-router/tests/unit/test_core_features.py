@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from tool_router.core.features import FeatureFlags
 
 

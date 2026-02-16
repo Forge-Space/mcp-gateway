@@ -117,7 +117,7 @@ class AIToolSelector:
         except requests.HTTPError as e:
             resp = getattr(e, "response", None)
             if resp is not None and resp.status_code == 404:
-                logger.error(f"Model {self.model} not found. Pull it with: ollama pull {self.model}")  # noqa: TRY400
+                logger.error(f"Model {self.model} not found. Pull it with: ollama pull {self.model}")
             else:
                 logger.exception("Ollama HTTP error: %s", e)
             return None

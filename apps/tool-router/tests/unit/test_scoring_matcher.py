@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
 from tool_router.scoring.matcher import (
-    SYNONYMS,
     _calculate_substring_match_score,
     _enrich_tokens_with_synonyms,
     _extract_normalized_tokens,

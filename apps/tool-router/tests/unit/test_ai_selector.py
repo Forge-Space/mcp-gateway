@@ -64,7 +64,8 @@ class TestAIToolSelector:
 
     def test_parse_response_valid(self, selector, sample_tools):
         """Test parsing valid response."""
-        result = selector._parse_response('{"tool_name": "search_web", "confidence": 0.9, "reasoning": "best"}', sample_tools)
+        response = '{"tool_name": "search_web", "confidence": 0.9, "reasoning": "best"}'
+        result = selector._parse_response(response, sample_tools)
         assert result is not None
         assert result["tool_name"] == "search_web"
         assert result["confidence"] == 0.9

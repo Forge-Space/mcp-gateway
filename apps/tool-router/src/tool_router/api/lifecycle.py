@@ -52,7 +52,7 @@ except ImportError:
             msvcrt.locking(file_obj.fileno(), msvcrt.LK_UNLCK, 1)
     else:
         # No locking available
-        def lock_file(file_obj: IO[bytes], timeout: float = 5.0) -> bool:  # noqa: ARG001
+        def lock_file(file_obj: IO[bytes], timeout: float = 5.0) -> bool:
             """No-op lock for unsupported platforms."""
             return True
 

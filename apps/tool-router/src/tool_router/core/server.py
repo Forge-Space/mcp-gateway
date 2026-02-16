@@ -40,7 +40,11 @@ ai_selector = None
 
 @mcp.tool()
 def execute_task(task: str, context: str = "") -> str:
-    """Run the best matching gateway tool for the given task. Describe what you want (e.g. 'search the web for X', 'list files in /tmp'). Optional context can narrow the choice."""
+    """Run the best matching gateway tool for the given task.
+
+    Describe what you want (e.g. 'search the web for X', 'list files in /tmp').
+    Optional context can narrow the choice.
+    """
     if config is None:
         return "Service not initialized. Please wait for startup to complete."
 
