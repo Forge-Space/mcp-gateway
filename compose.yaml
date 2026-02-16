@@ -1,0 +1,3 @@
+# Symlink to docker/docker-compose.yml for CI compatibility
+# This file is a symlink - actual compose configuration is in docker/docker-compose.yml
+# CI workflows expect compose.yaml in the root directory

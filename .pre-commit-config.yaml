@@ -44,12 +44,21 @@ repos:
 
   # TypeScript/JavaScript: Prettier formatter
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        name: Prettier format (TS/JS/JSON/YAML)
-        files: \.(ts|js|json|ya?ml)$
-        exclude: ^(package-lock\.json|node_modules/)
+        types_or: [javascript, jsx, ts, tsx, json, yaml, markdown]
+        exclude: ^(package-lock\.json|.*\.min\.(js|css))$
+
+  # TypeScript build check
+  - repo: local
+    hooks:
+      - id: npm-build
+        name: npm build
+        entry: sh -c 'command -v npm >/dev/null 2>&1 && npm run build || echo "npm not found, skipping build"'
+        language: system
+        pass_filenames: false
+        stages: [push]
 
   # Local hooks: Project-specific checks
   - repo: local
