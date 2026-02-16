@@ -10,5 +10,8 @@
     "resolveJsonModule": true
   },
   "files": [],
-  "references": []
+  "references": [
+    { "path": "./apps/mcp-client" },
+    { "path": "./apps/web-admin" }
+  ]
 }
