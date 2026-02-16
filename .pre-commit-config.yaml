@@ -42,19 +42,19 @@ repos:
         name: Ruff format (Python)
         files: ^tool_router/
 
-  # TypeScript build check
-  - repo: local
-    hooks:
-      - id: npm-build
-        name: npm build
-        entry: sh -c 'if command -v npm >/dev/null 2>&1; then npm run build; else echo "npm not found, skipping build"; fi'
-        language: system
-        pass_filenames: false
-        stages: [push]
-
   # Local hooks: Project-specific checks
   - repo: local
     hooks:
+      # TypeScript: Build check
+      - id: npm-build
+        name: npm build
+        entry: "bash -c 'if command -v npm >/dev/null 2>&1; then npm run build; else echo \"ERROR: npm not found - build failed\" >&2; exit 1; fi'"
+        language: system
+        files: \.(ts|tsx|js|jsx|json)$
+        pass_filenames: true
+        verbose: true
+        stages: [push]
+
       # Shell: shellcheck
       - id: shellcheck
         name: Lint (shellcheck)

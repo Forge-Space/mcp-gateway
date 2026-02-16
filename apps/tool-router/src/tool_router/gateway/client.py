@@ -1,12 +1,83 @@
 from __future__ import annotations
 
+import ipaddress
 import json
+import socket
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Any, Protocol
 
 from tool_router.core.config import GatewayConfig
+
+
+def _validate_url_security(url: str) -> None:
+    """Validate URL to prevent SSRF attacks.
+
+    Args:
+        url: URL to validate
+
+    Raises:
+        ValueError: If URL is invalid or points to disallowed location
+    """
+    parsed = urllib.parse.urlparse(url)
+
+    # Only allow http and https schemes
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Invalid URL scheme: {parsed.scheme}")
+
+    # Resolve hostname and check against private networks
+    try:
+        hostname = parsed.hostname
+        if not hostname:
+            raise ValueError("Invalid URL: no hostname")
+
+        # Get all IP addresses for the hostname
+        addr_info = socket.getaddrinfo(hostname, None)
+        for _, _, _, _, sockaddr in addr_info:
+            ip = sockaddr[0]
+            try:
+                ip_obj = ipaddress.ip_address(ip)
+
+                # Block private networks
+                if ip_obj.is_private:
+                    raise ValueError(f"Private IP address not allowed: {ip}")
+
+                # Block loopback
+                if ip_obj.is_loopback:
+                    raise ValueError(f"Loopback address not allowed: {ip}")
+
+                # Block link-local
+                if ip_obj.is_link_local:
+                    raise ValueError(f"Link-local address not allowed: {ip}")
+
+            except ValueError:
+                # Invalid IP address, skip
+                continue
+
+    except socket.gaierror as e:
+        raise ValueError(f"Failed to resolve hostname {hostname}: {e}")
+
+
+class RedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Custom redirect handler that limits redirects."""
+
+    def __init__(self, max_redirects: int = 5):
+        self.max_redirects = max_redirects
+        self.redirect_count = 0
+
+    def http_error_302(self, req, fp, code, msg, headers):
+        self.redirect_count += 1
+        if self.redirect_count > self.max_redirects:
+            raise ValueError(f"Too many redirects: {self.redirect_count}")
+        return super().http_error_302(req, fp, code, msg, headers)
+
+    def http_error_301(self, req, fp, code, msg, headers):
+        self.redirect_count += 1
+        if self.redirect_count > self.max_redirects:
+            raise ValueError(f"Too many redirects: {self.redirect_count}")
+        return super().http_error_301(req, fp, code, msg, headers)
 
 
 class GatewayClient(Protocol):
@@ -14,11 +85,11 @@ class GatewayClient(Protocol):
 
     def get_tools(self) -> list[dict[str, Any]]:
         """Fetch available tools from the gateway."""
-        raise NotImplementedError
+        ...
 
     def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
         """Execute a tool via the gateway."""
-        raise NotImplementedError
+        ...
 
 
 class HTTPGatewayClient:
@@ -43,6 +114,13 @@ class HTTPGatewayClient:
 
     def _make_request(self, url: str, method: str = "GET", data: bytes | None = None) -> dict[str, Any]:
         """Make HTTP request with retry logic for transient failures."""
+        # Validate URL security before making request
+        _validate_url_security(url)
+
+        # Create opener with redirect limit
+        redirect_handler = RedirectHandler(max_redirects=5)
+        opener = urllib.request.build_opener(redirect_handler)
+
         req = urllib.request.Request(url, headers=self._headers(), method=method)
         if data:
             req.data = data
@@ -50,7 +128,7 @@ class HTTPGatewayClient:
         last_error = None
         for attempt in range(self.config.max_retries):
             try:
-                with urllib.request.urlopen(req, timeout=self._timeout_seconds) as resp:
+                with opener.open(req, timeout=self._timeout_seconds) as resp:
                     return json.loads(resp.read().decode())
             except urllib.error.HTTPError as http_error:
                 if http_error.code >= 500:
@@ -128,10 +206,12 @@ class HTTPGatewayClient:
         try:
             json_rpc_response = self._make_request(url, method="POST", data=json.dumps(body).encode())
         except (ValueError, ConnectionError) as error:
-            return f"Failed to call tool: {error}"
+            msg = f"Failed to call tool: {error}"
+            raise ValueError(msg) from error
 
         if "error" in json_rpc_response:
-            return f"Gateway error: {json_rpc_response['error']}"
+            msg = f"Gateway error: {json_rpc_response['error']}"
+            raise ValueError(msg)
         content = json_rpc_response.get("result", {}).get("content", [])
         texts = [
             content_item.get("text", "")
@@ -144,8 +224,6 @@ class HTTPGatewayClient:
 # Backward compatibility: module-level functions that use environment config
 def get_tools() -> list[dict[str, Any]]:
     """Fetch tools using environment configuration (backward compatibility)."""
-    from tool_router.core.config import GatewayConfig
-
     config = GatewayConfig.load_from_environment()
     client = HTTPGatewayClient(config)
     return client.get_tools()
@@ -153,8 +231,6 @@ def get_tools() -> list[dict[str, Any]]:
 
 def call_tool(name: str, arguments: dict[str, Any]) -> str:
     """Call tool using environment configuration (backward compatibility)."""
-    from tool_router.core.config import GatewayConfig
-
     config = GatewayConfig.load_from_environment()
     client = HTTPGatewayClient(config)
     return client.call_tool(name, arguments)

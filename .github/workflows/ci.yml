@@ -10,7 +10,6 @@ jobs:
   lint-python:
     name: Lint Python
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +27,6 @@ jobs:
   lint-shell:
     name: Lint Shell Scripts
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
 
@@ -41,7 +39,6 @@ jobs:
   lint-typescript:
     name: Lint TypeScript
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -84,7 +81,6 @@ jobs:
   test-python:
     name: Test Python
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
@@ -117,7 +113,6 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
 

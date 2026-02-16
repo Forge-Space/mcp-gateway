@@ -21,8 +21,15 @@ COMMON_TASK_PARAMETER_NAMES = [
 def build_arguments(tool: dict[str, Any], task: str) -> dict[str, Any]:
     """Build arguments for a tool call based on its schema and the task description.
 
-    Attempts to intelligently map the task to the most appropriate parameter.
-    For tools with multiple required parameters, only the primary task parameter is filled.
+    Args:
+        tool: Tool definition dictionary containing schema information
+        task: Task description to map to tool parameters
+
+    Returns:
+        Dictionary of arguments populated for the tool call
+
+    Raises:
+        ValueError: If tool schema is invalid or cannot be processed
     """
     schema = tool.get("inputSchema") or tool.get("input_schema") or {}
     schema_properties = schema.get("properties") or {}
@@ -42,7 +49,7 @@ def build_arguments(tool: dict[str, Any], task: str) -> dict[str, Any]:
         parameter_type = first_parameter_definition.get("type", "string")
 
         # Only use first required param if it's a string type
-        if parameter_type in ("string", "text") or not parameter_type:
+        if parameter_type in ("string", "text"):
             tool_arguments[first_required_parameter] = task
             return tool_arguments
 
