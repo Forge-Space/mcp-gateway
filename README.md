@@ -8,7 +8,7 @@ Self-hosted MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-con
 
 **License:** [MIT](LICENSE)
 
-> **Note**: v0.7.0 introduces a monorepo structure with improved configuration management. See [MIGRATION_SUMMARY.md](MIGRATION_SUMMARY.md) and [SESSION_SUMMARY.md](SESSION_SUMMARY.md) for migration details.
+> **Note**: v0.7.0 introduces a monorepo structure with improved configuration management. See [MIGRATION_SUMMARY.md](MIGRATION_SUMMARY.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for migration details.
 
 ## Prerequisites
 
@@ -255,6 +255,15 @@ PRs require manual review before merge.
 - **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - **Script index:** [scripts/README.md](scripts/README.md)
 - **Maintenance automation:** See [Automated Maintenance](#automated-maintenance) above
+
+### Package Manager
+
+This project uses **npm (package-lock.json)** as the canonical package manager for consistency across development environments and CI/CD pipelines. The `.gitignore` configuration explicitly keeps `package-lock.json` while ignoring other lock files (`yarn.lock`, `pnpm-lock.yaml`) to ensure deterministic dependency resolution.
+
+If you need to migrate from another package manager:
+1. Delete the existing lock file (`rm yarn.lock` or `rm pnpm-lock.yaml`)
+2. Run `npm install` to generate `package-lock.json`
+3. Commit the new `package-lock.json` to ensure all developers use the same dependency tree
 
 ## Using the gateway with AI
 

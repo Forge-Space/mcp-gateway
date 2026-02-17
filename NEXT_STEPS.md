@@ -116,32 +116,35 @@ Update quickstart section with new structure:
 
 1. Clone and setup:
 
-   ```bash
-   git clone https://github.com/your-org/mcp-gateway.git
-   cd mcp-gateway
-   cp .env.example .env
-   ```
+```bash
+git clone https://github.com/your-org/mcp-gateway.git
+cd mcp-gateway
+cp .env.example .env
+```
 
 2. Install dependencies:
-   ```bash
-   # Python (tool-router)
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
 
-   # Install yq for YAML configs
-   brew install yq  # macOS
-   ```
+```bash
+# Python (tool-router)
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Install yq for YAML configs
+brew install yq  # macOS
+```
 
 3. Start services:
-   ```bash
-   ./start.sh
-   ```
+
+```bash
+./start.sh
+```
 
 4. Register gateways:
-   ```bash
-   ./scripts/gateway/register.sh
-   ```
+
+```bash
+./scripts/gateway/register.sh
+```
 ```
 
 ---

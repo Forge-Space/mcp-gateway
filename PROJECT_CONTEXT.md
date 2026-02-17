@@ -40,7 +40,7 @@ Enable seamless integration between AI-powered IDEs and MCP servers through inte
 
 ### System Components
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                         IDEs                                 │
 │              (Windsurf, Cursor, Claude Desktop)             │
@@ -67,6 +67,7 @@ Enable seamless integration between AI-powered IDEs and MCP servers through inte
 │  brave-search, github, filesystem, memory, puppeteer, etc.  │
 │  Enable/disable for optimized resource usage                │
 └─────────────────────────────────────────────────────────────┘
+```
 ```
 
 ### Project Structure (Target Monorepo Architecture - Partially Migrated)
@@ -583,7 +584,7 @@ mcp-gateway/
 
 ---
 
-### Phase 7: Next.js Admin UI (Week 7-8) � PLANNED
+### Phase 7: Next.js Admin UI (Week 7-8) 🚧 PLANNED
 **Goal**: Build visual interface using existing REST API
 
 **Deliverables**:

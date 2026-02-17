@@ -211,7 +211,7 @@ ruff check --fix tests/
 - **Implementation Summary**: `IMPLEMENTATION_SUMMARY.md`
 - **Migration Guide**: `MIGRATION_SUMMARY.md`
 - **Session Log**: `SESSION_SUMMARY.md`
-- **Config Migration**: `CONFIG_FORMAT_MIGRATION_SUMMARY.md`
+- **Config Migration**: `docs/CONFIG_MIGRATION.md`
 - **Changelog**: `CHANGELOG.md`
 - **Project Context**: `PROJECT_CONTEXT.md`
 

@@ -53,9 +53,8 @@ def test_call_tool_returns_error_message_on_jsonrpc_error() -> None:
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
         with patch("tool_router.gateway.client._validate_url_security"):
             with patch.object(HTTPGatewayClient, "_make_request", return_value=out):
-                result = call_tool("bad_tool", {})
-    assert "Gateway error" in result
-    assert "Tool not found" in result
+                with pytest.raises(ValueError, match="Gateway error.*Tool not found"):
+                    call_tool("bad_tool", {})
 
 
 def test_call_tool_returns_text_content() -> None:

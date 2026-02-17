@@ -13,7 +13,7 @@ Categories: CORE, API, TOOL, UI, SECURITY, OBSERVABILITY
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 
@@ -27,8 +27,8 @@ class Feature:
     description: str
     category: str
     requires_restart: bool = False
-    env_var: str | None = None
-    backward_compat: str | None = None
+    env_var: Optional[str] = None
+    backward_compat: Optional[str] = None
 
 
 @dataclass
@@ -107,7 +107,7 @@ class FeatureFlags:
         feature = self.features.get(feature_name)
         return feature.enabled if feature else False
 
-    def get_feature(self, feature_name: str) -> Feature | None:
+    def get_feature(self, feature_name: str) -> Optional[Feature]:
         """Get feature configuration by name.
 
         Args:
@@ -216,7 +216,7 @@ class FeatureFlags:
 
 
 # Global instance for application-wide access
-_feature_flags: FeatureFlags | None = None
+_feature_flags: Optional[FeatureFlags] = None
 
 
 def get_feature_flags() -> FeatureFlags:

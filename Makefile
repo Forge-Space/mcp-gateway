@@ -160,16 +160,16 @@ ide-config: ## Generate IDE config (IDE=windsurf|cursor SERVER=name [JWT_TOKEN=j
 		exit 1; \
 	fi; \
 	if [ "$(IDE)" = "windsurf" ]; then \
-		bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=windsurf --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN)); \
+		bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide="$(IDE)" --server="$(SERVER)" $(if $(JWT_TOKEN),--token="$(JWT_TOKEN)"); \
 	elif [ "$(IDE)" = "cursor" ]; then \
-		bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=cursor --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN)); \
+		bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide="$(IDE)" --server="$(SERVER)" $(if $(JWT_TOKEN),--token="$(JWT_TOKEN)"); \
 	fi
 
 ide-windsurf: ## Generate Windsurf IDE configuration
-	@bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=windsurf --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN))
+	@bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide="windsurf" --server="$(SERVER)" $(if $(JWT_TOKEN),--token="$(JWT_TOKEN)")
 
 ide-cursor: ## Generate Cursor IDE configuration
-	@bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide=cursor --server=$(SERVER) $(if $(JWT_TOKEN),--token=$(JWT_TOKEN))
+	@bash "$(CURDIR)/scripts/ide/generate-config.sh" --ide="cursor" --server="$(SERVER)" $(if $(JWT_TOKEN),--token="$(JWT_TOKEN)")
 
 # === Server Lifecycle Management ===
 enable-server: ## Enable a virtual server (SERVER=name)

@@ -206,7 +206,7 @@ docker build -f apps/tool-router/Dockerfile -t mcp-tool-router .
 
 ```bash
 # From project root
-.venv/bin/python3.14 -m pytest apps/tool-router/tests/ -v
+.venv/bin/python -m pytest apps/tool-router/tests/ -v
 
 # With coverage
 .venv/bin/python3.14 -m pytest apps/tool-router/tests/ \
