@@ -139,10 +139,10 @@ class AIToolSelector:
                 logger.warning("No JSON found in AI response")
                 return None
 
-            # Use JSONDecoder to robustly parse JSON and get consumed length
+            # Use JSONDecoder to robustly parse JSON
             try:
                 decoder = json.JSONDecoder()
-                selection, _consumed_length = decoder.raw_decode(response[json_start:])
+                selection = decoder.decode(response[json_start:])
             except json.JSONDecodeError as e:
                 logger.warning("Malformed JSON in AI response: %s", e)
                 return None

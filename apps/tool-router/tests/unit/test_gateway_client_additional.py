@@ -73,7 +73,7 @@ class TestHTTPGatewayClientAdditional:
         mock_urlopen.side_effect = [
             server_error,  # First attempt fails
             server_error,  # Second attempt fails
-            mock_response.__enter__.return_value  # Third succeeds
+            mock_response  # Third succeeds
         ]
 
         result = client._make_request("http://localhost:4444/test", method="GET")
@@ -192,7 +192,7 @@ class TestHTTPGatewayClientAdditional:
 
         mock_urlopen.side_effect = [
             network_error,
-            mock_response.__enter__.return_value
+            mock_response
         ]
 
         result = client._make_request("http://localhost:4444/test", method="GET")
@@ -227,7 +227,7 @@ class TestHTTPGatewayClientAdditional:
         mock_urlopen = mocker.patch("urllib.request.urlopen")
         mock_response = Mock()
         mock_response.read.return_value = b'{"result": "success"}'
-        mock_urlopen.return_value.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
 
         test_data = {"key": "value", "number": 123}
         client._make_request(
@@ -250,7 +250,7 @@ class TestHTTPGatewayClientAdditional:
         mock_urlopen = mocker.patch("urllib.request.urlopen")
         mock_response = Mock()
         mock_response.read.return_value = b'{"result": "success"}'
-        mock_urlopen.return_value.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
 
         client._make_request("http://localhost:4444/test", method="GET")
 
@@ -273,7 +273,7 @@ class TestHTTPGatewayClientAdditional:
 
         mock_urlopen.side_effect = [
             network_error,
-            mock_response.__enter__.return_value
+            mock_response
         ]
 
         client._make_request("http://localhost:4444/test", method="GET")
