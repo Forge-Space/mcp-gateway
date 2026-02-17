@@ -88,3 +88,5 @@ pnpm-lock.yaml
 # Test artifacts
 coverage/
 .hypothesis/
+coverage.json
+*.cover
