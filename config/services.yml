@@ -722,9 +722,53 @@ services:
       interval: "30"
       timeout: "10"
 
+  # Forge context and project management
+  forge-context:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "node",
+        "/app/dist/mcp-context-server/index.js",
+        "--expose-sse",
+        "--port",
+        "8026",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8026
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for critical service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: high
+      FORGE_WAKE_TIME_TARGET: "50" # < 50ms for high priority
+    volumes:
+      "${FORGE_FORGE_PATTERNS_VOLUME:-./forge-patterns}": "/app"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: true # Forge context is commonly needed
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes since it's commonly used
+      min_sleep_time: 120 # Don't sleep if used in last 2 minutes
+      memory_reservation: "128MB"
+      priority: "high"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
   # Dribbble visual reference search and image analysis (self-hosted, uiforge-mcp integration)
   dribbble-mcp:
     image: forge-mcp-gateway-dribbble:latest
+    command: ["python3", "-m", "dribbble_mcp"]
     port: 8035
     environment:
       DRIBBBLE_SESSION_COOKIE: "${DRIBBBLE_SESSION_COOKIE:-}"
