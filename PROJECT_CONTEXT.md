@@ -1,7 +1,7 @@
 # Forge MCP Gateway - Project Context Documentation
 
-**Version:** 1.27.0
-**Last Updated:** 2026-02-18
+**Version:** 1.28.0
+**Last Updated:** 2025-07-10
 **Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
 
 ## 📋 Executive Summary
@@ -47,6 +47,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ COMPREHENSIVE ADMIN COMPONENTS**: Gateway status, server metrics, template deployment, user management, Kubernetes deployment
 
 ### Recent Updates
+- **✅ DRIBBBLE MCP SERVER IMPLEMENTED**: Self-hosted `dribbble_mcp` FastMCP server with scraper, screenshot, image analysis, and 5 MCP tools. 84 tests, ≥85% coverage per module, lint-clean. Registered in gateways, services, and new `uiforge-design` virtual server.
 - **✅ PROJECT CLEANUP COMPLETE**: Removed temporary documentation and redundant scripts
 - **✅ PRODUCTION DEPLOYMENT READINESS COMPLETE**: Comprehensive validation and deployment checklist created
 - **✅ PRODUCTION TESTING VALIDATION COMPLETE**: All configuration files and deployment prerequisites validated
