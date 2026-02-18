@@ -11,7 +11,7 @@ on:
 
 # Environment variables (aligned with shared template)
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
   PYTHON_VERSION: "3.12"
   COVERAGE_THRESHOLD: "80"
   CACHE_VERSION: "v1"
@@ -20,15 +20,15 @@ jobs:
   # Use shared base CI workflow
   ci:
     name: Base CI Pipeline
-    uses: ./.github/shared/workflows/base-ci.yml
+    uses: ./.github/workflows/base-ci.yml
     with:
       project-type: 'gateway'
-      node-version: ${{ env.NODE_VERSION }}
-      python-version: ${{ env.PYTHON_VERSION }}
+      node-version: '24'
+      python-version: '3.12'
       enable-docker: true
       enable-security: true
       enable-coverage: true
-      coverage-threshold: ${{ env.COVERAGE_THRESHOLD }}
+      coverage-threshold: '80'
       test-parallel: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Validate UIForge patterns compliance
         run: bash scripts/validation/validate-patterns.sh
@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -99,7 +99,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -125,7 +125,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Check documentation links
         run: |
@@ -140,11 +140,39 @@ jobs:
             }
           fi
 
+  shell-lint:
+    name: Shell Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shfmt
+        run: sudo apt-get install -y shfmt
+
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          SHELLCHECK_OPTS: --rcfile=.shellcheckrc
+
+      - name: Check shell formatting
+        run: |
+          ERRORS=0
+          while IFS= read -r -d '' f; do
+            if shfmt -d -i 2 "$f" 2>/dev/null | grep -q .; then
+              echo "Formatting violation: $f"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done < <(find . -name "*.sh" ! -path "*/node_modules/*" -print0)
+          [ "$ERRORS" -eq 0 ] && echo "All shell scripts correctly formatted" || exit 1
+
 # Workflow summary
   workflow-summary:
     name: Workflow Summary
     runs-on: ubuntu-latest
-    needs: [ci, pattern-validation, integration-test, performance-test, docs-check]
+    needs: [ci, pattern-validation, integration-test, performance-test, docs-check, shell-lint]
     if: always()
 
     steps:
