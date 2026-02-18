@@ -218,6 +218,8 @@ services:
     env_file:
       - .env.shared
       - .env.development
+    volumes:
+      - ./data-dev:/data-dev
     ports:
       - "${FORGE_UI_PORT:-8026}:8026"
     depends_on:

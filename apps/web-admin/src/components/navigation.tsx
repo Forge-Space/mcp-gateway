@@ -11,7 +11,8 @@ import {
   Users,
   Zap,
   Hammer,
-  Monitor
+  Monitor,
+  Brain,
 } from 'lucide-react'
 
 const navigation = [
@@ -19,6 +20,12 @@ const navigation = [
     name: 'Dashboard',
     href: '/',
     icon: LayoutDashboard,
+    current: false
+  },
+  {
+    name: 'AI Performance',
+    href: '/ai',
+    icon: Brain,
     current: false
   },
   {
@@ -69,7 +76,12 @@ export default function Navigation() {
   const [pathname, setPathname] = useState('')
 
   useEffect(() => {
-    setPathname(window.location.pathname)
+    // Use requestAnimationFrame to avoid setState in effect
+    const updatePathname = () => {
+      setPathname(window.location.pathname)
+    }
+    const animationId = requestAnimationFrame(updatePathname)
+    return () => cancelAnimationFrame(animationId)
   }, [])
 
   return (

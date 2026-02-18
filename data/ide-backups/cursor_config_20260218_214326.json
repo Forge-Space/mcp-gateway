@@ -1,0 +1,132 @@
+{
+  "mcpServers": {
+    "Context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {}
+    },
+    "GitHub": {
+      "command": "/Users/lucassantana/.cursor/scripts/run-mcp-github.sh"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "mcp-gateway": {
+      "url": "https://stormmcp.ai/gateway/a0fd0056-dfd5-49bd-85d7-e19ba7e65bd0/radar",
+      "headers": {}
+    },
+    "context-forge": {
+      "command": "/Users/lucassantana/Desenvolvimento/mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "timeout": 120000
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "@magicuidesign/mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@magicuidesign/mcp@latest"
+      ]
+    },
+    "desktop-commander": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@wonderwhy-er/desktop-commander@latest"
+      ]
+    },
+    "prisma-remote": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.prisma.io/mcp"
+      ]
+    },
+    "cloudflare-observability": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://observability.mcp.cloudflare.com/mcp",
+        "3335"
+      ]
+    },
+    "cloudflare-bindings": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://bindings.mcp.cloudflare.com/mcp",
+        "3336"
+      ]
+    },
+    "v0": {
+      "command": "/Users/lucassantana/.cursor/scripts/run-mcp-with-env.sh",
+      "args": [
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://mcp.v0.dev",
+        "--header",
+        "Authorization:$V0_AUTH_HEADER"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "tavily": {
+      "command": "/Users/lucassantana/.cursor/scripts/run-mcp-with-env.sh",
+      "args": [
+        "npx",
+        "-y",
+        "tavily-mcp@latest"
+      ]
+    },
+    "browser-tools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@agentdeskai/browser-tools-mcp"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/lucassantana/Desenvolvimento/LukBot"
+      ]
+    },
+    "apify-dribbble": {
+      "command": "/Users/lucassantana/.cursor/scripts/run-mcp-with-env.sh",
+      "args": [
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://mcp.apify.com/sse?actors=practicaltools/apify-dribbble-scraper",
+        "--header",
+        "Authorization:$APIFY_AUTH_HEADER"
+      ]
+    }
+  }
+}

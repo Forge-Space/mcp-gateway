@@ -1,4 +1,4 @@
-.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update config-backup config-restore config-install config-list config-cleanup pre-commit-install pre-commit-run pre-commit-update help help-topics help-examples setup ide-setup status setup-dev
+.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update config-backup config-restore config-install config-list config-cleanup pre-commit-install pre-commit-run pre-commit-update validate-config help help-topics help-examples setup ide-setup status setup-dev
 
 # Default target
 .DEFAULT_GOAL := help
@@ -59,11 +59,56 @@ jwt: ## Generate JWT token for API access
 	echo "  - Container: $${MCPGATEWAY_CONTAINER:-forge-mcp-gateway}" >&2; \
 	exit 1'
 
+auth: ## Authentication commands (JWT generation and management)
+	@echo "Authentication Commands:"
+	@echo "  make jwt              # Generate JWT token"
+	@echo "  make auth-check       # Check JWT configuration"
+	@echo "  make auth-refresh     # Refresh JWT token"
+
+auth-check: ## Check JWT configuration
+	@echo "Checking JWT configuration..."
+	@if [ ! -f .env ]; then \
+		echo "❌ .env file not found. Run 'make setup' first."; \
+		exit 1; \
+	fi
+	@set -a; . ./.env; set +a; \
+	if [ -z "$$JWT_SECRET_KEY" ]; then \
+		echo "❌ JWT_SECRET_KEY not set in .env"; \
+		echo "   Run 'make generate-secrets' to create it."; \
+		exit 1; \
+	fi; \
+	if [ $${#JWT_SECRET_KEY} -lt 32 ]; then \
+		echo "❌ JWT_SECRET_KEY too short ($${#JWT_SECRET_KEY} chars, minimum 32)"; \
+		echo "   Run 'make generate-secrets' to create a proper secret."; \
+		exit 1; \
+	fi; \
+	if [ -z "$$PLATFORM_ADMIN_EMAIL" ]; then \
+		echo "❌ PLATFORM_ADMIN_EMAIL not set in .env"; \
+		echo "   Add it to .env: PLATFORM_ADMIN_EMAIL=your@email.com"; \
+		exit 1; \
+	fi; \
+	echo "✅ JWT configuration looks good"; \
+	echo "   JWT_SECRET_KEY: $${#JWT_SECRET_KEY} chars"; \
+	echo "   PLATFORM_ADMIN_EMAIL: $$PLATFORM_ADMIN_EMAIL"
+
+auth-refresh: ## Refresh JWT token with extended expiry
+	@echo "Refreshing JWT token..."
+	@bash -c 'set -a; [ -f .env ] && . ./.env; set +a; \
+	if python3 "$(CURDIR)/scripts/utils/create-jwt.py" --exp 20160; then \
+		echo "✅ JWT token refreshed (14 days expiry)"; \
+	else \
+		echo "❌ Failed to refresh JWT token"; \
+	fi'
+
 list-prompts: ## List available prompts
 	./scripts/gateway/list-prompts.sh
 
 list-servers: ## List virtual servers
 	./scripts/virtual-servers/list.sh
+
+validate-config: ## Validate MCP Gateway configuration fixes
+	@echo "🔍 Validating MCP Gateway Configuration..."
+	python3 scripts/validate-config
 
 register-enhanced: ## Register virtual servers with enabled/disabled status (enhanced format)
 	python3 ./scripts/virtual-server-manager.py register-enhanced
@@ -73,7 +118,7 @@ cleanup-duplicates: ## Clean up duplicate virtual servers
 
 # === Simplified Commands (Phase 3) ===
 setup: ## Interactive configuration wizard
-	python3 scripts/config-wizard.py
+	python3 scripts/setup-wizard.py
 
 ide-setup: ## Unified IDE setup and management
 	@if [ -z "$(IDE)" ]; then \
@@ -88,8 +133,34 @@ ide-setup: ## Unified IDE setup and management
 	fi
 	python3 scripts/ide-setup.py setup $(IDE) --action $(or $(ACTION),install)
 
-status: ## Comprehensive system status
-	python3 scripts/status.py $(if $(detailed),--detailed)
+status: ## Comprehensive system status check
+	@python3 scripts/status.py
+
+status-detailed: ## Detailed system status with JSON output
+	@python3 scripts/status.py --detailed
+
+status-json: ## System status in JSON format
+	@python3 scripts/status.py --json
+
+help: ## Show enhanced help system
+	@python3 scripts/help.py
+
+help-topics: ## Show available help topics
+	@echo "Available Help Topics:"
+	@echo "  setup           - Initial setup and configuration"
+	@echo "  ide             - IDE configuration and management"
+	@echo "  services        - Service management and monitoring"
+	@echo "  gateway         - Gateway operations and API"
+	@echo "  docker          - Docker and container management"
+	@echo "  development     - Development tools and workflows"
+	@echo "  troubleshooting  - Common issues and solutions"
+	@echo "  examples        - Practical command examples"
+	@echo ""
+	@echo "Usage: make help TOPIC"
+	@echo "Example: make help ide"
+
+help-examples: ## Show practical command examples
+	@python3 scripts/help.py --examples
 
 setup-dev: ## Set up development environment
 	@echo "==> Setting up development environment..."

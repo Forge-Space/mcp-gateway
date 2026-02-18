@@ -46,7 +46,7 @@ def initialize_ai(config: ToolRouterConfig) -> None:
                 config.ai.endpoint,
                 config.ai.min_confidence,
             )
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception("Failed to initialize AI selector: %s", e)
             _ai_selector = None
     else:
@@ -68,7 +68,7 @@ def execute_task(task: str, context: str = "") -> str:
             logger.exception("Failed to list tools: %s", error)
             metrics.increment_counter("execute_task.errors.get_tools")
             return f"Failed to list tools: {error}"
-        except Exception as unexpected_error:  # noqa: BLE001
+        except Exception as unexpected_error:
             logger.exception("Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error)
             metrics.increment_counter("execute_task.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
@@ -91,7 +91,7 @@ def execute_task(task: str, context: str = "") -> str:
                 else:
                     best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
                     metrics.increment_counter("execute_task.keyword_only_selection")
-        except Exception as selection_error:  # noqa: BLE001
+        except Exception as selection_error:
             logger.exception("Error picking tool: %s: %s", type(selection_error).__name__, selection_error)
             metrics.increment_counter("execute_task.errors.pick_tools")
             return f"Error picking tool: {type(selection_error).__name__}: {selection_error}"
@@ -114,7 +114,7 @@ def execute_task(task: str, context: str = "") -> str:
         try:
             with TimingContext("execute_task.build_arguments"):
                 tool_arguments = build_arguments(tool, task)
-        except Exception as build_error:  # noqa: BLE001
+        except Exception as build_error:
             logger.exception("Error building arguments: %s: %s", type(build_error).__name__, build_error)
             metrics.increment_counter("execute_task.errors.build_args")
             return f"Error building arguments: {type(build_error).__name__}: {build_error}"
@@ -145,7 +145,7 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
     with TimingContext("execute_tasks.total_duration"):
         try:
             tools = get_tools()
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             logger.exception("Failed to list tools: %s", error)
             return f"Failed to list tools: {error}"
 
@@ -245,7 +245,7 @@ def search_tools(query: str, limit: int = 10) -> str:
             logger.exception("Failed to list tools: %s", error)
             metrics.increment_counter("search_tools.errors.get_tools")
             return f"Failed to list tools: {error}"
-        except Exception as unexpected_error:  # noqa: BLE001
+        except Exception as unexpected_error:
             logger.exception("Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error)
             metrics.increment_counter("search_tools.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
@@ -258,7 +258,7 @@ def search_tools(query: str, limit: int = 10) -> str:
         try:
             with TimingContext("search_tools.pick_best_tools"):
                 matching_tools = select_top_matching_tools(tools, query, "", top_n=limit)
-        except Exception as search_error:  # noqa: BLE001
+        except Exception as search_error:
             logger.exception("Error searching tools: %s: %s", type(search_error).__name__, search_error)
             metrics.increment_counter("search_tools.errors.search")
             return f"Error searching tools: {type(search_error).__name__}: {search_error}"

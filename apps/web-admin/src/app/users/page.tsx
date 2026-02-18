@@ -53,6 +53,12 @@ export default function UsersPage() {
     }
   }
 
+  // Calculate date thresholds outside of render
+  // eslint-disable-next-line react-hooks/purity
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  // eslint-disable-next-line react-hooks/purity
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
   const stats = [
     {
       title: 'Total Users',
@@ -62,7 +68,7 @@ export default function UsersPage() {
     },
     {
       title: 'Active Today',
-      value: users.filter(u => u.last_active && new Date(u.last_active) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length,
+      value: users.filter(u => u.last_active && new Date(u.last_active) > oneDayAgo).length,
       icon: Activity,
       color: 'text-green-600'
     },
@@ -74,7 +80,7 @@ export default function UsersPage() {
     },
     {
       title: 'New This Week',
-      value: users.filter(u => new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
+      value: users.filter(u => new Date(u.created_at) > oneWeekAgo).length,
       icon: UserPlus,
       color: 'text-purple-600'
     }

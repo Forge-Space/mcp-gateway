@@ -28,6 +28,7 @@ import {
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { ForgeCore } from "@forgespace/core";
 import fetch from "node-fetch";
 
 // Helper function to parse CLI arguments safely
@@ -82,6 +83,13 @@ const server = new Server(
   }
 );
 
+// Initialize ForgeCore
+const forgeCore = new ForgeCore({
+  gatewayUrl: GATEWAY_URL,
+  authToken: GATEWAY_TOKEN,
+  timeout: REQUEST_TIMEOUT_MILLISECONDS,
+});
+
 // Define response type for gateway requests
 interface GatewayResponse {
   jsonrpc: string;
@@ -118,7 +126,7 @@ async function sendGatewayRequest(
     const response = await fetch(url, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : null,
       signal: controller.signal,
     });
 
@@ -300,6 +308,15 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 
 // Start the server with stdio transport
 async function main(): Promise<void> {
+  // Initialize ForgeCore
+  try {
+    await forgeCore.initialize();
+    console.error("ForgeCore initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize ForgeCore:", error);
+    // Continue without ForgeCore if initialization fails
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
