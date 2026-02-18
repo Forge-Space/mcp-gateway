@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fix pre-commit installation and configuration
-set -e
+set -euo pipefail
 
 echo "🔧 Fixing pre-commit installation..."
 

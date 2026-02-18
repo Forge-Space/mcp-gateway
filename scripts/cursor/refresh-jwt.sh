@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 source "$SCRIPT_DIR/lib/bootstrap.sh"
 load_env || { log_err ".env not found in $REPO_ROOT"; exit 1; }
 source "$SCRIPT_DIR/lib/gateway.sh"
