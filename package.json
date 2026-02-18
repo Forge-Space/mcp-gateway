@@ -16,6 +16,8 @@
     "lint:eslint": "eslint 'src/**/*.ts'",
     "lint:eslint:fix": "eslint 'src/**/*.ts' --fix",
     "lint:prettier": "prettier --check \"src/**/*.{ts,json}\"",
+    "lint:shell": "bash scripts/lint-shell.sh",
+    "lint:shell:ci": "STRICT=1 bash scripts/lint-shell.sh",
     "format": "prettier --write .",
     "deps:check": "npm-check-updates",
     "deps:update": "npm-check-updates -u && npm install",
@@ -25,7 +27,7 @@
     "precommit": "npm run lint",
     "lint:check": "eslint . --ext .js,.ts",
     "format:check": "prettier --check .",
-    "validate": "npm run lint:check && npm run format:check && npm run test",
+    "validate": "npm run lint:check && npm run format:check && npm run lint:shell && npm run test",
     "pre-commit": "npm run lint && npm run format && npm run test",
     "prepack": "npm run build",
     "publish": "npm publish --access public",
@@ -74,6 +76,21 @@
     "@types/semver": "^7.5.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.3"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,yml,yaml}": [
+      "prettier --write"
+    ],
+    "*.md": [
+      "prettier --write"
+    ],
+    "*.sh": [
+      "shellcheck --rcfile=.shellcheckrc"
+    ]
   },
   "engines": {
     "node": ">=18.0.0"
