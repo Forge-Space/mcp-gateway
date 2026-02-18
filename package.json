@@ -58,6 +58,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
+    "@uiforge/forge-patterns": "^1.1.1",
     "@types/node": "^20.5.0",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
@@ -73,8 +74,7 @@
     "@types/fs-extra": "^11.0.1",
     "@types/semver": "^7.5.0",
     "husky": "^8.0.3",
-    "lint-staged": "^13.2.3",
-    "@uiforge/forge-patterns": "file:../forge-patterns"
+    "lint-staged": "^13.2.3"
   },
   "engines": {
     "node": ">=22.0.0"
