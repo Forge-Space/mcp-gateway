@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
@@ -66,7 +66,11 @@ const navigation = [
 ]
 
 export default function Navigation() {
-  const pathname = usePathname()
+  const [pathname, setPathname] = useState('')
+
+  useEffect(() => {
+    setPathname(window.location.pathname)
+  }, [])
 
   return (
     <nav className="flex space-x-4 lg:space-x-6">

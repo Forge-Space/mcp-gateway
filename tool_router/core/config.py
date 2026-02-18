@@ -67,6 +67,7 @@ class AIConfig:
     endpoint: str = "http://localhost:11434"
     timeout_ms: int = 2000
     weight: float = 0.7  # Weight for AI score in hybrid scoring
+    min_confidence: float = 0.3  # Minimum confidence threshold to use AI result
 
     @classmethod
     def load_from_environment(cls) -> AIConfig:
@@ -88,6 +89,12 @@ class AIConfig:
             msg = f"ROUTER_AI_WEIGHT must be a valid float, got: {os.getenv('ROUTER_AI_WEIGHT')}"
             raise ValueError(msg) from e
 
+        try:
+            min_confidence = float(os.getenv("ROUTER_AI_MIN_CONFIDENCE", "0.3"))
+        except ValueError as e:
+            msg = f"ROUTER_AI_MIN_CONFIDENCE must be a valid float, got: {os.getenv('ROUTER_AI_MIN_CONFIDENCE')}"
+            raise ValueError(msg) from e
+
         return cls(
             enabled=enabled,
             provider=provider,
@@ -95,6 +102,7 @@ class AIConfig:
             endpoint=endpoint,
             timeout_ms=timeout_ms,
             weight=weight,
+            min_confidence=min_confidence,
         )
 
 

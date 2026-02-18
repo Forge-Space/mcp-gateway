@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..ai.selector import OllamaSelector
+from tool_router.ai.selector import OllamaSelector
+
+if TYPE_CHECKING:
+    from tool_router.ai.feedback import FeedbackStore
 
 
 logger = logging.getLogger(__name__)
@@ -102,15 +105,20 @@ def select_top_matching_tools(
     return [tool for tool, score in scored_tools if score > 0][:top_n]
 
 
-def select_top_matching_tools_hybrid(
+def select_top_matching_tools_hybrid(  # noqa: PLR0913
     tools: list[dict[str, Any]],
     task: str,
     context: str,
     top_n: int = 1,
     ai_selector: OllamaSelector | None = None,
     ai_weight: float = 0.7,
+    feedback_store: FeedbackStore | None = None,
 ) -> list[dict[str, Any]]:
-    """Select the best matching tools using hybrid AI + keyword scoring."""
+    """Select the best matching tools using hybrid AI + keyword scoring.
+
+    When a feedback_store is provided, historical success rates are used to
+    boost or penalise tool scores via a multiplier in [0.5, 1.5].
+    """
     if not tools:
         return []
 
@@ -119,6 +127,11 @@ def select_top_matching_tools_hybrid(
     for tool in tools:
         keyword_scores[tool.get("name", "")] = calculate_tool_relevance_score(task, context or "", tool)
 
+    # Retrieve similar tools from feedback history for the AI prompt
+    similar_tools: list[str] = []
+    if feedback_store:
+        similar_tools = feedback_store.similar_task_tools(task)
+
     # Try AI selection if available and enabled
     ai_result = None
     ai_score = 0.0
@@ -126,13 +139,15 @@ def select_top_matching_tools_hybrid(
 
     if ai_selector:
         try:
-            ai_result = ai_selector.select_tool(task, tools)
+            ai_result = ai_selector.select_tool(
+                task, tools, context=context or "", similar_tools=similar_tools or None
+            )
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
-                logger.info(f"AI selected tool: {selected_tool_name} with confidence: {ai_score}")
-        except Exception as e:
-            logger.warning(f"AI selection failed: {e}")
+                logger.info("AI selected tool: %s with confidence: %s", selected_tool_name, ai_score)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("AI selection failed: %s", e)
 
     # Calculate hybrid scores
     hybrid_scores = []
@@ -146,10 +161,18 @@ def select_top_matching_tools_hybrid(
         # If AI selected this tool, use hybrid scoring
         if selected_tool_name and tool_name == selected_tool_name:
             hybrid_score = (ai_score * ai_weight) + (normalized_keyword_score * (1 - ai_weight))
-            logger.info(f"Hybrid score for {tool_name}: AI={ai_score:.2f}, Keyword={normalized_keyword_score:.2f}, Hybrid={hybrid_score:.2f}")
+            logger.info(
+                "Hybrid score for %s: AI=%.2f, Keyword=%.2f, Hybrid=%.2f",
+                tool_name, ai_score, normalized_keyword_score, hybrid_score,
+            )
         else:
             # For non-AI-selected tools, just use normalized keyword score
             hybrid_score = normalized_keyword_score * (1 - ai_weight)
+
+        # Apply feedback boost multiplier
+        if feedback_store:
+            boost = feedback_store.get_boost(tool_name)
+            hybrid_score *= boost
 
         hybrid_scores.append((tool, hybrid_score))
 

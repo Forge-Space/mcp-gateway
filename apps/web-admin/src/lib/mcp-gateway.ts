@@ -82,7 +82,7 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
         }
         return response.json()
       })
-      .then(data => {
+      .then((data: { uptime?: number; version?: string }) => {
         set({
           status: {
             status: 'online',
@@ -131,7 +131,7 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      const data = await response.json()
+      const data = await response.json() as { uptime?: number; version?: string }
 
       set({
         status: {

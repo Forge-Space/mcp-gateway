@@ -6,16 +6,17 @@ health monitoring, and configuration-driven deployment.
 """
 
 import asyncio
+import datetime
 import signal
 import sys
 import time
-import psutil
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-import datetime
+
+import psutil
 
 import docker
 import structlog
@@ -356,8 +357,7 @@ class ServiceManager:
     async def initialize(self):
         """Initialize the service manager."""
         try:
-            import docker
-            self.docker_client = docker.from_env()
+            self.docker_client = docker.DockerClient(base_url="unix://var/run/docker.sock")
             self.docker_client.ping()
             logger.info("Docker client initialized successfully")
         except Exception as e:
