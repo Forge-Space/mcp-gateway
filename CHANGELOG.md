@@ -2,6 +2,42 @@
 
 All notable changes to this project are documented here.
 
+## [1.27.0] - 2026-02-18
+
+### ✨ MCP Server Builder Wizard
+
+- **New `/builder` page** — 4-step guided wizard (Server Type → Configuration → Review → Deploy)
+- **8 pre-defined server types**: Filesystem, GitHub, Fetch, Memory, PostgreSQL, MongoDB, Sequential Thinking, Custom
+- **Step components**: visual card grid, contextual form with env var masking, review with copyable snippets, live deploy progress
+- **Navigation**: "MCP Builder" entry with `Hammer` icon in sidebar
+- **Port conflict detection** and Service Manager API integration
+
+### ✨ Dashboard Improvements
+
+- Refactored `page.tsx` to use `GatewayStatus` + new `ServerMetrics` components
+- `ServerMetrics`: recharts bar chart, CPU/memory metrics, status badges, 10s polling
+- Fixed `GatewayStatus.getStatusIcon()` to return JSX elements instead of component refs
+- Fixed `mcp-gateway.ts`: explicit type cast for servers map
+
+### ✨ New UI Components
+
+- `Label`, `Select`, `Textarea` primitives
+- `KubernetesDeployment`, `TemplateDeployment`, `UserManagement` components
+
+### ✨ Virtual Server Manager Enhancements
+
+- `scripts/virtual-server-manager.py` — enable/disable status support
+- `scripts/virtual-servers/toggle-server.py` — toggle server enabled state
+- `scripts/virtual-servers/create-enhanced.py` — enhanced server creation
+- `register-enhanced` Makefile target
+
+### 🔧 CI/Coverage Fixes
+
+- Fixed `pyproject.toml` testpaths: `apps/tool-router/tests` → `tool_router/tests`
+- Fixed coverage source: `apps/tool-router/src` → `tool_router`
+- Fixed CI workflow: use local `base-ci.yml` path, downgrade `checkout` to `@v4`
+- Fixed `Dockerfile.tool-router`: HTTP health check + `simple_server.py` CMD
+
 ## [1.26.0] - 2026-02-18
 
 ### 🔧 Pattern Application Phase: UIForge Patterns Integration
