@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ai.selector import OllamaSelector
 
+
 logger = logging.getLogger(__name__)
 
 

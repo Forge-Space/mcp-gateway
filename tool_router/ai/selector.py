@@ -8,6 +8,7 @@ from typing import Any
 
 import httpx
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,28 +54,18 @@ class OllamaSelector:
                 return None
 
             # Parse the response
-            result = self._parse_response(response)
-            return result
+            return self._parse_response(response)
 
-        except Exception as e:
-            logger.warning(f"AI selector failed: {e}")
+        except Exception as e:  # noqa: BLE001
+            logger.warning("AI selector failed: %s", e)
             return None
 
     def _create_prompt(self, task: str, tool_list: str) -> str:
         """Create the prompt for Ollama."""
-        return f"""You are a tool selection assistant. Given a task and list of available tools, select the best tool.
-
-Task: {task}
-
-Available tools:
-{tool_list}
-
-Respond with JSON:
-{{
-  "tool_name": "<exact tool name from the list>",
-  "confidence": <0.0-1.0>,
-  "reasoning": "<brief explanation>"
-}}"""
+        header = "You are a tool selection assistant. Select the best tool for the task."
+        body = f"Task: {task}\n\nAvailable tools:\n{tool_list}"
+        footer = 'Respond with JSON: {"tool_name": "<name>", "confidence": 0.9, "reasoning": "<why>"}'
+        return f"{header}\n\n{body}\n\n{footer}"
 
     def _call_ollama(self, prompt: str) -> str | None:
         """Call the Ollama API."""
@@ -97,13 +88,13 @@ Respond with JSON:
                 return data.get("response", "").strip()
 
         except httpx.TimeoutException:
-            logger.warning(f"Ollama request timed out after {self.timeout_ms}ms")
+            logger.warning("Ollama request timed out after %dms", self.timeout_ms)
             return None
         except httpx.HTTPStatusError as e:
-            logger.warning(f"Ollama HTTP error: {e}")
+            logger.warning("Ollama HTTP error: %s", e)
             return None
-        except Exception as e:
-            logger.warning(f"Ollama request failed: {e}")
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Ollama request failed: %s", e)
             return None
 
     def _parse_response(self, response: str) -> dict[str, Any] | None:
@@ -128,14 +119,14 @@ Respond with JSON:
             # Validate confidence range
             confidence = result["confidence"]
             if not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1:
-                logger.warning(f"Invalid confidence value: {confidence}")
+                logger.warning("Invalid confidence value: %s", confidence)
                 return None
 
-            return result
-
         except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse AI response as JSON: {e}")
+            logger.warning("Failed to parse AI response as JSON: %s", e)
             return None
-        except Exception as e:
-            logger.warning(f"Error parsing AI response: {e}")
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Error parsing AI response: %s", e)
             return None
+        else:
+            return result

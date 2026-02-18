@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 @dataclass
 class VirtualServer:
@@ -116,7 +116,7 @@ class VirtualServerManager:
             return True
 
         self.servers[name].enabled = True
-        self.servers[name].updated_at = datetime.utcnow().isoformat()
+        self.servers[name].updated_at = datetime.now(timezone.utc).isoformat()
         self.save_servers()
         print(f"✅ Enabled server: {name}")
         return True
@@ -132,7 +132,7 @@ class VirtualServerManager:
             return True
 
         self.servers[name].enabled = False
-        self.servers[name].updated_at = datetime.utcnow().isoformat()
+        self.servers[name].updated_at = datetime.now(timezone.utc).isoformat()
         self.save_servers()
         print(f"❌ Disabled server: {name}")
         return True

@@ -1,7 +1,7 @@
 # Forge MCP Gateway - Project Context Documentation
 
-**Version:** 1.28.0
-**Last Updated:** 2025-07-10
+**Version:** 1.26.0
+**Last Updated:** 2026-02-18
 **Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
 
 ## 📋 Executive Summary
@@ -41,13 +41,8 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ PROJECT INTEGRATION READY**: Repository prepared for integration with forge-mcp-gateway, uiforge-webapp, and uiforge-mcp
 - **✅ QUALITY VALIDATION SYSTEM**: Automated validation scripts for patterns and configurations
 - **✅ HIGH-EFFICIENCY DOCKER STANDARDS COMPLETE**: Full implementation of serverless-like efficiency with three-state service model
-- **✅ PHASE 5 NEXT.JS ADMIN UI COMPLETE**: Comprehensive admin dashboard with real-time MCP Gateway integration
-- **✅ MCP SERVER BUILDER IMPLEMENTED**: Complete 4-step wizard for creating and deploying MCP servers
-- **✅ REAL-TIME GATEWAY INTEGRATION**: WebSocket-based connectivity with automatic reconnection
-- **✅ COMPREHENSIVE ADMIN COMPONENTS**: Gateway status, server metrics, template deployment, user management, Kubernetes deployment
 
 ### Recent Updates
-- **✅ DRIBBBLE MCP SERVER IMPLEMENTED**: Self-hosted `dribbble_mcp` FastMCP server with scraper, screenshot, image analysis, and 5 MCP tools. 84 tests, ≥85% coverage per module, lint-clean. Registered in gateways, services, and new `uiforge-design` virtual server.
 - **✅ PROJECT CLEANUP COMPLETE**: Removed temporary documentation and redundant scripts
 - **✅ PRODUCTION DEPLOYMENT READINESS COMPLETE**: Comprehensive validation and deployment checklist created
 - **✅ PRODUCTION TESTING VALIDATION COMPLETE**: All configuration files and deployment prerequisites validated
@@ -629,16 +624,18 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Production Deployment**: Full production-ready deployment with monitoring
 - **✅ Comprehensive Documentation**: Complete architecture guide and API reference
 
-### Phase 1: Virtual Server Lifecycle (High Priority) 🚧
+### ✅ Phase 1: Virtual Server Lifecycle (COMPLETE)
 **Goal**: Enable/disable servers, simplify management
 
-**Features**:
-- Add `enabled` flag to config format
-- Conditional server creation
-- `make enable-server` / `make disable-server` commands
-- Status indicators in `make list-servers`
+**Completed**:
+- ✅ `enabled` flag in `config/virtual-servers.txt` (4-field format: `name|enabled|gateways|description`)
+- ✅ `register.sh` respects `enabled` flag — skips disabled servers during registration
+- ✅ `make enable-server` / `make disable-server` via `virtual-server-manager.py`
+- ✅ `STATUS` column in `make list-servers` output (reads from config file)
+- ✅ 22 unit tests for `virtual-server-manager.py` (all passing)
+- ✅ Backwards-compatible with legacy 2-field format
 
-**Impact**: Reduces startup time, resource usage, complexity
+**Impact**: Disabled servers skipped at registration; status visible in list output
 
 ### Phase 2: IDE Integration UX (High Priority) 📅
 **Goal**: Eliminate manual UUID copying, support all IDEs
@@ -688,36 +685,6 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 
 **Impact**: Better visibility, easier management
 
-### Phase 5.5: MCP Server Builder Implementation ✅ COMPLETE
-
-**Goal**: Provide comprehensive wizard for creating and deploying MCP servers
-
-**Features Implemented**:
-- ✅ **4-Step Wizard Process**: Server Type → Configuration → Review → Deploy
-- ✅ **Server Type Selection**: 8+ pre-configured MCP server types with metadata
-- ✅ **Advanced Configuration**: Environment variables, ports, Docker images, custom tools
-- ✅ **Real-time Validation**: Port conflict detection, required field validation
-- ✅ **Review & Confirmation**: Configuration preview with copy-to-clipboard snippets
-- ✅ **Deployment Integration**: Service manager API integration with status tracking
-- ✅ **Modern UI Design**: Responsive layout with progress indicators and loading states
-- ✅ **Error Handling**: Comprehensive error management with user-friendly messages
-- ✅ **Code Generation**: Gateway entries, Docker Compose snippets, IDE MCP configurations
-
-**Technical Implementation**:
-- **Frontend**: Next.js 16 with TypeScript, Tailwind CSS, Zustand state management
-- **Components**: Modular step components with reusable UI elements
-- **Integration**: WebSocket gateway connectivity, service manager API
-- **Validation**: Real-time form validation with port conflict detection
-- **User Experience**: Progress tracking, navigation controls, success feedback
-
-**Files Created**:
-- `/apps/web-admin/src/components/mcp-builder/mcp-builder.tsx` - Main orchestrator component
-- `/apps/web-admin/src/components/mcp-builder/step-*.tsx` - Individual step components
-- `/apps/web-admin/src/app/mcp-builder/page.tsx` - Dedicated builder page
-- `/apps/web-admin/src/lib/mcp-server-catalog.ts` - Server type definitions
-
-**Impact**: Streamlined MCP server creation process with guided wizard approach
-
 ### Phase 6: UIForge Patterns Integration (High Priority) ✅ COMPLETE
 
 **Goal**: Integrate forge-mcp-gateway with UIForge patterns repository
@@ -731,20 +698,35 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 
 **Impact**: Consistent development standards across UIForge ecosystem
 
-### Phase 7: Next.js Admin UI (High Priority) ✅ COMPLETE
+### Phase 7: Next.js Admin UI (High Priority) � IN PROGRESS
 
-**Features Implemented**:
-- ✅ **Real-time MCP Gateway Integration**: WebSocket-based connectivity with automatic reconnection
-- ✅ **Gateway Status Monitoring**: Health checks, connection management, uptime tracking
-- ✅ **Server Metrics Dashboard**: CPU/memory monitoring, performance charts, activity tracking
-- ✅ **Template Deployment System**: Advanced template selection with variable configuration
-- ✅ **User Management Interface**: Role-based access control, user administration
-- ✅ **Kubernetes Deployment Support**: YAML generation, configuration builder, deployment simulation
-- ✅ **MCP Server Builder**: Complete 4-step wizard for creating and deploying MCP servers
-- ✅ **Comprehensive Admin UI**: Modern responsive design with accessibility support
-- ✅ **Quick Actions Integration**: Direct access to server builder and management tools
+**Features**:
+- PostgreSQL support (multi-user)
+- Server templates (React dev, Python ML, etc.)
+- Usage analytics dashboard
+- Smart server recommendations
+- Auto-scaling translate services
+- Kubernetes deployment support
 
-## Known Issues & Limitations
+**Current Status**:
+- ✅ Next.js 16 app created in `apps/web-admin/`
+- ✅ Supabase client and database schema configured
+- ✅ Zustand state management stores implemented
+- ✅ Base UI components (Button, Card, Switch, Badge, Input) created
+- ✅ Dashboard page with server overview and analytics
+- ✅ Feature toggles management page
+- ✅ Virtual servers management page
+- ✅ Usage analytics dashboard
+- ✅ Server templates management page
+- ✅ User management page
+- ✅ Database management page
+- ✅ Security center page
+- ✅ Navigation and layout structure
+- ✅ Comprehensive README documentation
+- ✅ Development server running successfully on localhost:3000
+- 🔄 Build process has prerender error (development mode functional)
+
+## 🐛 Known Issues & Limitations
 
 ### Issue 1: SQLite Database Corruption
 **Severity**: Medium
@@ -828,8 +810,6 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **Health Monitoring System**: Comprehensive automated monitoring and alerting
 - **Project Integration**: Successful rollout to uiforge-mcp and uiforge-webapp projects
 - **Serverless MCP Sleep Architecture**: Complete implementation with 60-80% memory reduction and <200ms wake times
-- **Next.js Admin UI Implementation**: Comprehensive admin dashboard with real-time integration and MCP Server Builder wizard
-- **MCP Server Builder**: Complete 4-step wizard system with validation, deployment, and configuration management
 - **Phase 4 Monitoring System**: Comprehensive state transition metrics, alerting, and performance dashboard
 - **Integration Testing Framework**: Real Docker container testing with automated validation
 - **Performance Validation**: All success metrics achieved (wake time, memory reduction, success rate)

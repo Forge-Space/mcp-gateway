@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from tool_router.ai.selector import OllamaSelector
 from tool_router.args.builder import build_arguments
 from tool_router.core.config import ToolRouterConfig
 from tool_router.gateway.client import call_tool, get_tools
 from tool_router.observability import get_logger, get_metrics
 from tool_router.observability.metrics import TimingContext
 from tool_router.scoring.matcher import select_top_matching_tools, select_top_matching_tools_hybrid
-from tool_router.ai.selector import OllamaSelector
+
 
 try:
     from mcp.server.fastmcp import FastMCP

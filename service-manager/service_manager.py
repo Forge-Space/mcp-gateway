@@ -356,15 +356,13 @@ class ServiceManager:
     async def initialize(self):
         """Initialize the service manager."""
         try:
-            # Skip Docker client initialization for now to focus on basic functionality
-            logger.warning("Docker client initialization skipped - running in limited mode")
-            self.docker_client = None
-
-            logger.info("Service manager initialized successfully (limited mode)")
-
+            import docker
+            self.docker_client = docker.from_env()
+            self.docker_client.ping()
+            logger.info("Docker client initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize service manager: {e}")
-            raise
+            logger.warning(f"Docker client initialization failed - running in limited mode: {e}")
+            self.docker_client = None
 
         # Load configuration
         await self._load_configuration()
