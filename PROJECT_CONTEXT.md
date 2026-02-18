@@ -1,7 +1,7 @@
 # Forge MCP Gateway - Project Context Documentation
 
-**Version:** 1.26.0
-**Last Updated:** 2026-02-18
+**Version:** 1.28.0
+**Last Updated:** 2026-02-19
 **Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
 
 ## 📋 Executive Summary
@@ -13,6 +13,16 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Status**: ✅ **PRODUCTION DEPLOYMENT READINESS COMPLETE**
 
 **Recent Achievements**:
+- **✅ FORGE-CONTEXT SERVICE ADDED**: New MCP service for project context management
+  - Added forge-context service with high-priority configuration
+  - Exposes SSE on port 8026 with 50ms wake time target
+  - Supports forge-patterns volume mounting for context persistence
+  - Auto-start enabled with 10-minute idle timeout policy
+- **✅ DOCKER AND SERVICE MANAGER FIXES COMPLETE**: Fixed critical Docker and service management issues
+  - Fixed dribbble-mcp service configuration with missing command field
+  - Restored service-manager Docker client initialization (was hardcoded to skip)
+  - Fixed forge-ui permission error with data-dev volume mount
+  - Cleaned up redundant imports and fixed code structure
 - **✅ UIFORGE PATTERNS INTEGRATION COMPLETE**: Successfully integrated forge-patterns with hybrid approach preserving superior configurations
 - **✅ CONFIGURATION MERGER UTILITY CREATED**: Streamlined tool for merging patterns with project-specific customizations
 - **✅ PRETTIER INTEGRATION SUCCESSFUL**: Merged base patterns with project-specific overrides (trailingComma: "none", arrowParens: "avoid")
@@ -637,15 +647,19 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 
 **Impact**: Disabled servers skipped at registration; status visible in list output
 
-### Phase 2: IDE Integration UX (High Priority) 📅
+### ✅ Phase 2: IDE Integration UX (COMPLETE)
 **Goal**: Eliminate manual UUID copying, support all IDEs
 
-**Features**:
-- Auto-detect installed IDEs
-- Generate IDE-specific configs
-- One-click "Add to Windsurf/Cursor/Claude" buttons
-- Admin UI server management page
-- Backup/restore config files
+**Completed**:
+- ✅ Unified IDE setup script (`scripts/ide-setup.py`) with auto-detection
+- ✅ Auto-detect installed IDEs (Cursor, VSCode, Windsurf, Claude Desktop)
+- ✅ Generate IDE-specific MCP configs with proper format differences
+- ✅ One-click "Add to IDE" buttons in Admin UI servers page
+- ✅ Copy configuration to clipboard with visual feedback
+- ✅ Download IDE-specific config files
+- ✅ Backup/restore functionality with timestamps
+- ✅ Admin UI server management page enhanced
+- ✅ 25 unit tests for IDE setup functionality
 
 **Impact**: Setup time reduced from 15min to 2min
 
