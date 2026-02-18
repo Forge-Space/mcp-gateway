@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented here.
 
+## [1.27.0] - 2025-07-14
+
+### ✨ feat(web-admin): MCP Server Builder wizard
+
+- **New page `/builder`** — 4-step guided wizard for creating MCP servers from the web UI
+- **Server type catalog** (`src/lib/mcp-server-catalog.ts`) — 8 pre-defined types: Filesystem, GitHub, Fetch, Memory, PostgreSQL, MongoDB, Sequential Thinking, Custom
+- **Step 1 — Server Type**: visual card grid with category badges and tool counts
+- **Step 2 — Configuration**: contextual form with name/port/transport, type-specific env vars (secret masking), custom tools list
+- **Step 3 — Review**: summary card + copyable `gateways.txt` entry, docker-compose snippet, and IDE `mcp.json` snippet
+- **Step 4 — Deploy**: live progress steps — saves to Supabase `virtual_servers`, registers with Service Manager API, health-checks the new container
+- **Navigation**: added "MCP Builder" entry with `Hammer` icon between Virtual Servers and Feature Toggles
+- **Supabase migration** (`apps/web-admin/supabase/migrations/20250101000000_create_mcp_server_definitions.sql`) — new `mcp_server_definitions` table with RLS policies
+- **Type definitions** — `mcp_server_definitions` table added to `src/lib/supabase.ts` Database type
+- **Port conflict detection** — auto-suggests next free port starting at 8040
+- **Service Manager integration** — best-effort `POST /services` call; server is saved to DB regardless of Service Manager availability
+
 ## [1.26.0] - 2026-02-18
 
 ### 🔧 Pattern Application Phase: UIForge Patterns Integration

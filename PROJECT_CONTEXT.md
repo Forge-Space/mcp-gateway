@@ -1,18 +1,20 @@
 # Forge MCP Gateway - Project Context Documentation
 
-**Version:** 1.26.0
-**Last Updated:** 2026-02-18
+**Version:** 1.27.0
+**Last Updated:** 2025-07-14
 **Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
 
 ## 📋 Executive Summary
 
 Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forge that consolidates multiple Model Context Protocol (MCP) servers into a single connection point for IDEs. It solves the problem of IDE tool limits by providing virtual servers (tool collections) and an intelligent tool-router for dynamic tool selection with AI-powered routing capabilities.
 
-### 🚧 **Current Phase: Phase 1 Production Deployment (High Priority)**
+### 🚧 **Current Phase: Phase 5 - Next.js Admin UI (High Priority)**
 
-**Status**: ✅ **PRODUCTION DEPLOYMENT READINESS COMPLETE**
+**Status**: 📋 **PLANNING**
+**Priority**: **HIGH**
 
 **Recent Achievements**:
+- **✅ MCP SERVER BUILDER IMPLEMENTED**: 4-step guided wizard at `/builder` for creating MCP servers from the web UI — server type catalog (8 types), contextual config form, review with copyable snippets, live deploy with Service Manager integration and RLS-secured Supabase table
 - **✅ UIFORGE PATTERNS INTEGRATION COMPLETE**: Successfully integrated forge-patterns with hybrid approach preserving superior configurations
 - **✅ CONFIGURATION MERGER UTILITY CREATED**: Streamlined tool for merging patterns with project-specific customizations
 - **✅ PRETTIER INTEGRATION SUCCESSFUL**: Merged base patterns with project-specific overrides (trailingComma: "none", arrowParens: "avoid")
@@ -37,18 +39,10 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ WORKFLOW VALIDATION**: All GitHub Actions workflows now pass validation checks
 - **✅ TEST INFRASTRUCTURE REPAIRED**: Fixed Python 3.9 compatibility issues and test configuration problems
 - **✅ COMPREHENSIVE DOCUMENTATION**: Ecosystem overview, integration guides, standards, and setup documentation
-- **✅ PATTERN CONFIGURATIONS**: ESLint, Prettier, Git hooks, and documentation templates created
-- **✅ PROJECT INTEGRATION READY**: Repository prepared for integration with forge-mcp-gateway, uiforge-webapp, and uiforge-mcp
-- **✅ QUALITY VALIDATION SYSTEM**: Automated validation scripts for patterns and configurations
-- **✅ HIGH-EFFICIENCY DOCKER STANDARDS COMPLETE**: Full implementation of serverless-like efficiency with three-state service model
 
-### Recent Updates
-- **✅ PROJECT CLEANUP COMPLETE**: Removed temporary documentation and redundant scripts
-- **✅ PRODUCTION DEPLOYMENT READINESS COMPLETE**: Comprehensive validation and deployment checklist created
-- **✅ PRODUCTION TESTING VALIDATION COMPLETE**: All configuration files and deployment prerequisites validated
-- **✅ DEPLOYMENT CHECKLIST CREATED**: Complete production deployment guide with step-by-step procedures
-- **✅ YAML MIGRATION VALIDATION COMPLETE**: All configuration files validated and migration-ready
-- **✅ MIGRATION VALIDATION SCRIPT CREATED**: Comprehensive validation script for configuration files
+**Current Sprint**: Phase 2 - IDE Integration UX (Week 7-8)
+- **Focus**: Enhanced IDE configuration automation and developer experience
+- **Target**: Seamless IDE setup with automatic tool detection and configuration files
 - **✅ CONFIGURATION SYNTAX ISSUES RESOLVED**: All 7 reported YAML validation errors investigated and resolved
 - **✅ GITHUB CONFIGURATION ISSUES RESOLVED**: Fixed all critical GitHub configuration problems including YAML syntax errors, boolean type issues, and deprecated action versions
 - **✅ BRANCH PROTECTION DOCUMENTATION**: Converted problematic YAML to proper markdown documentation format
