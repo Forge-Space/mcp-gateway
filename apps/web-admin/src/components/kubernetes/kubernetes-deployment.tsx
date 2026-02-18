@@ -53,12 +53,12 @@ export function KubernetesDeployment() {
   const [deploymentResult, setDeploymentResult] = useState<{
     success: boolean
     message: string
-    details?: any
+    details?: Record<string, unknown>
   } | null>(null)
 
   const [generatedYaml, setGeneratedYaml] = useState('')
 
-  const handleConfigChange = (field: keyof KubernetesConfig, value: any) => {
+  const handleConfigChange = (field: keyof KubernetesConfig, value: string | number) => {
     setConfig(prev => ({
       ...prev,
       [field]: value

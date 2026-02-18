@@ -297,7 +297,7 @@ export default function DatabasePage() {
             <div className="border rounded-lg p-4">
               <div className="font-mono text-sm text-muted-foreground mb-2">SQL Query Editor</div>
               <div className="bg-muted p-3 rounded text-sm font-mono">
-                SELECT * FROM users WHERE created_at &gt; '2026-02-01';
+                SELECT * FROM users WHERE created_at &gt; &apos;2026-02-01&apos;;
               </div>
             </div>
             <div className="flex items-center space-x-2">

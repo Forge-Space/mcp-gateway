@@ -17,9 +17,9 @@ const nextConfig = {
     unoptimized: true,
   },
   // Disable static generation completely
-  outputMode: 'ssr',
-  // Force server-side rendering for all pages
-  ssr: true,
+  distDir: '.next',
+  // Force all pages to be server-side rendered
+  generateBuildId: () => 'build',
 };
 
 export default nextConfig;

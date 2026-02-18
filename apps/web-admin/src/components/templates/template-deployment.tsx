@@ -36,7 +36,7 @@ export function TemplateDeployment() {
   const [deploymentResult, setDeploymentResult] = useState<{
     success: boolean
     message: string
-    details?: any
+    details?: Record<string, unknown>
   } | null>(null)
 
   const selectedTemplate = templates.find(t => t.id === deploymentConfig.templateId)

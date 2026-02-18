@@ -1,19 +1,70 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { useServerStore } from '@/lib/store'
-import { Server, Plus, Settings, Activity, Zap, Shield } from 'lucide-react'
+import type { Database } from '@/lib/supabase'
+import { Server, Plus, Settings, Activity, Zap, Shield, Download, Copy, Check } from 'lucide-react'
+
+type VirtualServer = Database['public']['Tables']['virtual_servers']['Row']
 
 export default function ServersPage() {
   const { servers, loading, fetchServers, toggleServer, deleteServer } = useServerStore()
+  const [copiedServer, setCopiedServer] = useState<string | null>(null)
+  const [downloadedConfig, setDownloadedConfig] = useState<string | null>(null)
 
   useEffect(() => {
     fetchServers()
   }, [fetchServers])
+
+  const copyToClipboard = async (text: string, serverName: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedServer(serverName)
+      setTimeout(() => setCopiedServer(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const downloadConfig = (server: VirtualServer, ide: string) => {
+    const config = generateIDEConfig(server, ide)
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${ide}-${server.name}-config.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    setDownloadedConfig(`${ide}-${server.name}`)
+    setTimeout(() => setDownloadedConfig(null), 2000)
+  }
+
+  const generateIDEConfig = (server: VirtualServer, ide: string) => {
+    const baseConfig = {
+      mcpServers: {
+        [server.name]: {
+          command: "/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+          args: ["--server-name", server.name],
+          env: {
+            GATEWAY_URL: "http://localhost:4444",
+            SERVER_ID: server.id
+          }
+        }
+      }
+    }
+
+    // IDE-specific adjustments
+    if (ide === "vscode") {
+      return { "mcp.servers": baseConfig.mcpServers }
+    }
+    return baseConfig
+  }
 
   const getStatusColor = (enabled: boolean) => {
     return enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -162,6 +213,136 @@ export default function ServersPage() {
                       <Activity className="mr-2 h-4 w-4" />
                       View Logs
                     </Button>
+                  </div>
+                </div>
+
+                {/* IDE Integration Section */}
+                <div className="mt-4 pt-4 border-t">
+                  <h4 className="font-medium mb-3">IDE Integration</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm text-muted-foreground">Cursor:</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(
+                          JSON.stringify(generateIDEConfig(server, 'cursor'), null, 2),
+                          `${server.name}-cursor`
+                        )}
+                      >
+                        {copiedServer === `${server.name}-cursor` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Copy className="mr-1 h-3 w-3" />
+                        )}
+                        Copy Config
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadConfig(server, 'cursor')}
+                      >
+                        {downloadedConfig === `cursor-${server.name}` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Download className="mr-1 h-3 w-3" />
+                        )}
+                        Download
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm text-muted-foreground">VSCode:</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(
+                          JSON.stringify(generateIDEConfig(server, 'vscode'), null, 2),
+                          `${server.name}-vscode`
+                        )}
+                      >
+                        {copiedServer === `${server.name}-vscode` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Copy className="mr-1 h-3 w-3" />
+                        )}
+                        Copy Config
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadConfig(server, 'vscode')}
+                      >
+                        {downloadedConfig === `vscode-${server.name}` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Download className="mr-1 h-3 w-3" />
+                        )}
+                        Download
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm text-muted-foreground">Windsurf:</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(
+                          JSON.stringify(generateIDEConfig(server, 'windsurf'), null, 2),
+                          `${server.name}-windsurf`
+                        )}
+                      >
+                        {copiedServer === `${server.name}-windsurf` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Copy className="mr-1 h-3 w-3" />
+                        )}
+                        Copy Config
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadConfig(server, 'windsurf')}
+                      >
+                        {downloadedConfig === `windsurf-${server.name}` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Download className="mr-1 h-3 w-3" />
+                        )}
+                        Download
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm text-muted-foreground">Claude:</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(
+                          JSON.stringify(generateIDEConfig(server, 'claude'), null, 2),
+                          `${server.name}-claude`
+                        )}
+                      >
+                        {copiedServer === `${server.name}-claude` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Copy className="mr-1 h-3 w-3" />
+                        )}
+                        Copy Config
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadConfig(server, 'claude')}
+                      >
+                        {downloadedConfig === `claude-${server.name}` ? (
+                          <Check className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Download className="mr-1 h-3 w-3" />
+                        )}
+                        Download
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
