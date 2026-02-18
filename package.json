@@ -3,9 +3,7 @@
   "version": "1.27.0",
   "description": "Forgespace MCP Gateway - Connect to your Forgespace MCP Gateway instance via NPX",
   "type": "module",
-  "bin": {
-    "forgespace-mcp": "./build/index.js"
-  },
+  "bin": { "forgespace-mcp": "./build/index.js" },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
@@ -13,34 +11,22 @@
     "dev": "tsc --watch",
     "lint": "eslint . --ext .js,.ts --fix",
     "lint:types": "tsc --noEmit",
-    "lint:eslint": "eslint 'src/**/*.ts'",
-    "lint:eslint:fix": "eslint 'src/**/*.ts' --fix",
-    "lint:prettier": "prettier --check \"src/**/*.{ts,json}\"",
     "format": "prettier --write .",
-    "deps:check": "npm-check-updates",
-    "deps:update": "npm-check-updates -u && npm install",
-    "deps:update:interactive": "npm-check-updates -i",
     "test": "bash patterns/cost/scripts/validate-development-workflow.sh",
     "prepare": "npm run build && husky install",
-    "precommit": "npm run lint",
-    "lint:check": "eslint . --ext .js,.ts",
-    "format:check": "prettier --check .",
-    "validate": "npm run lint:check && npm run format:check && npm run test",
-    "pre-commit": "npm run lint && npm run format && npm run test",
     "prepack": "npm run build",
-    "publish": "npm publish --access public"
+    "publish": "npm publish --access public",
+    "integrate": "node scripts/integrate.js",
+    "integrate:mcp-gateway": "node scripts/integrate.js --project=mcp-gateway",
+    "integrate:uiforge-mcp": "node scripts/integrate.js --project=uiforge-mcp",
+    "integrate:uiforge-webapp": "node scripts/integrate.js --project=uiforge-webapp"
   },
   "files": ["build", "README.md", "LICENSE"],
   "keywords": ["mcp", "model-context-protocol", "mcp-server", "forgespace", "ai", "llm"],
   "author": "Forgespace Contributors",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Forge-Space/mcp-gateway.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Forge-Space/mcp-gateway/issues"
-  },
+  "repository": { "type": "git", "url": "https://github.com/Forge-Space/mcp-gateway.git" },
+  "bugs": { "url": "https://github.com/Forge-Space/mcp-gateway/issues" },
   "homepage": "https://github.com/Forge-Space/mcp-gateway#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -65,7 +51,5 @@
     "husky": "^8.0.3",
     "lint-staged": "^13.2.3"
   },
-  "engines": {
-    "node": ">=22.0.0"
-  }
+  "engines": { "node": ">=22.0.0" }
 }
