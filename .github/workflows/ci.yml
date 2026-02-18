@@ -20,15 +20,15 @@ jobs:
   # Use shared base CI workflow
   ci:
     name: Base CI Pipeline
-    uses: ./.github/shared/workflows/base-ci.yml
+    uses: ./.github/workflows/base-ci.yml
     with:
       project-type: 'gateway'
-      node-version: ${{ env.NODE_VERSION }}
-      python-version: ${{ env.PYTHON_VERSION }}
+      node-version: '22'
+      python-version: '3.12'
       enable-docker: true
       enable-security: true
       enable-coverage: true
-      coverage-threshold: ${{ env.COVERAGE_THRESHOLD }}
+      coverage-threshold: '80'
       test-parallel: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Validate UIForge patterns compliance
         run: bash scripts/validation/validate-patterns.sh
@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -99,7 +99,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -125,7 +125,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Check documentation links
         run: |

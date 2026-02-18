@@ -1,6 +1,6 @@
 {
   "name": "@forge-mcp-gateway/client",
-  "version": "1.7.0",
+  "version": "1.27.0",
   "description": "Forge MCP Gateway client - Connect to your Forge MCP Gateway instance via NPX",
   "type": "module",
   "bin": {

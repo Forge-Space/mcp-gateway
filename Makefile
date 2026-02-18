@@ -1,4 +1,4 @@
-.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update pre-commit-install help
+.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update config-backup config-restore config-install config-list config-cleanup pre-commit-install pre-commit-run pre-commit-update help help-topics help-examples setup ide-setup status setup-dev
 
 # Default target
 .DEFAULT_GOAL := help
@@ -7,10 +7,15 @@ all: help ## Default target (shows help)
 
 clean: reset-db cleanup-duplicates ## Clean up database and duplicates
 
-help: ## Show this help message
-	@echo "MCP Gateway - Available Make targets:"
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2}'
+help: ## Show contextual help with examples
+	python3 scripts/help.py
+
+help-topics: ## List available help topics
+	@echo "Available help topics:"
+	@python3 scripts/help.py | grep "Available topics:" -A 20 | tail -20
+
+help-examples: ## Show practical command examples
+	python3 scripts/help.py --examples
 
 # === Setup & Secrets ===
 generate-secrets: ## Generate JWT and encryption secrets for .env
@@ -60,24 +65,51 @@ list-prompts: ## List available prompts
 list-servers: ## List virtual servers
 	./scripts/virtual-servers/list.sh
 
+register-enhanced: ## Register virtual servers with enabled/disabled status (enhanced format)
+	python3 ./scripts/virtual-server-manager.py register-enhanced
+
 cleanup-duplicates: ## Clean up duplicate virtual servers
 	./scripts/virtual-servers/cleanup-duplicates.sh
 
-# === Cursor IDE Integration ===
-refresh-cursor-jwt: ## Refresh JWT for Cursor IDE
-	./scripts/cursor/refresh-jwt.sh
+# === Simplified Commands (Phase 3) ===
+setup: ## Interactive configuration wizard
+	python3 scripts/config-wizard.py
 
-use-cursor-wrapper: ## Set up Cursor wrapper script
-	./scripts/cursor/use-wrapper.sh
+ide-setup: ## Unified IDE setup and management
+	@if [ -z "$(IDE)" ]; then \
+		echo "Usage: make ide-setup IDE=<cursor|windsurf|vscode|claude|all> [ACTION=<install|backup|restore|status>]"; \
+		echo "Actions: install (default), backup, restore, status"; \
+		echo "Examples:"; \
+		echo "  make ide-setup IDE=cursor                    # Install Cursor config"; \
+		echo "  make ide-setup IDE=all                       # Install all IDE configs"; \
+		echo "  make ide-setup IDE=windsurf ACTION=backup     # Backup Windsurf config"; \
+		echo "  make ide-setup IDE=vscode ACTION=status       # Check VS Code status"; \
+		exit 1; \
+	fi
+	python3 scripts/ide-setup.py setup $(IDE) --action $(or $(ACTION),install)
 
-verify-cursor-setup: ## Verify Cursor setup
-	./scripts/cursor/verify-setup.sh
+status: ## Comprehensive system status
+	python3 scripts/status.py $(if $(detailed),--detailed)
 
-cursor-pull: ## Pull Context Forge Docker image
-	@echo "Pulling Context Forge image (used by Cursor wrapper; avoids first-start timeout)..."
-	docker pull ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
+setup-dev: ## Set up development environment
+	@echo "==> Setting up development environment..."
+	@if [ ! -f .env ]; then \
+		echo "Generating secrets..."; \
+		$(MAKE) generate-secrets >> .env; \
+	fi
+	@echo "Installing pre-commit hooks..."
+	$(MAKE) pre-commit-install
+	@echo "Setting up Node.js dependencies..."
+	@if [ -f package.json ]; then \
+		npm install; \
+	fi
+	@echo "Setting up Python dependencies..."
+	@if [ -f requirements.txt ]; then \
+		pip3 install -r requirements.txt; \
+	fi
+	@echo "Development environment setup complete!"
 
-# === Linting & Quality ===
+# === IDE Configuration Management ===
 lint: lint-python lint-typescript shellcheck ## Run all linters (Python, TypeScript, Shell)
 
 lint-python: ## Lint Python code with Ruff
@@ -132,6 +164,29 @@ deps-update: ## Update npm dependencies interactively
 	@echo "==> Updating npm dependencies..."
 	@command -v npm >/dev/null 2>&1 || { echo "ERROR: npm not found. Install Node.js first."; exit 1; }
 	npm run deps:update:interactive
+
+# === IDE Configuration Management ===
+config-backup: ## Backup IDE configurations
+	@echo "==> Backing up IDE configurations..."
+	python3 scripts/config-manager.py backup all
+
+config-restore: ## Restore IDE configurations
+	@if [ -z "$(IDE)" ]; then echo "Usage: make config-restore IDE=<cursor|windsurf|vscode|claude>"; exit 1; fi
+	@echo "==> Restoring $(IDE) configuration..."
+	python3 scripts/config-manager.py restore $(IDE)
+
+config-install: ## Install IDE configurations
+	@if [ -z "$(IDE)" ]; then echo "Usage: make config-install IDE=<cursor|windsurf|vscode|claude|all>"; exit 1; fi
+	@echo "==> Installing $(IDE) configuration..."
+	python3 scripts/config-manager.py install $(IDE)
+
+config-list: ## List available configuration backups
+	@echo "==> Listing configuration backups..."
+	python3 scripts/config-manager.py list
+
+config-cleanup: ## Clean up old configuration backups
+	@echo "==> Cleaning up old configuration backups..."
+	python3 scripts/config-manager.py cleanup --keep 5
 
 # === Pre-commit Hooks ===
 pre-commit-install: ## Install pre-commit hooks

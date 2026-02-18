@@ -13,24 +13,24 @@ export function GatewayStatus() {
   useEffect(() => {
     // Initial status fetch
     fetchStatus()
-    
+
     // Set up polling for status updates
     const interval = setInterval(fetchStatus, 30000) // 30 seconds
-    
+
     return () => clearInterval(interval)
   }, [fetchStatus])
 
   const getStatusIcon = () => {
-    if (!status) return AlertCircle
+    if (!status) return <AlertCircle className="h-5 w-5" />
     switch (status.status) {
       case 'online':
-        return Wifi
+        return <Wifi className="h-5 w-5" />
       case 'offline':
-        return WifiOff
+        return <WifiOff className="h-5 w-5" />
       case 'error':
-        return AlertCircle
+        return <AlertCircle className="h-5 w-5" />
       default:
-        return Activity
+        return <Activity className="h-5 w-5" />
     }
   }
 
@@ -104,7 +104,7 @@ export function GatewayStatus() {
             </div>
           </div>
         )}
-        
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <RefreshCw className="h-6 w-6 animate-spin text-gray-400 mr-2" />
@@ -132,7 +132,7 @@ export function GatewayStatus() {
                 </div>
               </div>
             </div>
-            
+
             <div className="pt-2 border-t">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">

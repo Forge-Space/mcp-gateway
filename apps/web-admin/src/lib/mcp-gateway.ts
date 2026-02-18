@@ -175,7 +175,7 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
       const servers = await response.json()
 
       set({
-        servers: servers.map(server => ({
+        servers: (servers as Array<ServerMetrics & { lastActivity?: string | number }>).map(server => ({
           ...server,
           lastActivity: new Date(server.lastActivity || Date.now()),
         }))
