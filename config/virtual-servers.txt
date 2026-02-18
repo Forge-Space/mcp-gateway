@@ -35,3 +35,4 @@ monorepo-universal|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily
 monorepo-universal-minimal|true|tool-router,github,filesystem,git-mcp,memory|Virtual server: monorepo-universal-minimal
 devops-cicd|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily|Virtual server: devops-cicd
 devops-cicd-minimal|true|tool-router,github,filesystem,git-mcp|Virtual server: devops-cicd-minimal
+uiforge-design|true|dribbble-mcp,magicuidesign-mcp,reactbits,uiforge,memory|Virtual server: uiforge-design
