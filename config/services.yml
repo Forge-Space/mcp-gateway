@@ -721,3 +721,32 @@ services:
       path: "/health"
       interval: "30"
       timeout: "10"
+
+  # Dribbble visual reference search and image analysis (self-hosted, uiforge-mcp integration)
+  dribbble-mcp:
+    image: forge-mcp-gateway-dribbble:latest
+    port: 8035
+    environment:
+      DRIBBBLE_SESSION_COOKIE: "${DRIBBBLE_SESSION_COOKIE:-}"
+      DRIBBBLE_RATE_LIMIT_MS: "${DRIBBBLE_RATE_LIMIT_MS:-1000}"
+      DRIBBBLE_SCREENSHOT_TIMEOUT_MS: "${DRIBBBLE_SCREENSHOT_TIMEOUT_MS:-10000}"
+      DRIBBBLE_HTTP_TIMEOUT_S: "${DRIBBBLE_HTTP_TIMEOUT_S:-15.0}"
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "500"
+    resources:
+      memory: "1GB"
+      cpu: "0.5"
+      memory_reservation: "512MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 120 # 2 minutes - browser startup is expensive
+      memory_reservation: "512MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"

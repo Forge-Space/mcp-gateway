@@ -19,6 +19,7 @@ fetch|http://fetch:8029/sse|SSE
 tool-router|http://tool-router:8030/sse|SSE
 postgres|http://postgres:8031/sse|SSE
 mongodb|http://mongodb:8032/sse|SSE
+dribbble-mcp|http://dribbble-mcp:8035/sse|SSE
 # sqlite/github often fail with "Unable to connect" or "Unexpected error"; uncomment after checking docker compose logs sqlite|github, or add via Admin UI.
 # sqlite|http://sqlite:8024/sse|SSE
 github|http://github:8025/sse|SSE
