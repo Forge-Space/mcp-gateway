@@ -36,8 +36,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LucasSantana-Dev/mcp-gateway.git"
+    "url": "https://github.com/Forge-Space/mcp-gateway.git"
   },
+  "bugs": {
+    "url": "https://github.com/Forge-Space/mcp-gateway/issues"
+  },
+  "homepage": "https://github.com/Forge-Space/mcp-gateway#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "node-fetch": "^3.3.2"
