@@ -27,6 +27,7 @@ services:
     image: ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
     container_name: forge-mcpgateway
     restart: unless-stopped
+    entrypoint: ["/app/docker/entrypoint.sh"]
     ports:
       - "${GATEWAY_PORT:-4444}:4444"
     env_file:
@@ -38,8 +39,11 @@ services:
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/mcp.db}
       FORGE_ENABLE_DYNAMIC_SERVICES: true
       FORGE_SERVICE_MANAGER_URL: http://service-manager:9000
+      SKIP_MIGRATIONS: true
     volumes:
       - ./data:/data
+      - ./docker/entrypoint.sh:/app/docker/entrypoint.sh:ro
+      - ./docker/minimal_gateway.py:/app/docker/minimal_gateway.py:ro
     depends_on:
       - service-manager
       - tool-router

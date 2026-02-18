@@ -4,50 +4,50 @@
     "passed": 1,
     "failed": 6,
     "pass_rate": 14.285714285714285,
-    "timestamp": 1771373059.832897
+    "timestamp": 1771376859.873367
   },
   "results": [
     {
       "test": "test_connectivity",
       "passed": false,
-      "message": "HTTPConnectionPool(host='localhost', port=4444): Max retries exceeded with url: /health (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=4444): Failed to establish a new connection: [Errno 61] Connection refused\"))",
-      "timestamp": 1771373049.685674
+      "message": "HTTPConnectionPool(host='localhost', port=8030): Max retries exceeded with url: /health (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8030): Failed to establish a new connection: [Errno 61] Connection refused\"))",
+      "timestamp": 1771376849.509397
     },
     {
       "test": "test_service_manager_api",
       "passed": false,
       "message": "Status: False, Health: True, Metrics: False",
-      "timestamp": 1771373049.7061062
+      "timestamp": 1771376849.612555
     },
     {
       "test": "test_bulk_operations",
       "passed": false,
       "message": "Sleep: False (2ms), Wake: False (5ms), Performance: True",
-      "timestamp": 1771373059.730075
+      "timestamp": 1771376859.697928
     },
     {
       "test": "test_resource_optimization",
       "passed": false,
       "message": "Metrics: False, Cost: False, Data Quality: False",
-      "timestamp": 1771373059.735596
+      "timestamp": 1771376859.718892
     },
     {
       "test": "test_performance_metrics",
       "passed": false,
-      "message": "HTTPConnectionPool(host='localhost', port=4444): Max retries exceeded with url: /health (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=4444): Failed to establish a new connection: [Errno 61] Connection refused\"))",
-      "timestamp": 1771373059.736534
+      "message": "HTTPConnectionPool(host='localhost', port=8030): Max retries exceeded with url: /health (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8030): Failed to establish a new connection: [Errno 61] Connection refused\"))",
+      "timestamp": 1771376859.729975
     },
     {
       "test": "test_container_resource_limits",
       "passed": true,
       "message": "All containers have resource limits",
-      "timestamp": 1771373059.829538
+      "timestamp": 1771376859.869733
     },
     {
       "test": "test_service_discovery",
       "passed": false,
       "message": "Failed to get service status",
-      "timestamp": 1771373059.832761
+      "timestamp": 1771376859.873302
     }
   ],
   "recommendations": [
