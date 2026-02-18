@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 source "$SCRIPT_DIR/lib/bootstrap.sh"
 load_env || { log_err ".env not found in $REPO_ROOT"; exit 1; }
 
@@ -12,19 +12,12 @@ fi
 MCP_JSON="${MCP_CLIENT_CONFIG:-$HOME/.cursor/mcp.json}"
 if [[ ! -f "$MCP_JSON" ]]; then
   log_err "$MCP_JSON not found. Set MCP_CLIENT_CONFIG to your IDE's mcp.json path."
-  log_info "Examples: ~/.cursor/mcp.json, ~/.windsurf/mcp.json"
   exit 1
 fi
 
 WRAPPER_PATH="$REPO_ROOT/scripts/mcp-client/mcp-wrapper.sh"
 if [[ ! -x "$WRAPPER_PATH" ]]; then
   log_err "$WRAPPER_PATH not found or not executable"
-  exit 1
-fi
-
-url_file="$REPO_ROOT/data/.mcp-client-url"
-if [[ -z "${MCP_CLIENT_SERVER_URL:-}" && (! -f "$url_file" || ! -s "$url_file") ]]; then
-  log_err "Run 'make register' first so data/.mcp-client-url exists, or set MCP_CLIENT_SERVER_URL in .env"
   exit 1
 fi
 
@@ -50,5 +43,5 @@ jq --arg key "$KEY" --arg path "$WRAPPER_PATH" --argjson timeout "$MCP_TIMEOUT_M
 cp "$MCP_JSON" "${MCP_JSON}.bak"
 mv "$tmp" "$MCP_JSON"
 log_section "MCP Client Wrapper"
-log_ok "Set \"$KEY\" to use the wrapper in $MCP_JSON (backup: ${MCP_JSON}.bak)."
-log_info "Fully quit your IDE (Cmd+Q / Alt+F4) and reopen to use automatic JWT."
+log_ok "Set \"$KEY\" to use the wrapper in $MCP_JSON."
+log_info "Fully quit your IDE and reopen to use automatic JWT."
