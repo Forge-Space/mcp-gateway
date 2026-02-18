@@ -1,10 +1,10 @@
 {
-  "name": "@forge-ai/mcp",
+  "name": "@forgespace/mcp",
   "version": "1.27.0",
-  "description": "Forge AI MCP Gateway - Connect to your Forge MCP Gateway instance via NPX",
+  "description": "Forgespace MCP Gateway - Connect to your Forgespace MCP Gateway instance via NPX",
   "type": "module",
   "bin": {
-    "forge-mcp-gateway": "./build/index.js"
+    "forgespace-mcp": "./build/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -28,26 +28,11 @@
     "validate": "npm run lint:check && npm run format:check && npm run test",
     "pre-commit": "npm run lint && npm run format && npm run test",
     "prepack": "npm run build",
-    "publish": "npm publish --access public",
-    "integrate": "node scripts/integrate.js",
-    "integrate:mcp-gateway": "node scripts/integrate.js --project=mcp-gateway",
-    "integrate:uiforge-mcp": "node scripts/integrate.js --project=uiforge-mcp",
-    "integrate:uiforge-webapp": "node scripts/integrate.js --project=uiforge-webapp"
+    "publish": "npm publish --access public"
   },
-  "files": [
-    "build",
-    "README.md",
-    "LICENSE"
-  ],
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "mcp-server",
-    "forge-ai",
-    "ai",
-    "llm"
-  ],
-  "author": "Forge MCP Gateway Contributors",
+  "files": ["build", "README.md", "LICENSE"],
+  "keywords": ["mcp", "model-context-protocol", "mcp-server", "forgespace", "ai", "llm"],
+  "author": "Forgespace Contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -58,7 +43,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@forge-ai/core": "^1.1.1",
+    "@forgespace/core": "^1.1.1",
     "@types/node": "^20.5.0",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
