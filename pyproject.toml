@@ -66,7 +66,7 @@ precision = 2
 fail_under = 80
 
 [tool.coverage.html]
-directory = htmlcov
+directory = "htmlcov"
 
 [tool.ruff]
 line-length = 120
