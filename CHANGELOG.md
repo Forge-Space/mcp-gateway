@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here.
 
+## [1.28.0] - 2026-02-19
+
+### 🚀 Phase 1: Virtual Server Lifecycle
+
+- **✅ `register.sh` respects `enabled` flag** — Fixed parser to handle 4-field format (`name|enabled|gateways|description`)
+  - Disabled servers are skipped during registration with an informational log message
+  - Backwards-compatible: legacy 2-field format (`name|gateways`) treated as enabled
+- **✅ `list.sh` shows enabled/disabled status** — Added `STATUS` column to `make list-servers` output
+  - Reads `config/virtual-servers.txt` to show config-level state alongside live server list
+  - Servers not in config file show `(no cfg)` status
+- **✅ `virtual-server-manager.py` bug fix** — Replaced deprecated `datetime.utcnow()` with `datetime.now(timezone.utc)`
+- **✅ Tests added** — `scripts/tests/test_virtual_server_manager.py` (22 tests, all passing)
+  - Covers: 4-field load, legacy 2-field load, enabled/disabled filtering, enable/disable operations, persistence, validation, missing config
+
 ## [1.27.0] - 2026-02-18
 
 ### ✨ MCP Server Builder Wizard
