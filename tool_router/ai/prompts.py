@@ -1,7 +1,5 @@
 """Enhanced prompt templates for AI tool selection with improved NLP."""
 
-from __future__ annotations
-
 
 class PromptTemplates:
     """Enhanced prompt templates for AI tool selection."""
