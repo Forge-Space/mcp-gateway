@@ -2,6 +2,48 @@
 
 All notable changes to this project are documented here.
 
+## [1.30.0] - 2026-02-19
+
+### 🔧 Phase 3: Command Simplification
+
+- **✅ Simplified Makefile Structure** - Reduced from 50+ targets to 12 core targets
+  - 76% reduction in command complexity
+  - Consolidated related commands with ACTION parameters
+  - Added contextual help with examples and quick start guide
+  - Created unified command interface for better UX
+
+- **✅ Interactive Configuration Wizard** - Unified setup experience
+  - Consolidated setup, setup-dev, and config-wizard into single command
+  - Step-by-step configuration with validation and environment detection
+  - IDE auto-discovery and batch configuration support
+  - Comprehensive setup including development environment
+
+- **✅ Consolidated Authentication Management** - Single auth entry point
+  - Merged jwt, auth-check, auth-refresh, generate-secrets into 'make auth'
+  - ACTION parameter for different auth operations
+  - JWT validation, secret generation, and token refresh
+  - Configuration checking and troubleshooting
+
+- **✅ Unified IDE Management** - Streamlined IDE configuration
+  - Merged all cursor-specific commands into 'make ide-setup'
+  - Support for all IDEs: cursor, vscode, windsurf, claude
+  - Actions: install, backup, restore, status
+  - Auto-detection and batch configuration capabilities
+
+- **✅ Enhanced Status System** - Comprehensive monitoring
+  - Unified status checking for Docker, services, gateway, and IDEs
+  - JSON and detailed output formats for automation
+  - Recommendation system based on system state
+  - Quick action suggestions for common tasks
+
+- **✅ Improved Help System** - Contextual assistance
+  - Topic-based help with examples (setup, ide, auth, services)
+  - Quick start guide for new users
+  - Advanced options documentation
+  - Usage examples for all commands
+
+**Impact**: 76% reduction in command count, significantly improved onboarding experience
+
 ## [1.29.0] - 2026-02-19
 
 ### 🤖 Phase 4: AI-Enhanced Tool Router
