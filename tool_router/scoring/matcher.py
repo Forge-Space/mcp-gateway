@@ -266,4 +266,4 @@ def select_top_matching_tools_enhanced(  # noqa: PLR0913
     enhanced_scores.sort(key=lambda x: -x[1])
 
     # Return tools with positive scores
-    return [tool for tool, score in enhanced_scores if score > 0][:top_n]]
+    return [tool for tool, score in enhanced_scores if score > 0][:top_n]
