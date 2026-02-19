@@ -13,6 +13,12 @@ import {
   Hammer,
   Monitor,
   Brain,
+  Globe,
+  Shield,
+  Database,
+  Cpu
+  HardDrive,
+  Network
 } from 'lucide-react'
 
 const navigation = [
@@ -26,6 +32,12 @@ const navigation = [
     name: 'AI Performance',
     href: '/ai',
     icon: Brain,
+    current: false
+  },
+  {
+    name: 'Kubernetes',
+    href: '/kubernetes',
+    icon: Globe,
     current: false
   },
   {

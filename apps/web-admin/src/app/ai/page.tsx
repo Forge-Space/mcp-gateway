@@ -1,6 +1,8 @@
 'use client'
 
-import AIPerformanceDashboard from '@/components/ai/ai-performance-dashboard'
+import AIPerformanceDashboard from '@/components/ai/ai-performance-dashboard-simple'
+
+export const dynamic = 'force-dynamic'
 
 export default function AIDashboard() {
   return (

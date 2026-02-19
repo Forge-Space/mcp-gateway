@@ -1,10 +1,11 @@
-export const dynamic = 'force-dynamic'
+import Link from 'next/link';
 
 export default function NotFound() {
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>404 - Page Not Found</h1>
-      <p>The page you&apos;re looking for doesn&apos;t exist.</p>
+      <h2>Not Found</h2>
+      <p>Could not find requested resource</p>
+      <Link href="/">Return Home</Link>
     </div>
-  )
+  );
 }
