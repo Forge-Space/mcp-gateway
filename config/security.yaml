@@ -1,0 +1,186 @@
+# Security Configuration for MCP Gateway AI Agents
+
+security:
+  enabled: true
+  strict_mode: false
+  validation_level: "standard"  # permissive, standard, strict
+  
+  # Input Validation Settings
+  input_validation:
+    max_prompt_length: 10000
+    max_context_length: 5000
+    allowed_languages: ["en", "es", "fr", "de", "pt", "it", "ja", "zh", "ko"]
+    sanitize_html: true
+    block_suspicious_patterns: true
+    
+  # Prompt Injection Detection
+  prompt_injection:
+    enabled: true
+    sensitivity_level: "medium"  # low, medium, high
+    ai_detection_enabled: false  # Requires AI model for detection
+    pattern_detection_enabled: true
+    block_on_detection: true
+    
+  # Rate Limiting Configuration
+  rate_limiting:
+    use_redis: false
+    redis_url: "redis://localhost:6379"
+    penalty_duration: 300  # seconds
+    
+    # Default limits (anonymous users)
+    default:
+      requests_per_minute: 60
+      requests_per_hour: 1000
+      requests_per_day: 10000
+      burst_capacity: 10
+    
+    # Authenticated user limits
+    authenticated_user:
+      requests_per_minute: 120
+      requests_per_hour: 2000
+      requests_per_day: 20000
+      burst_capacity: 20
+    
+    # Enterprise user limits
+    enterprise_user:
+      requests_per_minute: 300
+      requests_per_hour: 5000
+      requests_per_day: 50000
+      burst_capacity: 50
+  
+  # Authentication Settings
+  authentication:
+    required: false
+    methods: ["api_key", "jwt", "session"]
+    api_key_header: "X-API-Key"
+    jwt_secret_env: "JWT_SECRET"
+    session_timeout: 3600  # seconds
+    
+  # Authorization Settings
+  authorization:
+    enabled: false
+    default_role: "user"
+    roles:
+      - name: "user"
+        permissions: ["read", "execute_basic"]
+      - name: "developer"
+        permissions: ["read", "execute", "configure"]
+      - name: "admin"
+        permissions: ["read", "execute", "configure", "manage"]
+      - name: "enterprise"
+        permissions: ["read", "execute", "configure", "manage", "admin"]
+  
+  # Audit Logging
+  audit_logging:
+    enabled: true
+    log_file: "logs/security_audit.log"
+    enable_console: true
+    log_all_requests: true
+    log_blocked_requests: true
+    log_security_events: true
+    retention_days: 90
+  
+  # Content Policies
+  content_policies:
+    block_malicious_content: true
+    block_inappropriate_content: true
+    block_sensitive_data_requests: true
+    custom_patterns: []
+    
+    # Sensitive data patterns to block
+    sensitive_patterns:
+      - "password"
+      - "secret"
+      - "token"
+      - "credential"
+      - "api_key"
+      - "private_key"
+      - "credit_card"
+      - "ssn"
+      - "social_security"
+  
+  # Monitoring and Analytics
+  monitoring:
+    enabled: true
+    metrics_collection: true
+    alert_thresholds:
+      high_risk_requests_per_minute: 10
+      blocked_requests_per_minute: 5
+      suspicious_activity_per_hour: 20
+    
+    # Performance monitoring
+    performance_impact_threshold: 100  # ms
+    max_security_overhead: 50  # ms
+  
+  # Advanced Security Features
+  advanced:
+    # Behavioral analysis
+    behavioral_analysis:
+      enabled: false
+      learning_period: 86400  # 24 hours
+      anomaly_threshold: 2.0  # standard deviations
+    
+    # IP-based security
+    ip_security:
+      enabled: false
+      block_known_malicious_ips: true
+      geolocation_filtering: false
+      rate_limit_by_country: false
+    
+    # Request fingerprinting
+    fingerprinting:
+      enabled: false
+      track_user_patterns: true
+      detect_automation: true
+  
+  # Integration Settings
+  integrations:
+    # External security services
+    external_services:
+      virustotal:
+        enabled: false
+        api_key_env: "VIRUSTOTAL_API_KEY"
+      
+      recaptcha:
+        enabled: false
+        site_key_env: "RECAPTCHA_SITE_KEY"
+        secret_key_env: "RECAPTCHA_SECRET_KEY"
+    
+    # SIEM integration
+    siem:
+      enabled: false
+      endpoint: ""
+      api_key: ""
+      format: "json"  # json, syslog,cef
+  
+  # Compliance Settings
+  compliance:
+    gdpr:
+      enabled: false
+      data_retention_days: 30
+      anonymize_logs: true
+    
+    hipaa:
+      enabled: false
+      phi_protection: true
+      audit_trail: true
+    
+    soc2:
+      enabled: false
+      access_logging: true
+      change_management: true
+  
+  # Emergency Settings
+  emergency:
+    # Panic mode - block all requests
+    panic_mode:
+      enabled: false
+      auto_enable_threshold: 100  # blocked requests per minute
+      duration: 300  # seconds
+    
+    # Whitelist for emergency bypass
+    emergency_whitelist:
+      enabled: false
+      ips: []
+      user_ids: []
+      api_keys: []
