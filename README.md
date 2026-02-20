@@ -13,7 +13,7 @@ Self-hosted Forge MCP gateway using [IBM Context Forge](https://github.com/IBM/m
 - Docker
 - Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
 
-**Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#dev-container-optional).
+**Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. Part of the [Forge Space Ecosystem](../../ECOSYSTEM_OVERVIEW.md) - Complete AI-powered development platform.
 
 ## Quick start
 

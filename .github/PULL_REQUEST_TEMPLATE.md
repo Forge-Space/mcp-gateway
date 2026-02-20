@@ -1,4 +1,4 @@
-# Pull Request Template - UIForge Projects
+# Pull Request Template - Forge Space Projects
 
 ## 🎯 Type of Change
 - [ ] Bug fix (non-breaking change that fixes an issue)
@@ -221,4 +221,4 @@
 
 ---
 
-*This template is part of the UIForge shared GitHub patterns standardization.*
+*This template is part of the Forge Space shared GitHub patterns standardization.*

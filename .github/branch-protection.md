@@ -1,5 +1,5 @@
-# UIForge GitHub Branch Protection Configuration
-# This file documents the branch protection rules for UIForge projects
+# Forge Space GitHub Branch Protection Configuration
+# This file documents the branch protection rules for Forge Space projects
 # Apply these settings via GitHub UI or GitHub API
 
 ## Branch Protection Rules
@@ -128,5 +128,5 @@ scripts/** @core-team
 
 Last Updated: 2025-01-19
 Version: 1.0.0
-Maintainer: UIForge DevOps Team
+Maintainer: Forge Space DevOps Team
 Review Required: Yes
