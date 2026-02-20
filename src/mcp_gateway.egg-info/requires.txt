@@ -1,0 +1,14 @@
+mcp
+mcp-contextforge-gateway
+beautifulsoup4
+httpx
+lxml
+Pillow
+playwright
+requests
+
+[dev]
+pytest>=7.0.0
+pytest-cov>=4.0.0
+ruff>=0.1.0
+pre-commit>=3.0.0

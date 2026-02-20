@@ -114,8 +114,7 @@ export default function EnhancedServerManagement() {
   const [refreshInterval, setRefreshInterval] = useState(5000)
 
   // Mock data for demonstration
-  useEffect(() => {
-    const mockServers: VirtualServer[] = [
+  const mockServers: VirtualServer[] = [
     {
       id: 'cursor-default',
       name: 'Cursor Default',
@@ -202,9 +201,15 @@ export default function EnhancedServerManagement() {
     avgResponseTime: 245
   }
 
-  setServers(mockServers)
-  setMetrics(mockMetrics)
-  setLoading(false)
+  useEffect(() => {
+    // Initialize with mock data
+    const initializeData = () => {
+      setServers(mockServers)
+      setMetrics(mockMetrics)
+      setLoading(false)
+    }
+
+    initializeData()
   }, [])
 
   useEffect(() => {

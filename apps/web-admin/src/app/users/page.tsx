@@ -1,177 +1,105 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useAuthStore } from '@/lib/store'
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Shield, 
-  Mail, 
-  Calendar,
-  Activity,
-  Settings,
-  UserPlus,
-  Key
-} from 'lucide-react'
+import { Users, Plus, Search, Shield, Mail, Calendar, Activity } from 'lucide-react'
+import AdvancedUserManagement from '@/components/users/advanced-user-management'
 
 export default function UsersPage() {
-  const { users, loading, fetchUsers } = useAuthStore()
+  // Mock data for demonstration
+  const mockUsers = [
+    {
+      id: '1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      role: 'admin',
+      created_at: new Date('2024-01-15'),
+      last_login: new Date('2024-02-19'),
+      status: 'active'
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      role: 'user',
+      created_at: new Date('2024-01-20'),
+      last_login: new Date('2024-02-18'),
+      status: 'active'
+    },
+    {
+      id: '3',
+      name: 'Bob Johnson',
+      email: 'bob.johnson@example.com',
+      role: 'moderator',
+      created_at: new Date('2024-02-01'),
+      last_login: new Date('2024-02-17'),
+      status: 'inactive'
+    }
+  ]
+
+  const [users] = useState(mockUsers)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedRole, setSelectedRole] = useState('all')
-
-  useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole
-    return matchesSearch && matchesRole
-  })
+  const [loading] = useState(false)
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800'
-      case 'moderator': return 'bg-blue-100 text-blue-800'
-      case 'user': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'admin':
+        return 'bg-red-500'
+      case 'moderator':
+        return 'bg-yellow-500'
+      case 'user':
+        return 'bg-green-500'
+      default:
+        return 'bg-gray-500'
     }
   }
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin': return <Shield className="h-4 w-4" />
-      case 'moderator': return <Settings className="h-4 w-4" />
-      case 'user': return <Users className="h-4 w-4" />
-      default: return <Users className="h-4 w-4" />
+      case 'admin':
+        return <Shield className="h-3 w-3" />
+      case 'moderator':
+        return <Activity className="h-3 w-3" />
+      case 'user':
+        return <Users className="h-3 w-3" />
+      default:
+        return <Users className="h-3 w-3" />
     }
   }
 
-  // Calculate date thresholds outside of render
-  // eslint-disable-next-line react-hooks/purity
-  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  // eslint-disable-next-line react-hooks/purity
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-
-  const stats = [
-    {
-      title: 'Total Users',
-      value: users.length,
-      icon: Users,
-      color: 'text-blue-600'
-    },
-    {
-      title: 'Active Today',
-      value: users.filter(u => u.last_active && new Date(u.last_active) > oneDayAgo).length,
-      icon: Activity,
-      color: 'text-green-600'
-    },
-    {
-      title: 'Admins',
-      value: users.filter(u => u.role === 'admin').length,
-      icon: Shield,
-      color: 'text-red-600'
-    },
-    {
-      title: 'New This Week',
-      value: users.filter(u => new Date(u.created_at) > oneWeekAgo).length,
-      icon: UserPlus,
-      color: 'text-purple-600'
-    }
-  ]
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
-          <p className="text-muted-foreground">
-            Manage users, roles, and permissions for the MCP gateway admin interface
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <Key className="mr-2 h-4 w-4" />
-            API Keys
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={selectedRole === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedRole('all')}
-          >
-            All Roles
-          </Button>
-          <Button
-            variant={selectedRole === 'admin' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedRole('admin')}
-          >
-            Admins
-          </Button>
-          <Button
-            variant={selectedRole === 'moderator' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedRole('moderator')}
-          >
-            Moderators
-          </Button>
-          <Button
-            variant={selectedRole === 'user' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedRole('user')}
-          >
-            Users
-          </Button>
-        </div>
-      </div>
+    <div className="container mx-auto py-8">
+      <AdvancedUserManagement />
 
       {/* Users List */}
       <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Users</h2>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-64"
+              />
+            </div>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -202,85 +130,36 @@ export default function UsersPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <h4 className="font-medium mb-2">User Information</h4>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div>• ID: {user.id}</div>
-                      <div>• Created: {new Date(user.created_at).toLocaleDateString()}</div>
-                      <div>• Last Active: {user.last_active ? new Date(user.last_active).toLocaleString() : 'Never'}</div>
-                      <div>• Status: {user.active ? 'Active' : 'Inactive'}</div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Permissions</h4>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div>• Server Management: {user.role === 'admin' ? 'Full' : user.role === 'moderator' ? 'Limited' : 'None'}</div>
-                      <div>• Feature Toggles: {user.role === 'admin' ? 'Full' : user.role === 'moderator' ? 'Read' : 'None'}</div>
-                      <div>• User Management: {user.role === 'admin' ? 'Full' : 'None'}</div>
-                      <div>• Analytics Access: {user.role !== 'user' ? 'Full' : 'Limited'}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Activity className="h-4 w-4" />
-                    <span>Last login: {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>Joined: {user.created_at.toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Key className="mr-2 h-4 w-4" />
-                      API Keys
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                    <Button 
-                      variant={user.active ? "outline" : "default"} 
-                      size="sm"
-                    >
-                      {user.active ? 'Disable' : 'Enable'}
-                    </Button>
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    <span>Last login: {user.last_login.toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${user.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                    <span className="capitalize">{user.status}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
-        {filteredUsers.length === 0 && !loading && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <Users className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No users found</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                {searchTerm || selectedRole !== 'all' 
-                  ? 'Try adjusting your search or filters' 
-                  : 'Get started by inviting your first user to the admin interface.'
-                }
-              </p>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Invite User
-              </Button>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
-      {/* User Management Info */}
-      <Card>
+      {/* Features Overview */}
+      <Card className="mt-8">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Users className="h-5 w-5" />
-            <span>User Management System</span>
-          </CardTitle>
+          <CardTitle>User Management Features</CardTitle>
           <CardDescription>
-            Supabase-based authentication and authorization for the admin interface
+            Comprehensive user authentication and authorization system
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-medium mb-2">Authentication Features</h4>
               <div className="space-y-1 text-sm text-muted-foreground">
