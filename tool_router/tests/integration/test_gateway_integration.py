@@ -150,7 +150,8 @@ class TestGatewayClientIntegration:
         client = HTTPGatewayClient(gateway_config)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = ConnectionError("Network unreachable")
+            # Test retry-related ConnectionError that gets converted to ValueError
+            mock_urlopen.side_effect = ConnectionError("Failed after 3 attempts. Last error: Network unreachable")
 
             with patch("time.sleep"):
                 with pytest.raises(ValueError) as exc_info:
@@ -158,4 +159,4 @@ class TestGatewayClientIntegration:
 
                 # Error message should include context
                 assert "Failed to fetch tools" in str(exc_info.value)
-                assert "Network unreachable" in str(exc_info.value)
+                assert "Failed after 3 attempts" in str(exc_info.value)

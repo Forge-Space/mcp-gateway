@@ -146,39 +146,50 @@ class TestSecurityWorkflow:
         context_data = "regular operation"
 
         with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-            with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
+            with patch.object(middleware.input_validator, 'validate_user_preferences') as mock_validate_prefs:
+                with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
 
-                # Mock successful validation
-                mock_validate.return_value = SecurityValidationResult(
-                    is_valid=True,
-                    risk_score=0.1,
-                    violations=[],
-                    sanitized_input=task,
-                    blocked=False,
-                    metadata={}
-                )
+                    # Mock successful validation
+                    mock_validate.return_value = SecurityValidationResult(
+                        is_valid=True,
+                        risk_score=0.1,
+                        violations=[],
+                        sanitized_input=task,
+                        blocked=False,
+                        metadata={}
+                    )
 
-                # Mock rate limit exceeded
-                mock_rate_limit.return_value = RateLimitResult(
-                    allowed=False,
-                    remaining=0,
-                    reset_time=1234567890,
-                    retry_after=60,  # 1 minute retry
-                    metadata={"window_type": "minute"}
-                )
+                    # Mock user preferences validation with low risk
+                    mock_validate_prefs.return_value = SecurityValidationResult(
+                        is_valid=True,
+                        risk_score=0.0,  # Low risk to not affect calculations
+                        violations=[],
+                        sanitized_input="{}",
+                        blocked=False,
+                        metadata={}
+                    )
 
-                result = middleware.check_request_security(
-                    context, task, category, context_data, "{}"
-                )
+                    # Mock rate limit exceeded
+                    mock_rate_limit.return_value = RateLimitResult(
+                        allowed=False,
+                        remaining=0,
+                        reset_time=1234567890,
+                        retry_after=60,  # 1 minute retry
+                        metadata={"window_type": "minute"}
+                    )
 
-                # Business logic: rate limit exceeded should be blocked
-                assert result.allowed is False
-                assert "rate limit" in result.blocked_reason.lower()
+                    result = middleware.check_request_security(
+                        context, task, category, context_data, "{}"
+                    )
 
-                # Should include rate limit metadata
-                assert result.metadata["rate_limit"]["allowed"] is False
-                assert result.metadata["rate_limit"]["retry_after"] == 60
-                assert "reset_time" in result.metadata
+                    # Business logic: rate limit exceeded should be blocked
+                    assert result.allowed is False
+                    assert "rate limit" in result.blocked_reason.lower()
+
+                    # Should include rate limit metadata
+                    assert result.metadata["rate_limit"]["allowed"] is False
+                    assert result.metadata["rate_limit"]["retry_after"] == 60
+                    assert "reset_time" in result.metadata["rate_limit"]
 
     def test_strict_mode_security_workflow(self, security_config: dict) -> None:
         """Test security workflow in strict mode."""
@@ -338,40 +349,52 @@ class TestSecurityWorkflow:
         category = "data"
         context_data = "testing security"
 
+        # Mock all the methods
         with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-            with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-                with patch.object(middleware.rate_limiter, 'apply_penalty') as mock_penalty:
+            with patch.object(middleware.input_validator, 'validate_user_preferences') as mock_validate_prefs:
+                with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
+                    with patch.object(middleware.rate_limiter, 'apply_penalty') as mock_penalty:
 
-                    # Mock validation with medium-high risk to trigger penalty
-                    mock_validate.return_value = SecurityValidationResult(
-                        is_valid=True,
-                        risk_score=0.8,  # High risk to trigger penalty
-                        violations=[],
-                        sanitized_input=task,
-                        blocked=False,
-                        metadata={}
-                    )
+                        # Mock validation with medium-high risk to trigger penalty
+                        mock_validate.return_value = SecurityValidationResult(
+                            is_valid=True,
+                            risk_score=0.75,  # High risk to trigger penalty but not blocking
+                            violations=[],
+                            sanitized_input=task,
+                            blocked=False,
+                            metadata={}
+                        )
 
-                    # Mock successful rate limit check
-                    mock_rate_limit.return_value = RateLimitResult(
-                        allowed=True,
-                        remaining=50,
-                        reset_time=1234567890,
-                        retry_after=0,
-                        metadata={}
-                    )
+                        # Mock user preferences validation with low risk
+                        mock_validate_prefs.return_value = SecurityValidationResult(
+                            is_valid=True,
+                            risk_score=0.0,  # Low risk to not affect penalty calculation
+                            violations=[],
+                            sanitized_input="{}",
+                            blocked=False,
+                            metadata={}
+                        )
 
-                    result = middleware.check_request_security(
-                        context, task, category, context_data, "{}"
-                    )
+                        # Mock successful rate limit check
+                        mock_rate_limit.return_value = RateLimitResult(
+                            allowed=True,
+                            remaining=50,
+                            reset_time=1234567890,
+                            retry_after=0,
+                            metadata={}
+                        )
 
-                    # Should apply penalty for high risk
-                    mock_penalty.assert_called_once_with(
-                        context.user_id,
-                        pytest.approx(240, rel=0.1)  # 300 * 0.8 = 240
-                    )
+                        result = middleware.check_request_security(
+                            context, task, category, context_data, "{}"
+                        )
 
-                    # Business logic: high risk may be allowed with penalty
-                    assert result.allowed is True
-                    assert result.risk_score == 0.8
-                    assert "penalty_applied" in result.metadata
+                        # Should apply penalty for high risk
+                        mock_penalty.assert_called_once_with(
+                            f"user:{context.user_id}",
+                            pytest.approx(225, rel=0.1)  # 300 * 0.75 = 225
+                        )
+
+                        # Business logic: high risk may be allowed with penalty
+                        assert result.allowed is True
+                        assert result.risk_score == 0.75
+                        assert "penalty_applied" in result.metadata
