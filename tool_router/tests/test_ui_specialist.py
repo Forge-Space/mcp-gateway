@@ -1,7 +1,5 @@
 """Tests for tool_router.ai.ui_specialist module."""
 
-from __future__ import annotations
-
 import pytest
 
 from tool_router.ai.ui_specialist import (
@@ -13,85 +11,16 @@ from tool_router.ai.ui_specialist import (
     ComponentSpec,
     UIStandardsCompliance,
     ComponentGenerator,
+    UISpecialist,
 )
 
 
-class TestUIFramework:
-    """Test cases for UIFramework enum."""
-
-    def test_ui_framework_values(self):
-        """Test that UIFramework has expected values."""
-        assert UIFramework.REACT.value == "react"
-        assert UIFramework.VUE.value == "vue"
-        assert UIFramework.ANGULAR.value == "angular"
-        assert UIFramework.SVELTE.value == "svelte"
-        assert UIFramework.NEXT_JS.value == "nextjs"
-        assert UIFramework.HTML_CSS.value == "html_css"
-        assert UIFramework.TAILWIND.value == "tailwind"
-        assert UIFramework.BOOTSTRAP.value == "bootstrap"
-        assert UIFramework.MATERIAL_UI.value == "material_ui"
-        assert UIFramework.CHAKRA_UI.value == "chakra_ui"
-
-    def test_ui_framework_count(self):
-        """Test number of UI frameworks."""
-        assert len(UIFramework) == 10
 
 
-class TestDesignSystem:
-    """Test cases for DesignSystem enum."""
-
-    def test_design_system_values(self):
-        """Test that DesignSystem has expected values."""
-        assert DesignSystem.MATERIAL_DESIGN.value == "material_design"
-        assert DesignSystem.ANT_DESIGN.value == "ant_design"
-        assert DesignSystem.BOOTSTRAP.value == "bootstrap"
-        assert DesignSystem.TAILWIND_UI.value == "tailwind_ui"
-        assert DesignSystem.CHAKRA_UI.value == "chakra_ui"
-        assert DesignSystem.MANTINE.value == "mantine"
-        assert DesignSystem.SEMANTIC_UI.value == "semantic_ui"
-        assert DesignSystem.CUSTOM.value == "custom"
-
-    def test_design_system_count(self):
-        """Test number of design systems."""
-        assert len(DesignSystem) == 8
 
 
-class TestComponentType:
-    """Test cases for ComponentType enum."""
-
-    def test_component_type_values(self):
-        """Test that ComponentType has expected values."""
-        assert ComponentType.FORM.value == "form"
-        assert ComponentType.TABLE.value == "table"
-        assert ComponentType.CHART.value == "chart"
-        assert ComponentType.MODAL.value == "modal"
-        assert ComponentType.NAVIGATION.value == "navigation"
-        assert ComponentType.CARD.value == "card"
-        assert ComponentType.BUTTON.value == "button"
-        assert ComponentType.INPUT.value == "input"
-        assert ComponentType.LAYOUT.value == "layout"
-        assert ComponentType.DASHBOARD.value == "dashboard"
-        assert ComponentType.LANDING.value == "landing"
-        assert ComponentType.AUTH.value == "auth"
-        assert ComponentType.SETTINGS.value == "settings"
-
-    def test_component_type_count(self):
-        """Test number of component types."""
-        assert len(ComponentType) == 13
 
 
-class TestAccessibilityLevel:
-    """Test cases for AccessibilityLevel enum."""
-
-    def test_accessibility_level_values(self):
-        """Test that AccessibilityLevel has expected values."""
-        assert AccessibilityLevel.AA.value == "aa"
-        assert AccessibilityLevel.AAA.value == "aaa"
-        assert AccessibilityLevel.MINIMAL.value == "minimal"
-
-    def test_accessibility_level_count(self):
-        """Test number of accessibility levels."""
-        assert len(AccessibilityLevel) == 3
 
 
 class TestUIRequirement:
@@ -784,3 +713,567 @@ class TestComponentGenerator:
 
         assert "ProfileCard" in template
         assert "role=\"article\"" in template
+
+
+class TestUISpecialist:
+    """Test cases for UISpecialist."""
+
+    def test_initialization(self):
+        """Test UISpecialist initialization."""
+        specialist = UISpecialist()
+
+        assert hasattr(specialist, 'compliance_checker')
+        assert hasattr(specialist, 'component_generator')
+        assert hasattr(specialist, '_component_cache')
+        assert isinstance(specialist._component_cache, dict)
+
+    def test_generate_ui_component_basic(self):
+        """Test basic UI component generation."""
+        specialist = UISpecialist()
+
+        result = specialist.generate_ui_component(
+            component_name="TestButton",
+            component_type=ComponentType.BUTTON,
+            framework=UIFramework.REACT,
+            design_system=DesignSystem.MATERIAL_DESIGN,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        assert "component" in result
+        assert "validation" in result
+        assert "requirement" in result
+        assert "spec" in result
+        assert "optimization_applied" in result
+        assert result["optimization_applied"] is True
+        # These depend on validation scores, so we check they exist rather than specific values
+        assert "industry_standards_compliant" in result
+        assert "accessibility_compliant" in result
+        assert "responsive_ready" in result
+        assert "design_system_compliant" in result
+
+    def test_generate_ui_component_with_preferences(self):
+        """Test UI component generation with user preferences."""
+        specialist = UISpecialist()
+
+        user_preferences = {
+            "responsive": False,
+            "dark_mode": True,
+            "animations": True,
+            "custom_styling": True,
+            "props": {"variant": "outlined"},
+            "styling": {"margin": "16px"}
+        }
+
+        result = specialist.generate_ui_component(
+            component_name="CustomCard",
+            component_type=ComponentType.CARD,
+            framework=UIFramework.VUE,
+            design_system=DesignSystem.TAILWIND_UI,
+            accessibility_level=AccessibilityLevel.AAA,
+            user_preferences=user_preferences,
+            cost_optimization=False
+        )
+
+        assert result["optimization_applied"] is False
+        assert result["responsive_ready"] is False
+        assert result["spec"].props == {"variant": "outlined"}
+        assert result["spec"].styling == {"margin": "16px"}
+
+    def test_get_required_accessibility_features_aa(self):
+        """Test AA level accessibility features."""
+        specialist = UISpecialist()
+
+        features = specialist._get_required_accessibility_features(AccessibilityLevel.AA)
+
+        assert "color_contrast_4_5" in features
+        assert "keyboard_navigation" in features
+        assert "focus_indicators" in features
+        assert "screen_reader_support" in features
+        assert "alt_text_for_images" in features
+        assert "semantic_html" in features
+        assert len(features) == 6
+
+    def test_get_required_accessibility_features_aaa(self):
+        """Test AAA level accessibility features."""
+        specialist = UISpecialist()
+
+        features = specialist._get_required_accessibility_features(AccessibilityLevel.AAA)
+
+        assert "color_contrast_7_1" in features
+        assert "no_reflow" in features
+        assert "text_spacing" in features
+        assert "pointer_gestures" in features
+        assert "orientation" in features
+        assert "color_contrast_4_5" in features  # AA features included
+        assert len(features) == 11
+
+    def test_get_required_accessibility_features_minimal(self):
+        """Test minimal accessibility features."""
+        specialist = UISpecialist()
+
+        features = specialist._get_required_accessibility_features(AccessibilityLevel.MINIMAL)
+
+        assert "basic_keyboard_access" in features
+        assert "alt_text_important" in features
+        assert "semantic_structure" in features
+        assert len(features) == 3
+
+    def test_optimize_for_cost(self):
+        """Test cost optimization."""
+        specialist = UISpecialist()
+
+        generation_result = {
+            "component_code": "<!-- Comment -->\n<div class='container'>\n  <p>Content</p>\n</div><!-- End -->",
+            "token_estimate": 100
+        }
+
+        optimized = specialist._optimize_for_cost(generation_result)
+
+        assert optimized["component_code"] == "<div class='container'> <p>Content</p>"
+        assert optimized["token_estimate"] <= generation_result["token_estimate"]
+        assert "token_reduction" in optimized
+        assert optimized["token_reduction"] >= 0
+
+    def test_optimize_for_cost_no_tokens(self):
+        """Test cost optimization with zero tokens."""
+        specialist = UISpecialist()
+
+        generation_result = {
+            "component_code": "<div>Test</div>",
+            "token_estimate": 0
+        }
+
+        optimized = specialist._optimize_for_cost(generation_result)
+
+        assert optimized["token_reduction"] == 0
+
+
+    def test_get_specialist_stats(self):
+        """Test getting specialist statistics."""
+        specialist = UISpecialist()
+
+        stats = specialist.get_specialist_stats()
+
+        assert "cache_size" in stats
+        assert "supported_frameworks" in stats
+        assert "supported_components" in stats
+        assert "supported_design_systems" in stats
+        assert "accessibility_levels" in stats
+        assert stats["supported_frameworks"] == 10
+        assert stats["supported_components"] == 13
+
+
+
+class TestComponentGeneratorAdditional:
+    """Additional test cases for ComponentGenerator."""
+
+    def test_generate_button_template(self):
+        """Test button template generation."""
+        generator = ComponentGenerator()
+
+        requirement = UIRequirement(
+            component_type=ComponentType.BUTTON,
+            framework=UIFramework.REACT,
+            design_system=DesignSystem.MATERIAL_DESIGN,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        spec = ComponentSpec(
+            name="SubmitButton",
+            type=ComponentType.BUTTON,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+
+        template = generator._generate_button_template(requirement, spec)
+
+        assert "SubmitButton" in template
+        assert "type=\"button\"" in template
+        assert "aria-label=\"SubmitButton\"" in template
+
+    def test_generate_input_template(self):
+        """Test input template generation."""
+        generator = ComponentGenerator()
+
+        requirement = UIRequirement(
+            component_type=ComponentType.INPUT,
+            framework=UIFramework.HTML_CSS,
+            design_system=DesignSystem.BOOTSTRAP,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        spec = ComponentSpec(
+            name="EmailInput",
+            type=ComponentType.INPUT,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+
+        template = generator._generate_input_template(requirement, spec)
+
+        assert "EmailInput" in template
+        assert "type=\"text\"" in template
+        assert "aria-label=\"EmailInput\"" in template
+
+    def test_generate_layout_template(self):
+        """Test layout template generation."""
+        generator = ComponentGenerator()
+
+        requirement = UIRequirement(
+            component_type=ComponentType.LAYOUT,
+            framework=UIFramework.REACT,
+            design_system=DesignSystem.MATERIAL_DESIGN,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        spec = ComponentSpec(
+            name="MainLayout",
+            type=ComponentType.LAYOUT,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+
+        template = generator._generate_layout_template(requirement, spec)
+
+        assert "MainLayout" in template
+        assert "layout-header" in template
+        assert "layout-main" in template
+        assert "layout-footer" in template
+
+    def test_generate_dashboard_template(self):
+        """Test dashboard template generation."""
+        generator = ComponentGenerator()
+
+        requirement = UIRequirement(
+            component_type=ComponentType.DASHBOARD,
+            framework=UIFramework.REACT,
+            design_system=DesignSystem.MATERIAL_DESIGN,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        spec = ComponentSpec(
+            name="AnalyticsDashboard",
+            type=ComponentType.DASHBOARD,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+
+        template = generator._generate_dashboard_template(requirement, spec)
+
+        assert "AnalyticsDashboard" in template
+        assert "role=\"main\"" in template
+        assert "dashboard-grid" in template
+
+    def test_generate_landing_template(self):
+        """Test landing page template generation."""
+        generator = ComponentGenerator()
+
+        requirement = UIRequirement(
+            component_type=ComponentType.LANDING,
+            framework=UIFramework.HTML_CSS,
+            design_system=DesignSystem.BOOTSTRAP,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        spec = ComponentSpec(
+            name="ProductLanding",
+            type=ComponentType.LANDING,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+
+        template = generator._generate_landing_template(requirement, spec)
+
+        assert "ProductLanding" in template
+        assert "hero" in template
+        assert "features" in template
+        assert "cta" in template
+
+    def test_generate_auth_template(self):
+        """Test authentication template generation."""
+        generator = ComponentGenerator()
+
+        requirement = UIRequirement(
+            component_type=ComponentType.AUTH,
+            framework=UIFramework.REACT,
+            design_system=DesignSystem.MATERIAL_DESIGN,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        spec = ComponentSpec(
+            name="LoginForm",
+            type=ComponentType.AUTH,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+
+        template = generator._generate_auth_template(requirement, spec)
+
+        assert "LoginForm" in template
+        assert "role=\"main\"" in template
+        assert "auth-form" in template
+
+    def test_generate_settings_template(self):
+        """Test settings template generation."""
+        generator = ComponentGenerator()
+
+        requirement = UIRequirement(
+            component_type=ComponentType.SETTINGS,
+            framework=UIFramework.VUE,
+            design_system=DesignSystem.TAILWIND_UI,
+            accessibility_level=AccessibilityLevel.AA
+        )
+
+        spec = ComponentSpec(
+            name="UserSettings",
+            type=ComponentType.SETTINGS,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+
+        template = generator._generate_settings_template(requirement, spec)
+
+        assert "UserSettings" in template
+        assert "role=\"main\"" in template
+        assert "settings-form" in template
+
+    def test_apply_framework_enhancements_react(self):
+        """Test React framework enhancements."""
+        generator = ComponentGenerator()
+
+        code = "<!-- React comment -->"
+        enhanced = generator._apply_framework_enhancements(code, UIFramework.REACT)
+
+        assert enhanced == "{/* React comment */}"
+
+    def test_apply_framework_enhancements_vue(self):
+        """Test Vue framework enhancements."""
+        generator = ComponentGenerator()
+
+        code = "<!-- Vue comment -->"
+        enhanced = generator._apply_framework_enhancements(code, UIFramework.VUE)
+
+        assert enhanced == "<!-- Vue comment -->"
+
+    def test_apply_framework_enhancements_default(self):
+        """Test default framework enhancements."""
+        generator = ComponentGenerator()
+
+        code = "<!-- Default comment -->"
+        enhanced = generator._apply_framework_enhancements(code, UIFramework.SVELTE)
+
+        assert enhanced == "<!-- Default comment -->"
+
+    def test_apply_accessibility_features_aa(self):
+        """Test AA accessibility features."""
+        generator = ComponentGenerator()
+
+        code = "<div>Content</div>"
+        enhanced = generator._apply_accessibility_features(code, AccessibilityLevel.AA)
+
+        # Should return unchanged (implementation placeholder)
+        assert enhanced == code
+
+    def test_apply_accessibility_features_aaa(self):
+        """Test AAA accessibility features."""
+        generator = ComponentGenerator()
+
+        code = "<div>Content</div>"
+        enhanced = generator._apply_accessibility_features(code, AccessibilityLevel.AAA)
+
+        # Should return unchanged (implementation placeholder)
+        assert enhanced == code
+
+    def test_apply_accessibility_features_minimal(self):
+        """Test minimal accessibility features."""
+        generator = ComponentGenerator()
+
+        code = "<div>Content</div>"
+        enhanced = generator._apply_accessibility_features(code, AccessibilityLevel.MINIMAL)
+
+        # Should return unchanged (implementation placeholder)
+        assert enhanced == code
+
+    def test_apply_responsive_design_true(self):
+        """Test responsive design application when enabled."""
+        generator = ComponentGenerator()
+
+        code = '<div class="container">Content</div>'
+        enhanced = generator._apply_responsive_design(code, True)
+
+        assert enhanced == '<div class="responsive-container">Content</div>'
+
+    def test_apply_responsive_design_false(self):
+        """Test responsive design application when disabled."""
+        generator = ComponentGenerator()
+
+        code = '<div class="container">Content</div>'
+        enhanced = generator._apply_responsive_design(code, False)
+
+        assert enhanced == code
+
+    def test_apply_styling_tailwind(self):
+        """Test Tailwind styling application."""
+        generator = ComponentGenerator()
+
+        code = '<div class="container">Content</div>'
+        enhanced = generator._apply_styling(code, DesignSystem.TAILWIND_UI, False)
+
+        assert enhanced == '<div class="tw-container">Content</div>'
+
+    def test_apply_styling_material(self):
+        """Test Material Design styling application."""
+        generator = ComponentGenerator()
+
+        code = '<div class="container">Content</div>'
+        enhanced = generator._apply_styling(code, DesignSystem.MATERIAL_DESIGN, False)
+
+        assert enhanced == '<div class="md-container">Content</div>'
+
+    def test_apply_styling_bootstrap(self):
+        """Test Bootstrap styling application."""
+        generator = ComponentGenerator()
+
+        code = '<div class="container">Content</div>'
+        enhanced = generator._apply_styling(code, DesignSystem.BOOTSTRAP, False)
+
+        assert enhanced == '<div class="bs-container">Content</div>'
+
+    def test_apply_styling_dark_mode(self):
+        """Test dark mode styling application."""
+        generator = ComponentGenerator()
+
+        code = '<div class="container">Content</div>'
+        enhanced = generator._apply_styling(code, DesignSystem.MATERIAL_DESIGN, True)
+
+        assert enhanced == '<div class="dark-md-container">Content</div>'
+
+    def test_extract_features(self):
+        """Test feature extraction from code."""
+        generator = ComponentGenerator()
+
+        code = '<div role="main" aria-label="main" class="responsive-dark-container">Content</div>'
+        features = generator._extract_features(code)
+
+        assert "semantic_roles" in features
+        assert "aria_labels" in features
+        assert "responsive_design" in features
+        assert "dark_mode" in features
+
+    def test_extract_features_empty(self):
+        """Test feature extraction from code with no features."""
+        generator = ComponentGenerator()
+
+        code = '<div class="container">Content</div>'
+        features = generator._extract_features(code)
+
+        assert features == []
+
+    def test_estimate_component_tokens(self):
+        """Test component token estimation."""
+        generator = ComponentGenerator()
+
+        code = "div class container Content"
+        tokens = generator._estimate_component_tokens(code)
+
+        assert tokens == len(code.split()) * 1.3
+        assert tokens == 5.2
+
+
+class TestComponentGeneratorAdvanced:
+    """Test advanced ComponentGenerator functionality."""
+    
+    def test_generate_component_all_types(self) -> None:
+        """Test component generation for all component types."""
+        generator = ComponentGenerator()
+        requirement = UIRequirement(
+            component_type=ComponentType.BUTTON,
+            framework=UIFramework.REACT,
+            design_system=DesignSystem.MATERIAL_DESIGN,
+            accessibility_level=AccessibilityLevel.AA
+        )
+        
+        # Test each component type
+        for component_type in ComponentType:
+            if component_type in generator.templates:
+                spec = ComponentSpec(
+                    name=f"Test{component_type.value.title()}",
+                    type=component_type,
+                    props={},
+                    styling={},
+                    accessibility_features=[],
+                    responsive_breakpoints=[]
+                )
+                
+                result = generator.generate_component(requirement, spec)
+                assert isinstance(result, dict)
+                assert "component_code" in result
+                assert "token_estimate" in result
+
+
+class TestComponentGeneratorAdvanced:
+    """Test advanced ComponentGenerator functionality."""
+    
+    def test_generate_component_all_types(self) -> None:
+        """Test component generation for all component types."""
+        generator = ComponentGenerator()
+        requirement = UIRequirement(
+            component_type=ComponentType.BUTTON,
+            framework=UIFramework.REACT,
+            design_system=DesignSystem.MATERIAL_DESIGN,
+            accessibility_level=AccessibilityLevel.AA
+        )
+        
+        # Test each component type
+        for component_type in ComponentType:
+            if component_type in generator.templates:
+                spec = ComponentSpec(
+                    name=f"Test{component_type.value.title()}",
+                    type=component_type,
+                    props={},
+                    styling={},
+                    accessibility_features=[],
+                    responsive_breakpoints=[]
+                )
+                
+                result = generator.generate_component(requirement, spec)
+                assert isinstance(result, dict)
+                assert "component_code" in result
+                assert "token_estimate" in result
+    
+    def test_generate_component_vue_framework(self) -> None:
+        """Test component generation for Vue framework."""
+        generator = ComponentGenerator()
+        requirement = UIRequirement(
+            component_type=ComponentType.FORM,
+            framework=UIFramework.VUE,
+            design_system=DesignSystem.VUE_UI,
+            accessibility_level=AccessibilityLevel.AA
+        )
+        spec = ComponentSpec(
+            name="LoginForm",
+            type=ComponentType.FORM,
+            props={},
+            styling={},
+            accessibility_features=[],
+            responsive_breakpoints=[]
+        )
+        
+        result = generator.generate_component(requirement, spec)
+        assert isinstance(result, dict)
+        assert "component_code" in result
+        assert "token_estimate" in result

@@ -1,8 +1,7 @@
 """Unit tests for tool_router/args.py module."""
 
-from __future__ import annotations
-
-from tool_router.args.builder import build_arguments, COMMON_TASK_PARAMETER_NAMES
+from tool_router.args import build_arguments
+from tool_router.args.builder import COMMON_TASK_PARAMETER_NAMES
 
 
 def test_common_task_parameter_names_exists() -> None:

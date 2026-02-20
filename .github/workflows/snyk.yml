@@ -49,6 +49,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r apps/tool-router/requirements.txt
+          pip install -r service-manager/requirements.txt
+          pip install -r dribbble_mcp/requirements.txt
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/python@master
@@ -112,6 +114,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r apps/tool-router/requirements.txt
+          pip install -r service-manager/requirements.txt
+          pip install -r dribbble_mcp/requirements.txt
 
       - name: Monitor dependencies with Snyk
         uses: snyk/actions/python@master
