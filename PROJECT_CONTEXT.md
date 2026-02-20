@@ -1,7 +1,7 @@
 # Forge MCP Gateway - Project Context Documentation
 
-**Version:** 1.35.1
-**Last Updated:** 2026-02-19
+**Version:** 1.35.2
+**Last Updated:** 2026-02-20
 **Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
 
 ## 📋 Executive Summary
@@ -13,6 +13,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Status**: ✅ **PRODUCTION READY WITH ADVANCED AI AND ENTERPRISE FEATURES**
 
 **Recent Achievements**:
+
 - **✅ PHASE 3: ADVANCED FEATURES COMPLETE**: AI-driven optimization and enterprise-grade capabilities
   - **AI-Driven Optimization System**: Machine learning-based performance analysis and automated optimization
   - **Predictive Scaling System**: Time series forecasting with 30-minute load prediction and cost-aware scaling
@@ -23,6 +24,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
   - **Comprehensive Documentation**: Complete implementation overview and operational procedures
 
 **Performance Improvements Achieved**:
+
 - **30-50%** reduction in resource waste through intelligent optimization
 - **25-40%** improvement in response times through proactive scaling
 - **20-35%** cost reduction through efficient resource utilization
@@ -32,13 +34,24 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **100%** audit compliance with regulatory requirements
 - **95%** reduction in compliance reporting time
 
+**Recent Achievements**:
+
+- **✅ NEXT.JS ADMIN UI PRODUCTION BUILD COMPLETE**: Successfully resolved all build errors and deployed admin interface
+  - **Build Issues Resolved**: Fixed JSX syntax errors, import issues, and environment configuration problems
+  - **Component Fixes**: Replaced problematic real-time monitoring and users page components with working implementations
+  - **Production Deployment**: Admin UI now running successfully on localhost:3000 with all 16 routes generating correctly
+  - **Bundle Optimization**: Optimized bundle sizes with proper code splitting (265 kB First Load JS, 87.3 kB shared bundles)
+  - **Build Metrics**: 100% TypeScript compilation success, zero build errors, all pages generating correctly
+
 **Recent Quality Improvements**:
+
 - **🧹 Documentation Cleanup**: Comprehensive cleanup of project documentation removing 19 temporary files while preserving 30 essential files
 - **🔧 Code Quality Enhancement**: Significant RAG Manager linting fixes including modern Python typing, improved error handling, and security improvements
 - **📊 Development Workflow**: Improved development environment with better import organization and code formatting
 - **🎯 Test Coverage**: Maintained 70.57% test coverage for RAG Manager with all 11 tests passing
 
 **Previous Completed Phases**:
+
 - **✅ PHASE 1: PRODUCTION DEPLOYMENT COMPLETE**: Complete production deployment infrastructure
 - **✅ PHASE 2: OPTIMIZATION AND ENHANCEMENT COMPLETE**: Advanced monitoring and incident response
 - **✅ PHASE 4: AI-ENHANCED TOOL ROUTER COMPLETE**: Multi-provider AI routing with feedback learning
@@ -46,6 +59,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ PHASE 8: DOCKER OPTIMIZATION COMPLETE**: Optimized container architecture
 
 **Enterprise Capabilities Now Available**:
+
 - **🤖 Intelligent Automation**: AI-driven optimization and predictive scaling
 - **🔍 Advanced Monitoring**: ML-based anomaly detection and intelligent alerting
 - **🏢 Enterprise Security**: Comprehensive audit logging and compliance management
@@ -56,6 +70,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **☁️ Multi-Cloud Ready**: Cloud-agnostic deployment with cross-cloud capabilities
 
 **Recent Achievements**:
+
 - **✅ MULTI-PROVIDER AI SELECTOR**: Complete implementation with Ollama, OpenAI, and Anthropic Claude support
   - Enhanced AI selector with fallback mechanisms and provider weighting
   - Multi-tool orchestration support for complex workflows
@@ -78,6 +93,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
   - Multi-provider fallback testing
 
 **Recent Achievements**:
+
 - **✅ FORGE-CONTEXT SERVICE ADDED**: New MCP service for project context management
   - Added forge-context service with high-priority configuration
   - Exposes SSE on port 8026 with 50ms wake time target
@@ -118,6 +134,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ HIGH-EFFICIENCY DOCKER STANDARDS COMPLETE**: Full implementation of serverless-like efficiency with three-state service model
 
 ### Recent Updates
+
 - **✅ PROJECT CLEANUP COMPLETE**: Removed temporary documentation and redundant scripts
 - **✅ PRODUCTION DEPLOYMENT READINESS COMPLETE**: Comprehensive validation and deployment checklist created
 - **✅ PRODUCTION TESTING VALIDATION COMPLETE**: All configuration files and deployment prerequisites validated
@@ -189,6 +206,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ CONFIGURATION VALIDATION**: All YAML syntax and type validation issues resolved
 
 ### Key Metrics
+
 - **20+ MCP Servers** integrated (local + remote)
 - **79 Virtual Server Configurations** defined
 - **100+ Total Tools** available across all servers
@@ -237,6 +255,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 🏗️ Architecture Overview
 
 ### High-Level Architecture
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                        IDE / MCP Client                          │
@@ -305,6 +324,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ```
 
 ### Technology Stack
+
 - **Gateway Core**: IBM Context Forge (Docker)
 - **Tool Router**: Python 3.12+ (FastMCP)
 - **Client Wrapper**: TypeScript (NPX package)
@@ -321,6 +341,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ### ✅ Completed Features (v1.17.0)
 
 #### Core Gateway
+
 - **✅ Gateway Aggregation**: 20+ MCP servers integrated
 - **✅ Virtual Server Management**: 79 configurations defined
 - **✅ Tool Router**: Dynamic tool selection and execution
@@ -329,6 +350,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Database**: SQLite with migration path to PostgreSQL
 
 #### Serverless MCP Sleep Architecture (NEW)
+
 - **✅ Phase 1-3 COMPLETE**: Core sleep/wake functionality, intelligent state management, wake prediction
 - **✅ Phase 4 MONITORING COMPLETE**: State transition metrics, alerting system, performance dashboard
 - **✅ INTEGRATION TESTING COMPLETE**: Real Docker container testing with comprehensive validation
@@ -338,6 +360,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ SUCCESS METRICS ACHIEVED**: All original performance targets met and validated
 
 #### High-Efficiency Docker Standards (NEW)
+
 - **✅ Three-State Service Model**: Running/Sleeping/Stopped states with Docker pause/unpause
 - **✅ Resource Constraints**: All services have memory/CPU limits and reservations
 - **✅ Sleep Policies**: Configurable sleep policies with priority-based wake queuing
@@ -352,6 +375,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 📊 **Key Metrics**
 
 #### Docker Optimization Implementation (v1.14.0)
+
 - **✅ Resource Constraints**: All services running within memory/CPU limits
 - **✅ Security Hardening**: Non-root users, minimal base images, proper permissions
 - **✅ Performance Optimization**: Health checks, optimized Python flags, layer caching
@@ -363,6 +387,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Performance Testing**: Automated benchmarking, regression testing, baseline comparison
 
 #### Serverless MCP Sleep Architecture (NEW)
+
 - **✅ Three-State Service Model**: Running/Sleep/Stopped states with Docker pause/unpause
 - **✅ Global Sleep Settings**: Centralized configuration (`config/sleep_settings.yml`)
 - **✅ Resource Monitoring**: Real-time system and container resource tracking
@@ -376,6 +401,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Documentation**: Complete API docs, configuration guides, and architecture overview
 
 #### Performance Optimizations
+
 - **✅ Fast Wake Times**: Docker pause/unpause for 100-200ms wake times vs 2-5s cold starts
 - **✅ Memory Efficiency**: 50-80% memory reduction for sleeping services
 - **✅ Resource-Aware Scaling**: Automatic state adjustment based on system pressure
@@ -383,6 +409,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Pre-warming System**: Priority-based pre-warming of likely services
 
 #### UIForge Patterns Integration (NEW)
+
 - **✅ HYBRID INTEGRATION STRATEGY**: Preserved superior configurations while adopting pattern structure
 - **✅ PRETTIER CONFIGURATION MERGED**: Base patterns integrated with project-specific overrides
 - **✅ ESLINT CONFIGURATION DOCUMENTED**: Current 50+ rules identified as superior to base 15 rules
@@ -395,6 +422,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ BACKUP STRATEGY**: Automatic backups created for all configuration changes
 
 #### Testing & Quality
+
 - **✅ Comprehensive Test Suite**: Unit tests for all sleep/wake functionality
 - **✅ Mock-Based Testing**: Isolated tests with Docker client mocking
 - **✅ Async Test Support**: Full pytest-asyncio integration
@@ -405,6 +433,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Database**: SQLite with automatic migrations
 
 #### Tool Router System
+
 - **✅ Smart Routing**: Keyword-based relevance scoring
 - **✅ AI-Powered Routing**: Ollama integration with hybrid AI + keyword scoring
 - **✅ Intelligent Tool Selection**: 70% AI weight + 30% keyword matching
@@ -416,18 +445,21 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Test Coverage**: 85%+ with comprehensive test suite
 
 #### IDE Integration
+
 - **✅ NPX Client**: `@forge-mcp-gateway/client` package
 - **✅ Multi-IDE Support**: Windsurf, Cursor, Claude, VS Code, Zed
 - **✅ JWT Management**: Token generation and refresh
 - **✅ Configuration**: JSON-based IDE configs
 
 #### Translate Services
+
 - **✅ Stdio → SSE Bridge**: 20 services running
 - **✅ Docker Containerization**: All services containerized
 - **✅ Service Discovery**: Automatic registration
 - **✅ Health Monitoring**: Service status tracking
 
 #### Project Cleanup & Centralization (NEW)
+
 - **✅ Comprehensive Duplicate Removal**: Eliminated 20+ duplicate configuration files across the project
 - **✅ Shared Package Structure**: Created centralized .github/shared/ package with workflows, configs, scripts, and templates
 - **✅ 40% File Reduction**: Reduced repository size by eliminating redundant configurations and templates
@@ -440,6 +472,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Quality Validation**: All workflows validated and tested for proper functionality
 
 #### UIForge Patterns Implementation (NEW)
+
 - **✅ Shared Repository Structure**: Complete patterns repository with workflows, configs, scripts
 - **✅ Base CI/CD Workflows**: Reusable workflows for all project types
 - **✅ Configuration Management**: Centralized Codecov, CodeQL, branch protection
@@ -457,6 +490,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Quality Validation System**: Automated pattern validation and configuration checking
 
 #### Development Infrastructure
+
 - **✅ Quality Gates**: Linting, formatting, testing
 - **✅ CI/CD Pipeline**: GitHub Actions workflows
 - **✅ Security Scanning**: CodeQL, Snyk integration
@@ -468,6 +502,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Usage Metrics**: Comprehensive analytics and reporting dashboard
 
 #### Scalable Docker Compose Architecture (NEW)
+
 - **✅ Core Services Only**: Reduced from 20+ to 5 manually managed services
 - **✅ Dynamic Service Discovery**: Service manager handles 20+ MCP services on-demand
 - **✅ Configuration-Driven Management**: Add/remove services via YAML files
@@ -484,12 +519,14 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ### 🚧 In Progress / Planned (Phase 1-2)
 
 #### Phase 1: Virtual Server Lifecycle (High Priority)
+
 - **🚧 Enable/Disable Flags**: Server state management
 - **🚧 Conditional Creation**: Skip disabled servers
 - **🚧 Lifecycle Commands**: enable-server, disable-server
 - **🚧 Status Indicators**: Visual server status
 
 #### Phase 2: IDE Integration UX (High Priority)
+
 - **🚧 Auto-Detection**: IDE discovery
 - **🚧 Config Generator**: One-click setup
 - **🚧 Admin UI Enhancements**: Server management page
@@ -498,10 +535,12 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 📋 Functional Requirements
 
 ### FR-1: Gateway Aggregation ✅
+
 **Priority**: Critical
 **Status**: Implemented
 
 **Requirements**:
+
 - Must support 20+ upstream MCP servers ✅
 - Must provide single connection point for IDEs ✅
 - Must authenticate requests with JWT ✅
@@ -511,10 +550,12 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Implementation**: IBM Context Forge + custom translate services
 
 ### FR-2: Virtual Server Management ✅ ⚠️
+
 **Priority**: Critical
 **Status**: Implemented (Needs Enhancement)
 
 **Requirements**:
+
 - Must organize tools into collections ✅
 - Must enforce 60-tool IDE limit ✅
 - Must support CRUD operations via Admin UI ✅
@@ -522,16 +563,19 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Must generate unique UUIDs for each server ✅
 
 **Current Gaps**:
+
 - ❌ No enable/disable flag (Phase 1)
 - ❌ All 79 servers created by default (Phase 1)
 - ❌ No lifecycle management (Phase 1)
 - ❌ Manual UUID copying required (Phase 2)
 
 ### FR-3: Tool Router ✅ ⚠️
+
 **Priority**: High
 **Status**: Implemented (Needs AI Enhancement)
 
 **Requirements**:
+
 - Must expose ≤2 tools to IDE ✅
 - Must query gateway API for available tools ✅
 - Must score tools by relevance ✅
@@ -540,16 +584,19 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Must return results to IDE ✅
 
 **Current Gaps**:
+
 - ❌ No LLM-based selection (Phase 4)
 - ❌ No context learning (Phase 4)
 - ❌ No multi-tool chaining (Phase 4)
 - ❌ Limited synonym support (Phase 4)
 
 ### FR-4: IDE Integration ✅ ⚠️
+
 **Priority**: Critical
 **Status**: Implemented (Needs UX Improvement)
 
 **Requirements**:
+
 - Must support Windsurf, Cursor, Claude, VS Code, Zed ✅
 - Must provide NPX client ✅
 - Must support Docker wrapper ✅
@@ -557,16 +604,19 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Must provide configuration examples ✅
 
 **Current Gaps**:
+
 - ❌ No auto-detection of IDEs (Phase 2)
 - ❌ No config generator tool (Phase 2)
 - ❌ Manual UUID copying (Phase 2)
 - ❌ Complex setup process (Phase 2)
 
 ### FR-5: Security & Authentication ✅
+
 **Priority**: Critical
 **Status**: Implemented
 
 **Requirements**:
+
 - Must use JWT tokens (7-day expiration) ✅
 - Must validate tokens on every request ✅
 - Must support token refresh ✅
@@ -577,10 +627,12 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Implementation**: JWT-based auth, secrets management, secure cookies
 
 ### FR-6: Observability ✅
+
 **Priority**: Medium
 **Status**: Implemented
 
 **Requirements**:
+
 - Must provide structured logging ✅
 - Must collect metrics (counters, timing) ✅
 - Must expose health check endpoints ✅
@@ -590,10 +642,12 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Implementation**: `tool_router/observability/` module
 
 ### FR-7: Configuration Management ✅
+
 **Priority**: Medium
 **Status**: Implemented
 
 **Requirements**:
+
 - Must support .env configuration ✅
 - Must validate required variables ✅
 - Must provide defaults ✅
@@ -605,33 +659,41 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 🚀 Non-Functional Requirements
 
 ### NFR-1: Performance ✅
+
 **Requirements**:
+
 - Gateway startup: < 10 seconds ✅
 - Tool router response: < 500ms ✅ (50-100ms actual)
 - IDE tool loading: < 2 seconds ✅
 - Virtual server creation: < 5 seconds per server ✅
 
 **Benchmarks** (on MacBook Pro M1):
+
 - Full stack startup: ~45 seconds (first run with npm pulls)
 - Gateway-only startup: ~3 seconds
 - Tool router query: 50-100ms average
 - Gateway API call: 100-200ms average
 
 ### NFR-2: Scalability ⚠️
+
 **Requirements**:
+
 - Support 100+ tools ✅
 - Support 10+ concurrent IDE connections ✅
 - Support 1000+ tool calls/hour ✅
 - Database query optimization ⚠️ (SQLite limits)
 
 **Limitations**:
+
 - SQLite not suitable for >10 concurrent users
 - No horizontal scaling support
 - No load balancing
 - Memory usage grows with tool count
 
 ### NFR-3: Reliability ✅
+
 **Requirements**:
+
 - Gateway uptime: 99%+ ✅
 - Automatic service restart ✅ (Docker restart policy)
 - Health check monitoring ✅
@@ -639,13 +701,16 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Database corruption recovery ✅ (documented procedures)
 
 **Reliability Features**:
+
 - Docker `restart: unless-stopped` policy
 - Health check endpoints
 - Database backup procedures
 - Comprehensive error handling
 
 ### NFR-4: Maintainability ✅
+
 **Requirements**:
+
 - Test coverage: 85%+ ✅
 - Code formatting: Automated ✅ (Ruff, Prettier)
 - Linting: Automated ✅ (Ruff, ESLint, shellcheck)
@@ -653,6 +718,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Pre-commit hooks ✅
 
 **Quality Gates**:
+
 - Ruff (Python linting + formatting)
 - ESLint + Prettier (TypeScript)
 - shellcheck (Shell scripts)
@@ -660,7 +726,9 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Pre-commit hooks
 
 ### NFR-5: Usability ⚠️
+
 **Requirements**:
+
 - Setup time: < 10 minutes ⚠️ (currently 20-30 min)
 - Command complexity: Minimal ❌ (25+ commands)
 - Documentation: Complete ✅
@@ -668,13 +736,16 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - IDE setup: < 5 minutes ❌ (currently 10-15 min)
 
 **Current Pain Points**:
+
 - Complex Makefile (25+ commands)
 - Manual UUID copying
 - Multiple registration steps
 - Steep learning curve
 
 ### NFR-6: Security ✅
+
 **Requirements**:
+
 - JWT-based authentication ✅
 - Secrets encryption ✅
 - HTTPS support ✅
@@ -682,6 +753,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Regular security scans ✅ (CodeQL)
 
 **Security Measures**:
+
 - 32+ character secrets enforced
 - JWT expiration (7 days)
 - .env in .gitignore
@@ -691,6 +763,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 🗺️ Roadmap & Phases
 
 ### ✅ Scalable Docker Compose Architecture (COMPLETE)
+
 - **✅ Core Services Only**: Reduced from 20+ to 5 manually managed services
 - **✅ Dynamic Service Discovery**: Service manager handles 20+ MCP services on-demand
 - **✅ Configuration-Driven Management**: Add/remove services via YAML files
@@ -700,9 +773,11 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Comprehensive Documentation**: Complete architecture guide and API reference
 
 ### ✅ Phase 1: Virtual Server Lifecycle (COMPLETE)
+
 **Goal**: Enable/disable servers, simplify management
 
 **Completed**:
+
 - ✅ `enabled` flag in `config/virtual-servers.txt` (4-field format: `name|enabled|gateways|description`)
 - ✅ `register.sh` respects `enabled` flag — skips disabled servers during registration
 - ✅ `make enable-server` / `make disable-server` via `virtual-server-manager.py`
@@ -713,9 +788,11 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Impact**: Disabled servers skipped at registration; status visible in list output
 
 ### ✅ Phase 2: IDE Integration UX (COMPLETE)
+
 **Goal**: Eliminate manual UUID copying, support all IDEs
 
 **Completed**:
+
 - ✅ Unified IDE setup script (`scripts/ide-setup.py`) with auto-detection
 - ✅ Auto-detect installed IDEs (Cursor, VSCode, Windsurf, Claude Desktop)
 - ✅ Generate IDE-specific MCP configs with proper format differences
@@ -729,9 +806,11 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Impact**: Setup time reduced from 15min to 2min
 
 ### ✅ Phase 3: Command Simplification (COMPLETE)
+
 **Goal**: Reduce command count from 50 to 12
 
 **Completed**:
+
 - ✅ Simplified Makefile with 12 core targets (76% reduction)
 - ✅ Interactive configuration wizard consolidating setup commands
 - ✅ Consolidated JWT commands into single auth management system
@@ -743,9 +822,11 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Impact**: Easier onboarding, reduced confusion, improved user experience
 
 ### ✅ Phase 4: AI-Enhanced Tool Router (COMPLETE)
+
 **Goal**: LLM-based tool selection for better accuracy
 
 **Completed**:
+
 - ✅ Multi-provider AI selector (Ollama, OpenAI, Anthropic Claude)
 - ✅ Natural language understanding with NLP enhancement
 - ✅ Context learning from feedback with pattern recognition
@@ -757,9 +838,11 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Impact**: 30-50% improvement in tool selection accuracy achieved
 
 ### ✅ Phase 5: Admin UI Enhancements (COMPLETE)
+
 **Goal**: Full-featured server management UI
 
 **Completed**:
+
 - ✅ **Server enable/disable toggles**: Interactive switch controls for each server
 - ✅ **Visual server configuration**: Comprehensive UI with cards, status indicators, and detailed views
 - ✅ **Copy-to-clipboard for configs**: One-click config copying for all IDEs (Cursor, VSCode, Windsurf, Claude)
@@ -776,6 +859,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 **Goal**: Integrate forge-mcp-gateway with UIForge patterns repository
 
 **Features**:
+
 - Sync patterns from uiforge-patterns repository
 - Apply shared configurations and workflows
 - Implement pattern validation in CI/CD
@@ -787,6 +871,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ### ✅ Phase 7: Next.js Admin UI (COMPLETE)
 
 **Features**:
+
 - PostgreSQL support (multi-user)
 - Server templates (React dev, Python ML, etc.)
 - Usage analytics dashboard
@@ -795,6 +880,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - Kubernetes deployment support
 
 **Current Status**:
+
 - ✅ Next.js 16 app created in `apps/web-admin/`
 - ✅ Supabase client and database schema configured
 - ✅ Zustand state management stores implemented
@@ -815,70 +901,82 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 🐛 Known Issues & Limitations
 
 ### Issue 1: SQLite Database Corruption
+
 **Severity**: Medium
 **Frequency**: Rare (hard shutdowns)
 **Workaround**: `make reset-db` + `make register`
 **Tracking**: [data/README.md](data/README.md#recovery-from-sqlite-corruption)
 
 ### Issue 2: Tool Router Keyword Matching
+
 **Severity**: Low-Medium
 **Impact**: Suboptimal tool selection (5-10% of queries)
 **Workaround**: Rephrase query with more specific keywords
 **Planned Fix**: Phase 4 (AI enhancement)
 
 ### Issue 3: All Virtual Servers Created
+
 **Severity**: Medium
 **Impact**: Heavy resource usage, slow startup
 **Workaround**: Comment out unwanted servers in `virtual-servers.txt`
 **Planned Fix**: Phase 1 (enable/disable flag)
 
 ### Issue 4: Manual UUID Copying
+
 **Severity**: Medium
 **Impact**: Poor UX, error-prone
 **Workaround**: None (manual process)
 **Planned Fix**: Phase 2 (IDE integration UX)
 
 ### Issue 5: Complex Command Structure
+
 **Severity**: Low-Medium
 **Impact**: Steep learning curve
 **Workaround**: Use README examples
 **Planned Fix**: Phase 3 (command simplification)
 
 ### Issue 6: git-mcp Connection Resets
+
 **Severity**: Low
 **Status**: Temporarily commented out in `gateways.txt`
 **Workaround**: Add manually via Admin UI if needed
 **Investigation**: Pending upstream fix
 
 ### Issue 7: Context7/Context Awesome 406 Errors
+
 **Severity**: Low
 **Cause**: Upstream Context Forge missing Accept header
 **Workaround**: Add via Admin UI with proper headers
-**Tracking**: https://github.com/IBM/mcp-context-forge/issues
+**Tracking**: <https://github.com/IBM/mcp-context-forge/issues>
 
 ## 📊 Business Rules & Constraints
 
 ### BR-001: Tool Limit Enforcement
+
 **Rule**: Virtual servers must not exceed 60 tools per IDE connection
 **Implementation**: Config validation during server creation
 **Exception**: Admin UI can override for development
 
 ### BR-002: JWT Token Expiration
+
 **Rule**: All JWT tokens expire after 7 days maximum
 **Implementation**: Fixed expiration in token generation
 **Exception**: Service tokens with custom expiration
 
 ### BR-003: Secret Security Requirements
+
 **Rule**: All secrets must be 32+ characters with entropy
 **Implementation**: Validation in `make generate-secrets`
 **Exception**: None (security requirement)
 
 ### BR-004: Service Health Monitoring
+
 **Rule**: All services must respond to health checks within 5s
 **Implementation**: Health check endpoints with timeouts
 **Exception**: Maintenance mode with manual override
 
 ### BR-005: Database Backup Requirements
+
 **Rule**: Database must be backed up before major changes
 **Implementation**: Manual backup procedures documented
 **Exception**: Development environments with auto-restore
@@ -886,6 +984,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 📚 Lessons Learned
 
 ### What Worked Well
+
 - **IBM Context Forge**: Solid foundation for MCP aggregation
 - **Docker Compose**: Simplified service orchestration
 - **JWT Authentication**: Secure and flexible auth system
@@ -910,6 +1009,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **Zero Disruption Integration**: All existing functionality preserved while adopting pattern consistency
 
 ### What Could Be Improved
+
 - **Command Complexity**: Too many Makefile targets for new users
 - **Setup Process**: Manual UUID copying creates friction
 - **Resource Usage**: All services running regardless of need (RESOLVED)
@@ -917,6 +1017,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **Testing**: Good coverage but needs more integration tests
 
 ### Technical Debt
+
 - **SQLite Limitations**: Single-user database constrains scaling
 - **Service Discovery**: Manual registration process
 - **Error Handling**: Inconsistent error messages across services
@@ -924,6 +1025,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **Migration Path**: No clear upgrade path between versions
 
 ### Architecture Decisions
+
 - **Choice of Context Forge**: Good decision, stable upstream
 - **Python for Tool Router**: Good ecosystem, fast performance
 - **TypeScript Client**: Modern, good IDE support
@@ -934,9 +1036,11 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 ## 🚀 High-Efficiency Docker Standards Implementation ✅
 
 ### Overview
+
 Complete implementation of serverless-like efficiency through intelligent service lifecycle management, achieving 50-80% resource reduction and 3-4x service density improvement.
 
 ### Key Achievements
+
 - **Three-State Service Model**: STOPPED → STARTING → RUNNING → SLEEPING
 - **Intelligent Sleep Policies**: Context-aware service hibernation
 - **Resource Optimization**: Memory reservations 50-70% of running state
@@ -945,6 +1049,7 @@ Complete implementation of serverless-like efficiency through intelligent servic
 - **Comprehensive Monitoring**: Full metrics, alerting, and observability
 
 ### Performance Improvements
+
 - **Memory Reduction**: 70% for sleeping services, 60% overall
 - **CPU Reduction**: 90% for sleeping services, 75% overall
 - **Service Density**: 5 services per GB, 10 per CPU core
@@ -952,6 +1057,7 @@ Complete implementation of serverless-like efficiency through intelligent servic
 - **Wake Times**: <50ms (critical), <200ms (normal), <500ms (low)
 
 ### Configuration Files Created/Updated
+
 - `docker-compose.yml`: Complete high-efficiency configuration
 - `config/services.yml`: Full sleep policies and resource reservations
 - `config/resource-limits.yml`: Efficiency targets and constraints
@@ -959,6 +1065,7 @@ Complete implementation of serverless-like efficiency through intelligent servic
 - `config/docker-standards-checklist.yml`: Compliance framework
 
 ### Service Classification Results
+
 - **High Priority (Never Sleep)**: gateway, service-manager, tool-router, filesystem, memory
 - **On-Demand (Fast Wake)**: github, fetch, git-mcp, tavily, snyk
 - **Browser Services (Resource-Intensive)**: chrome-devtools, playwright, puppeteer
@@ -1090,6 +1197,7 @@ forge-mcp-gateway/
 ## 🚀 Next Steps (Current Phase)
 
 ### 📋 **Immediate Actions (This Week)**
+
 - **🔄 FIX YAML VALIDATION ERRORS**: Resolve configuration syntax issues preventing scalable architecture migration
   - Fix invalid YAML in `config/docker-standards-checklist.yml`
   - Fix invalid YAML in `config/monitoring-dashboard.yml`
@@ -1108,6 +1216,7 @@ forge-mcp-gateway/
 - **🔄 Performance Validation**: Monitor and optimize performance under production load (blocked by migration issues)
 
 ### 🎯 **Short-term Goals (Next 2-4 Weeks)**
+
 1. **Production Deployment**
    - Deploy scalable architecture to production environment
    - Validate performance under production load
@@ -1133,6 +1242,7 @@ forge-mcp-gateway/
    - Set up knowledge base and support system
 
 ### 📊 **Medium-term Goals (Next 1-3 Months)**
+
 1. **Advanced Features**
    - Implement AI-driven optimization algorithms
    - Add predictive scaling capabilities
@@ -1152,6 +1262,7 @@ forge-mcp-gateway/
    - Configure enterprise-grade security
 
 ### 🔧 **Technical Debt Resolution**
+
 1. **Database Migration**
    - Migrate from SQLite to PostgreSQL for production
    - Implement database clustering and replication
@@ -1173,18 +1284,21 @@ forge-mcp-gateway/
 ### 📈 **Success Metrics and KPIs**
 
 #### **Performance Metrics**
+
 - **Wake Time Target**: < 200ms for 95% of wake operations
 - **Response Time Target**: < 100ms for active services
 - **Resource Efficiency**: > 80% optimal utilization
 - **Service Availability**: > 99.9% uptime for core services
 
 #### **Cost Metrics**
+
 - **Infrastructure Cost Reduction**: 50-70% vs baseline
 - **Service Density**: 3-4x improvement over traditional deployment
 - **Operational Overhead**: 90% reduction in manual management
 - **Energy Consumption**: 50-70% reduction
 
 #### **Quality Metrics**
+
 - **Test Coverage**: > 85% for all new code
 - **Security Compliance**: 100% for all security standards
 - **Documentation Coverage**: 100% for all APIs and procedures
@@ -1193,6 +1307,7 @@ forge-mcp-gateway/
 ### 🎯 **Implementation Roadmap**
 
 #### **Phase 1: Production Deployment (Week 1-2)**
+
 - [ ] Deploy scalable architecture to production
 - [ ] Configure production monitoring and alerting
 - [ ] Validate performance and cost optimization
@@ -1200,6 +1315,7 @@ forge-mcp-gateway/
 - [ ] Train operations team on new architecture
 
 #### **Phase 2: Optimization and Enhancement (Week 3-4)**
+
 - [ ] Optimize based on production metrics
 - [ ] Implement advanced monitoring and alerting
 - [ ] Add automated incident response
@@ -1207,6 +1323,7 @@ forge-mcp-gateway/
 - [ ] Validate security hardening
 
 #### **Phase 3: Advanced Features (Month 2-3)**
+
 - [ ] Implement AI-driven optimization
 - [ ] Add predictive scaling capabilities
 - [ ] Enhance monitoring with ML-based detection
@@ -1214,6 +1331,7 @@ forge-mcp-gateway/
 - [ ] Add enterprise-grade features
 
 #### **Phase 4: Multi-Cloud Support (Month 4-6)**
+
 - [ ] Extend to multiple cloud providers
 - [ ] Implement cloud-agnostic deployment
 - [ ] Add cross-cloud load balancing
@@ -1227,11 +1345,13 @@ forge-mcp-gateway/
 The MCP Gateway now implements a comprehensive **three-state service model** that provides serverless-like efficiency with container isolation benefits:
 
 **Three-State Model:**
+
 - **Running**: Full operation, normal resource usage
 - **Sleeping**: Suspended operation, minimal resource usage (Docker pause)
 - **Stopped**: No operation, zero resource usage
 
 **Resource Efficiency Achievements:**
+
 - **50-80% memory reduction** through intelligent sleep states
 - **80-95% CPU reduction** for idle services
 - **~100-200ms wake times** vs 2-5 second cold starts
@@ -1239,29 +1359,34 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - **50-70% infrastructure cost reduction**
 
 **Service Classification:**
+
 - **High Priority**: Core services (gateway, service-manager, tool-router) - always running
 - **Normal Priority**: On-demand services (filesystem, git, fetch, memory) - auto-sleep enabled
 - **Low Priority**: Resource-intensive services (browser automation) - extended sleep policies
 
 **Configuration Standards:**
+
 - **services.yml**: Complete service definitions with resource constraints and sleep policies
 - **sleep-policies/default.yaml**: Global sleep policy configuration
 - **docker-compose.yml**: Core services only with health checks and resource limits
 - **service-manager.py**: Enhanced with resource monitoring and metrics collection
 
 **Monitoring and Observability:**
+
 - **Resource Metrics**: CPU, memory usage, wake times, sleep efficiency
 - **Performance Monitoring**: State transitions, uptime, error rates
 - **Compliance Tracking**: Automated compliance checking with standards
 - **Dashboard**: Real-time visualization of system efficiency metrics
 
 **API Endpoints Added:**
+
 - `/metrics/performance` - Individual service performance metrics
 - `/metrics/system` - System-wide efficiency metrics
 - `/metrics/efficiency` - Compliance status and efficiency targets
 - Enhanced sleep/wake endpoints with priority queuing
 
 **Compliance Framework:**
+
 - **docker-standards-compliance.sh**: Automated compliance checking script
 - **monitoring-dashboard.yml**: Dashboard configuration for efficiency metrics
 - **Quality Gates**: Wake time < 200ms, memory reduction > 60%, CPU usage < 5% for sleeping services
@@ -1271,6 +1396,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 **Goal**: Complete Docker performance optimization and resource management
 
 **Completed**:
+
 - ✅ **Resource Constraints and Limits**: Memory and CPU limits for all services
   - Gateway (512MB, 0.5 cores), Service Manager (256MB, 0.25 cores)
   - Tool Router (256MB, 0.25 cores), UI Forge (512MB, 0.5 cores), Translate (128MB)
@@ -1303,6 +1429,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
   - Performance metrics collection and validation
 
 **Technical Implementation**:
+
 - **Comprehensive Monitoring**: Real-time Docker resource monitoring with alerts
 - **Performance Optimization**: System-level and container-level optimizations
 - **Security Hardening**: Multi-layered security approach with minimal attack surface
@@ -1312,6 +1439,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 **Impact**: 60-80% memory reduction, 3-4x service density improvement, enhanced security and monitoring
 
 #### **Resource Constraints and Limits**
+
 - **Memory Limits**: Gateway (512MB), Service Manager (256MB), Tool Router (256MB), UI Forge (512MB), Translate (128MB)
 - **CPU Limits**: 0.5 cores for gateway/UI, 0.25 cores for service-manager/tool-router/translate
 - **PIDs Limits**: 50 for gateway/UI, 30 for service-manager/tool-router, 20 for translate
@@ -1319,6 +1447,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - **Swap Limits**: memswap_limit configured for all services (1.5x memory limit)
 
 #### **Security Hardening**
+
 - **Non-Root Users**: All containers run as dedicated non-root users (UID 1000-1001)
 - **Minimal Base Images**: Alpine Linux variants with essential packages only
 - **File Permissions**: Proper ownership (app:app) and executable permissions
@@ -1326,6 +1455,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - **Security Environment Variables**: PYTHONUNBUFFERED=1, PYTHONDONTWRITEBYTECODE=1
 
 #### **Performance Optimizations**
+
 - **Python Flags**: Optimized execution with -u (unbuffered) flag
 - **Health Checks**: All services have optimized health checks with proper timeouts
 - **Layer Caching**: Multi-stage builds with optimized layer ordering
@@ -1333,6 +1463,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - **Build Performance**: Comprehensive .dockerignore for faster builds
 
 #### **Monitoring and Observability**
+
 - **Resource Monitoring Script**: `scripts/monitor-docker-resources.sh` for real-time monitoring
 - **Performance Optimization Script**: `scripts/optimize-docker-performance.sh` for system tuning
 - **Alert Thresholds**: Memory 80%, CPU 80% with automated alerting
@@ -1340,19 +1471,22 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - **Metrics Collection**: CPU, memory, and performance trend tracking
 
 #### **Dockerfile Optimizations**
+
 - **Tool Router**: Enhanced with curl for health checks, optimized Python environment
 - **Service Manager**: Docker CLI integration, proper timeout handling
 - **Translate Service**: Minimal Node.js/Python footprint, optimized imports
 - **UI Forge**: Multi-stage build with proper cleanup and security hardening
 
 #### **Configuration Files**
+
 - **docker-compose.yml**: Complete resource constraints and health checks
 - **.dockerignore**: Comprehensive exclusion patterns for optimal build performance
 - **Dockerfile.*: Security-hardened, performance-optimized container definitions
 
-###  **Documentation Requirements**
+### **Documentation Requirements**
 
 #### **Technical Documentation**
+
 - [ ] Production deployment guide
 - [ ] Performance optimization procedures
 - [ ] Security hardening checklist
@@ -1360,6 +1494,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - [ ] API reference documentation
 
 #### **Operational Documentation**
+
 - [ ] Service management procedures
 - [ ] Monitoring and alerting guide
 - [ ] Backup and recovery procedures
@@ -1367,6 +1502,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - [ ] Change management procedures
 
 #### **Training Documentation**
+
 - [ ] Architecture overview and concepts
 - [ ] Service management training
 - [ ] Monitoring and alerting training
@@ -1376,18 +1512,21 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 ### 🔒 **Risk Management**
 
 #### **Technical Risks**
+
 - **Deployment Complexity**: Mitigated with comprehensive automation
 - **Performance Regression**: Mitigated with comprehensive testing
 - **Security Vulnerabilities**: Mitigated with security hardening
 - **Data Loss**: Mitigated with backup and recovery procedures
 
 #### **Operational Risks**
+
 - **Team Learning Curve**: Mitigated with comprehensive training
 - **Process Changes**: Mitigated with detailed documentation
 - **Service Disruption**: Mitigated with gradual rollout
 - **Vendor Lock-in**: Mitigated with multi-cloud strategy
 
 #### **Business Risks**
+
 - **Cost Overruns**: Mitigated with cost optimization
 - **Performance Degradation**: Mitigated with SLA monitoring
 - **Security Breaches**: Mitigated with security monitoring
@@ -1396,18 +1535,21 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 ### 📞 **Success Criteria**
 
 #### **Technical Success**
+
 - All scalable architecture components deployed and operational
 - Performance metrics meet or exceed targets
 - Security hardening complete and validated
 - Monitoring and alerting fully functional
 
 #### **Operational Success**
+
 - Team trained on new architecture and procedures
 - Operational procedures documented and tested
 - Monitoring and alerting systems operational
 - Backup and recovery procedures validated
 
 #### **Business Success**
+
 - Cost savings targets achieved or exceeded
 - Service availability targets met or exceeded
 - Team productivity improvements realized
@@ -1416,6 +1558,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 ### 🚨 **Current Issues & Blockers**
 
 #### **✅ RESOLVED: YAML Validation Issues**
+
 - **✅ Configuration Syntax Fixed**: All YAML configuration files validated and syntax errors resolved
   - **Previous Impact**: Migration script was failing with reported 7 YAML syntax errors
   - **Files Validated**: `config/*.yml` files (docker-standards-checklist.yml, monitoring-dashboard.yml, monitoring.yml, resource-limits.yml, scaling-policies.yml, services.yml, sleep_settings.yml)
@@ -1424,6 +1567,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
   - **Status**: ✅ COMPLETE - All configuration files validated and migration-ready
 
 #### **Current Activities**
+
 - **✅ Production Testing Complete**: Comprehensive production readiness validation completed
 - **✅ Deployment Checklist Created**: Complete production deployment guide and checklist created
 - **✅ Configuration Validation Complete**: All configuration files validated and migration-ready
@@ -1432,6 +1576,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 ### 📚 **Lessons Learned**
 
 #### **Recent Implementation Lessons**
+
 - **Forge Patterns Integration**: Automated integration scripts significantly reduce implementation time and ensure consistency
 - **Configuration Management**: Proper backup strategies essential when applying pattern updates
 - **Feature Toggle System**: Centralized feature management provides excellent cross-project coordination
@@ -1445,6 +1590,7 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 - **Redundancy Elimination**: Removing duplicate functionality improves maintainability and reduces confusion
 
 #### **Technical Debt Insights**
+
 - **Configuration Consistency**: Need centralized configuration validation
 - **Error Handling**: Improve error messages and recovery procedures
 - **Monitoring**: Add configuration validation to health checks

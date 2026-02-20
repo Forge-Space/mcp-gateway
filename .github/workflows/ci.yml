@@ -5,9 +5,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, master, dev, release/*, feature/*]
+    branches: [main, master, dev, release/*, feature/*, feat/*]
   pull_request:
-    branches: [main, master, dev, release/*]
+    branches: [main, master, dev, release/*, feature/*, feat/*]
 
 # Environment variables (aligned with shared template)
 env:

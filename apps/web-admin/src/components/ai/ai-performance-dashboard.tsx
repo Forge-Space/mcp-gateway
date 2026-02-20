@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { 
-  Brain, 
-  TrendingUp, 
-  TrendingDown, 
-  Activity, 
-  Clock, 
-  CheckCircle, 
+import {
+  Brain,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Clock,
+  CheckCircle,
   XCircle,
   Zap,
   BarChart3,
@@ -58,7 +58,7 @@ export default function AIPerformanceDashboard() {
     // Simulate fetching AI performance metrics
     const fetchMetrics = async () => {
       setLoading(true)
-      
+
       // Mock data for demonstration
       const mockProviderData: ProviderMetrics[] = [
         {
@@ -175,10 +175,10 @@ export default function AIPerformanceDashboard() {
     }
 
     fetchMetrics()
-    
+
     // Set up real-time updates
     const interval = setInterval(fetchMetrics, 30000) // Update every 30 seconds
-    
+
     return () => clearInterval(interval)
   }, [timeRange])
 
@@ -216,16 +216,16 @@ export default function AIPerformanceDashboard() {
     )
   }
 
-  const filteredProviders = selectedProvider === 'all' 
-    ? providerMetrics 
+  const filteredProviders = selectedProvider === 'all'
+    ? providerMetrics
     : providerMetrics.filter(p => p.name === selectedProvider)
 
   const totalRequests = filteredProviders.reduce((sum, p) => sum + p.totalRequests, 0)
-  const averageSuccessRate = filteredProviders.length > 0 
-    ? filteredProviders.reduce((sum, p) => sum + p.successRate, 0) / filteredProviders.length 
+  const averageSuccessRate = filteredProviders.length > 0
+    ? filteredProviders.reduce((sum, p) => sum + p.successRate, 0) / filteredProviders.length
     : 0
-  const averageResponseTime = filteredProviders.length > 0 
-    ? filteredProviders.reduce((sum, p) => sum + p.averageResponseTime, 0) / filteredProviders.length 
+  const averageResponseTime = filteredProviders.length > 0
+    ? filteredProviders.reduce((sum, p) => sum + p.averageResponseTime, 0) / filteredProviders.length
     : 0
 
   if (loading) {
@@ -379,7 +379,7 @@ export default function AIPerformanceDashboard() {
                         <span className="font-medium">{provider.averageResponseTime}ms</span>
                       </div>
                       <div className="mt-1 h-2 bg-gray-200 rounded">
-                        <div 
+                        <div
                           className="h-2 bg-blue-500 rounded"
                           style={{ width: `${Math.min((provider.averageResponseTime / 2000) * 100, 100)}%` }}
                         />
@@ -429,7 +429,7 @@ export default function AIPerformanceDashboard() {
                         <span className="font-medium">{(metric.averageConfidence * 100).toFixed(0)}%</span>
                       </div>
                       <div className="mt-1 h-2 bg-gray-200 rounded">
-                        <div 
+                        <div
                           className="h-2 bg-green-500 rounded"
                           style={{ width: `${metric.averageConfidence * 100}%` }}
                         />
@@ -469,7 +469,7 @@ export default function AIPerformanceDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredProviders.flatMap(provider => 
+                {filteredProviders.flatMap(provider =>
                   provider.models.map(model => (
                     <tr key={`${provider.name}-${model.model}`} className="border-b">
                       <td className="py-2">{provider.name}</td>

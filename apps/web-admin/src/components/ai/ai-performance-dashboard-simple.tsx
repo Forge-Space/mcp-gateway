@@ -6,7 +6,12 @@ export default function AIPerformanceDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(false)
+    // Simulate loading completion
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 1000)
+
+    return () => clearTimeout(timer)
   }, [])
 
   if (loading) {

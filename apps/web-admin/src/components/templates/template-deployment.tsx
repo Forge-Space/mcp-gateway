@@ -66,6 +66,8 @@ export function TemplateDeployment() {
     }))
   }
 
+  const generateServerId = () => `server-${Math.random().toString(36).substr(2, 9)}`
+
   const handleDeploy = async () => {
     if (!deploymentConfig.templateId || !deploymentConfig.name) {
       setDeploymentResult({
@@ -88,7 +90,7 @@ export function TemplateDeployment() {
         success: true,
         message: `Template "${deploymentConfig.name}" deployed successfully`,
         details: {
-          serverId: `server-${Date.now()}`,
+          serverId: generateServerId(),
           status: 'running',
           url: `${deploymentConfig.name.toLowerCase().replace(/\s+/g, '-')}.example.com`,
         },
