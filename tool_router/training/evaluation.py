@@ -48,7 +48,7 @@ class EvaluationResult:
     test_cases: int = 0
     passed_cases: int = 0
     details: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def success_rate(self) -> float:
         """Calculate success rate."""
@@ -110,7 +110,7 @@ class SpecialistEvaluator:
                 ],
                 category=PatternCategory.UI_COMPONENT
             ),
-            
+
             "prompt_architect": BenchmarkSuite(
                 name="Prompt Architect Benchmark",
                 description="Evaluates prompt optimization and task categorization",
@@ -143,7 +143,7 @@ class SpecialistEvaluator:
                 ],
                 category=PatternCategory.PROMPT_ENGINEERING
             ),
-            
+
             "router_specialist": BenchmarkSuite(
                 name="Router Specialist Benchmark",
                 description="Evaluates tool selection and task routing",
@@ -178,30 +178,30 @@ class SpecialistEvaluator:
             )
         }
 
-    def evaluate_specialist(self, specialist_type: str, 
+    def evaluate_specialist(self, specialist_type: str,
                           benchmark_suite: Optional[BenchmarkSuite] = None) -> List[EvaluationResult]:
         """Evaluate a specialist agent."""
         if benchmark_suite is None:
             benchmark_suite = self.benchmark_suites.get(specialist_type)
-        
+
         if not benchmark_suite:
             logger.error(f"No benchmark suite found for specialist: {specialist_type}")
             return []
-        
+
         results = []
-        
+
         for metric in benchmark_suite.metrics:
             result = self._evaluate_metric(specialist_type, metric, benchmark_suite)
             results.append(result)
             self.evaluation_history.append(result)
-        
+
         logger.info(f"Evaluated {specialist_type} with {len(results)} metrics")
         return results
 
-    def _evaluate_metric(self, specialist_type: str, metric: EvaluationMetric, 
+    def _evaluate_metric(self, specialist_type: str, metric: EvaluationMetric,
                         benchmark_suite: BenchmarkSuite) -> EvaluationResult:
         """Evaluate a specific metric for a specialist."""
-        
+
         if metric == EvaluationMetric.ACCURACY:
             return self._evaluate_accuracy(specialist_type, benchmark_suite)
         elif metric == EvaluationMetric.PRECISION:
@@ -233,7 +233,7 @@ class SpecialistEvaluator:
         relevant_patterns = self.knowledge_base.get_patterns_by_category(
             benchmark_suite.category, limit=50
         )
-        
+
         if not relevant_patterns:
             return EvaluationResult(
                 specialist_type=specialist_type,
@@ -243,14 +243,14 @@ class SpecialistEvaluator:
                 passed_cases=0,
                 details={"error": "No relevant patterns found"}
             )
-        
+
         # Calculate accuracy based on pattern relevance and confidence
         total_confidence = sum(p.confidence_score for p in relevant_patterns)
         avg_confidence = total_confidence / len(relevant_patterns)
-        
+
         # Simulate test case execution
         passed_cases = int(len(benchmark_suite.test_cases) * avg_confidence)
-        
+
         return EvaluationResult(
             specialist_type=specialist_type,
             metric=EvaluationMetric.ACCURACY,
@@ -268,11 +268,11 @@ class SpecialistEvaluator:
         """Evaluate precision metric."""
         # Precision = True Positives / (True Positives + False Positives)
         # Simulate based on pattern specificity
-        
+
         relevant_patterns = self.knowledge_base.get_patterns_by_category(
             benchmark_suite.category, limit=50
         )
-        
+
         if not relevant_patterns:
             return EvaluationResult(
                 specialist_type=specialist_type,
@@ -281,17 +281,17 @@ class SpecialistEvaluator:
                 test_cases=len(benchmark_suite.test_cases),
                 passed_cases=0
             )
-        
+
         # Calculate precision based on pattern specificity (tags, metadata)
         specificity_scores = []
         for pattern in relevant_patterns:
             # More specific patterns (more tags, detailed metadata) have higher precision
             specificity = len(pattern.tags) + len(pattern.metadata)
             specificity_scores.append(min(specificity / 10.0, 1.0))  # Normalize to 0-1
-        
+
         avg_precision = statistics.mean(specificity_scores) if specificity_scores else 0.0
         passed_cases = int(len(benchmark_suite.test_cases) * avg_precision)
-        
+
         return EvaluationResult(
             specialist_type=specialist_type,
             metric=EvaluationMetric.PRECISION,
@@ -308,11 +308,11 @@ class SpecialistEvaluator:
         """Evaluate recall metric."""
         # Recall = True Positives / (True Positives + False Negatives)
         # Simulate based on knowledge base coverage
-        
+
         total_patterns = self.knowledge_base.get_patterns_by_category(
             benchmark_suite.category, limit=100
         )
-        
+
         if not total_patterns:
             return EvaluationResult(
                 specialist_type=specialist_type,
@@ -321,11 +321,11 @@ class SpecialistEvaluator:
                 test_cases=len(benchmark_suite.test_cases),
                 passed_cases=0
             )
-        
+
         # Calculate recall based on coverage of relevant patterns
         coverage = min(len(total_patterns) / 100.0, 1.0)  # Assume 100 patterns needed for full coverage
         passed_cases = int(len(benchmark_suite.test_cases) * coverage)
-        
+
         return EvaluationResult(
             specialist_type=specialist_type,
             metric=EvaluationMetric.RECALL,
@@ -342,15 +342,15 @@ class SpecialistEvaluator:
         """Evaluate F1 score (harmonic mean of precision and recall)."""
         precision_result = self._evaluate_precision(specialist_type, benchmark_suite)
         recall_result = self._evaluate_recall(specialist_type, benchmark_suite)
-        
+
         precision = precision_result.value
         recall = recall_result.value
-        
+
         if precision + recall == 0:
             f1_score = 0.0
         else:
             f1_score = 2 * (precision * recall) / (precision + recall)
-        
+
         return EvaluationResult(
             specialist_type=specialist_type,
             metric=EvaluationMetric.F1_SCORE,
@@ -368,16 +368,16 @@ class SpecialistEvaluator:
         """Evaluate response time metric."""
         # Simulate response time evaluation
         # In real implementation, this would measure actual response times
-        
+
         # Simulated response times in milliseconds
         response_times = [150, 200, 180, 220, 160]  # Sample times
         avg_response_time = statistics.mean(response_times)
-        
+
         # Convert to score (lower is better, normalize to 0-1)
         # Assume 500ms is the maximum acceptable time
         max_acceptable_time = 500.0
         score = max(0.0, 1.0 - (avg_response_time / max_acceptable_time))
-        
+
         return EvaluationResult(
             specialist_type=specialist_type,
             metric=EvaluationMetric.RESPONSE_TIME,
@@ -394,11 +394,11 @@ class SpecialistEvaluator:
     def _evaluate_code_quality(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
         """Evaluate code quality metric."""
         # Simulate code quality evaluation based on patterns
-        
+
         relevant_patterns = self.knowledge_base.get_patterns_by_category(
             benchmark_suite.category, limit=50
         )
-        
+
         if not relevant_patterns:
             return EvaluationResult(
                 specialist_type=specialist_type,
@@ -407,34 +407,34 @@ class SpecialistEvaluator:
                 test_cases=len(benchmark_suite.test_cases),
                 passed_cases=0
             )
-        
+
         # Quality factors: code examples, best practices, confidence
         quality_factors = []
-        
+
         for pattern in relevant_patterns:
             pattern_quality = 0.0
-            
+
             # Has code example
             if pattern.code_example:
                 pattern_quality += 0.3
-            
+
             # Is best practice
             if pattern.best_practice:
                 pattern_quality += 0.3
-            
+
             # High confidence
             if pattern.confidence_score > 0.8:
                 pattern_quality += 0.2
-            
+
             # Has usage (indicates tested)
             if pattern.usage_count > 0:
                 pattern_quality += 0.2
-            
+
             quality_factors.append(pattern_quality)
-        
+
         avg_quality = statistics.mean(quality_factors) if quality_factors else 0.0
         passed_cases = int(len(benchmark_suite.test_cases) * avg_quality)
-        
+
         return EvaluationResult(
             specialist_type=specialist_type,
             metric=EvaluationMetric.CODE_QUALITY,
@@ -454,7 +454,7 @@ class SpecialistEvaluator:
         accessibility_patterns = self.knowledge_base.get_patterns_by_category(
             PatternCategory.ACCESSIBILITY, limit=50
         )
-        
+
         if not accessibility_patterns:
             return EvaluationResult(
                 specialist_type=specialist_type,
@@ -464,32 +464,32 @@ class SpecialistEvaluator:
                 passed_cases=0,
                 details={"error": "No accessibility patterns found"}
             )
-        
+
         # Calculate accessibility coverage
         wcag_coverage = 0.0
         aria_usage = 0.0
         semantic_html = 0.0
-        
+
         for pattern in accessibility_patterns:
             content = f"{pattern.title} {pattern.description}".lower()
-            
+
             if "wcag" in content:
                 wcag_coverage += 1.0
             if "aria" in content:
                 aria_usage += 1.0
             if "semantic" in content or "html5" in content:
                 semantic_html += 1.0
-        
+
         total_patterns = len(accessibility_patterns)
         if total_patterns > 0:
             wcag_coverage /= total_patterns
             aria_usage /= total_patterns
             semantic_html /= total_patterns
-        
+
         # Overall accessibility score
         accessibility_score = (wcag_coverage + aria_usage + semantic_html) / 3.0
         passed_cases = int(len(benchmark_suite.test_cases) * accessibility_score)
-        
+
         return EvaluationResult(
             specialist_type=specialist_type,
             metric=EvaluationMetric.ACCESSIBILITY_SCORE,
@@ -507,20 +507,20 @@ class SpecialistEvaluator:
     def get_evaluation_summary(self, specialist_type: Optional[str] = None) -> Dict[str, Any]:
         """Get evaluation summary for a specialist or all specialists."""
         results = self.evaluation_history
-        
+
         if specialist_type:
             results = [r for r in results if r.specialist_type == specialist_type]
-        
+
         if not results:
             return {"error": "No evaluation results found"}
-        
+
         # Group by specialist and metric
         summary = {}
-        
+
         for result in results:
             if result.specialist_type not in summary:
                 summary[result.specialist_type] = {}
-            
+
             metric_name = result.metric.value
             summary[result.specialist_type][metric_name] = {
                 "latest_value": result.value,
@@ -530,38 +530,38 @@ class SpecialistEvaluator:
                 "success_rate": result.success_rate,
                 "details": result.details
             }
-        
+
         # Calculate overall scores
         for specialist in summary:
             metrics = summary[specialist]
             values = [m["latest_value"] for m in metrics.values()]
-            
+
             if values:
                 summary[specialist]["overall_score"] = statistics.mean(values)
                 summary[specialist]["metrics_count"] = len(metrics)
-        
+
         return summary
 
     def compare_specialists(self, specialist_types: List[str]) -> Dict[str, Any]:
         """Compare performance between multiple specialists."""
         comparison = {}
-        
+
         for specialist_type in specialist_types:
             summary = self.get_evaluation_summary(specialist_type)
-            
+
             if specialist_type in summary:
                 comparison[specialist_type] = {
                     "overall_score": summary[specialist_type].get("overall_score", 0.0),
                     "metrics": summary[specialist_type]
                 }
-        
+
         # Rank specialists by overall score
         ranked_specialists = sorted(
             comparison.items(),
             key=lambda x: x[1]["overall_score"],
             reverse=True
         )
-        
+
         return {
             "rankings": ranked_specialists,
             "comparison_data": comparison,
@@ -571,17 +571,17 @@ class SpecialistEvaluator:
     def generate_improvement_recommendations(self, specialist_type: str) -> List[str]:
         """Generate improvement recommendations for a specialist."""
         summary = self.get_evaluation_summary(specialist_type)
-        
+
         if specialist_type not in summary:
             return ["No evaluation data available for this specialist"]
-        
+
         recommendations = []
         metrics = summary[specialist_type]
-        
+
         # Analyze each metric and generate recommendations
         for metric_name, metric_data in metrics.items():
             score = metric_data["latest_value"]
-            
+
             if score < 0.5:
                 if metric_name == "accuracy":
                     recommendations.append(f"Improve pattern matching and knowledge base coverage for {metric_name}")
@@ -599,11 +599,33 @@ class SpecialistEvaluator:
                     recommendations.append(f"General improvement needed for {metric_name}")
             elif score < 0.7:
                 recommendations.append(f"Moderate improvement recommended for {metric_name}")
-        
+
         if not recommendations:
             recommendations.append("Performance is good across all metrics")
-        
+
         return recommendations
+
+    def get_evaluation_results(self, specialist_type: str, limit: int = 100) -> List[EvaluationResult]:
+        """Get evaluation results for a specific specialist.
+
+        Args:
+            specialist_type: The type of specialist to get results for
+            limit: Maximum number of results to return
+
+        Returns:
+            List of evaluation results sorted by timestamp (most recent first)
+        """
+        # Filter results by specialist type
+        results = [
+            result for result in self.evaluation_history
+            if result.specialist_type == specialist_type
+        ]
+
+        # Sort by timestamp (most recent first)
+        results.sort(key=lambda x: x.timestamp, reverse=True)
+
+        # Apply limit
+        return results[:limit]
 
     def export_evaluation_data(self, export_path: Path) -> None:
         """Export evaluation data for analysis."""
@@ -633,53 +655,53 @@ class SpecialistEvaluator:
             },
             "export_timestamp": datetime.now().isoformat()
         }
-        
+
         with export_path.open("w", encoding="utf-8") as f:
             json.dump(export_data, f, indent=2, ensure_ascii=False)
-        
+
         logger.info(f"Evaluation data exported to {export_path}")
 
 
 if __name__ == "__main__":
     # Example usage
     logging.basicConfig(level=logging.INFO)
-    
+
     # Create knowledge base and evaluator
     kb = KnowledgeBase()
     evaluator = SpecialistEvaluator(kb)
-    
+
     # Evaluate all specialists
     print("Evaluating specialists...")
-    
+
     for specialist_name in evaluator.benchmark_suites.keys():
         print(f"\nEvaluating {specialist_name}...")
         results = evaluator.evaluate_specialist(specialist_name)
-        
+
         for result in results:
             print(f"  {result.metric.value}: {result.value:.2f} "
                   f"({result.passed_cases}/{result.test_cases} passed)")
-    
+
     # Get evaluation summary
     print("\nEvaluation Summary:")
     summary = evaluator.get_evaluation_summary()
-    
+
     for specialist, data in summary.items():
         print(f"\n{specialist}:")
         print(f"  Overall Score: {data.get('overall_score', 'N/A'):.2f}")
         print(f"  Metrics: {data.get('metrics_count', 0)}")
-        
+
         for metric, metric_data in data.items():
             if isinstance(metric_data, dict) and "latest_value" in metric_data:
                 print(f"    {metric}: {metric_data['latest_value']:.2f}")
-    
+
     # Compare specialists
     print("\nSpecialist Comparison:")
     comparison = evaluator.compare_specialists(list(evaluator.benchmark_suites.keys()))
-    
+
     print("Rankings:")
     for rank, (specialist, data) in enumerate(comparison["rankings"], 1):
         print(f"{rank}. {specialist}: {data['overall_score']:.2f}")
-    
+
     # Generate recommendations
     print("\nImprovement Recommendations:")
     for specialist in evaluator.benchmark_suites.keys():
@@ -687,7 +709,7 @@ if __name__ == "__main__":
         print(f"\n{specialist}:")
         for rec in recommendations:
             print(f"  - {rec}")
-    
+
     # Export evaluation data
     export_path = Path(__file__).parent.parent / "evaluation_export.json"
     evaluator.export_evaluation_data(export_path)
