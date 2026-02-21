@@ -1,0 +1,178 @@
+# Production Monitoring and Alerting Configuration
+# Complete monitoring setup for production deployment of Forge MCP Gateway
+
+version: "3.8"
+
+services:
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: forge-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/monitoring/prometheus-rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    environment:
+      PROMETHEUS_RETENTION: 30d
+      PROMETHEUS_STORAGE_SIZE: 10GB
+    networks:
+      - monitoring
+    depends_on:
+      - gateway
+      - service-manager
+
+  # Grafana - Visualization and Dashboards
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: forge-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SMTP_ENABLED: true
+      GF_SMTP_HOST: ${SMTP_HOST:-localhost:587}
+      GF_SMTP_USER: ${SMTP_USER:-}
+      GF_SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      GF_SMTP_FROM_ADDRESS: ${SMTP_FROM:-noreply@forge-mcp-gateway.local}
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # AlertManager - Alert Management and Routing
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: forge-alertmanager
+    restart: unless-stopped
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./config/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./config/monitoring/alertmanager-templates:/etc/alertmanager/templates:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--web.route-prefix=/'
+      - '--log.level=info'
+    environment:
+      ALERTMANAGER_RETENTION: 120h
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # Node Exporter - System Metrics
+  node-exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: forge-node-exporter
+    restart: unless-stopped
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    environment:
+      NODE_EXPORTER_COLLECTOR: filesystem
+    networks:
+      - monitoring
+
+  # cAdvisor - Container Metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: forge-cadvisor
+    restart: unless-stopped
+    ports:
+      - "${CADVISOR_PORT:-8080}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    environment:
+      CADVISOR_STORAGE_DURATION: 24h
+    networks:
+      - monitoring
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: forge-loki
+    restart: unless-stopped
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./config/monitoring/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      LOKI_RETENTION: 168h
+    networks:
+      - monitoring
+
+  # Promtail - Log Collection
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: forge-promtail
+    restart: unless-stopped
+    ports:
+      - "${PROMTAIL_PORT:-9080}:9080"
+    volumes:
+      - ./config/monitoring/promtail.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    environment:
+      PROMTAIL_CLIENT_URL: http://loki:3100/loki/api/v1/push
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  loki-data:
+    driver: local
+
+networks:
+  monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

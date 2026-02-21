@@ -1,0 +1,187 @@
+# AlertManager Configuration for Forge MCP Gateway
+# Production alert routing and notification management
+
+global:
+  smtp_smarthost: '${SMTP_HOST:-localhost:587}'
+  smtp_from: '${SMTP_FROM:-forge-mcp-gateway@localhost}'
+  smtp_auth_username: '${SMTP_USER:-}'
+  smtp_auth_password: '${SMTP_PASSWORD:-}'
+
+# Route configuration - how alerts are grouped and routed
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 5s
+      repeat_interval: 5m
+      continue: true
+
+    # High severity alerts - frequent notification
+    - match:
+        severity: high
+      receiver: 'high-alerts'
+      group_wait: 10s
+      repeat_interval: 30m
+      continue: true
+
+    # Warning alerts - less frequent
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 30s
+      repeat_interval: 2h
+      continue: true
+
+    # Service-specific alerts
+    - match:
+        service: gateway
+      receiver: 'gateway-alerts'
+      group_by: ['alertname', 'service', 'instance']
+      continue: true
+
+    - match:
+        service: service-manager
+      receiver: 'service-manager-alerts'
+      group_by: ['alertname', 'service', 'instance']
+      continue: true
+
+# Inhibition rules - prevent alert spam
+inhibit_rules:
+  # Inhibit warning alerts if critical alert is firing
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ['alertname', 'instance']
+
+  # Inhibit node alerts if container is down
+  - source_match:
+      alertname: 'ContainerDown'
+    target_match:
+      service: node-exporter
+    equal: ['instance']
+
+# Receivers - where alerts are sent
+receivers:
+  # Default receiver
+  - name: 'default'
+    email_configs:
+      - to: '${DEFAULT_EMAIL:-admin@localhost}'
+        subject: '[Forge MCP Gateway] {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+          {{ end }}
+
+  # Critical alerts - immediate notification
+  - name: 'critical-alerts'
+    email_configs:
+      - to: '${CRITICAL_EMAIL:-admin@localhost}'
+        subject: '[CRITICAL] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
+        body: |
+          CRITICAL ALERT TRIGGERED
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Service: {{ .Labels.service }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          
+          Runbook: {{ .Annotations.runbook_url }}
+          {{ end }}
+          
+          Immediate action required!
+    # Slack integration (if configured)
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL:-}'
+        channel: '#alerts-critical'
+        title: '🚨 CRITICAL: Forge MCP Gateway'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Service:* {{ .Labels.service }}
+          *Instance:* {{ .Labels.instance }}
+          *Runbook:* {{ .Annotations.runbook_url }}
+          {{ end }}
+
+  # High severity alerts
+  - name: 'high-alerts'
+    email_configs:
+      - to: '${HIGH_EMAIL:-admin@localhost}'
+        subject: '[HIGH] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
+        body: |
+          High severity alert triggered
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Service: {{ .Labels.service }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ end }}
+
+  # Warning alerts
+  - name: 'warning-alerts'
+    email_configs:
+      - to: '${WARNING_EMAIL:-admin@localhost}'
+        subject: '[WARNING] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
+        body: |
+          Warning alert triggered
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Service: {{ .Labels.service }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ end }}
+
+  # Gateway service alerts
+  - name: 'gateway-alerts'
+    email_configs:
+      - to: '${GATEWAY_EMAIL:-admin@localhost}'
+        subject: '[Gateway] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
+        body: |
+          Gateway service alert
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ end }}
+
+  # Service manager alerts
+  - name: 'service-manager-alerts'
+    email_configs:
+      - to: '${SERVICE_MANAGER_EMAIL:-admin@localhost}'
+        subject: '[Service Manager] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
+        body: |
+          Service manager alert
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ end }}
+
+# Templates for alert formatting
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

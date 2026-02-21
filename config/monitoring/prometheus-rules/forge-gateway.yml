@@ -1,0 +1,258 @@
+# Prometheus Alert Rules for Forge MCP Gateway
+# Production monitoring and alerting rules
+
+groups:
+  - name: forge-gateway.rules
+    rules:
+      # Gateway Service Health
+      - alert: GatewayDown
+        expr: up{job="gateway"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: gateway
+          component: core
+        annotations:
+          summary: "Forge MCP Gateway is down"
+          description: "Forge MCP Gateway has been down for more than 1 minute"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+      - alert: GatewayHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="gateway"}[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: high
+          service: gateway
+          component: performance
+        annotations:
+          summary: "Gateway response time is high"
+          description: "95th percentile response time is {{ $value }}s (threshold: 0.5s)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+      - alert: GatewayHighErrorRate
+        expr: rate(http_requests_total{job="gateway",status=~"5.."}[5m]) / rate(http_requests_total{job="gateway"}[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: high
+          service: gateway
+          component: reliability
+        annotations:
+          summary: "Gateway error rate is high"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+      - alert: GatewayMemoryUsageHigh
+        expr: (container_memory_usage_bytes{name="forge-gateway"} / container_spec_memory_limit_bytes{name="forge-gateway"}) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: gateway
+          component: resources
+        annotations:
+          summary: "Gateway memory usage is high"
+          description: "Memory usage is {{ $value | humanizePercentage }} (threshold: 80%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+      - alert: GatewayCPUUsageHigh
+        expr: rate(container_cpu_usage_seconds_total{name="forge-gateway"}[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: gateway
+          component: resources
+        annotations:
+          summary: "Gateway CPU usage is high"
+          description: "CPU usage is {{ $value | humanizePercentage }} (threshold: 80%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+  - name: forge-service-manager.rules
+    rules:
+      # Service Manager Health
+      - alert: ServiceManagerDown
+        expr: up{job="service-manager"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: service-manager
+          component: core
+        annotations:
+          summary: "Service Manager is down"
+          description: "Service Manager has been down for more than 1 minute"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+      - alert: ServiceManagerHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="service-manager"}[5m])) > 0.3
+        for: 5m
+        labels:
+          severity: high
+          service: service-manager
+          component: performance
+        annotations:
+          summary: "Service Manager response time is high"
+          description: "95th percentile response time is {{ $value }}s (threshold: 0.3s)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+      - alert: ServiceManagerHighErrorRate
+        expr: rate(http_requests_total{job="service-manager",status=~"5.."}[5m]) / rate(http_requests_total{job="service-manager"}[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: high
+          service: service-manager
+          component: reliability
+        annotations:
+          summary: "Service Manager error rate is high"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+      - alert: ServiceManagerMemoryUsageHigh
+        expr: (container_memory_usage_bytes{name="forge-service-manager"} / container_spec_memory_limit_bytes{name="forge-service-manager"}) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: service-manager
+          component: resources
+        annotations:
+          summary: "Service Manager memory usage is high"
+          description: "Memory usage is {{ $value | humanizePercentage }} (threshold: 80%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+  - name: forge-virtual-servers.rules
+    rules:
+      # Virtual Server Health
+      - alert: VirtualServerDown
+        expr: forge_virtual_server_status == 0
+        for: 2m
+        labels:
+          severity: high
+          service: virtual-servers
+          component: availability
+        annotations:
+          summary: "Virtual server {{ $labels.server_name }} is down"
+          description: "Virtual server {{ $labels.server_name }} has been down for more than 2 minutes"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+      - alert: VirtualServerHighWakeTime
+        expr: forge_virtual_server_wake_time_seconds > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: virtual-servers
+          component: performance
+        annotations:
+          summary: "Virtual server wake time is high"
+          description: "Virtual server {{ $labels.server_name }} wake time is {{ $value }}s (threshold: 1.0s)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+      - alert: TooManySleepingServers
+        expr: forge_virtual_servers_total{state="sleeping"} > 10
+        for: 15m
+        labels:
+          severity: warning
+          service: virtual-servers
+          component: optimization
+        annotations:
+          summary: "Too many virtual servers are sleeping"
+          description: "{{ $value }} virtual servers are sleeping (threshold: 10)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/optimization.md"
+
+  - name: forge-infrastructure.rules
+    rules:
+      # Infrastructure Health
+      - alert: NodeExporterDown
+        expr: up{job="node-exporter"} == 0
+        for: 2m
+        labels:
+          severity: high
+          service: infrastructure
+          component: monitoring
+        annotations:
+          summary: "Node Exporter is down"
+          description: "Node Exporter has been down for more than 2 minutes"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+      - alert: HostMemoryUsageHigh
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: high
+          service: infrastructure
+          component: resources
+        annotations:
+          summary: "Host memory usage is critical"
+          description: "Host memory usage is {{ $value | humanizePercentage }} (threshold: 90%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+      - alert: HostCPUUsageHigh
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 5m
+        labels:
+          severity: high
+          service: infrastructure
+          component: resources
+        annotations:
+          summary: "Host CPU usage is critical"
+          description: "Host CPU usage is {{ $value }}% (threshold: 90%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+      - alert: HostDiskUsageHigh
+        expr: (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          service: infrastructure
+          component: resources
+        annotations:
+          summary: "Host disk usage is high"
+          description: "Host disk usage is {{ $value | humanizePercentage }} (threshold: 85%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/performance.md"
+
+      - alert: ContainerDown
+        expr: time() - container_start_time_seconds > 300 and up{job=~"gateway|service-manager"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: infrastructure
+          component: containers
+        annotations:
+          summary: "Container {{ $labels.name }} is down"
+          description: "Container {{ $labels.name }} has been down for more than 5 minutes"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+  - name: forge-business.rules
+    rules:
+      # Business Metrics
+      - alert: LowActiveVirtualServers
+        expr: forge_virtual_servers_total{state="running"} < 2
+        for: 10m
+        labels:
+          severity: warning
+          service: business
+          component: availability
+        annotations:
+          summary: "Low number of active virtual servers"
+          description: "Only {{ $value }} virtual servers are running (threshold: 2)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/operations.md"
+
+      - alert: HighServiceFailureRate
+        expr: forge_service_failures_total / forge_service_requests_total > 0.1
+        for: 5m
+        labels:
+          severity: high
+          service: business
+          component: reliability
+        annotations:
+          summary: "High service failure rate"
+          description: "Service failure rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
+
+      - alert: LowToolRoutingSuccess
+        expr: forge_tool_routing_success_rate < 0.95
+        for: 5m
+        labels:
+          severity: high
+          service: business
+          component: reliability
+        annotations:
+          summary: "Low tool routing success rate"
+          description: "Tool routing success rate is {{ $value | humanizePercentage }} (threshold: 95%)"
+          runbook_url: "https://github.com/LucasSantana-Dev/forge-mcp-gateway/docs/troubleshooting.md"
