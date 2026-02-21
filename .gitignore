@@ -62,4 +62,6 @@ __pycache__/
 htmlcov/
 .coverage
 *.cover
+coverage.json
+coverage.xml
 bandit-report.json

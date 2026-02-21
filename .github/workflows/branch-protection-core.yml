@@ -1,0 +1,175 @@
+# Branch Protection for Core Package Release
+# Ensures proper workflow for release branches
+
+name: Branch Protection - Core Release
+
+on:
+  # Trigger on changes to branch protection
+  workflow_call:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'validate'
+        type: choice
+        options:
+          - validate
+          - enable
+          - disable
+      repository:
+        description: 'Repository name (owner/repo)'
+        required: true
+        type: string
+
+jobs:
+  validate:
+    name: Validate Branch Protection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.inputs.action == 'validate'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Check branch protection settings
+        run: |
+          echo "🔍 Validating branch protection settings..."
+          
+          # Check if release/core branch exists
+          if git branch --list | grep -q "release/core"; then
+            echo "✅ release/core branch exists"
+          else
+            echo "❌ release/core branch not found"
+            echo "💡 Create it with: git checkout -b release/core main"
+            exit 1
+          fi
+          
+          echo "✅ Branch protection validation passed"
+
+  enable:
+    name: Enable Branch Protection
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.inputs.action == 'enable'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Create release/core branch
+        run: |
+          if ! git branch --list | grep -q "release/core"; then
+            echo "🌿 Creating release/core branch..."
+            git checkout -b release/core main
+            git push origin release/core
+            echo "✅ release/core branch created"
+          else
+            echo "✅ release/core branch already exists"
+          fi
+          
+      - name: Create branch protection
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            
+            // Branch protection for release/core
+            await github.rest.repos.updateBranchProtectionRule({
+              owner,
+              repo,
+              branch_name: 'release/core',
+              protection: {
+                required_status_checks: {
+                  strict: true,
+                  contexts: [
+                    {
+                      context: 'ci',
+                      type: 'status'
+                    },
+                    {
+                      context: 'Validate Release',
+                      type: 'status'
+                    },
+                    {
+                      context: 'Security & Quality Checks',
+                      type: 'status'
+                    },
+                    {
+                      context: 'Test Package',
+                      type: 'status'
+                    }
+                  ]
+                },
+                enforce_admins: true,
+                required_pull_request_reviews: {
+                  required_approving_review_count: 1,
+                  dismiss_stale_reviews: true,
+                  require_code_owner_reviews: false,
+                  require_last_push_approval: false
+                },
+                restrictions: {
+                  users: [],
+                  teams: ['core-maintainers'],
+                  apps: []
+                },
+                allows_deletions: false,
+                required_linear_history: {
+                  enabled: true,
+                  required_approvals: 0
+                },
+                required_conversation_resolution: {
+                  enabled: true
+                },
+                lock_branch: {
+                  enabled: false,
+                  lock_reason: ''
+                },
+                allow_force_pushes: {
+                  enabled: false
+                },
+                allow_deletions: {
+                  enabled: false
+                }
+              }
+            });
+            
+            console.log('✅ Branch protection enabled for release/core');
+
+  disable:
+    name: Disable Branch Protection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.inputs.action == 'disable'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Remove branch protection
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            
+            try {
+              await github.rest.repos.deleteBranchProtectionRule({
+                owner,
+                repo,
+                branch_name: 'release/core'
+              });
+              console.log('✅ Branch protection removed for release/core');
+            } catch (error) {
+              console.log('ℹ️ Branch protection not found or already removed');
+            }

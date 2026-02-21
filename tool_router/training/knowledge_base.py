@@ -8,8 +8,6 @@ Manages structured knowledge repositories including:
 - Quality assessment and validation
 """
 
-from __future__ import annotations
-
 import hashlib
 import json
 import sqlite3
@@ -45,8 +43,8 @@ class KnowledgeItem:
     confidence_score: float = 1.0
     status: KnowledgeStatus = KnowledgeStatus.ACTIVE
     source_url: str | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(datetime.UTC))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(datetime.UTC))
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     usage_count: int = 0
     user_ratings: list[float] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -266,7 +264,7 @@ class KnowledgeBase:
                 SET usage_count = usage_count + 1, updated_at = ?
                 WHERE id = ?
             """,
-                (datetime.now(datetime.UTC).isoformat(), item_id),
+                (datetime.now(timezone.utc).isoformat(), item_id),
             )
 
     def add_user_rating(self, item_id: str, rating: float) -> None:
@@ -274,7 +272,7 @@ class KnowledgeBase:
         item = self.get_knowledge_item(item_id)
         if item:
             item.user_ratings.append(rating)
-            item.updated_at = datetime.now(datetime.UTC)
+            item.updated_at = datetime.now(timezone.utc)
 
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(

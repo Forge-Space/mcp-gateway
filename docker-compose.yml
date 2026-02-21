@@ -298,7 +298,7 @@ services:
     depends_on:
       - gateway
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8026/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8026/sse || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -330,7 +330,7 @@ services:
     ports:
       - "${FORGE_TRANSLATE_PORT:-8000}:8000"
     environment:
-      FORGE_SERVICE_MODE: manager
+      FORGE_SERVICE_MODE: sse
       FORGE_MAX_REQUEST_SIZE: ${FORGE_MAX_REQUEST_SIZE}
       # High-efficiency configuration for on-demand service
       FORGE_SLEEP_POLICY_ENABLED: true
@@ -340,6 +340,7 @@ services:
       FORGE_MIN_SLEEP_TIME: 60
       FORGE_MEMORY_RESERVATION: 64MB
       FORGE_WAKE_TIME_TARGET: 200 # < 200ms wake time
+    command: ["python3", "-m", "mcpgateway.translate", "--connect-sse", "http://gateway:4444"]
     healthcheck:
       test: ["CMD", "python3", "-c", "import mcpgateway.translate; import sys; sys.exit(0)"]
       interval: 30s

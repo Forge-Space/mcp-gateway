@@ -1,0 +1,115 @@
+# GitGuardian Security Scanning for MCP Gateway
+# Detect secrets and sensitive data in code
+
+name: GitGuardian Security Scan
+
+on:
+  push:
+    branches: [main, master, dev, release/*, feature/*, feat/*]
+  pull_request:
+    branches: [main, master, dev, release/*, feature/*, feat/*]
+  schedule:
+    # Run daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+env:
+  GITGUARDIAN_API_URL: "https://api.gitguardian.com"
+
+jobs:
+  gitguardian-scan:
+    name: GitGuardian Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: GitGuardian Scan
+        uses: GitGuardian/gg-shield-action@v1
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+          GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
+        with:
+          args: >
+            scan 
+            --all 
+            --verbose 
+            --exit-code-on-secrets=1
+
+      - name: Upload GitGuardian results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: .gitguardian/reports/sarif.json
+
+      - name: GitGuardian Summary
+        if: always()
+        run: |
+          echo "🔒 GitGuardian Security Scan Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Security Policy" >> $GITHUB_STEP_SUMMARY
+          echo "- **No secrets allowed** in source code" >> $GITHUB_STEP_SUMMARY
+          echo "- **API keys** must use environment variables" >> $GITHUB_STEP_SUMMARY
+          echo "- **Credentials** must be stored in GitHub Secrets" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sensitive data** must be excluded from commits" >> $GITHUB_STEP_SUMMARY
+
+  gitguardian-monitoring:
+    name: GitGuardian Continuous Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: GitGuardian Monitoring
+        uses: GitGuardian/gg-shield-action@v1
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+          GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
+        with:
+          args: >
+            monitor 
+            --all 
+            --verbose
+
+  workflow-summary:
+    name: GitGuardian Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    needs: [gitguardian-scan, gitguardian-monitoring]
+    if: always()
+
+    steps:
+      - name: GitGuardian Workflow Summary
+        run: |
+          echo "## 🔒 GitGuardian Security Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scan Type | Status | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.gitguardian-scan.result }} | ✅ Passed or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Continuous Monitoring | ${{ needs.gitguardian-monitoring.result }} | ✅ Active or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Security Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Scan Frequency**: Daily scheduled + event-driven" >> $GITHUB_STEP_SUMMARY
+          echo "- **Coverage**: All branches and files" >> $GITHUB_STEP_SUMMARY
+          echo "- **Integration**: GitHub Security tab" >> $GITHUB_STEP_SUMMARY
+          echo "- **Alerting**: SARIF upload to GitHub" >> $GITHUB_STEP_SUMMARY

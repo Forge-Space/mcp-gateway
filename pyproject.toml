@@ -16,6 +16,9 @@ dependencies = [
     "lxml",
     "Pillow",
     "playwright",
+    "sentry-sdk[fastapi]>=2.0.0",
+    "structlog>=23.0.0",
+    "psycopg2-binary>=2.9.0",
 ]
 
 [project.optional-dependencies]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import urllib.error
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 import pytest
 
@@ -23,11 +23,10 @@ class TestHealthCheck:
 
         with patch('sys.exit') as mock_exit:
             main()
-            # Should exit with 0 after successful HTTP check
-            mock_exit.assert_called_with(0)
-            # The function might exit twice due to the way it's structured,
-            # but the important thing is that it exits with 0
-            assert mock_exit.call_args_list[-1] == (0,)
+            # Should exit with 0 first (successful HTTP check), then 1 (function continues)
+            assert mock_exit.call_args_list[0] == call(0)
+            # Verify urlopen was called with correct URL
+            mock_urlopen.assert_called_once_with('http://localhost:8035/health', timeout=5)
 
     @patch('urllib.request.urlopen')
     def test_main_http_health_check_failure(self, mock_urlopen):

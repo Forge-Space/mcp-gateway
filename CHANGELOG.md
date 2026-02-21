@@ -31,6 +31,34 @@ All notable changes to this project are documented here.
 - **Zero** build errors or warnings
 - **100%** TypeScript compilation success
 
+## [1.35.2] - 2026-02-20
+
+### Added
+- ✅ **Phase 5.4: Advanced User Management**: Complete RBAC implementation with enterprise-grade capabilities
+  - **Advanced User Management Component**: Comprehensive user lifecycle management with bulk operations
+  - **5-Tier Role System**: Super Admin, Admin, Moderator, Developer, Viewer with hierarchical permissions
+  - **14 Granular Permissions**: Across 5 categories (servers, users, monitoring, settings, analytics)
+  - **Activity Monitoring**: Real-time user activity logging and session management
+  - **Bulk Operations**: Multi-select user actions with batch processing
+  - **User Analytics**: Live statistics and activity tracking dashboard
+  - **Session Management**: Active session monitoring and termination capabilities
+  - **Import/Export**: User data import/export functionality
+
+### Changed
+- 🔄 **Enhanced User Interface**: Replaced basic user management with advanced RBAC system
+- 🔄 **Navigation Updates**: Streamlined navigation after Kubernetes cleanup
+- 🔄 **Permission Architecture**: Implemented hierarchical RBAC with role inheritance
+
+### Fixed
+- 🐛 **TypeScript Errors**: Fixed Select component integration and user property references
+- 🐛 **Navigation Issues**: Resolved broken links after Kubernetes component removal
+- 🐛 **Import Errors**: Fixed missing imports and component references
+
+### Status
+- **Phase 5.4 Complete**: Advanced User Management with full RBAC implementation
+- **Kubernetes Cleanup Complete**: All Kubernetes components removed and replaced with Docker Compose messaging
+- **Next Steps**: Ready for production deployment with enterprise-grade user management
+
 ## [1.35.1] - 2026-02-19
 
 ### 🧹 Documentation Cleanup & Code Quality Improvements

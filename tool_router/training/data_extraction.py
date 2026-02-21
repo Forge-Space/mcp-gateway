@@ -8,8 +8,6 @@ Extracts patterns and best practices from public data sources including:
 - Community knowledge bases
 """
 
-from __future__ import annotations
-
 import json
 import re
 from abc import ABC, abstractmethod
