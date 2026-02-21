@@ -4,35 +4,34 @@
  * Test script to verify @forgespace/core integration
  */
 
-import { ForgeCore } from "@forgespace/core";
+import { ForgeCore } from '@forgespace/core';
 
 async function testForgeCoreIntegration() {
-  console.log("🧪 Testing @forgespace/core integration...");
-  
+  console.log('🧪 Testing @forgespace/core integration...');
+
   try {
     // Test ForgeCore import
-    console.log("✅ ForgeCore import successful");
-    
+    console.log('✅ ForgeCore import successful');
+
     // Test ForgeCore instantiation
     const forgeCore = new ForgeCore({
-      gatewayUrl: "http://localhost:4444",
-      authToken: "test-token",
+      gatewayUrl: process.env.GATEWAY_URL || 'http://localhost:4444',
+      authToken: process.env.GATEWAY_TOKEN,
       timeout: 120000,
     });
-    console.log("✅ ForgeCore instantiation successful");
-    
+    console.log('✅ ForgeCore instantiation successful');
+
     // Test basic configuration
-    console.log("✅ Configuration:", {
+    console.log('✅ Configuration:', {
       gatewayUrl: forgeCore.gatewayUrl,
       timeout: forgeCore.timeout,
-      hasAuthToken: !!forgeCore.authToken
+      hasAuthToken: !!forgeCore.authToken,
     });
-    
-    console.log("🎉 @forgespace/core integration test passed!");
+
+    console.log('🎉 @forgespace/core integration test passed!');
     return true;
-    
   } catch (error) {
-    console.error("❌ @forgespace/core integration test failed:", error);
+    console.error('❌ @forgespace/core integration test failed:', error);
     return false;
   }
 }
@@ -40,9 +39,9 @@ async function testForgeCoreIntegration() {
 // Run test if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   testForgeCoreIntegration()
-    .then(success => process.exit(success ? 0 : 1))
-    .catch(error => {
-      console.error("Test execution error:", error);
+    .then((success) => process.exit(success ? 0 : 1))
+    .catch((error) => {
+      console.error('Test execution error:', error);
       process.exit(1);
     });
 }

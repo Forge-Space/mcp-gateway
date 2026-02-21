@@ -105,10 +105,9 @@ class TestPromptTemplates:
     def test_create_tool_selection_prompt_is_deterministic(self) -> None:
         task = "Test task"
         tool_list = "1. test_tool - Test tool"
-        assert (
-            PromptTemplates.create_tool_selection_prompt(task, tool_list)
-            == PromptTemplates.create_tool_selection_prompt(task, tool_list)
-        )
+        assert PromptTemplates.create_tool_selection_prompt(
+            task, tool_list
+        ) == PromptTemplates.create_tool_selection_prompt(task, tool_list)
 
     def test_create_tool_selection_prompt_different_inputs(self) -> None:
         tool_list = "1. test_tool - Test tool"
@@ -129,15 +128,11 @@ class TestPromptTemplates:
         assert '"reasoning"' in result
 
     def test_create_multi_tool_selection_prompt_max_tools(self) -> None:
-        result = PromptTemplates.create_multi_tool_selection_prompt(
-            "task", "- tool: desc", max_tools=5
-        )
+        result = PromptTemplates.create_multi_tool_selection_prompt("task", "- tool: desc", max_tools=5)
         assert "5" in result
 
     def test_create_multi_tool_selection_prompt_with_context(self) -> None:
-        result = PromptTemplates.create_multi_tool_selection_prompt(
-            "task", "- tool: desc", context="some context"
-        )
+        result = PromptTemplates.create_multi_tool_selection_prompt("task", "- tool: desc", context="some context")
         assert "some context" in result
         assert "## Context" in result
 

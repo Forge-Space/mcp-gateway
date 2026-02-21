@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from tool_router.security.security_middleware import SecurityMiddleware, SecurityContext
-from tool_router.security.rate_limiter import RateLimitResult
+import pytest
+
 from tool_router.security.input_validator import SecurityValidationResult
+from tool_router.security.rate_limiter import RateLimitResult
+from tool_router.security.security_middleware import SecurityContext, SecurityMiddleware
 
 
 class TestSecurityWorkflow:
@@ -19,16 +20,12 @@ class TestSecurityWorkflow:
         return {
             "enabled": True,
             "strict_mode": False,
-            "rate_limiting": {
-                "enabled": True,
-                "requests_per_minute": 60,
-                "burst_size": 10
-            },
+            "rate_limiting": {"enabled": True, "requests_per_minute": 60, "burst_size": 10},
             "input_validation": {
                 "enabled": True,
                 "max_input_length": 1000,
-                "blocked_patterns": ["password", "secret", "token"]
-            }
+                "blocked_patterns": ["password", "secret", "token"],
+            },
         }
 
     @pytest.fixture
@@ -38,42 +35,26 @@ class TestSecurityWorkflow:
 
     def test_complete_security_check_workflow(self, middleware: SecurityMiddleware) -> None:
         """Test complete security check workflow for clean request."""
-        context = SecurityContext(
-            user_id="user123",
-            ip_address="192.168.1.1",
-            session_id="session456"
-        )
+        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", session_id="session456")
 
         task = "search for information"
         category = "research"
         context_data = "academic research project"
 
-        with patch.object(middleware.audit_logger, 'log_request_received') as mock_log:
-            with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-                with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-
+        with patch.object(middleware.audit_logger, "log_request_received") as mock_log:
+            with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
+                with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                     # Mock successful validation
                     mock_validate.return_value = SecurityValidationResult(
-                        is_valid=True,
-                        risk_score=0.1,
-                        violations=[],
-                        sanitized_input=task,
-                        blocked=False,
-                        metadata={}
+                        is_valid=True, risk_score=0.1, violations=[], sanitized_input=task, blocked=False, metadata={}
                     )
 
                     # Mock successful rate limit check
                     mock_rate_limit.return_value = RateLimitResult(
-                        allowed=True,
-                        remaining=50,
-                        reset_time=1234567890,
-                        retry_after=0,
-                        metadata={}
+                        allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
                     )
 
-                    result = middleware.check_request_security(
-                        context, task, category, context_data, "{}"
-                    )
+                    result = middleware.check_request_security(context, task, category, context_data, "{}")
 
                     # Business logic validation
                     assert result.allowed is True
@@ -89,19 +70,15 @@ class TestSecurityWorkflow:
 
     def test_security_workflow_with_violations(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow when violations are detected."""
-        context = SecurityContext(
-            user_id="user123",
-            ip_address="192.168.1.1"
-        )
+        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
 
         # Task with suspicious content
         task = "here is my password: secret123"
         category = "authentication"
         context_data = "login attempt"
 
-        with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-            with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
+            with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                 # Mock validation with violations
                 mock_validate.return_value = SecurityValidationResult(
                     is_valid=False,
@@ -109,21 +86,15 @@ class TestSecurityWorkflow:
                     violations=["Password detected", "High risk pattern"],
                     sanitized_input="here is my password: [REDACTED]",
                     blocked=True,
-                    metadata={"blocked_patterns": ["password"]}
+                    metadata={"blocked_patterns": ["password"]},
                 )
 
                 # Mock rate limit check
                 mock_rate_limit.return_value = RateLimitResult(
-                    allowed=True,
-                    remaining=50,
-                    reset_time=1234567890,
-                    retry_after=0,
-                    metadata={}
+                    allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
                 )
 
-                result = middleware.check_request_security(
-                    context, task, category, context_data, "{}"
-                )
+                result = middleware.check_request_security(context, task, category, context_data, "{}")
 
                 # Business logic: high risk should be blocked
                 assert result.allowed is False
@@ -136,26 +107,17 @@ class TestSecurityWorkflow:
 
     def test_rate_limiting_workflow(self, middleware: SecurityMiddleware) -> None:
         """Test rate limiting workflow."""
-        context = SecurityContext(
-            user_id="user123",
-            ip_address="192.168.1.1"
-        )
+        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
 
         task = "normal request"
         category = "data"
         context_data = "regular operation"
 
-        with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-            with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
+            with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                 # Mock successful validation
                 mock_validate.return_value = SecurityValidationResult(
-                    is_valid=True,
-                    risk_score=0.1,
-                    violations=[],
-                    sanitized_input=task,
-                    blocked=False,
-                    metadata={}
+                    is_valid=True, risk_score=0.1, violations=[], sanitized_input=task, blocked=False, metadata={}
                 )
 
                 # Mock rate limit exceeded
@@ -164,12 +126,10 @@ class TestSecurityWorkflow:
                     remaining=0,
                     reset_time=1234567890,
                     retry_after=60,  # 1 minute retry
-                    metadata={"window_type": "minute"}
+                    metadata={"window_type": "minute"},
                 )
 
-                result = middleware.check_request_security(
-                    context, task, category, context_data, "{}"
-                )
+                result = middleware.check_request_security(context, task, category, context_data, "{}")
 
                 # Business logic: rate limit exceeded should be blocked
                 assert result.allowed is False
@@ -186,19 +146,15 @@ class TestSecurityWorkflow:
         security_config["strict_mode"] = True
         strict_middleware = SecurityMiddleware(security_config)
 
-        context = SecurityContext(
-            user_id="user123",
-            ip_address="192.168.1.1"
-        )
+        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
 
         # Medium risk task
         task = "execute system command"
         category = "system"
         context_data = "administrative task"
 
-        with patch.object(strict_middleware.input_validator, 'validate_prompt') as mock_validate:
-            with patch.object(strict_middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-
+        with patch.object(strict_middleware.input_validator, "validate_prompt") as mock_validate:
+            with patch.object(strict_middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                 # Mock medium risk validation
                 mock_validate.return_value = SecurityValidationResult(
                     is_valid=True,
@@ -206,21 +162,15 @@ class TestSecurityWorkflow:
                     violations=[],
                     sanitized_input=task,
                     blocked=False,
-                    metadata={}
+                    metadata={},
                 )
 
                 # Mock successful rate limit check
                 mock_rate_limit.return_value = RateLimitResult(
-                    allowed=True,
-                    remaining=50,
-                    reset_time=1234567890,
-                    retry_after=0,
-                    metadata={}
+                    allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
                 )
 
-                result = strict_middleware.check_request_security(
-                    context, task, category, context_data, "{}"
-                )
+                result = strict_middleware.check_request_security(context, task, category, context_data, "{}")
 
                 # Business logic: strict mode should block medium risk
                 assert result.allowed is False
@@ -230,19 +180,15 @@ class TestSecurityWorkflow:
     def test_anonymous_user_security_workflow(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow for anonymous users."""
         # Anonymous context (no user_id)
-        context = SecurityContext(
-            ip_address="192.168.1.1",
-            user_agent="Mozilla/5.0"
-        )
+        context = SecurityContext(ip_address="192.168.1.1", user_agent="Mozilla/5.0")
 
         task = "public information request"
         category = "general"
         context_data = "public data access"
 
-        with patch.object(middleware.audit_logger, 'log_request_received') as mock_log:
-            with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-                with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-
+        with patch.object(middleware.audit_logger, "log_request_received") as mock_log:
+            with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
+                with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                     # Mock successful validation
                     mock_validate.return_value = SecurityValidationResult(
                         is_valid=True,
@@ -250,7 +196,7 @@ class TestSecurityWorkflow:
                         violations=[],
                         sanitized_input=task,
                         blocked=False,
-                        metadata={}
+                        metadata={},
                     )
 
                     # Mock rate limit check (stricter for anonymous)
@@ -259,12 +205,10 @@ class TestSecurityWorkflow:
                         remaining=20,  # Lower limit for anonymous
                         reset_time=1234567890,
                         retry_after=0,
-                        metadata={"user_type": "anonymous"}
+                        metadata={"user_type": "anonymous"},
                     )
 
-                    result = middleware.check_request_security(
-                        context, task, category, context_data, "{}"
-                    )
+                    result = middleware.check_request_security(context, task, category, context_data, "{}")
 
                     # Business logic: anonymous users should have higher scrutiny
                     assert result.allowed is True  # Still allowed for low-risk tasks
@@ -276,45 +220,31 @@ class TestSecurityWorkflow:
 
     def test_security_workflow_with_multiple_violations(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow with multiple types of violations."""
-        context = SecurityContext(
-            user_id="user123",
-            ip_address="192.168.1.1"
-        )
+        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
 
         # Task with multiple issues
         task = "execute 'rm -rf /' with api_token=secret_key"
         category = "system"
         context_data = "dangerous operation"
 
-        with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-            with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
+            with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                 # Mock validation with multiple violations
                 mock_validate.return_value = SecurityValidationResult(
                     is_valid=False,
                     risk_score=0.95,  # Very high risk
-                    violations=[
-                        "Dangerous command detected",
-                        "API token exposed",
-                        "System operation risk"
-                    ],
+                    violations=["Dangerous command detected", "API token exposed", "System operation risk"],
                     sanitized_input="execute '[REDACTED]' with api_token='[REDACTED]'",
                     blocked=True,
-                    metadata={"blocked_patterns": ["rm -rf", "api_token"]}
+                    metadata={"blocked_patterns": ["rm -rf", "api_token"]},
                 )
 
                 # Mock rate limit check
                 mock_rate_limit.return_value = RateLimitResult(
-                    allowed=True,
-                    remaining=50,
-                    reset_time=1234567890,
-                    retry_after=0,
-                    metadata={}
+                    allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
                 )
 
-                result = middleware.check_request_security(
-                    context, task, category, context_data, "{}"
-                )
+                result = middleware.check_request_security(context, task, category, context_data, "{}")
 
                 # Business logic: multiple violations should be blocked
                 assert result.allowed is False
@@ -329,19 +259,15 @@ class TestSecurityWorkflow:
 
     def test_security_workflow_with_penalty_application(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow with penalty application for violations."""
-        context = SecurityContext(
-            user_id="user123",
-            ip_address="192.168.1.1"
-        )
+        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
 
         task = "slightly suspicious request"
         category = "data"
         context_data = "testing security"
 
-        with patch.object(middleware.input_validator, 'validate_prompt') as mock_validate:
-            with patch.object(middleware.rate_limiter, 'check_rate_limit') as mock_rate_limit:
-                with patch.object(middleware.rate_limiter, 'apply_penalty') as mock_penalty:
-
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
+            with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
+                with patch.object(middleware.rate_limiter, "apply_penalty") as mock_penalty:
                     # Mock validation with medium-high risk to trigger penalty
                     mock_validate.return_value = SecurityValidationResult(
                         is_valid=True,
@@ -349,26 +275,20 @@ class TestSecurityWorkflow:
                         violations=[],
                         sanitized_input=task,
                         blocked=False,
-                        metadata={}
+                        metadata={},
                     )
 
                     # Mock successful rate limit check
                     mock_rate_limit.return_value = RateLimitResult(
-                        allowed=True,
-                        remaining=50,
-                        reset_time=1234567890,
-                        retry_after=0,
-                        metadata={}
+                        allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
                     )
 
-                    result = middleware.check_request_security(
-                        context, task, category, context_data, "{}"
-                    )
+                    result = middleware.check_request_security(context, task, category, context_data, "{}")
 
                     # Should apply penalty for high risk
                     mock_penalty.assert_called_once_with(
                         context.user_id,
-                        pytest.approx(240, rel=0.1)  # 300 * 0.8 = 240
+                        pytest.approx(240, rel=0.1),  # 300 * 0.8 = 240
                     )
 
                     # Business logic: high risk may be allowed with penalty

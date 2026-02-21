@@ -43,16 +43,16 @@ class CommandResult:
 
 class CommandManager:
     """Unified command management for MCP Gateway."""
-    
+
     def __init__(self, repo_root: Optional[Path] = None):
         self.repo_root = repo_root or Path(__file__).parent.parent
         self.makefile = self.repo_root / "Makefile"
-        
+
     def _run_command(self, cmd: List[str], cwd: Optional[Path] = None) -> CommandResult:
         """Run command and return result."""
         import time
         start_time = time.time()
-        
+
         try:
             result = subprocess.run(
                 cmd,
@@ -84,25 +84,25 @@ class CommandManager:
                 error=str(e),
                 duration=duration
             )
-            
+
     def _run_make(self, target: str, args: List[str] = None) -> CommandResult:
         """Run make target with optional arguments."""
         cmd = ["make", target]
         if args:
             cmd.extend(args)
         return self._run_command(cmd)
-        
+
     def setup(self, args: argparse.Namespace) -> CommandResult:
         """Setup command - interactive configuration wizard."""
         cmd = [sys.executable, str(self.repo_root / "scripts" / "setup-wizard.py")]
-        
+
         if args.quick:
             cmd.append("--quick")
         elif args.reconfigure:
             cmd.append("--reconfigure")
-            
+
         return self._run_command(cmd)
-        
+
     def auth(self, args: argparse.Namespace) -> CommandResult:
         """Authentication management command."""
         if args.generate:
@@ -114,31 +114,31 @@ class CommandManager:
         else:
             # Default: generate JWT token
             return self._run_make("jwt")
-            
+
     def start(self, args: argparse.Namespace) -> CommandResult:
         """Start services command."""
         make_args = []
-        
+
         if args.gateway_only:
             make_args.append("gateway-only")
-            
+
         return self._run_make("start", make_args)
-        
+
     def stop(self, args: argparse.Namespace) -> CommandResult:
         """Stop services command."""
         return self._run_make("stop")
-        
+
     def register(self, args: argparse.Namespace) -> CommandResult:
         """Register servers command."""
         make_args = []
-        
+
         if args.wait:
             make_args.append("register-wait")
         else:
             make_args.append("register")
-            
+
         return self._run_make("register", make_args)
-        
+
     def status(self, args: argparse.Namespace) -> CommandResult:
         """System status command."""
         if args.detailed:
@@ -147,7 +147,7 @@ class CommandManager:
             return self._run_make("status-json")
         else:
             return self._run_make("status")
-            
+
     def list(self, args: argparse.Namespace) -> CommandResult:
         """List resources command."""
         if args.servers:
@@ -158,18 +158,18 @@ class CommandManager:
             # Default: list both
             servers_result = self._run_make("list-servers")
             prompts_result = self._run_make("list-prompts")
-            
+
             combined_output = "=== Virtual Servers ===\n"
             combined_output += servers_result.output
             combined_output += "\n=== Available Prompts ===\n"
             combined_output += prompts_result.output
-            
+
             return CommandResult(
                 success=servers_result.success and prompts_result.success,
                 output=combined_output,
                 error=servers_result.error or prompts_result.error
             )
-            
+
     def clean(self, args: argparse.Namespace) -> CommandResult:
         """Clean up command."""
         if args.reset_db:
@@ -179,11 +179,11 @@ class CommandManager:
         else:
             # Default: run both clean operations
             return self._run_make("clean")
-            
+
     def lint(self, args: argparse.Namespace) -> CommandResult:
         """Lint code command."""
         make_args = []
-        
+
         if args.python:
             make_args.append("lint-python")
         elif args.typescript:
@@ -193,13 +193,13 @@ class CommandManager:
         else:
             # Default: run all linters
             make_args.append("lint")
-            
+
         return self._run_make("lint", make_args)
-        
+
     def format(self, args: argparse.Namespace) -> CommandResult:
         """Format code command."""
         make_args = []
-        
+
         if args.python:
             make_args.append("format-python")
         elif args.typescript:
@@ -207,16 +207,16 @@ class CommandManager:
         else:
             # Default: format all
             make_args.append("format")
-            
+
         return self._run_make("format", make_args)
-        
+
     def test(self, args: argparse.Namespace) -> CommandResult:
         """Run tests command."""
         if args.coverage:
             return self._run_make("test-coverage")
         else:
             return self._run_make("test")
-            
+
     def config(self, args: argparse.Namespace) -> CommandResult:
         """Configuration management command."""
         if args.backup:
@@ -231,11 +231,11 @@ class CommandManager:
             return self._run_make("config-cleanup")
         else:
             return self._run_make("validate-config")
-            
+
     def help(self, args: argparse.Namespace) -> CommandResult:
         """Enhanced help command."""
         help_args = []
-        
+
         if args.topics:
             help_args.append("help-topics")
         elif args.examples:
@@ -245,9 +245,9 @@ class CommandManager:
             return self._show_topic_help(args.topic)
         else:
             help_args.append("help")
-            
+
         return self._run_make("help", help_args)
-        
+
     def _show_topic_help(self, topic: str) -> CommandResult:
         """Show contextual help for specific topic."""
         help_content = {
@@ -274,7 +274,7 @@ Examples:
   make setup --quick            # Quick setup with defaults
   make setup --reconfigure      # Update existing configuration
             """,
-            
+
             "auth": """
 🔑 Authentication Command
 
@@ -297,7 +297,7 @@ Examples:
   make auth --check             # Validate current config
   make auth --refresh           # Refresh JWT token
             """,
-            
+
             "ide": """
 💻 IDE Setup Command
 
@@ -324,7 +324,7 @@ Examples:
   make ide-setup IDE=windsurf ACTION=backup     # Backup Windsurf config
   make ide-setup IDE=vscode ACTION=status       # Check VS Code status
             """,
-            
+
             "status": """
 📊 Status Command
 
@@ -347,7 +347,7 @@ Examples:
   make status --detailed        # Detailed system information
   make status --json            # Machine-readable JSON output
             """,
-            
+
             "troubleshooting": """
 🔧 Troubleshooting
 
@@ -375,9 +375,9 @@ Get Help:
   make help --examples          # Show usage examples
             """
         }
-        
+
         content = help_content.get(topic.lower(), f"❌ Unknown topic: {topic}")
-        
+
         return CommandResult(
             success=True,
             output=content,
@@ -404,13 +404,13 @@ For more help:
   %(prog)s help --examples          # Show usage examples
         """
     )
-    
+
     subparsers = parser.add_subparsers(
         dest="command",
         help="Available commands",
         metavar="COMMAND"
     )
-    
+
     # Setup command
     setup_parser = subparsers.add_parser(
         "setup",
@@ -426,7 +426,7 @@ For more help:
         action="store_true",
         help="Reconfigure existing setup"
     )
-    
+
     # Auth command
     auth_parser = subparsers.add_parser(
         "auth",
@@ -448,7 +448,7 @@ For more help:
         action="store_true",
         help="Refresh JWT token"
     )
-    
+
     # Start command
     start_parser = subparsers.add_parser(
         "start",
@@ -459,13 +459,13 @@ For more help:
         action="store_true",
         help="Start only gateway service"
     )
-    
+
     # Stop command
     subparsers.add_parser(
         "stop",
         help="Stop services"
     )
-    
+
     # Register command
     register_parser = subparsers.add_parser(
         "register",
@@ -476,7 +476,7 @@ For more help:
         action="store_true",
         help="Wait for services to be ready"
     )
-    
+
     # Status command
     status_parser = subparsers.add_parser(
         "status",
@@ -493,7 +493,7 @@ For more help:
         action="store_true",
         help="JSON format output"
     )
-    
+
     # List command
     list_parser = subparsers.add_parser(
         "list",
@@ -510,7 +510,7 @@ For more help:
         action="store_true",
         help="List available prompts"
     )
-    
+
     # Clean command
     clean_parser = subparsers.add_parser(
         "clean",
@@ -527,7 +527,7 @@ For more help:
         action="store_true",
         help="Clean duplicate servers"
     )
-    
+
     # Lint command
     lint_parser = subparsers.add_parser(
         "lint",
@@ -549,7 +549,7 @@ For more help:
         action="store_true",
         help="Lint shell scripts only"
     )
-    
+
     # Format command
     format_parser = subparsers.add_parser(
         "format",
@@ -566,7 +566,7 @@ For more help:
         action="store_true",
         help="Format TypeScript code only"
     )
-    
+
     # Test command
     test_parser = subparsers.add_parser(
         "test",
@@ -577,7 +577,7 @@ For more help:
         action="store_true",
         help="Run tests with coverage"
     )
-    
+
     # Config command
     config_parser = subparsers.add_parser(
         "config",
@@ -609,7 +609,7 @@ For more help:
         action="store_true",
         help="Clean up old configurations"
     )
-    
+
     # Help command
     help_parser = subparsers.add_parser(
         "help",
@@ -630,7 +630,7 @@ For more help:
         "--topic",
         help="Show help for specific topic"
     )
-    
+
     return parser
 
 
@@ -638,13 +638,13 @@ def main():
     """Main entry point."""
     parser = create_parser()
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         sys.exit(1)
-        
+
     manager = CommandManager()
-    
+
     # Map commands to methods
     command_map = {
         "setup": manager.setup,
@@ -661,16 +661,16 @@ def main():
         "config": manager.config,
         "help": manager.help,
     }
-    
+
     if args.command not in command_map:
         print(f"❌ Unknown command: {args.command}")
         parser.print_help()
         sys.exit(1)
-        
+
     # Execute command
     try:
         result = command_map[args.command](args)
-        
+
         if result.success:
             if result.output:
                 print(result.output)
@@ -679,7 +679,7 @@ def main():
             if result.error:
                 print(f"❌ Error: {result.error}")
             sys.exit(1)
-            
+
     except KeyboardInterrupt:
         print("\n❌ Command cancelled by user.")
         sys.exit(1)

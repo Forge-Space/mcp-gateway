@@ -76,7 +76,7 @@ class HTTPGatewayClient:
                 if attempt < self.config.max_retries - 1:
                     time.sleep(self._retry_delay_seconds * (2**attempt))
                     continue
-            except json.JSONDecodeError as json_error:
+            except json.JSONDecodeError:
                 msg = "Invalid JSON response"
                 raise ValueError(msg)
 

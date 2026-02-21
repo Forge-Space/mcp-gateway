@@ -27,6 +27,11 @@ class VirtualServerManager:
 
     def __init__(self, config_file: str = None):
         self.config_file = config_file or "config/virtual-servers.txt"
+        # Validate config file path to prevent path traversal
+        if self.config_file != "config/virtual-servers.txt":
+            # Only allow relative paths within the current directory
+            if self.config_file.startswith('/') or '..' in self.config_file:
+                raise ValueError("Invalid config file path: must be relative path within project")
         self.config_path = Path(self.config_file)
         self.servers: Dict[str, VirtualServer] = {}
         self.load_servers()
@@ -91,6 +96,9 @@ class VirtualServerManager:
             backup_path.write_text(self.config_path.read_text())
 
         # Write new configuration
+        # Additional safety check before opening file
+        if not str(self.config_path).startswith('./') and not str(self.config_path).startswith('config/'):
+            raise ValueError(f"Unsafe file path: {self.config_path}")
         with open(self.config_path, 'w') as f:
             f.write("# Virtual servers: Name|enabled|gateways|description\n")
             f.write("# enabled: true/false - controls server creation\n")

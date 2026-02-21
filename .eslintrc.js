@@ -6,14 +6,14 @@ module.exports = {
   root: true,
   env: {
     node: true,
-    es2022: true
+    es2022: true,
   },
   extends: ['eslint:recommended', '@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: './tsconfig.json'
+    project: './tsconfig.json',
   },
   plugins: ['@typescript-eslint'],
   rules: {
@@ -25,8 +25,8 @@ module.exports = {
       'warn',
       {
         argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_'
-      }
+        varsIgnorePattern: '^_',
+      },
     ],
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/explicit-function-return-type': 'off',
@@ -57,28 +57,28 @@ module.exports = {
     // Style rules (handled by Prettier)
     quotes: ['error', 'single', { avoidEscape: true }],
     semi: ['error', 'always'],
-    'comma-dangle': ['error', 'never']
+    'comma-dangle': ['error', 'never'],
   },
   overrides: [
     {
       files: ['*.js'],
       rules: {
-        '@typescript-eslint/no-var-requires': 'off'
-      }
+        '@typescript-eslint/no-var-requires': 'off',
+      },
     },
     {
       files: ['*.ts'],
       rules: {
-        '@typescript-eslint/no-var-requires': 'error'
-      }
+        '@typescript-eslint/no-var-requires': 'error',
+      },
     },
     {
       files: ['scripts/**/*.js', 'scripts/**/*.sh'],
       rules: {
         'no-console': 'off',
-        '@typescript-eslint/no-var-requires': 'off'
-      }
-    }
+        '@typescript-eslint/no-var-requires': 'off',
+      },
+    },
   ],
-  ignorePatterns: ['node_modules/', 'dist/', 'build/', 'coverage/', '*.min.js', '!.eslintrc.js']
+  ignorePatterns: ['node_modules/', 'dist/', 'build/', 'coverage/', '*.min.js', '!.eslintrc.js'],
 };

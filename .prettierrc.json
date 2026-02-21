@@ -17,10 +17,7 @@
       }
     },
     {
-      "files": [
-        "*.yml",
-        "*.yaml"
-      ],
+      "files": ["*.yml", "*.yaml"],
       "options": {
         "printWidth": 80,
         "singleQuote": false

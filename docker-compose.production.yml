@@ -1,7 +1,7 @@
 # Production Docker Compose Configuration for Forge MCP Gateway
 # This file is optimized for production deployment with security, monitoring, and scalability
 
-version: '3.8'
+version: "3.8"
 
 services:
   # Core Gateway Service (Production)
@@ -211,7 +211,11 @@ services:
       restart_policy:
         condition: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-forge_user} -d ${POSTGRES_DB:-forge_mcp_prod}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-forge_user} -d ${POSTGRES_DB:-forge_mcp_prod}",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -265,10 +269,10 @@ services:
     ports:
       - "9090:9090"
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
     volumes:
       - ./config/prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus

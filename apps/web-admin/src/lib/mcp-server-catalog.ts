@@ -6,29 +6,29 @@ export type ServerTypeId =
   | 'postgres'
   | 'mongodb'
   | 'sequential-thinking'
-  | 'custom'
+  | 'custom';
 
 export interface EnvVarSpec {
-  key: string
-  label: string
-  placeholder: string
-  required: boolean
-  secret: boolean
-  description?: string
+  key: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  secret: boolean;
+  description?: string;
 }
 
 export interface ServerTypeDefinition {
-  id: ServerTypeId
-  name: string
-  description: string
-  icon: string
-  category: 'tools' | 'data' | 'ai' | 'custom'
-  defaultPort: number
-  dockerImage: string
-  defaultTransport: 'SSE' | 'STREAMABLEHTTP'
-  envVars: EnvVarSpec[]
-  defaultTools: string[]
-  badge?: string
+  id: ServerTypeId;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'tools' | 'data' | 'ai' | 'custom';
+  defaultPort: number;
+  dockerImage: string;
+  defaultTransport: 'SSE' | 'STREAMABLEHTTP';
+  envVars: EnvVarSpec[];
+  defaultTools: string[];
+  badge?: string;
 }
 
 export const SERVER_TYPE_CATALOG: ServerTypeDefinition[] = [
@@ -158,7 +158,13 @@ export const SERVER_TYPE_CATALOG: ServerTypeDefinition[] = [
         description: 'Full MongoDB connection string',
       },
     ],
-    defaultTools: ['find_documents', 'insert_document', 'update_document', 'delete_document', 'list_collections'],
+    defaultTools: [
+      'find_documents',
+      'insert_document',
+      'update_document',
+      'delete_document',
+      'list_collections',
+    ],
   },
   {
     id: 'sequential-thinking',
@@ -186,16 +192,16 @@ export const SERVER_TYPE_CATALOG: ServerTypeDefinition[] = [
     defaultTools: [],
     badge: 'Advanced',
   },
-]
+];
 
 export function getServerType(id: ServerTypeId): ServerTypeDefinition | undefined {
-  return SERVER_TYPE_CATALOG.find((s) => s.id === id)
+  return SERVER_TYPE_CATALOG.find((s) => s.id === id);
 }
 
 export function getNextAvailablePort(usedPorts: number[]): number {
-  let port = 8040
+  let port = 8040;
   while (usedPorts.includes(port)) {
-    port++
+    port++;
   }
-  return port
+  return port;
 }

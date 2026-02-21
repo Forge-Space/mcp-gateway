@@ -2,44 +2,45 @@
 
 from __future__ import annotations
 
-import json
 import time
-from typing import Any, Dict, Optional
 from dataclasses import dataclass
+from typing import Any
 
-from .input_validator import InputValidator, SecurityValidationResult, ValidationLevel
-from .rate_limiter import RateLimiter, RateLimitConfig, RateLimitResult
-from .audit_logger import SecurityAuditLogger, SecurityEventType, SecuritySeverity
+from .audit_logger import SecurityAuditLogger
+from .input_validator import InputValidator, ValidationLevel
+from .rate_limiter import RateLimitConfig, RateLimiter
 
 
 @dataclass
 class SecurityContext:
     """Security context for a request."""
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
-    request_id: Optional[str] = None
-    endpoint: Optional[str] = None
-    authentication_method: Optional[str] = None
-    user_role: Optional[str] = None
+
+    user_id: str | None = None
+    session_id: str | None = None
+    ip_address: str | None = None
+    user_agent: str | None = None
+    request_id: str | None = None
+    endpoint: str | None = None
+    authentication_method: str | None = None
+    user_role: str | None = None
 
 
 @dataclass
 class SecurityCheckResult:
     """Result of security checks."""
+
     allowed: bool
     risk_score: float
     violations: list[str]
-    sanitized_inputs: Dict[str, str]
-    metadata: Dict[str, Any]
-    blocked_reason: Optional[str] = None
+    sanitized_inputs: dict[str, str]
+    metadata: dict[str, Any]
+    blocked_reason: str | None = None
 
 
 class SecurityMiddleware:
     """Main security middleware orchestrating all security components."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.enabled = config.get("enabled", True)
         self.strict_mode = config.get("strict_mode", False)
@@ -51,15 +52,13 @@ class SecurityMiddleware:
         # Rate limiter configuration
         rate_limit_config = config.get("rate_limiting", {})
         self.rate_limiter = RateLimiter(
-            use_redis=rate_limit_config.get("use_redis", False),
-            redis_url=rate_limit_config.get("redis_url")
+            use_redis=rate_limit_config.get("use_redis", False), redis_url=rate_limit_config.get("redis_url")
         )
 
         # Audit logger
         audit_config = config.get("audit_logging", {})
         self.audit_logger = SecurityAuditLogger(
-            log_file=audit_config.get("log_file"),
-            enable_console=audit_config.get("enable_console", True)
+            log_file=audit_config.get("log_file"), enable_console=audit_config.get("enable_console", True)
         )
 
         # Default rate limit configurations
@@ -68,7 +67,7 @@ class SecurityMiddleware:
             requests_per_hour=rate_limit_config.get("default", {}).get("requests_per_hour", 1000),
             requests_per_day=rate_limit_config.get("default", {}).get("requests_per_day", 10000),
             burst_capacity=rate_limit_config.get("default", {}).get("burst_capacity", 10),
-            penalty_duration=rate_limit_config.get("penalty_duration", 300)
+            penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
         self.authenticated_rate_limit = RateLimitConfig(
@@ -76,7 +75,7 @@ class SecurityMiddleware:
             requests_per_hour=rate_limit_config.get("authenticated_user", {}).get("requests_per_hour", 2000),
             requests_per_day=rate_limit_config.get("authenticated_user", {}).get("requests_per_day", 20000),
             burst_capacity=rate_limit_config.get("authenticated_user", {}).get("burst_capacity", 20),
-            penalty_duration=rate_limit_config.get("penalty_duration", 300)
+            penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
         self.enterprise_rate_limit = RateLimitConfig(
@@ -84,20 +83,16 @@ class SecurityMiddleware:
             requests_per_hour=rate_limit_config.get("enterprise_user", {}).get("requests_per_hour", 5000),
             requests_per_day=rate_limit_config.get("enterprise_user", {}).get("requests_per_day", 50000),
             burst_capacity=rate_limit_config.get("enterprise_user", {}).get("burst_capacity", 50),
-            penalty_duration=rate_limit_config.get("penalty_duration", 300)
+            penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
-    def check_request_security(self, context: SecurityContext,
-                               task: str, category: str, context_str: str,
-                               user_preferences: str) -> SecurityCheckResult:
+    def check_request_security(
+        self, context: SecurityContext, task: str, category: str, context_str: str, user_preferences: str
+    ) -> SecurityCheckResult:
         """Perform comprehensive security checks on a request."""
         if not self.enabled:
             return SecurityCheckResult(
-                allowed=True,
-                risk_score=0.0,
-                violations=[],
-                sanitized_inputs={},
-                metadata={"security_disabled": True}
+                allowed=True, risk_score=0.0, violations=[], sanitized_inputs={}, metadata={"security_disabled": True}
             )
 
         violations = []
@@ -118,7 +113,7 @@ class SecurityMiddleware:
             user_agent=context.user_agent,
             request_id=context.request_id,
             endpoint=context.endpoint,
-            details={"category": category, "task_length": len(task)}
+            details={"category": category, "task_length": len(task)},
         )
 
         # Input validation
@@ -143,7 +138,7 @@ class SecurityMiddleware:
                 endpoint=context.endpoint,
                 reason=blocked_reason,
                 risk_score=risk_score,
-                details={"violations": prompt_result.violations}
+                details={"violations": prompt_result.violations},
             )
 
         # User preferences validation
@@ -177,10 +172,10 @@ class SecurityMiddleware:
                 ip_address=context.ip_address,
                 request_id=context.request_id,
                 endpoint=context.endpoint,
-                limit_type=rate_limit_result.metadata.get('window_type', 'unknown'),
-                current_count=rate_limit_result.metadata.get('current_count', 0),
-                limit=rate_limit_result.metadata.get('max_requests', 0),
-                details={"retry_after": rate_limit_result.retry_after}
+                limit_type=rate_limit_result.metadata.get("window_type", "unknown"),
+                current_count=rate_limit_result.metadata.get("current_count", 0),
+                limit=rate_limit_result.metadata.get("max_requests", 0),
+                details={"retry_after": rate_limit_result.retry_after},
             )
 
         # Check for prompt injection patterns specifically
@@ -199,7 +194,7 @@ class SecurityMiddleware:
                     endpoint=context.endpoint,
                     patterns=injection_patterns,
                     risk_score=risk_score,
-                    details={"sanitized_prompt": prompt_result.sanitized_input[:200] + "..."}
+                    details={"sanitized_prompt": prompt_result.sanitized_input[:200] + "..."},
                 )
 
         # Apply strict mode rules
@@ -210,10 +205,10 @@ class SecurityMiddleware:
 
         # Determine if request should be blocked
         blocked = (
-            blocked_reason is not None or
-            risk_score >= 0.8 or
-            len(violations) > 5 or
-            (self.strict_mode and risk_score > 0.5)
+            blocked_reason is not None
+            or risk_score >= 0.8
+            or len(violations) > 5
+            or (self.strict_mode and risk_score > 0.5)
         )
 
         # Log suspicious activity
@@ -226,7 +221,7 @@ class SecurityMiddleware:
                 endpoint=context.endpoint,
                 activity_type="high_risk_request",
                 risk_score=risk_score,
-                details={"violations": violations, "risk_score": risk_score}
+                details={"violations": violations, "risk_score": risk_score},
             )
 
         # Apply penalty if risk is high
@@ -243,31 +238,33 @@ class SecurityMiddleware:
                 penalty_type="high_risk_penalty",
                 duration=penalty_duration,
                 reason=f"High risk score: {risk_score:.2f}",
-                details={"violations": violations}
+                details={"violations": violations},
             )
 
             # Add penalty metadata to result
             metadata["penalty_applied"] = {
                 "duration": penalty_duration,
                 "reason": f"High risk score: {risk_score:.2f}",
-                "timestamp": time.time()
+                "timestamp": time.time(),
             }
 
         # Update metadata
-        metadata.update({
-            "validation_results": {
-                "prompt": {"valid": prompt_result.is_valid, "risk": prompt_result.risk_score},
-                "preferences": {"valid": prefs_result.is_valid, "risk": prefs_result.risk_score}
-            },
-            "rate_limit": {
-                "allowed": rate_limit_result.allowed,
-                "remaining": rate_limit_result.remaining,
-                "reset_time": rate_limit_result.reset_time,
-                "retry_after": rate_limit_result.retry_after
-            },
-            "security_level": self.config.get("validation_level", "standard"),
-            "strict_mode": self.strict_mode
-        })
+        metadata.update(
+            {
+                "validation_results": {
+                    "prompt": {"valid": prompt_result.is_valid, "risk": prompt_result.risk_score},
+                    "preferences": {"valid": prefs_result.is_valid, "risk": prefs_result.risk_score},
+                },
+                "rate_limit": {
+                    "allowed": rate_limit_result.allowed,
+                    "remaining": rate_limit_result.remaining,
+                    "reset_time": rate_limit_result.reset_time,
+                    "retry_after": rate_limit_result.retry_after,
+                },
+                "security_level": self.config.get("validation_level", "standard"),
+                "strict_mode": self.strict_mode,
+            }
+        )
 
         return SecurityCheckResult(
             allowed=not blocked,
@@ -275,7 +272,7 @@ class SecurityMiddleware:
             violations=violations,
             sanitized_inputs=sanitized_inputs,
             metadata=metadata,
-            blocked_reason=blocked_reason
+            blocked_reason=blocked_reason,
         )
 
     def _get_rate_limit_identifier(self, context: SecurityContext) -> str:
@@ -283,21 +280,19 @@ class SecurityMiddleware:
         # Priority: user_id > session_id > ip_address
         if context.user_id:
             return f"user:{context.user_id}"
-        elif context.session_id:
+        if context.session_id:
             return f"session:{context.session_id}"
-        elif context.ip_address:
+        if context.ip_address:
             return f"ip:{context.ip_address}"
-        else:
-            return "anonymous"
+        return "anonymous"
 
     def _get_rate_limit_config(self, context: SecurityContext) -> RateLimitConfig:
         """Get rate limit configuration based on user context."""
         if context.user_role == "enterprise":
             return self.enterprise_rate_limit
-        elif context.user_id:  # Authenticated user
+        if context.user_id:  # Authenticated user
             return self.authenticated_rate_limit
-        else:
-            return self.default_rate_limit
+        return self.default_rate_limit
 
     def _detect_prompt_injection_patterns(self, prompt: str) -> list[str]:
         """Detect prompt injection patterns in the prompt."""
@@ -305,24 +300,25 @@ class SecurityMiddleware:
 
         # Additional injection patterns not caught by general validation
         injection_checks = [
-            r'(?i)(ignore|forget|disregard).*(previous|above|system).*(prompt|instruction)',
-            r'(?i)(you are|act as|pretend to be).*(not|no longer).*(an? )?(ai|assistant)',
-            r'(?i)(new|different|changed).*(role|persona|character)',
-            r'(?i)(instead|rather|alternatively).*(do|perform|execute)',
-            r'(?i)(stop|cease|halt).*(following|obeying)',
-            r'(?i)(override|bypass|ignore).*(rules|guidelines|restrictions)',
-            r'(?i)(###|---|\*\*\*|===).*(end|stop|finish)',
-            r'(?i)(\\n\\n|\\r\\n|\\t).*(new|separate|different)',
+            r"(?i)(ignore|forget|disregard).*(previous|above|system).*(prompt|instruction)",
+            r"(?i)(you are|act as|pretend to be).*(not|no longer).*(an? )?(ai|assistant)",
+            r"(?i)(new|different|changed).*(role|persona|character)",
+            r"(?i)(instead|rather|alternatively).*(do|perform|execute)",
+            r"(?i)(stop|cease|halt).*(following|obeying)",
+            r"(?i)(override|bypass|ignore).*(rules|guidelines|restrictions)",
+            r"(?i)(###|---|\*\*\*|===).*(end|stop|finish)",
+            r"(?i)(\\n\\n|\\r\\n|\\t).*(new|separate|different)",
         ]
 
         import re
+
         for pattern in injection_checks:
             if re.search(pattern, prompt):
                 injection_patterns.append(pattern)
 
         return injection_patterns
 
-    def get_security_stats(self) -> Dict[str, Any]:
+    def get_security_stats(self) -> dict[str, Any]:
         """Get security statistics."""
         return {
             "enabled": self.enabled,
@@ -331,12 +327,12 @@ class SecurityMiddleware:
             "rate_limiting": {
                 "default": self.default_rate_limit.__dict__,
                 "authenticated": self.authenticated_rate_limit.__dict__,
-                "enterprise": self.enterprise_rate_limit.__dict__
+                "enterprise": self.enterprise_rate_limit.__dict__,
             },
-            "audit_summary": self.audit_logger.get_security_summary()
+            "audit_summary": self.audit_logger.get_security_summary(),
         }
 
-    def update_config(self, new_config: Dict[str, Any]) -> None:
+    def update_config(self, new_config: dict[str, Any]) -> None:
         """Update security configuration."""
         self.config.update(new_config)
 

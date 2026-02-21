@@ -32,9 +32,9 @@ def demo_input_validation() -> None:
     print("=" * 60)
     print("🔍 INPUT VALIDATION & SANITIZATION DEMO")
     print("=" * 60)
-    
+
     validator = InputValidator(ValidationLevel.STANDARD)
-    
+
     # Test cases
     test_cases = [
         {
@@ -63,27 +63,27 @@ def demo_input_validation() -> None:
             "expected_valid": False
         }
     ]
-    
+
     for i, test_case in enumerate(test_cases, 1):
         print(f"\n{i}. {test_case['name']}")
         print("-" * 40)
         print(f"Input: {test_case['prompt'][:100]}{'...' if len(test_case['prompt']) > 100 else ''}")
-        
+
         result = validator.validate_prompt(test_case['prompt'])
-        
+
         print(f"✅ Valid: {result.is_valid}")
         print(f"🎯 Risk Score: {result.risk_score:.2f}")
         print(f"🚫 Blocked: {result.blocked}")
         print(f"📝 Violations: {len(result.violations)}")
-        
+
         if result.violations:
             print("   Violations:")
             for violation in result.violations[:3]:  # Show first 3
                 print(f"   - {violation}")
-        
+
         if result.sanitized_input != test_case['prompt']:
             print(f"🧹 Sanitized: {result.sanitized_input[:100]}{'...' if len(result.sanitized_input) > 100 else ''}")
-        
+
         # Verify expectation
         if result.is_valid == test_case['expected_valid']:
             print("✅ Test PASSED")
@@ -96,9 +96,9 @@ def demo_rate_limiting() -> None:
     print("\n" + "=" * 60)
     print("⏱️  RATE LIMITING DEMO")
     print("=" * 60)
-    
+
     rate_limiter = RateLimiter(use_redis=False)
-    
+
     # Different user configurations
     configs = {
         "Anonymous User": RateLimitConfig(
@@ -120,21 +120,21 @@ def demo_rate_limiting() -> None:
             burst_capacity=8
         )
     }
-    
+
     for user_type, config in configs.items():
         print(f"\n👤 {user_type}")
         print("-" * 40)
         print(f"Limits: {config.requests_per_minute}/min, {config.burst_capacity} burst")
-        
+
         user_id = f"{user_type.lower().replace(' ', '_')}_test"
-        
+
         # Test rapid requests
         allowed_count = 0
         blocked_count = 0
-        
+
         for i in range(15):  # More than the limit
             result = rate_limiter.check_rate_limit(user_id, config)
-            
+
             if result.allowed:
                 allowed_count += 1
                 print(f"  Request {i+1}: ✅ Allowed (remaining: {result.remaining})")
@@ -142,9 +142,9 @@ def demo_rate_limiting() -> None:
                 blocked_count += 1
                 print(f"  Request {i+1}: 🚫 Blocked (retry after: {result.retry_after}s)")
                 break  # Stop after first block for demo
-        
+
         print(f"📊 Summary: {allowed_count} allowed, {blocked_count} blocked")
-        
+
         # Show usage stats
         stats = rate_limiter.get_usage_stats(user_id)
         print(f"📈 Usage Stats: {stats['minute']['count']} requests this minute")
@@ -155,10 +155,10 @@ def demo_security_middleware() -> None:
     print("\n" + "=" * 60)
     print("🛡️  SECURITY MIDDLEWARE INTEGRATION DEMO")
     print("=" * 60)
-    
+
     # Load security configuration
     config_path = Path(__file__).parent / "config" / "security.yaml"
-    
+
     if config_path.exists():
         import yaml
         with config_path.open() as f:
@@ -186,9 +186,9 @@ def demo_security_middleware() -> None:
                 "enable_console": False
             }
         }
-    
+
     middleware = SecurityMiddleware(config)
-    
+
     # Test scenarios
     scenarios = [
         {
@@ -219,11 +219,11 @@ def demo_security_middleware() -> None:
             "expected_allowed": True
         }
     ]
-    
+
     for i, scenario in enumerate(scenarios, 1):
         print(f"\n{i}. {scenario['name']}")
         print("-" * 50)
-        
+
         context = SecurityContext(
             user_id=scenario['user_id'],
             ip_address="192.168.1.100",
@@ -232,10 +232,10 @@ def demo_security_middleware() -> None:
             endpoint="execute_specialist_task",
             user_role="user"
         )
-        
+
         print(f"👤 User: {scenario['user_id']}")
         print(f"📝 Task: {scenario['task'][:60]}{'...' if len(scenario['task']) > 60 else ''}")
-        
+
         result = middleware.check_request_security(
             context=context,
             task=scenario['task'],
@@ -243,19 +243,19 @@ def demo_security_middleware() -> None:
             context_str=scenario['context'],
             user_preferences=scenario['preferences']
         )
-        
+
         print(f"✅ Allowed: {result.allowed}")
         print(f"🎯 Risk Score: {result.risk_score:.2f}")
         print(f"📝 Violations: {len(result.violations)}")
-        
+
         if result.blocked_reason:
             print(f"🚫 Blocked Reason: {result.blocked_reason}")
-        
+
         if result.violations:
             print("   Violations:")
             for violation in result.violations[:2]:
                 print(f"   - {violation}")
-        
+
         # Show sanitized inputs
         if any(result.sanitized_inputs[key] != original for key, original in [
             ("task", scenario['task']),
@@ -267,7 +267,7 @@ def demo_security_middleware() -> None:
                 original = scenario.get(key.replace("user_preferences", "preferences"), "")
                 if value != original:
                     print(f"   {key}: {value[:50]}{'...' if len(value) > 50 else ''}")
-        
+
         # Verify expectation
         if result.allowed == scenario['expected_allowed']:
             print("✅ Scenario PASSED")
@@ -280,10 +280,10 @@ def demo_audit_logging() -> None:
     print("\n" + "=" * 60)
     print("📋 SECURITY AUDIT LOGGING DEMO")
     print("=" * 60)
-    
+
     # Create audit logger (console disabled for cleaner demo output)
     audit_logger = SecurityAuditLogger(enable_console=False)
-    
+
     # Log different security events
     events = [
         ("Request Received", lambda: audit_logger.log_request_received(
@@ -295,7 +295,7 @@ def demo_audit_logging() -> None:
             endpoint="execute_specialist_task",
             details={"category": "ui_generation"}
         )),
-        
+
         ("Request Blocked", lambda: audit_logger.log_request_blocked(
             user_id="user_malicious",
             session_id="session789",
@@ -307,7 +307,7 @@ def demo_audit_logging() -> None:
             risk_score=0.95,
             details={"violations": ["suspicious pattern detected"]}
         )),
-        
+
         ("Rate Limit Exceeded", lambda: audit_logger.log_rate_limit_exceeded(
             user_id="user_spammer",
             session_id="session999",
@@ -319,7 +319,7 @@ def demo_audit_logging() -> None:
             limit=60,
             details={"retry_after": 60}
         )),
-        
+
         ("Prompt Injection Detected", lambda: audit_logger.log_prompt_injection_detected(
             user_id="user_hacker",
             session_id="session_hack",
@@ -331,20 +331,20 @@ def demo_audit_logging() -> None:
             details={"attack_vector": "prompt_injection"}
         ))
     ]
-    
+
     for event_name, log_function in events:
         print(f"\n📝 Logging: {event_name}")
         print("-" * 30)
-        
+
         event_id = log_function()
         print(f"🆔 Event ID: {event_id}")
         print("✅ Event logged successfully")
-    
+
     # Get security summary
     print(f"\n📊 Security Summary (Last 24 Hours)")
     print("-" * 40)
     summary = audit_logger.get_security_summary(24)
-    
+
     for key, value in summary.items():
         print(f"{key}: {value}")
 
@@ -354,7 +354,7 @@ def demo_performance_impact() -> None:
     print("\n" + "=" * 60)
     print("⚡ PERFORMANCE IMPACT DEMO")
     print("=" * 60)
-    
+
     # Initialize security middleware
     config = {
         "enabled": True,
@@ -371,15 +371,15 @@ def demo_performance_impact() -> None:
         },
         "audit_logging": {"enabled": True, "enable_console": False}
     }
-    
+
     middleware = SecurityMiddleware(config)
-    
+
     # Test performance with multiple requests
     num_requests = 100
     print(f"🏃 Testing {num_requests} security checks...")
-    
+
     start_time = time.time()
-    
+
     for i in range(num_requests):
         context = SecurityContext(
             user_id=f"user_{i % 10}",  # Rotate between 10 users
@@ -387,7 +387,7 @@ def demo_performance_impact() -> None:
             request_id=f"perf_req_{i}",
             endpoint="execute_specialist_task"
         )
-        
+
         result = middleware.check_request_security(
             context=context,
             task=f"Generate component {i}",
@@ -395,15 +395,15 @@ def demo_performance_impact() -> None:
             context_str="Performance test context",
             user_preferences='{"cost_preference": "efficient"}'
         )
-    
+
     end_time = time.time()
     total_time = end_time - start_time
     avg_time = total_time / num_requests * 1000  # Convert to milliseconds
-    
+
     print(f"⏱️  Total Time: {total_time:.3f}s")
     print(f"📊 Average Time per Request: {avg_time:.2f}ms")
     print(f"🚀 Requests per Second: {num_requests / total_time:.1f}")
-    
+
     # Performance assessment
     if avg_time < 10:
         print("✅ Excellent performance (< 10ms per request)")
@@ -421,14 +421,14 @@ def main() -> None:
     print("=" * 60)
     print("This demo showcases the comprehensive security features")
     print("implemented for the MCP Gateway AI agents.")
-    
+
     try:
         demo_input_validation()
         demo_rate_limiting()
         demo_security_middleware()
         demo_audit_logging()
         demo_performance_impact()
-        
+
         print("\n" + "=" * 60)
         print("🎉 ALL DEMOS COMPLETED SUCCESSFULLY!")
         print("=" * 60)
@@ -439,19 +439,19 @@ def main() -> None:
         print("   ✅ Security audit logging")
         print("   ✅ Security middleware integration")
         print("   ✅ Performance impact analysis")
-        
+
         print("\n📋 Next Steps:")
         print("   1. Configure security settings in config/security.yaml")
         print("   2. Run comprehensive tests: python -m pytest tests/test_security.py")
         print("   3. Monitor security logs in production")
         print("   4. Adjust security policies based on usage patterns")
-        
+
     except Exception as e:
         print(f"\n❌ Demo failed with error: {e}")
         print("Please check that all dependencies are installed:")
         print("   pip install pyyaml bleach cachetools redis")
         return 1
-    
+
     return 0
 
 
