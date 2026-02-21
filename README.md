@@ -440,3 +440,4 @@ You can fork this repo to run your own MCP gateway stack. After forking: copy `.
 # Trigger CI rerun for debugging
 # CI fix verification
 # CI trigger for PR #43
+# CI trigger for PR #42
