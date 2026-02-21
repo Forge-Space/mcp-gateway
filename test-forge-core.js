@@ -8,29 +8,29 @@ import { ForgeCore } from "@forgespace/core";
 
 async function testForgeCoreIntegration() {
   console.log("🧪 Testing @forgespace/core integration...");
-  
+
   try {
     // Test ForgeCore import
     console.log("✅ ForgeCore import successful");
-    
+
     // Test ForgeCore instantiation
     const forgeCore = new ForgeCore({
-      gatewayUrl: "http://localhost:4444",
-      authToken: "test-token",
+      gatewayUrl: process.env.GATEWAY_URL || "http://localhost:4444",
+      authToken: process.env.FORGE_CORE_AUTH_TOKEN,
       timeout: 120000,
     });
     console.log("✅ ForgeCore instantiation successful");
-    
+
     // Test basic configuration
     console.log("✅ Configuration:", {
       gatewayUrl: forgeCore.gatewayUrl,
       timeout: forgeCore.timeout,
       hasAuthToken: !!forgeCore.authToken
     });
-    
+
     console.log("🎉 @forgespace/core integration test passed!");
     return true;
-    
+
   } catch (error) {
     console.error("❌ @forgespace/core integration test failed:", error);
     return false;
