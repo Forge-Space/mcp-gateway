@@ -1,8 +1,8 @@
-# UIForge Shared GitHub Package
+# Forge Space Shared GitHub Package
 
 ## 📦 Overview
 
-This directory contains centralized GitHub configurations, workflows, templates, and scripts shared across all UIForge projects. This package ensures consistency, reduces duplication, and simplifies maintenance across the entire UIForge ecosystem.
+This directory contains centralized GitHub configurations, workflows, templates, and scripts shared across all Forge Space projects. This package ensures consistency, reduces duplication, and simplifies maintenance across the entire Forge Space ecosystem.
 
 ## 🗂️ Directory Structure
 
@@ -264,9 +264,9 @@ This directory contains centralized GitHub configurations, workflows, templates,
 ### Getting Help
 
 1. **Documentation**: Review this README and template documentation
-2. **Examples**: Check reference implementations in other UIForge projects
+2. **Examples**: Check reference implementations in other Forge Space projects
 3. **Issues**: Report problems in the shared package repository
-4. **Community**: Consult UIForge development team for guidance
+4. **Community**: Consult Forge Space development team for guidance
 
 ## 📈 Future Enhancements
 
@@ -298,5 +298,5 @@ This directory contains centralized GitHub configurations, workflows, templates,
 
 **Version**: 1.0.0
 **Last Updated**: 2025-02-17
-**Maintainer**: UIForge Development Team
+**Maintainer**: Forge Space Development Team
 **License**: MIT

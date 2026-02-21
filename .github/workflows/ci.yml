@@ -17,7 +17,7 @@ env:
   CACHE_VERSION: "v1"
 
 jobs:
-  # Use shared base CI workflow
+  # Use local base CI workflow
   ci:
     name: Base CI Pipeline
     uses: ./.github/workflows/base-ci-shared.yml

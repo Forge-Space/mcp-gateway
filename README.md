@@ -1,1125 +1,397 @@
-# MCP Gateway
+# Forge MCP Gateway (Context Forge)
 
-A comprehensive, enterprise-ready Model Context Protocol (MCP) Gateway with advanced security, compliance, and performance features.
+Self-hosted Forge MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge). One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.
 
-## 🚀 Overview
+**GitHub repo description** (paste in Settings → General → Description, 350 char max):
 
-MCP Gateway provides a secure, scalable, and compliant gateway for managing Model Context Protocol (MCP) communications. It offers comprehensive security features including encryption, access control, GDPR compliance, and automated data retention policies.
+> Self-hosted Forge MCP gateway using IBM Context Forge. One Cursor (or MCP client) connection; add upstream servers via Admin UI. Docker, virtual servers, tool-router. MIT.
 
-### Key Features
+**License:** [MIT](LICENSE)
 
-- 🔐 **Enterprise Security**: Fernet encryption, role-based access control, comprehensive audit trails
-- 📋 **Regulatory Compliance**: GDPR, CCPA, HIPAA, SOX, PCI-DSS, ISO-27001 compliance
-- 🔄 **Data Retention**: Automated retention policies with multiple policy types
-- 📊 **Performance Monitoring**: Real-time metrics and performance optimization
-- 🌐 **REST API**: Comprehensive API for security and compliance management
-- 🐳 **Container Ready**: Docker-based deployment with multi-platform support
-- 🧪 **High Test Coverage**: Comprehensive test suite with 80%+ coverage
-- 🔒 **Cache Security**: Advanced cache security with encryption and access control (NEW)
+## Prerequisites
 
-## 📋 Table of Contents
+- Docker
+- Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
 
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [Security Features](#security-features)
-- [Cache Security](#cache-security)
-- [Compliance](#compliance)
-- [API Documentation](#api-documentation)
-- [Configuration](#configuration)
-- [Deployment](#deployment)
-- [Monitoring](#monitoring)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+**Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. Part of the [Forge Space Ecosystem](../../ECOSYSTEM_OVERVIEW.md) - Complete AI-powered development platform.
 
-## 🚀 Quick Start
+## Quick start
 
-### Prerequisites
+```bash
+cp .env.example .env
+# Edit .env: set PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD, JWT_SECRET_KEY, AUTH_ENCRYPTION_SECRET (min 32 chars each). Run: make generate-secrets
+make start
+```
 
-- Python 3.14+
-- Docker and Docker Compose
-- PostgreSQL (for production)
-- Redis (optional, for distributed caching)
+Then run `make register` to register gateways and get the Cursor URL.
 
-### Installation
+- **Admin UI:** http://localhost:4444/admin
+- **Stop:** `make stop` (or `./start.sh stop`)
 
-1. **Clone the repository**
+### NPX Client (Standard MCP Server Pattern)
+
+Use the gateway like any other MCP server with `npx`:
+
+**Local usage (no authentication needed):**
+```json
+{
+  "mcpServers": {
+    "forge-mcp-gateway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@forge-mcp-gateway/client",
+        "--url=http://localhost:4444/servers/<UUID>/mcp"
+      ]
+    }
+  }
+}
+```
+
+**Remote/secured usage (with JWT):**
+```json
+{
+  "mcpServers": {
+    "forge-mcp-gateway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@forge-mcp-gateway/client",
+        "--url=https://gateway.example.com/servers/<UUID>/mcp",
+        "--token=<JWT>"
+      ]
+    }
+  }
+}
+```
+
+**Get your configuration:**
+1. Start gateway: `make start`
+2. Register servers: `make register` (saves URL to `data/.cursor-mcp-url`)
+3. Add to your IDE's `mcp.json` with the URL (token only needed if `AUTH_REQUIRED=true` in `.env`)
+
+See [NPM_PACKAGE_README.md](NPM_PACKAGE_README.md) for detailed NPX client documentation.
+
+Default `make start` (or `./start.sh`) starts the gateway and all local servers (e.g. sequential-thinking). Use `make gateway-only` (or `./start.sh gateway-only`) for the gateway alone. Data is stored in `./data` (SQLite). Add gateways in Admin UI or run `make register` after start; create a virtual server, attach tools, note its UUID.
+
+### Registering URL-based MCP servers
+
+Servers that expose an HTTP/SSE URL can be added as gateways so one Cursor connection reaches them through Context Forge. Either add them in Admin UI (**MCP Servers** → **Add New MCP Server or Gateway**) or run once the gateway is up:
+
+```bash
+make register
+```
+
+(or `./scripts/register-gateways.sh`). The command is idempotent: if a gateway name already exists (e.g. after restart with the same DB), it reports "OK name (already registered)" instead of failing. It waits up to 90s for the gateway to respond at `/health` (override with `REGISTER_GATEWAY_MAX_WAIT`). If the first URL fails (e.g. `127.0.0.1` on Docker Desktop), it retries with `localhost` or vice versa. If still unreachable, run `docker compose ps gateway` and `docker compose logs gateway`. If a gateway shows FAIL, the gateway could not initialize the remote URL (see **Troubleshooting**). Run `REGISTER_VERBOSE=1 make register` to see the full API response. For local SSE gateways (e.g. sqlite, desktop-commander, github), the script retries once after 15s on "Unable to connect" or "Unexpected error". If **all** local gateways fail, translate containers may still be starting (first run pulls npm packages): wait 30–60s and run again, or set `REGISTER_WAIT_SECONDS=30` in `.env` or run `make register-wait`.
+
+`make register` reads `scripts/gateways.txt` (one line per gateway: `Name|URL` or `Name|URL|Transport`) or the `EXTRA_GATEWAYS` env var (comma-separated). Default `gateways.txt` registers **local** servers up to snyk (sequential-thinking through snyk). sqlite, github, and Context7 are commented out (they often fail with "Unable to connect" or "Unexpected error"; uncomment after checking `docker compose logs sqlite|github` or add Context7/sqlite/github via Admin UI). `.env.example` sets `REGISTER_WAIT_SECONDS=30` so translate containers are ready before registration. After `make start`, run `make register` (or `make register-wait` to force a 30s wait). After registering gateways, the script creates or updates **virtual server(s)** and prints Cursor URLs. Cursor (and some other MCP clients) can only handle about **60 tools per connection**; if you register many gateways, a single virtual server with all tools can trigger a warning. To stay under the limit, use **multiple virtual servers**, each with a subset of gateways:
+
+- **With `config/virtual-servers.txt`:** One line per server: `ServerName|gateway1,gateway2,...`. The script creates or updates each named server with up to 60 tools from those gateways and prints one URL per server. Connect Cursor to one URL (e.g. `cursor-default` for general dev, `cursor-search` for search/docs). See [scripts/README.md](scripts/README.md) and [docs/AI_USAGE.md](docs/AI_USAGE.md#tool-limit-and-virtual-servers).
+- **Single entry point (router):** The **cursor-router** virtual server is the default for the wrapper. It exposes only the tool-router gateway (1–2 tools). Set `GATEWAY_JWT` in `.env` (run `make jwt` and paste the token; refresh periodically, e.g. weekly) so the router can call the gateway API. See [docs/AI_USAGE.md](docs/AI_USAGE.md#single-entry-point-router).
+- **Without `virtual-servers.txt`:** A single virtual server (name `default` or `REGISTER_VIRTUAL_SERVER_NAME`) gets all tools; fine if you have few gateways. Example remote entries:
+
+| Name                     | URL                                          | Transport       |
+| ------------------------ | -------------------------------------------- | --------------- |
+| Context7                 | https://mcp.context7.com/mcp                 | Streamable HTTP |
+| context-awesome          | https://www.context-awesome.com/api/mcp      | Streamable HTTP |
+| prisma-remote            | https://mcp.prisma.io/mcp                    | Streamable HTTP |
+| cloudflare-observability | https://observability.mcp.cloudflare.com/mcp | Streamable HTTP |
+| cloudflare-bindings      | https://bindings.mcp.cloudflare.com/mcp      | Streamable HTTP |
+
+**Auth (v0, apify-dribbble, etc.):** Add the gateway in Admin UI, then edit it and set **Passthrough Headers** (e.g. `Authorization`) or **Authentication type** OAuth so the gateway sends the token. Do not put secrets in `gateways.txt` or in the repo. For the exact Context Forge structure (gateway, virtual server, prompts, resources) and which registrations need manual steps, see [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md).
+
+Some remote URLs may show "Failed to initialize" (e.g. context-awesome returns 406 from this gateway). See **Troubleshooting** below. Stdio-only servers (e.g. sequential-thinking) need the translate setup in the next section or stay in Cursor.
+
+### Local servers (stdio → SSE)
+
+The default `./start.sh` starts the gateway and these local translate services (stdio → SSE):
+
+| Gateway name        | URL (internal)                      | Notes                                                              |
+| ------------------- | ----------------------------------- | ------------------------------------------------------------------ |
+| sequential-thinking | http://sequential-thinking:8013/sse | —                                                                  |
+| chrome-devtools     | http://chrome-devtools:8014/sse     | —                                                                  |
+| playwright          | http://playwright:8015/sse          | —                                                                  |
+| magicuidesign-mcp   | http://magicuidesign-mcp:8016/sse   | @magicuidesign/mcp                                                 |
+| desktop-commander   | http://desktop-commander:8017/sse   | —                                                                  |
+| puppeteer           | http://puppeteer:8018/sse           | —                                                                  |
+| browser-tools       | http://browser-tools:8019/sse       | —                                                                  |
+| tavily              | http://tavily:8020/sse              | Set `TAVILY_API_KEY` in .env                                       |
+| filesystem          | http://filesystem:8021/sse          | Set `FILESYSTEM_VOLUME` (host path) in .env; default `./workspace` |
+| reactbits           | http://reactbits:8022/sse           | reactbits-dev-mcp-server                                           |
+| snyk                | http://snyk:8023/sse                | Set `SNYK_TOKEN` in .env (Snyk CLI auth)                           |
+| memory              | http://memory:8027/sse              | Persistent knowledge graph; data in `./data/memory` (no API key)   |
+| git-mcp             | http://git-mcp:8028/sse             | Local git operations: commit, branch, diff, log (no API key)       |
+| fetch               | http://fetch:8029/sse               | Web content fetching to markdown for LLM use (no API key)          |
+| postgres            | http://postgres:8031/sse            | Set `POSTGRES_CONNECTION_STRING` in .env; see [Multi-User Config](docs/MULTI_USER_DATABASE_CONFIG.md) |
+| mongodb             | http://mongodb:8032/sse             | Set `MONGODB_CONNECTION_STRING` in .env; see [Multi-User Config](docs/MULTI_USER_DATABASE_CONFIG.md) |
+| tool-router         | http://tool-router:8030/sse         | Single entry point; set `GATEWAY_JWT` in .env (see cursor-router)  |
+| sqlite              | http://sqlite:8024/sse              | Set `SQLITE_DB_PATH` / `SQLITE_VOLUME` in .env; default `./data`   |
+| github              | http://github:8025/sse              | Set `GITHUB_PERSONAL_ACCESS_TOKEN` in .env                         |
+| ui                 | http://ui:8026/sse                 | AI-driven UI generation (7 tools); set `FIGMA_ACCESS_TOKEN` in .env for Figma sync |
+
+After start, run `make register` to register them (or add in Admin UI with the URLs above, Transport **SSE**). This creates or updates a virtual server and prints its Cursor URL. Attach tools in Admin UI if you skip that step. Optional: set `REGISTER_PROMPTS=true` and add `config/prompts.txt` (format: `name|description|template` with `{{arg}}` and `\n` for newlines), then run `make register`. Use `make gateway-only` to run only the gateway (no translate services).
+
+**Stack-focused gateways (React, Node, TypeScript, Java, Spring, Prisma, etc.):** `config/gateways.txt` includes local SSE servers and optional remote entries (Context7, context-awesome, prisma-remote). Add more via `EXTRA_GATEWAYS` in `.env`. Next.js (`next-devtools-mcp`) is project-local; run it inside your Next app. Spring AI MCP runs on the host; add its URL to `EXTRA_GATEWAYS` if you expose it.
+
+**Servers that stay in Cursor or as remote gateways:** context-forge (gateway wrapper), browserstack, infisical-lukbot use custom scripts or tokens; run them on the host or add their HTTP URL in Admin UI if you expose them. Remote-only servers (Context7, context-awesome, prisma, cloudflare-\*, v0, apify-dribbble) add as gateways with URL; v0 and apify need Passthrough Headers or OAuth in Admin UI.
+
+## Connect Cursor
+
+The gateway requires a **Bearer JWT** on every request.
+
+**Automatic JWT (recommended)**
+Use the wrapper script so no token is stored in mcp.json and no weekly refresh is needed. From the repo: ensure `.env` is set, run `make register` once (this writes `data/.cursor-mcp-url`), then run **`make use-cursor-wrapper`** to set the context-forge entry in `~/.cursor/mcp.json` to the wrapper (replacing any URL/headers or docker-args config). The wrapper config includes a 2-minute MCP timeout to avoid "Request timed out" (-32001); set `CURSOR_MCP_TIMEOUT_MS` in `.env` (e.g. `180000`) to change it. Before first use, run **`make cursor-pull`** so the Context Forge Docker image is cached and the first Cursor connection does not time out while the image downloads. Restart Cursor. The wrapper uses the **cursor-router** (tool-router) virtual server by default; set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` in `.env` and run `make register` to use the full tool set instead. The wrapper generates a fresh JWT on each connection and runs the gateway Docker image. On Linux the script adds `--add-host=host.docker.internal:host-gateway` automatically. Optional: set `CURSOR_MCP_SERVER_URL` in `.env` if you prefer not to use `data/.cursor-mcp-url`. To configure manually instead, set the entry to `{"command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh", "timeout": 120000}` (use your clone path).
+
+**Manual JWT (URL-based or docker args)**
+
+1. Generate a JWT (e.g. 1 week): run `make jwt` (or `make refresh-cursor-jwt` to update the token in mcp.json in place; run weekly or before opening Cursor).
+
+   Or run:
+
    ```bash
-   git clone https://github.com/forgespace/mcp-gateway.git
-   cd mcp-gateway
+   docker exec mcpgateway python3 -m mcpgateway.utils.create_jwt_token \
+     --username "$PLATFORM_ADMIN_EMAIL" --exp 10080 --secret "$JWT_SECRET_KEY"
    ```
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
+2. Add to `~/.cursor/mcp.json` (docker wrapper with token in args):
+
+   ```json
+   {
+     "mcpServers": {
+       "context-forge": {
+         "command": "docker",
+         "args": [
+           "run",
+           "--rm",
+           "-i",
+           "-e",
+           "MCP_SERVER_URL=http://host.docker.internal:4444/servers/YOUR_SERVER_UUID/mcp",
+           "-e",
+           "MCP_AUTH=Bearer YOUR_JWT_TOKEN",
+           "-e",
+           "MCP_TOOL_CALL_TIMEOUT=120",
+           "ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2",
+           "python3",
+           "-m",
+           "mcpgateway.wrapper"
+         ]
+       }
+     }
+   }
    ```
 
-3. **Set up environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   On Linux add after `"-i"`: `"--add-host=host.docker.internal:host-gateway"`. Restart Cursor after changing the config.
+
+   **Alternative: URL-based (Streamable HTTP or SSE)**
+   Example with your server UUID and a token in headers:
+
+   ```json
+   "context-forge": {
+     "type": "streamableHttp",
+     "url": "http://localhost:4444/servers/YOUR_SERVER_UUID/mcp",
+     "headers": {
+       "Authorization": "Bearer YOUR_JWT_TOKEN"
+     }
+   }
    ```
 
-4. **Start the gateway**
+   For **SSE** use `"type": "sse"` and path `.../servers/YOUR_SERVER_UUID/sse`. Both require `Authorization: Bearer YOUR_JWT_TOKEN`. To avoid storing the token in mcp.json, use the [Automatic JWT](#connect-cursor) wrapper or the docker wrapper above. To refresh the token in mcp.json without copy-paste, run `make refresh-cursor-jwt` (e.g. weekly via cron: `0 9 * * 0` or a launchd plist).
+
+## Environment
+
+See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, `AUTH_ENCRYPTION_SECRET` (each at least 32 chars; run `make generate-secrets`). Never commit `.env` or secrets.
+
+## Automated Maintenance
+
+This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
+
+### Dependency Updates (Renovate)
+
+**Schedule:** Every Monday at 2 AM UTC
+
+Renovate automatically checks for updates to:
+- Python dependencies (`requirements.txt`)
+- Docker images (Context Forge gateway)
+- GitHub Actions
+
+**Auto-merge policy:**
+- ✅ Patch/minor updates: Auto-merge after 3-day stabilization + passing CI
+- ❌ Major updates: Require manual review (labeled `breaking-change`)
+- 🔒 Security vulnerabilities: Immediate auto-merge
+
+**Setup:** Add `RENOVATE_TOKEN` secret to repository settings (GitHub PAT with `repo` and `workflow` scopes).
+
+**Dashboard:** Check the Dependency Dashboard issue for pending updates.
+
+### MCP Server Registry Check
+
+**Schedule:** Every Monday at 3 AM UTC
+
+Automatically scans the MCP Registry for:
+- New servers not in `gateways.txt`
+- Status of commented servers (auth requirements, etc.)
+
+Creates/updates a GitHub issue with findings. No secrets required.
+
+### Docker Image Updates
+
+**Schedule:** Every Monday at 4 AM UTC
+
+Checks IBM/mcp-context-forge for new releases and automatically creates PRs with:
+- Updated image tags in all files
+- Changelog link
+- Testing checklist
+
+PRs require manual review before merge.
+
+## Development
+
+- **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+- **Script index:** [scripts/README.md](scripts/README.md)
+- **Maintenance automation:** See [Automated Maintenance](#automated-maintenance) above
+
+### Trunk Based Development Workflow
+
+This project uses Trunk Based Development with the following branch strategy:
+
+#### Branch Structure
+
+- **main**: Production-ready code, always deployable
+- **dev**: Development environment branch, continuously deployed
+- **release/x.y.z**: Release preparation branches
+- **feature/***: Feature development branches
+
+#### Workflow
+
+1. **Feature Development**
    ```bash
-   docker-compose up -d
-   ```
-
-5. **Verify installation**
-   ```bash
-   curl http://localhost:4444/health
-   ```
-
-## 🏗️ Architecture
-
-### System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         IDE/Client                          │
-│                    (Cursor, VS Code, etc.)                  │
-└────────────────────────┬────────────────────────────────────┘
-                         │ MCP Protocol (HTTP/SSE)
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│                      MCP Gateway                            │
-│                   (Context Forge)                           │
-│  ┌──────────────────────────────────────────────┐  │
-│  │  Virtual Servers (Tool Collections)                  │  │
-│  │  - cursor-default (all tools)                        │  │
-│  │  - cursor-router (tool-router only)                  │  │
-│  │  - custom servers (filtered tool sets)              │  │
-│  └──────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────┐  │
-│  │  Gateway Registry                                     │  │
-│  │  - Upstream MCP servers                              │  │
-│  │  - Authentication & routing                          │  │
-│  └──────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────┐  │
-│  │  Cache Security Layer (NEW)                           │  │
-│  │  - Encryption & Access Control                        │  │
-│  │  - GDPR Compliance & Retention                       │  │
-│  │  - Audit Trail & Monitoring                         │  │
-│  └──────────────────────────────────────────────┘  │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-        ┌────────────────┼────────────────┐
-        │                │                │
-┌───────▼──────┐  ┌──────▼──────┐  ┌────▼────────┐
-│   Remote     │  │   Local     │  │ Tool Router │
-│   Gateways   │  │  Translate  │  │  (Dynamic)  │
-│              │  │  Services   │  │             │
-│ - Context7   │  │ - sequential│  │ Queries     │
-│ - Prisma     │  │ - playwright│  │ gateway API │
-│ - v0         │  │ - snyk      │  │ for tools   │
-└──────────────┘  └─────────────┘  └─────────────┘
-```
-
-### Core Components
-
-1. **MCP Gateway**: Central hub for MCP server aggregation
-2. **Virtual Servers**: Tool collections with access control
-3. **Gateway Registry**: Server registration and discovery
-4. **Tool Router**: AI-powered dynamic tool selection
-5. **Cache Security Layer**: Advanced security and compliance features
-
-## 🔒 Security Features
-
-### Cache Security (Phase 2.4)
-
-#### **Encryption System**
-- **Fernet-based Encryption**: AES-256 encryption for sensitive data
-- **Key Management**: Automatic key generation and rotation
-- **Data Classification**: Multiple classification levels (PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED, PERSONAL, SENSITIVE_PERSONAL)
-- **Thread-Safe Operations**: Concurrent access protection
-- **Performance Optimized**: < 5ms encryption/decryption for typical data
-
-#### **Access Control**
-- **Role-Based Permissions**: Granular access control system
-- **Access Request Workflow**: Approval system for elevated permissions
-- **Permission Inheritance**: Role-based permission inheritance
-- **Audit Logging**: Complete access control audit trail
-- **Integration**: Seamless integration with cache operations
-
-#### **GDPR Compliance**
-- **Consent Management**: Complete consent lifecycle management
-- **Data Subject Rights**: Access, portability, rectification, erasure
-- **Right to be Forgotten**: Complete data removal capabilities
-- **Consent Tracking**: Timestamped consent records with metadata
-- **Compliance Reporting**: Automated compliance assessment and reporting
-
-#### **Retention Policies**
-- **Rule-Based Retention**: Configurable retention policies by data type
-- **Lifecycle Management**: Automated data lifecycle stage transitions
-- **Retention Scheduler**: Automated cleanup operations
-- **Retention Auditing**: Compliance checking and reporting
-- **Multiple Triggers**: Time-based, access-based, and size-based retention
-
-### Enterprise Security Standards
-
-- **GDPR**: Full compliance with consent management and data subject rights
-- **CCPA**: California Consumer Privacy Act compliance
-- **HIPAA**: Healthcare information protection
-- **SOX**: Sarbanes-Oxley Act compliance
-- **PCI-DSS**: Payment card industry data security
-- **ISO-27001**: Information security management
-
-## 🔒 Cache Security
-
-### Overview
-
-The cache security module provides comprehensive protection for cached data, ensuring that sensitive information is encrypted, access-controlled, and retained according to regulatory requirements.
-
-### Key Components
-
-#### **CacheEncryption**
-```python
-from tool_router.cache.security import CacheEncryption
-
-# Initialize encryption
-encryption = CacheEncryption()
-encryption.set_encryption_key("your-encryption-key")
-
-# Encrypt data
-encrypted_data = encryption.encrypt("sensitive_data")
-
-# Decrypt data
-decrypted_data = encryption.decrypt(encrypted_data)
-```
-
-#### **AccessControlManager**
-```python
-from tool_router.cache.security import AccessControlManager
-
-# Initialize access control
-access_manager = AccessControlManager()
-
-# Check permissions
-has_access = access_manager.check_access(
-    user_id="user123",
-    operation="read",
-    resource="cache_key",
-    data_classification="CONFIDENTIAL"
-)
-```
-
-#### **GDPRComplianceManager**
-```python
-from tool_router.cache.compliance import GDPRComplianceManager
-
-# Initialize compliance manager
-gdpr_manager = GDPRComplianceManager()
-
-# Record consent
-gdpr_manager.record_consent(
-    user_id="user123",
-    data_type="cache_data",
-    purpose="storage",
-    consent_given=True
-)
-```
-
-#### **RetentionPolicyManager**
-```python
-from tool_router.cache.retention import RetentionPolicyManager
-
-# Initialize retention manager
-retention_manager = RetentionPolicyManager()
-
-# Create retention policy
-retention_manager.create_policy(
-    policy_id="personal_data",
-    data_classification="PERSONAL",
-    retention_days=2555,  # 7 years for GDPR
-    auto_delete=True
-)
-```
-
-### Security Configuration
-
-```bash
-# Security Configuration
-CACHE_ENCRYPTION_KEY=your-encryption-key
-CACHE_ACCESS_CONTROL_ENABLED=true
-CACHE_GDPR_ENABLED=true
-CACHE_RETENTION_ENABLED=true
-CACHE_AUDIT_ENABLED=true
-
-# Retention Configuration
-CACHE_RETENTION_PUBLIC_DAYS=30
-CACHE_RETENTION_INTERNAL_DAYS=90
-CACHE_RETENTION_CONFIDENTIAL_DAYS=180
-CACHE_RETENTION_RESTRICTED_DAYS=365
-CACHE_RETENTION_PERSONAL_DAYS=2555
-```
-
-## 📋 Compliance
-
-### Regulatory Compliance
-
-#### **GDPR (General Data Protection Regulation)**
-- ✅ **Data Protection**: All personal data encrypted by default
-- ✅ **Consent Management**: Full consent lifecycle management
-- ✅ **Right to be Forgotten**: Complete data removal capability
-- ✅ **Data Subject Rights**: Access, portability, rectification, erasure
-- ✅ **Data Retention**: Configurable retention periods by data type
-- ✅ **Audit Trail**: Complete audit logging for compliance
-
-#### **CCPA (California Consumer Privacy Act)**
-- ✅ **Consumer Rights**: Right to know, delete, opt-out
-- ✅ **Data Minimization**: Collect only necessary data
-- ✅ **Purpose Limitation**: Use data for specified purposes only
-- ✅ **Data Security**: Reasonable security measures
-
-#### **HIPAA (Health Insurance Portability and Accountability Act)**
-- ✅ **Protected Health Information**: PHI encryption and access control
-- ✅ **Audit Controls**: Comprehensive audit trail
-- ✅ **Access Management**: Role-based access to health data
-- **Transmission Security**: Secure data transmission
-
-#### **SOX (Sarbanes-Oxley Act)**
-- ✅ **Internal Controls**: Comprehensive internal control framework
-- ✅ **Audit Trail**: Complete audit logging and reporting
-- ✅ **Data Integrity**: Data integrity controls and validation
-- ✅ **Access Controls**: Segregation of duties and access controls
-
-### Compliance Features
-
-#### **Consent Management**
-- **Consent Recording**: Timestamped consent records with metadata
-- **Consent Validation**: Automated consent validation checks
-- **Consent Withdrawal**: Easy consent withdrawal with data cleanup
-- **Consent Analytics**: Consent metrics and reporting
-
-#### **Data Subject Requests**
-- **Access Requests**: Automated data access request handling
-- **Portability Requests**: Data export in machine-readable format
-- **Rectification Requests**: Data correction and update capabilities
-- **Erasure Requests**: Complete data removal with verification
-
-#### **Compliance Reporting**
-- **Assessment Reports**: Automated compliance assessment scoring
-- **Compliance Metrics**: Real-time compliance status tracking
-- **Audit Reports**: Detailed audit trail analysis
-- **Regulatory Filings**: Automated compliance documentation
-
-## 🌐 API Documentation
-
-### Security API
-
-#### **Encryption Endpoints**
-```bash
-# Encrypt data
-POST /api/security/encrypt
-Content-Type: application/json
-{
-  "data": "sensitive_information",
-  "classification": "CONFIDENTIAL",
-  "key_id": "optional_key_id"
-}
-
-# Decrypt data
-POST /api/security/decrypt
-Content-Type: application/json
-{
-  "encrypted_data": "gAAAA...",
-  "key_id": "optional_key_id"
-}
-```
-
-#### **Access Control Endpoints**
-```bash
-# Check access permissions
-POST /api/security/access/check
-Content-Type: application/json
-{
-  "user_id": "user123",
-  "operation": "read",
-  "resource": "cache_key",
-  "data_classification": "CONFIDENTIAL"
-}
-
-# Create access request
-POST /api/security/access/request
-Content-Type: application/json
-{
-  "user_id": "user123",
-  "operation": "write",
-  "resource": "cache_key",
-  "data_classification": "CONFIDENTIAL",
-  "reason": "Business requirement"
-}
-```
-
-#### **Compliance Endpoints**
-```bash
-# Record consent
-POST /api/compliance/consent/record
-Content-Type: application/json
-{
-  "user_id": "user123",
-  "data_type": "cache_data",
-  "purpose": "storage",
-  "consent_given": true,
-  "metadata": {}
-}
-
-# Check consent
-GET /api/compliance/consent/check?user_id=user123&data_type=cache_data&purpose=storage
-
-# Create data subject request
-POST /api/compliance/data-subject/request
-Content-Type: application/json
-{
-  "user_id": "user123",
-  "request_type": "access",
-  "data_type": "cache_data",
-  "reason": "Data access request"
-}
-```
-
-#### **Retention Endpoints**
-```bash
-# Create retention policy
-POST /api/retention/policies
-Content-Type: application/json
-{
-  "policy_id": "personal_data",
-  "data_classification": "PERSONAL",
-  "retention_days": 2555,
-  "auto_delete": true,
-  "description": "GDPR compliant retention policy"
-}
-
-# Enforce retention
-POST /api/retention/enforce
-Content-Type: application/json
-{
-  "policy_id": "personal_data",
-  "dry_run": false
-}
-```
-
-### Configuration API
-
-#### **Security Configuration**
-```bash
-# Get security configuration
-GET /api/config/security
-
-# Update security configuration
-PUT /api/config/security
-Content-Type: application/json
-{
-  "encryption_key_rotation_days": 90,
-  "access_control_enabled": true,
-  "gdpr_enabled": true,
-  "retention_enabled": true,
-  "audit_enabled": true
-}
-```
-
-#### **Key Management**
-```bash
-# Rotate encryption key
-POST /api/config/keys/rotate
-
-# Get key status
-GET /api/config/keys/status
-```
-
-### Monitoring API
-
-#### **Health Check**
-```bash
-# System health check
-GET /api/health
-
-# Security health check
-GET /api/health/security
-```
-
-#### **Metrics**
-```bash
-# Security metrics
-GET /api/metrics/security
-
-# Compliance metrics
-GET /api/metrics/compliance
-
-# Retention metrics
-GET /api/metrics/retention
-```
-
-#### **Audit Trail**
-```bash
-# Get audit trail
-GET /api/audit/trail?user_id=user123&limit=100
-
-# Get audit summary
-GET /api/audit/summary?start_date=2024-01-01&end_date=2024-12-31
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-#### **Security Configuration**
-```bash
-# Encryption Settings
-CACHE_ENCRYPTION_KEY=your-encryption-key-here
-CACHE_ENCRYPTION_ALGORITHM=FERNET
-CACHE_KEY_ROTATION_DAYS=90
-
-# Access Control Settings
-CACHE_ACCESS_CONTROL_ENABLED=true
-CACHE_ACCESS_REQUEST_EXPIRY_HOURS=24
-CACHE_DEFAULT_ACCESS_LEVEL=READ
-
-# GDPR Compliance Settings
-CACHE_GDPR_ENABLED=true
-CACHE_CONSENT_RETENTION_DAYS=2555
-CACHE_DATA_SUBJECT_REQUEST_RETENTION_DAYS=365
-
-# Retention Settings
-CACHE_RETENTION_ENABLED=true
-CACHE_RETENTION_PUBLIC_DAYS=30
-CACHE_RETENTION_INTERNAL_DAYS=90
-CACHE_RETENTION_CONFIDENTIAL_DAYS=180
-CACHE_RETENTION_RESTRICTED_DAYS=365
-CACHE_RETENTION_PERSONAL_DAYS=2555
-CACHE_RETENTION_SENSITIVE_PERSONAL_DAYS=2555
-
-# Audit Settings
-CACHE_AUDIT_ENABLED=true
-CACHE_MAX_AUDIT_ENTRIES=10000
-CACHE_AUDIT_RETENTION_DAYS=365
-
-# API Settings
-CACHE_SECURITY_API_HOST=0.0.0.0
-CACHE_SECURITY_API_PORT=8001
-CACHE_SECURITY_API_DEBUG=false
-CACHE_SECURITY_API_WORKERS=4
-```
-
-#### **Cache Configuration**
-```bash
-# Cache Backend Configuration
-CACHE_BACKEND_TYPE=memory  # memory, redis, hybrid
-CACHE_MAX_SIZE=1000
-CACHE_DEFAULT_TTL=3600
-
-# Redis Configuration (if using Redis)
-CACHE_REDIS_URL=redis://localhost:6379/0
-CACHE_REDIS_PASSWORD=redis-password
-CACHE_REDIS_DB=0
-CACHE_REDIS_SSL=false
-
-# Performance Configuration
-CACHE_CLEANUP_INTERVAL=300
-CACHE_METRICS_ENABLED=true
-CACHE_PERFORMANCE_MONITORING=true
-```
-
-### Configuration Files
-
-#### **Docker Compose**
-```yaml
-version: '3.8'
-
-services:
-  gateway:
-    build: .
-    ports:
-      - "4444:4444"
-    environment:
-      - CACHE_ENCRYPTION_KEY=${CACHE_ENCRYPTION_KEY}
-      - CACHE_ACCESS_CONTROL_ENABLED=true
-      - CACHE_GDPR_ENABLED=true
-      - CACHE_RETENTION_ENABLED=true
-      - CACHE_AUDIT_ENABLED=true
-    volumes:
-      - ./data:/app/data
-    depends_on:
-      - postgres
-      - redis
-
-  postgres:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=mcp_gateway
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-```
-
-#### **Application Configuration**
-```python
-# config.py
-from tool_router.cache.config import CacheConfig
-from tool_router.cache.security import CacheSecurityConfig
-
-class AppConfig:
-    def __init__(self):
-        self.cache_config = CacheConfig(
-            max_size=int(os.getenv('CACHE_MAX_SIZE', 1000)),
-            ttl=int(os.getenv('CACHE_DEFAULT_TTL', 3600)),
-            cleanup_interval=int(os.getenv('CACHE_CLEANUP_INTERVAL', 300)),
-            enable_metrics=os.getenv('CACHE_METRICS_ENABLED', 'true').lower() == 'true'
-        )
-
-        self.security_config = CacheSecurityConfig(
-            encryption_key=os.getenv('CACHE_ENCRYPTION_KEY'),
-            access_control_enabled=os.getenv('CACHE_ACCESS_CONTROL_ENABLED', 'true').lower() == 'true',
-            gdpr_enabled=os.getenv('CACHE_GDPR_ENABLED', 'true').lower() == 'true',
-            retention_enabled=os.getenv('CACHE_RETENTION_ENABLED', 'true').lower() == 'true',
-            audit_enabled=os.getenv('CACHE_AUDIT_ENABLED', 'true').lower() == 'true'
-        )
-```
-
-## 🚀 Deployment
-
-### Docker Deployment
-
-#### **Production Deployment**
-```bash
-# Build and deploy
-docker-compose -f docker-compose.prod.yml up -d
-
-# Scale services
-docker-compose -f docker-compose.prod.yml up -d --scale gateway=3
-
-# Monitor logs
-docker-compose -f docker-compose.prod.yml logs -f gateway
-```
-
-#### **Development Deployment**
-```bash
-# Development setup
-docker-compose -f docker-compose.dev.yml up -d
-
-# Run tests
-docker-compose -f docker-compose.dev.yml exec gateway pytest
-
-# Development server
-docker-compose -f docker-compose.dev.yml exec gateway python -m uvicorn main:app --host 0.0.0.0 --port 4444 --reload
-```
-
-### Kubernetes Deployment
-
-#### **Kubernetes Manifest**
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mcp-gateway
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: mcp-gateway
-  template:
-    metadata:
-      labels:
-        app: mcp-gateway
-    spec:
-      containers:
-      - name: gateway
-        image: mcp-gateway:latest
-        ports:
-        - containerPort: 4444
-        env:
-        - name: CACHE_ENCRYPTION_KEY
-          valueFrom:
-            secretKeyRef:
-              name: mcp-gateway-secrets
-              key: encryption-key
-        - name: CACHE_ACCESS_CONTROL_ENABLED
-          value: "true"
-        - name: CACHE_GDPR_ENABLED
-          value: "true"
-        - name: CACHE_RETENTION_ENABLED
-          value: "true"
-        - name: CACHE_AUDIT_ENABLED
-          value: "true"
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "1Gi"
-            cpu: "1000m"
-        volumeMounts:
-        - name: config-volume
-          mountPath: /app/config
-        - name: data-volume
-          mountPath: /app/data
-      volumes:
-      - name: config-volume
-        configMap:
-          name: mcp-gateway-config
-      - name: data-volume
-        persistentVolumeClaim:
-          claimName: mcp-gateway-data
-```
-
-### Environment Setup
-
-#### **Production Environment**
-```bash
-# Set up production environment
-export CACHE_ENCRYPTION_KEY=$(openssl rand -base64 32)
-export POSTGRES_PASSWORD=$(openssl rand -base64 32)
-export CACHE_ACCESS_CONTROL_ENABLED=true
-export CACHE_GDPR_ENABLED=true
-export CACHE_RETENTION_ENABLED=true
-export CACHE_AUDIT_ENABLED=true
-
-# Deploy
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-#### **Development Environment**
-```bash
-# Set up development environment
-export CACHE_ENCRYPTION_KEY=dev-key-for-testing-only
-export POSTGRES_PASSWORD=dev-password
-export CACHE_ACCESS_CONTROL_ENABLED=true
-export CACHE_GDPR_ENABLED=true
-export CACHE_RETENTION_ENABLED=true
-export CACHE_AUDIT_ENABLED=true
-
-# Deploy
-docker-compose -f docker-compose.dev.yml up -d
-```
-
-## 📊 Monitoring
-
-### Health Monitoring
-
-#### **Health Check Endpoints**
-```bash
-# Overall system health
-curl http://localhost:4444/health
-
-# Security health
-curl http://localhost:4444/health/security
-
-# Compliance health
-curl http://localhost:4444/health/compliance
-
-# Cache health
-curl http://localhost:4444/health/cache
-```
-
-#### **Metrics Collection**
-```bash
-# Security metrics
-curl http://localhost:4444/metrics/security
-
-# Compliance metrics
-curl http://localhost:4444/metrics/compliance
-
-# Retention metrics
-curl http://localhost:4444/metrics/retention
-
-# Performance metrics
-curl http://localhost:4444/metrics/performance
-```
-
-### Logging
-
-#### **Structured Logging**
-```python
-import logging
-from tool_router.cache.security import CacheSecurityManager
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('/var/log/mcp-gateway/security.log'),
-        logging.handlers.RotatingFileHandler(
-            '/var/log/mcp-gateway/security.log',
-            maxBytes=10485760,  # 100MB
-            backupCount=5
-        )
-    ]
-)
-
-# Security manager with logging
-security_manager = CacheSecurityManager()
-```
-
-#### **Audit Trail**
-```python
-from tool_router.cache.security import CacheSecurityManager
-
-# Get audit trail
-security_manager = CacheSecurityManager()
-audit_trail = security_manager.get_audit_trail(
-    user_id="user123",
-    event_type="cache_access",
-    limit=100
-)
-
-# Filter audit trail
-filtered_trail = security_manager.get_audit_trail(
-    start_date=datetime(2024, 1, 1),
-    end_date=datetime(2024, 12, 31),
-    event_type="encryption"
-)
-```
-
-### Performance Monitoring
-
-#### **Cache Performance**
-```python
-from tool_router.cache.dashboard import CachePerformanceDashboard
-
-# Get performance metrics
-dashboard = CachePerformanceDashboard()
-metrics = dashboard.get_metrics()
-
-# Get performance trends
-trends = dashboard.get_trends(hours=24)
-
-# Get alert summary
-alerts = dashboard.get_alert_summary()
-```
-
-#### **Security Metrics**
-```python
-from tool_router.cache.security import CacheSecurityManager
-
-# Get security metrics
-security_manager = CacheSecurityManager()
-metrics = security_manager.get_security_metrics()
-
-# Monitor key metrics
-print(f"Encryption operations: {metrics.encryption_operations}")
-print(f"Access control checks: {metrics.access_control_checks}")
-print(f"GDPR compliance score: {metrics.gdpr_compliance_score}")
-print(f"Retention enforcement: {metrics.retention_enforcement}")
-```
-
-## 🧪 Testing
-
-### Test Suite
-
-#### **Security Tests**
-```bash
-# Run security tests
-python -m pytest tool_router/tests/test_cache_security_working.py -v
-
-# Run compliance tests
-python -m pytest tool_router/tests/test_cache_compliance.py -v
-
-# Run retention tests
-python -m pytest tool_router/tests/test_retention.py -v
-```
-
-#### **Integration Tests**
-```bash
-# Run integration tests
-python -m pytest tests/integration/test_security_integration.py -v
-
-# Run end-to-end tests
-python - pytest tests/e2e/test_security_e2e.py -v
-```
-
-#### **Performance Tests**
-```bash
-# Run performance tests
-python -m pytest tests/performance/test_encryption_performance.py -v
-
-# Run load tests
-python -m pytest tests/load/test_security_load.py -v
-```
-
-### Test Coverage
-
-#### **Coverage Report**
-```bash
-# Generate coverage report
-python -m pytest --cov=tool_router/cache --cov-report=html
-
-# Coverage threshold check
-python -m pytest --cov=tool_router/cache --cov-fail-under=80
-```
-
-#### **Security Testing**
-```bash
-# Run security vulnerability scan
-python -m pytest tests/security/test_vulnerabilities.py -v
-
-# Run penetration tests
-python -m pytest tests/security/test_penetration.py -v
-```
-
-### Test Configuration
-
-#### **pytest.ini**
-```ini
-[tool:pytest]
-testpaths = tests
-python_files = test_*.py
-python_classes = Test*
-python_functions = test_*
-addopts = -v --tb=short
-markers =
-    security: Security tests
-    compliance: Compliance tests
-    retention: Retention tests
-    performance: Performance tests
-    integration: Integration tests
-    e2e: End-to-end tests
-```
-
-#### **Test Environment**
-```python
-# conftest.py
-import pytest
-from tool_router.cache.security import CacheSecurityManager
-
-@pytest.fixture
-def security_manager():
-    """Fixture for security manager testing."""
-    return CacheSecurityManager()
-
-@pytest.fixture
-def encryption_key():
-    """Fixture for encryption key testing."""
-    return Fernet.generate_key().decode()
-
-@pytest.fixture
-def test_cache():
-    """Fixture for test cache."""
-    from cachetools import TTLCache
-    return TTLCache(maxsize=100, ttl=3600)
-```
-
-## 🤝 Contributing
-
-### Development Workflow
-
-1. **Fork the repository**
-   ```bash
-   git fork https://github.com/forgespace/mcp-gateway.git
-   cd mcp-gateway
-   ```
-
-2. **Create feature branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-3. **Make changes**
-   - Write code following the style guidelines
-   - Add tests for new features
-   - Update documentation
-
-4. **Run tests**
-   ```bash
-   python -m pytest
-   python -m pytest --cov=tool_router/cache
-   ```
-
-5. **Submit pull request**
-   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b feature/your-feature-name dev
+   # Make your changes
+   git commit -m "feat: add your feature"
    git push origin feature/your-feature-name
    ```
 
-### Code Quality
+2. **Testing & Review**
+   - Create PR from `feature/your-feature-name` to `release/x.y.z`
+   - All CI tests must pass
+   - Code review required
 
-#### **Linting**
-```bash
-# Run linting
-flake8 tool_router/cache/
-black tool_router/cache/
-isort tool_router/cache/
+3. **Release Preparation**
+   ```bash
+   git checkout release/x.y.z
+   git merge feature/your-feature-name
+   git push origin release/x.y.z
+   ```
+
+4. **Production Deployment**
+   ```bash
+   git checkout main
+   git merge release/x.y.z
+   git tag v1.2.3
+   git push origin main --tags
+   ```
+
+#### Branch Protection
+
+- **main**: Require PR approval, passing CI, no force pushes
+- **release/***: Require PR approval and passing CI
+- **dev**: Require passing CI only
+
+#### Environment Configuration
+
+- **Dev Environment**: Uses `.env.development`, auto-deployed from `dev` branch
+- **Production Environment**: Uses `.env.production`, deployed from `main` merges
+
+## Using the gateway with AI
+
+Which tools to use for planning, docs, search, browser, DB: [docs/AI_USAGE.md](docs/AI_USAGE.md).
+
+## 🏗️ Shared Package Structure
+
+This project uses a centralized shared package structure for UIForge-wide standardization:
+
+```
+.github/shared/
+├── workflows/           # Reusable CI/CD templates
+├── configs/             # Shared configurations
+├── scripts/            # Utility scripts
+├── templates/          # GitHub templates
+└── README.md           # Comprehensive documentation
 ```
 
-#### **Type Checking**
-```bash
-# Run type checking
-mypy tool_router/cache/
+### Key Benefits
+- **40% reduction** in duplicate configurations
+- **Standardized CI/CD** pipelines across UIForge projects
+- **Unified security scanning** and dependency management
+- **Automated setup** with symlink management
+
+### Usage
+- **Setup**: Run `./scripts/setup-shared-symlinks.sh` to create configuration links
+- **Documentation**: See `.github/shared/README.md` for detailed usage
+- **Migration**: Use `docs/UIFORGE_MIGRATION_GUIDE.md` for other projects
+
+### CI/CD Pipeline
+The main workflow (`.github/workflows/ci.yml`) uses shared templates:
+```yaml
+jobs:
+  ci:
+    uses: ./.github/shared/workflows/base-ci.yml
+    with:
+      project-type: 'gateway'
+      node-version: '22'
+      python-version: '3.12'
 ```
 
-#### **Security Scanning**
-```bash
-# Run security scan
-bandit -r tool_router/cache/
-snyk test tool_router/cache/
-```
+## Troubleshooting
 
-### Documentation
+**403 "Insufficient permissions. Required: admin.dashboard" on /admin**
+The admin UI requires an authenticated user with the `admin.dashboard` permission. Open the gateway root or login page first (e.g. `http://localhost:4444/` or `http://localhost:4444/login`), sign in with `PLATFORM_ADMIN_EMAIL` and `PLATFORM_ADMIN_PASSWORD` from your `.env`, then go to `http://localhost:4444/admin`. If the browser prompts for credentials, use the same email and password. Do not put secrets in the repo; keep them only in `.env`.
 
-#### **API Documentation**
-```bash
-# Generate API docs
-python -c "
-from tool_router.cache.api import app
-import json
-print(json.dumps(app.openapi(), indent=2))
-" > docs/api/security.json
-```
+**"Failed to initialize gateway" when adding a gateway**
+The gateway (Context Forge) checks the URL when you save. Common causes: (1) Remote server down or unreachable from the container. (2) Wrong URL or path (e.g. some servers need `/sse`). (3) Server rejects the request — e.g. **Context Awesome** (`https://www.context-awesome.com/api/mcp`) returns 406 unless the client sends `Accept: application/json, text/event-stream`; if Context Forge does not send that header, initialization fails and this is an [upstream limitation](https://github.com/IBM/mcp-context-forge/issues). Workaround: use the server from a client that supports that URL (e.g. Cursor with the URL in mcp.json) or watch [Context Forge](https://github.com/IBM/mcp-context-forge) for fixes.
 
-#### **Code Documentation**
-```bash
-# Generate code docs
-pdoc tool_router/cache/ --html
-```
+If you see **"Failed to initialize gateway"** or **"Unable to connect to gateway"** for all local gateways when running `make register`, the translate services must listen on `0.0.0.0` so the gateway container can reach them (docker-compose already uses `--host 0.0.0.0`). If you changed the translate command, add `--host 0.0.0.0`. Otherwise, translate containers may still be starting (first run can take 30–60s while npx installs packages): wait and run `make register` again, or run `make register-wait` (or `REGISTER_WAIT_SECONDS=30 make register`). If **only one** local gateway (e.g. sqlite) fails, the same wait-and-retry usually fixes it. Ensure `make start` was used (not `make gateway-only`) and `docker compose ps` shows the translate services running. If translate containers are **Restarting**, they may be crashing (e.g. missing `npx` in the image): rebuild with `docker compose build --no-cache sequential-thinking`, then `make stop` and `make start`.
 
-## 📄 License
+**Script hangs on "Waiting for gateway"**
+The register script polls the gateway for up to 90s. On Docker Desktop for Mac, if you use `GATEWAY_URL=http://127.0.0.1:4444`, the script now tries `localhost` first. If it still hangs, set `GATEWAY_URL=http://localhost:4444` in `.env`.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**MCP Registry shows "Failed" for some servers**
+When you add a server from the registry, the gateway validates it (connects and lists tools). Failure usually means the remote server is down, slow, or unreachable from the gateway. Try **Click to Retry**. If it still fails, add the gateway manually: **Gateways → New Gateway**, enter the same name and URL (e.g. `https://mcp.deepwiki.com/sse`). Servers that need OAuth show "OAuth Config Required" in the registry; after adding them, edit the gateway and set Authentication type to OAuth with the provider’s client ID, secret, and URLs (see [Context Forge OAuth docs](https://ibm.github.io/mcp-context-forge/manage/oauth/)).
 
-### License Summary
+**context-forge shows "Error" / "Needs authentication" / "Loading tools" forever, or logs "Server disconnected without sending a response" / "No server info found"**
+Often caused by **weak `JWT_SECRET_KEY` or `AUTH_ENCRYPTION_SECRET`** (gateway logs: "Secret has low entropy", "Secret should be at least 32 characters"). Fix: run `make generate-secrets`, add the two lines to `.env`, then `make stop`, `make start`, `make register`, and **fully quit Cursor (Cmd+Q / Alt+F4) and reopen**. Reload Window is not enough. If that’s not the cause:
 
-- **MIT License**: Permissive free software license
-- **Commercial Use**: Allowed
-- **Modification**: Allowed
-- **Distribution**: Allowed
-- **Private Use**: Allowed
-- **Patent Grant**: Required
+- **If you use the wrapper** (recommended): Run `make verify-cursor-setup` to check gateway, `data/.cursor-mcp-url`, server existence, Context Forge image, and gateway reachability from Docker. If any check fails, run `make start` then `make register`, then fully quit and reopen Cursor. Run **`make cursor-pull`** once so the first Cursor start does not timeout while the image downloads. **To use the default cursor-router (tool-router):** remove or comment out `REGISTER_CURSOR_MCP_SERVER_NAME` in `.env`, run `make register`, then fully quit Cursor (Cmd+Q / Alt+F4) and reopen. If you have `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` in `.env`, the wrapper uses cursor-default; the URL in `data/.cursor-mcp-url` is only updated when you run `make register`. If logs show **"No server info found"**: (1) Ensure the gateway is running (`make start`) and reachable from Docker (the wrapper runs in a container and uses `host.docker.internal:4444`). (2) Run `make register` to refresh the URL, then fully quit and reopen Cursor. (3) For cursor-router, set `GATEWAY_JWT` in `.env` (run `make jwt` and paste) so the router can call the gateway. If logs show **"Request timed out" (MCP error -32001)**: (1) Run `make cursor-pull` so the Context Forge image is cached. (2) Run `make use-cursor-wrapper` again to set a 2-minute timeout in mcp.json (or set `CURSOR_MCP_TIMEOUT_MS=180000` in `.env` before running it). (3) Fully quit and reopen Cursor.
 
-### License Terms
+- **If you use a manual JWT (URL in mcp.json):** (1) `make start` (ensure gateway is running). (2) `make refresh-cursor-jwt` (updates the Bearer token in `~/.cursor/mcp.json` for the context-forge entry; the script also finds `user-context-forge` if that’s the key Cursor uses). (3) Restart Cursor. Your URL must end with `/mcp` or `/sse`. If Cursor is on the host and the gateway runs in Docker, use `http://host.docker.internal:4444/servers/UUID/mcp`. Alternatively switch to the [wrapper](#connect-cursor) with `make use-cursor-wrapper`.
 
-- ✅ **Commercial use**: You can use this software for commercial purposes
-- ✅ **Modification**: You can modify the software
-- ✅ **Distribution**: You can distribute the software
-- ✅ **Private use**: You can use the software privately
-- ✅ **Sublic derivative works**: You can create derivative works
+**"Method Not Allowed" or "Invalid OAuth error response" when connecting Cursor to context-forge**
+You are using a URL like `http://localhost:4444/servers/UUID` without a transport path. Use `/sse` for SSE or `/mcp` for streamable HTTP (e.g. `.../servers/UUID/sse`). You must also send the JWT: use the [docker wrapper](#connect-cursor) with `MCP_SERVER_URL=.../servers/UUID/mcp` and `MCP_AUTH=Bearer YOUR_JWT_TOKEN`, or add `headers: { "Authorization": "Bearer YOUR_JWT_TOKEN" }` to the SSE URL config.
 
-### Attribution
+**500 on /admin (gateways/partial, prompts/partial) or "Loading gateways..." / "Loading prompts..." never finish**
+The admin UI loads data from the gateway backend; when the backend returns 500, those requests fail. A common cause is a **corrupted SQLite database**. Check gateway logs: `docker compose logs gateway --tail 100`. If you see `sqlite3.DatabaseError: database disk image is malformed`, follow the recovery steps in the next bullet (stop, remove `./data/mcp.db` and WAL/SHM, restart). Then run `make register` again to re-register gateways. See [data/README.md](data/README.md#recovery-from-sqlite-corruption). You can run `make reset-db` to stop the stack and remove the DB files in one step, then `make start` and `make register`.
 
-- ✅ **License notice**: Must include the license notice
-- ✅ **Copyright notice**: Must include the copyright notice
-- ✅ **Disclaimer**: Must include the disclaimer
+**"database disk image is malformed" or "FileLock health check failed"**
+The SQLite database in `./data/mcp.db` is corrupted (e.g. after a hard shutdown or disk issue). Stop the stack, remove the DB file (and `mcp.db-shm`, `mcp.db-wal` if present), and restart so the gateway creates a fresh database. Use `make reset-db` then `make start` (and `make register` to re-add gateways). See [data/README.md](data/README.md#recovery-from-sqlite-corruption).
 
-## 📞 Support
+**Admin "Prompts" page stuck on "Loading prompts..."**
+The Context Forge admin UI at `/admin/#prompts` can hang due to an upstream frontend/API mismatch or slow response. Workarounds: (1) **Use the API**: run `make list-prompts` (lists prompts via GET /prompts with JWT). (2) **Register prompts via Make**: set `REGISTER_PROMPTS=true` in `.env` and add lines to `scripts/prompts.txt` (format: `name|description|template`), then run `make register`. (3) **Inspect in browser**: DevTools → Network, filter by "prompts" or XHR; check the request URL, status, and response body. If the API returns 200 with valid JSON and the UI still spins, report to [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge/issues). A CSP error in the console for `fonts.googleapis.com` is unrelated to prompts loading.
 
-### Documentation
+**Missing servers and authentication**
+Some gateways are commented out in `config/gateways.txt` so `make register` succeeds by default. To enable them:
 
-- **[Architecture Overview](docs/architecture/OVERVIEW.md)**
-- **[API Reference](docs/api/)**
-- **[Security Guide](docs/security/)**
-- **[Compliance Guide](docs/compliance/)**
-- **[Deployment Guide](docs/deployment/)**
-- **[Troubleshooting](docs/troubleshooting/)**
+- **Commented local (sqlite, github):** Uncomment the corresponding lines in `config/gateways.txt`, set the required env vars in `.env` (e.g. `GITHUB_PERSONAL_ACCESS_TOKEN` for github), run `make register` or `make register-wait`. If they fail, see the "Failed to initialize gateway" / "Unable to connect" bullets above and `docker compose logs sqlite` or `docker compose logs github`.
+- **Commented remote (Context7, context-awesome, prisma-remote, cloudflare-\*, v0, apify-dribbble):** Uncomment in `scripts/gateways.txt` and run `make register`, or add the gateway via Admin UI (MCP Servers → Add New MCP Server or Gateway). For **Context7, v0, apify-dribbble, cloudflare-\***: after adding the gateway, edit it in Admin UI and set **Passthrough Headers** (e.g. `Authorization`) or **Authentication type** OAuth so the gateway can call the upstream. See [docs/ADMIN_UI_MANUAL_REGISTRATION.md](docs/ADMIN_UI_MANUAL_REGISTRATION.md).
 
-### Community
+**Authentication checklist:** Local gateways that need keys: **Tavily** → `TAVILY_API_KEY` in `.env`; **Snyk** → `SNYK_TOKEN`; **GitHub** → `GITHUB_PERSONAL_ACCESS_TOKEN`. Remote gateways **Context7, v0, apify-dribbble, cloudflare-\*** → configure Passthrough Headers or OAuth in Admin UI (do not put secrets in `config/gateways.txt` or the repo).
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/forgespace/mcp-gateway/issues)
-- **GitHub Discussions**: [Community discussions](https://github.com/forgespace/mcp-gateway/discussions)
-- **Wiki**: [Community wiki](https://github.com/forgespace/mcp-gateway/wiki)
+## Contributing / Forking
 
-### Professional Support
+You can fork this repo to run your own MCP gateway stack. After forking: copy `.env.example` to `.env`, set secrets (`make generate-secrets`), then `make start` and `make register`. To contribute back: run `make lint` and `make test`, open a PR with a clear description; see [CHANGELOG.md](CHANGELOG.md) for the project’s change conventions.
 
-- **Enterprise Support**: Available for enterprise customers
-- **Consulting Services**: Architecture and security consulting
-- **Training Services**: Security and compliance training
-- **Support SLA**: 24/7 support for enterprise customers
+## References
 
----
-
-## 🚀 Quick Reference
-
-### Common Commands
-
-```bash
-# Start gateway
-make start
-
-# Stop gateway
-make stop
-
-# Run tests
-make test
-
-# Run security tests
-make test-security
-
-# Run compliance tests
-make test-compliance
-
-# Generate coverage report
-make coverage
-
-# Lint code
-make lint
-
-# Format code
-make format
-
-# Build Docker images
-make build
-
-# Deploy to production
-make deploy
-```
-
-### Environment Variables
-
-```bash
-# Security
-CACHE_ENCRYPTION_KEY=your-key
-CACHE_ACCESS_CONTROL_ENABLED=true
-CACHE_GDPR_ENABLED=true
-
-# Cache
-CACHE_BACKEND_TYPE=memory
-CACHE_MAX_SIZE=1000
-CACHE_DEFAULT_TTL=3600
-
-# API
-CACHE_SECURITY_API_PORT=8001
-CACHE_SECURITY_API_HOST=0.0.0.0
-```
-
-### API Endpoints
-
-```bash
-# Health
-GET /health
-
-# Security
-GET /api/security/health
-POST /api/security/encrypt
-POST /api/security/decrypt
-
-# Compliance
-GET /api/compliance/health
-POST /api/compliance/consent/record
-GET /api/compliance/assessment
-
-# Retention
-GET /api/retention/health
-POST /api/retention/policies
-POST /api/retention/enforce
-
-# Metrics
-GET /api/metrics/security
-GET /api/metrics/compliance
-GET /api/metrics/retention
-```
-
----
-
-**Version**: 1.35.1
-**Last Updated**: 2026-02-20
-**Status**: ✅ Production Ready with Advanced Security Features
-**Next Release**: 1.36.0 (Planned: Advanced Analytics)
+- [Context Forge](https://github.com/IBM/mcp-context-forge) – Docker, stdio wrapper, translate
+- [MCP Registry](https://registry.modelcontextprotocol.io) – Discover servers; add via Admin UI
