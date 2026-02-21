@@ -8,8 +8,11 @@ from typing import Any
 
 import httpx
 
+<<<<<<< Updated upstream
 from tool_router.ai.prompts import PromptTemplates
 
+=======
+>>>>>>> Stashed changes
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +20,7 @@ logger = logging.getLogger(__name__)
 class OllamaSelector:
     """AI-powered tool selector using Ollama LLM."""
 
+<<<<<<< Updated upstream
     def __init__(
         self,
         endpoint: str,
@@ -32,12 +36,16 @@ class OllamaSelector:
             timeout: Timeout in milliseconds
             min_confidence: Minimum confidence to accept an AI result
         """
+=======
+    def __init__(self, endpoint: str, model: str, timeout: int = 2000) -> None:
+>>>>>>> Stashed changes
         self.endpoint = endpoint.rstrip("/")
         self.model = model
         self.timeout_ms = timeout
         self.timeout_s = timeout / 1000.0
         self.min_confidence = min_confidence
 
+<<<<<<< Updated upstream
     def select_tool(
         self,
         task: str,
@@ -58,7 +66,25 @@ class OllamaSelector:
             failed or confidence below threshold
         """
         if not tools:
+=======
+    def select_tool(self, task: str, tools: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """Select the best tool for a given task using AI."""
+        try:
+            tool_list = "
+".join(
+                f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
+                for tool in tools
+            )
+            prompt = self._create_prompt(task, tool_list)
+            response = self._call_ollama(prompt)
+            if not response:
+                return None
+        except Exception as e:  # noqa: BLE001
+            logger.warning("AI selector failed: %s", e)
+>>>>>>> Stashed changes
             return None
+        else:
+            return self._parse_response(response)
 
         tool_list = "\n".join(
             f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
@@ -144,8 +170,23 @@ class OllamaSelector:
     # ------------------------------------------------------------------
 
     def _create_prompt(self, task: str, tool_list: str) -> str:
+<<<<<<< Updated upstream
         """Create the prompt for Ollama (kept for backward compatibility)."""
         return PromptTemplates.create_tool_selection_prompt(task=task, tool_list=tool_list)
+=======
+        """Create the prompt for Ollama."""
+        header = "You are a tool selection assistant. Select the best tool for the task."
+        body = f"Task: {task}
+
+Available tools:
+{tool_list}"
+        footer = 'Respond with JSON: {"tool_name": "<name>", "confidence": 0.9, "reasoning": "<why>"}'
+        return f"{header}
+
+{body}
+
+{footer}"
+>>>>>>> Stashed changes
 
     def _call_ollama(self, prompt: str) -> str | None:
         """Call the Ollama API."""
@@ -157,10 +198,14 @@ class OllamaSelector:
                         "model": self.model,
                         "prompt": prompt,
                         "stream": False,
+<<<<<<< Updated upstream
                         "options": {
                             "temperature": 0.1,
                             "num_predict": 200,
                         },
+=======
+                        "options": {"temperature": 0.1, "max_tokens": 150},
+>>>>>>> Stashed changes
                     },
                 )
                 response.raise_for_status()
@@ -184,6 +229,7 @@ class OllamaSelector:
             if start_idx == -1 or end_idx == 0:
                 logger.warning("No JSON found in Ollama response")
                 return None
+<<<<<<< Updated upstream
 
             result = json.loads(response[start_idx:end_idx])
 
@@ -191,10 +237,17 @@ class OllamaSelector:
                 logger.warning("Missing required fields in AI response")
                 return None
 
+=======
+            result = json.loads(response[start_idx:end_idx])
+            if not all(key in result for key in ["tool_name", "confidence", "reasoning"]):
+                logger.warning("Missing required fields in AI response")
+                return None
+>>>>>>> Stashed changes
             confidence = result["confidence"]
             if not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1:
                 logger.warning("Invalid confidence value: %s", confidence)
                 return None
+<<<<<<< Updated upstream
 
         except json.JSONDecodeError as e:
             logger.warning("Failed to parse AI response as JSON: %s", e)
@@ -243,6 +296,13 @@ class OllamaSelector:
             return None
         except Exception as e:  # noqa: BLE001
             logger.warning("Error parsing AI multi-tool response: %s", e)
+=======
+        except json.JSONDecodeError as e:
+            logger.warning("Failed to parse AI response as JSON: %s", e)
+            return None
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Error parsing AI response: %s", e)
+>>>>>>> Stashed changes
             return None
         else:
             return result
