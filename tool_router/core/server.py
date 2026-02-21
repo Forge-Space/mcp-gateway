@@ -40,8 +40,13 @@ _security_middleware: SecurityMiddleware | None = None
 
 
 def initialize_ai(config: ToolRouterConfig) -> None:
+<<<<<<< Updated upstream
     """Initialize AI selector, specialist coordinator, feedback store, and security middleware."""
     global _ai_selector, _enhanced_ai_selector, _specialist_coordinator, _feedback_store, _config, _security_middleware  # noqa: PLW0603
+=======
+    """Initialize AI selector if enabled."""
+    global _ai_selector, _config  # noqa: PLW0603
+>>>>>>> Stashed changes
     _config = config
     _feedback_store = FeedbackStore()
 
@@ -67,6 +72,7 @@ def initialize_ai(config: ToolRouterConfig) -> None:
                 timeout=config.ai.timeout_ms,
                 min_confidence=config.ai.min_confidence,
             )
+<<<<<<< Updated upstream
 
             # Initialize enhanced selector with hardware-aware routing
             ollama_provider = EnhancedOllamaSelector(
@@ -108,6 +114,11 @@ def initialize_ai(config: ToolRouterConfig) -> None:
             logger.info("Specialist agents initialized: Router, Prompt Architect, UI Specialist")
         except Exception as e:
             logger.exception("Failed to initialize AI system: %s", e)
+=======
+            logger.info("AI selector initialized with model %s at %s", config.ai.model, config.ai.endpoint)
+        except Exception as e:  # noqa: BLE001
+            logger.exception("Failed to initialize AI selector: %s", e)
+>>>>>>> Stashed changes
             _ai_selector = None
             _enhanced_ai_selector = None
             _specialist_coordinator = None
