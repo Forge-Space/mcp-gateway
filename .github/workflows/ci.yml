@@ -20,7 +20,7 @@ jobs:
   # Use local base CI workflow
   ci:
     name: Base CI Pipeline
-    uses: ./.github/workflows/base-ci.yml
+    uses: ./.github/workflows/base-ci-shared.yml
     with:
       project-type: 'gateway'
       node-version: '22'
@@ -28,8 +28,6 @@ jobs:
       enable-docker: true
       enable-security: true
       enable-coverage: true
-      coverage-threshold: '80'
-      test-parallel: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

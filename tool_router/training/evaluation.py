@@ -580,25 +580,6 @@ class SpecialistEvaluator:
 
         return recommendations
 
-    def get_evaluation_results(self, specialist_type: str, limit: int = 100) -> list[EvaluationResult]:
-        """Get evaluation results for a specific specialist.
-
-        Args:
-            specialist_type: The type of specialist to get results for
-            limit: Maximum number of results to return
-
-        Returns:
-            List of evaluation results sorted by timestamp (most recent first)
-        """
-        # Filter results by specialist type
-        results = [result for result in self.evaluation_history if result.specialist_type == specialist_type]
-
-        # Sort by timestamp (most recent first)
-        results.sort(key=lambda x: x.timestamp, reverse=True)
-
-        # Apply limit
-        return results[:limit]
-
     def export_evaluation_data(self, export_path: Path) -> None:
         """Export evaluation data for analysis."""
         export_data = {
@@ -650,7 +631,7 @@ if __name__ == "__main__":
         results = evaluator.evaluate_specialist(specialist_name)
 
         for result in results:
-            print(f"  {result.metric.value}: {result.value:.2f} " f"({result.passed_cases}/{result.test_cases} passed)")
+            print(f"  {result.metric.value}: {result.value:.2f} ({result.passed_cases}/{result.test_cases} passed)")
 
     # Get evaluation summary
     print("\nEvaluation Summary:")

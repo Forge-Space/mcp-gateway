@@ -44,12 +44,10 @@ fi
 
 # 4. Validate CI/CD uses shared workflows
 echo "🔄 Checking CI/CD shared workflow usage..."
-if grep -q "uses: ./.github/workflows/base-ci.yml" .github/workflows/ci.yml; then
-    echo "✅ CI pipeline uses local base workflow"
-elif grep -q "uses: ./.github/shared/workflows/base-ci.yml" .github/workflows/ci.yml; then
+if grep -q "uses: ./.github/shared/workflows/base-ci.yml" .github/workflows/ci.yml || grep -q "uses: ./.github/workflows/base-ci-shared.yml" .github/workflows/ci.yml; then
     echo "✅ CI pipeline uses shared workflow"
 else
-    echo "❌ CI pipeline should use a base workflow"
+    echo "❌ CI pipeline should use shared workflow"
     FAILED=1
 fi
 

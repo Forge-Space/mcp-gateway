@@ -48,7 +48,7 @@ class EvaluationTool:
 
             # Run evaluation
             results = self.evaluator.evaluate_specialist(
-                specialist_type=specialist_name, benchmark_suite=benchmark_suite
+                specialist_name=specialist_name, benchmark_suite=benchmark_suite, test_cases=test_cases
             )
 
             # Format results

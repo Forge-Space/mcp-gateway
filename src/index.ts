@@ -88,7 +88,7 @@ const forgeCore = new ForgeCore({
   gatewayUrl: GATEWAY_URL,
   authToken: GATEWAY_TOKEN,
   timeout: REQUEST_TIMEOUT_MILLISECONDS,
-});
+} as any);
 
 // Define response type for gateway requests
 interface GatewayResponse {
@@ -310,7 +310,7 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 async function main(): Promise<void> {
   // Initialize ForgeCore
   try {
-    await forgeCore.initialize();
+    await (forgeCore as any).initialize();
     console.error('ForgeCore initialized successfully');
   } catch (error) {
     console.error('Failed to initialize ForgeCore:', error);

@@ -1,11 +1,9 @@
 """Enhanced prompt templates for AI tool selection with improved NLP."""
 
-from typing import Any
-
 
 class PromptTemplates:
     """Enhanced prompt templates for AI tool selection."""
-    
+
     # Enhanced single-tool selection template with better NLP
     TOOL_SELECTION_TEMPLATE = """You are an expert tool selection assistant for an MCP (Model Context Protocol) gateway.
 Your role is to analyze user intent and select the most appropriate tool from the available options.
@@ -127,32 +125,25 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Context\n{context}"
-        
+
         history_section = ""
         if similar_tools:
-<<<<<<< Updated upstream
-            history_section = f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
-        
-        if enhanced:
-            template = cls.CONTEXT_ENHANCED_TEMPLATE
-        else:
-            template = cls.TOOL_SELECTION_TEMPLATE
-        
-=======
             history_section = (
                 f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
             )
 
-        template = cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
+        if enhanced:
+            template = cls.CONTEXT_ENHANCED_TEMPLATE
+        else:
+            template = cls.TOOL_SELECTION_TEMPLATE
 
->>>>>>> Stashed changes
         return template.format(
             task=task,
             tool_list=tool_list,
             context_section=context_section,
             history_section=history_section,
         )
-    
+
     @classmethod
     def create_multi_tool_selection_prompt(
         cls,
@@ -166,18 +157,20 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Context\n{context}"
-        
+
         if enhanced:
             # Add workflow analysis section
-            context_section += "\n\n## Workflow Considerations\nConsider the logical flow and dependencies between tools."
-        
+            context_section += (
+                "\n\n## Workflow Considerations\nConsider the logical flow and dependencies between tools."
+            )
+
         return cls.MULTI_TOOL_SELECTION_TEMPLATE.format(
             task=task,
             tool_list=tool_list,
             context_section=context_section,
             max_tools=max_tools,
         )
-    
+
     @classmethod
     def create_context_aware_prompt(
         cls,
@@ -191,25 +184,27 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Current Context\n{context}"
-        
+
         history_section = ""
         if history:
             history_items = []
             for i, item in enumerate(history[-5:], 1):  # Last 5 interactions
-                history_items.append(f"{i}. Task: '{item.get('task', 'Unknown')}' -> Tool: '{item.get('tool', 'None')}' (Success: {item.get('success', 'Unknown')})")
-            history_section = f"\n\n## Recent History\n" + "\n".join(history_items)
-        
+                history_items.append(
+                    f"{i}. Task: '{item.get('task', 'Unknown')}' -> Tool: '{item.get('tool', 'None')}' (Success: {item.get('success', 'Unknown')})"
+                )
+            history_section = "\n\n## Recent History\n" + "\n".join(history_items)
+
         similar_tools_section = ""
         if similar_tools:
             similar_tools_section = f"\n\n## Similar Successful Tools\n{', '.join(similar_tools)}"
-        
+
         return cls.CONTEXT_ENHANCED_TEMPLATE.format(
             task=task,
             tool_list=tool_list,
             context_section=context_section,
             history_section=history_section + similar_tools_section,
         )
-    
+
     @classmethod
     def create_nlp_enhanced_prompt(
         cls,
@@ -222,11 +217,11 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Context\n{context}"
-        
+
         hints_section = ""
         if intent_hints:
             hints_section = f"\n\n## Intent Hints\nConsider these aspects: {', '.join(intent_hints)}"
-        
+
         # Enhanced template with NLP focus
         template = """You are an advanced NLP-powered tool selection assistant for MCP (Model Context Protocol) gateway.
 Your role is to perform deep semantic analysis of user requests and select the most appropriate tool.
@@ -263,7 +258,7 @@ Respond with valid JSON only, no additional text:
   "key_entities": "<main entities identified>",
   "semantic_score": <0.0-1.0>
 }}"""
-        
+
         return template.format(
             task=task,
             tool_list=tool_list,

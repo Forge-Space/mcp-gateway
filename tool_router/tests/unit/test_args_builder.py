@@ -1,4 +1,4 @@
-"""Unit tests for tool_router/args/builder.py module."""
+"""Test cases for argument building functionality."""
 
 from __future__ import annotations
 
@@ -6,179 +6,291 @@ from tool_router.args.builder import build_arguments
 
 
 class TestBuildArguments:
-    """Test the build_arguments function."""
+    """Test cases for build_arguments function."""
 
-    def test_build_arguments_with_task_param_in_schema(self) -> None:
-        """Test build_arguments when schema has a 'task' parameter."""
-        tool_definition = {
+    def test_build_arguments_with_query_param(self):
+        """Test building arguments when tool has 'query' parameter."""
+        tool = {
+            "name": "test_tool",
             "inputSchema": {
-                "type": "object",
+                "properties": {
+                    "query": {"type": "string"},
+                    "max_results": {"type": "number"}
+                },
+                "required": ["query"]
+            }
+        }
+        task = "search for files"
+
+        result = build_arguments(tool, task)
+
+        assert result == {"query": task}
+
+    def test_build_arguments_with_task_param(self):
+        """Test building arguments when tool has 'task' parameter."""
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {
                 "properties": {
                     "task": {"type": "string"},
-                    "context": {"type": "string"},
+                    "options": {"type": "object"}
                 },
-                "required": ["task"],
+                "required": ["task"]
             }
         }
-        task = "Search the web"
-        result = build_arguments(tool_definition, task)
+        task = "process data"
+
+        result = build_arguments(tool, task)
+
         assert result == {"task": task}
 
-    def test_build_arguments_with_query_param_in_schema(self) -> None:
-        """Test build_arguments when schema has a 'query' parameter."""
-        tool_definition = {
+    def test_build_arguments_with_search_param(self):
+        """Test building arguments when tool has 'search' parameter."""
+        tool = {
+            "name": "test_tool",
             "inputSchema": {
-                "type": "object",
                 "properties": {
-                    "query": {"type": "string"},
-                    "max_results": {"type": "integer"},
+                    "search": {"type": "string"}
                 },
-                "required": ["query"],
+                "required": ["search"]
             }
         }
-        task = "Find information about Python"
-        result = build_arguments(tool_definition, task)
+        task = "find documents"
+
+        result = build_arguments(tool, task)
+
+        assert result == {"search": task}
+
+    def test_build_arguments_with_multiple_task_params(self):
+        """Test building arguments when tool has multiple task-related parameters."""
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {
+                "properties": {
+                    "query": {"type": "string"},
+                    "task": {"type": "string"},
+                    "search": {"type": "string"}
+                },
+                "required": ["query"]
+            }
+        }
+        task = "test task"
+
+        result = build_arguments(tool, task)
+
+        # Should use the first matching parameter (query)
         assert result == {"query": task}
 
-    def test_build_arguments_with_first_required_string_param(self) -> None:
-        """Test build_arguments with first required string parameter."""
-        tool_definition = {
+    def test_build_arguments_with_first_required_string_param(self):
+        """Test building arguments using first required string parameter."""
+        tool = {
+            "name": "test_tool",
             "inputSchema": {
-                "type": "object",
                 "properties": {
-                    "search_term": {"type": "string"},
-                    "limit": {"type": "integer"},
+                    "filename": {"type": "string"},
+                    "max_size": {"type": "number"}
                 },
-                "required": ["search_term", "limit"],
+                "required": ["filename", "max_size"]
             }
         }
-        task = "Search for books"
-        result = build_arguments(tool_definition, task)
-        assert result == {"search_term": task}
+        task = "test.txt"
 
-    def test_build_arguments_fallback_to_task_param(self) -> None:
-        """Test build_arguments falls back to 'task' parameter."""
-        tool_definition = {
+        result = build_arguments(tool, task)
+
+        assert result == {"filename": task}
+
+    def test_build_arguments_with_first_required_text_param(self):
+        """Test building arguments using first required 'text' parameter."""
+        tool = {
+            "name": "test_tool",
             "inputSchema": {
-                "type": "object",
                 "properties": {
-                    "limit": {"type": "integer"},
-                    "offset": {"type": "integer"},
+                    "content": {"type": "text"},
+                    "metadata": {"type": "object"}
                 },
-                "required": ["limit"],
+                "required": ["content", "metadata"]
             }
         }
-        task = "Some task"
-        result = build_arguments(tool_definition, task)
+        task = "sample content"
+
+        result = build_arguments(tool, task)
+
+        assert result == {"content": task}
+
+    def test_build_arguments_ignores_non_string_required_param(self):
+        """Test building arguments ignores non-string required parameters."""
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {
+                "properties": {
+                    "count": {"type": "number"},
+                    "size": {"type": "integer"}
+                },
+                "required": ["count", "size"]
+            }
+        }
+        task = "test task"
+
+        result = build_arguments(tool, task)
+
+        # Should fall back to "task" parameter
         assert result == {"task": task}
 
-    def test_build_arguments_empty_schema(self) -> None:
-        """Test build_arguments with empty schema."""
-        tool_definition = {"inputSchema": {}}
-        task = "Test task"
-        result = build_arguments(tool_definition, task)
+    def test_build_arguments_with_no_schema(self):
+        """Test building arguments when tool has no input schema."""
+        tool = {"name": "test_tool"}
+        task = "test task"
+
+        result = build_arguments(tool, task)
+
         assert result == {"task": task}
 
-    def test_build_arguments_no_input_schema(self) -> None:
-        """Test build_arguments when inputSchema is missing."""
-        tool_definition = {}
-        task = "Test task"
-        result = build_arguments(tool_definition, task)
+    def test_build_arguments_with_empty_schema(self):
+        """Test building arguments when tool has empty input schema."""
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {}
+        }
+        task = "test task"
+
+        result = build_arguments(tool, task)
+
         assert result == {"task": task}
 
-    def test_build_arguments_no_properties(self) -> None:
-        """Test build_arguments when schema has no properties."""
-        tool_definition = {
+    def test_build_arguments_with_no_properties(self):
+        """Test building arguments when schema has no properties."""
+        tool = {
+            "name": "test_tool",
             "inputSchema": {
-                "type": "object",
-                "required": ["something"],
+                "required": ["unknown_param"]  # Not in COMMON_TASK_PARAMETER_NAMES
             }
         }
-        task = "Test task"
-        result = build_arguments(tool_definition, task)
-        assert result == {"something": task}
+        task = "test task"
 
-    def test_build_arguments_no_required_params(self) -> None:
-        """Test build_arguments when no required parameters."""
-        tool_definition = {
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "optional_param": {"type": "string"},
-                },
-            }
-        }
-        task = "Test task"
-        result = build_arguments(tool_definition, task)
-        assert result == {"task": task}
+        result = build_arguments(tool, task)
 
-    def test_build_arguments_non_string_required_param(self) -> None:
-        """Test build_arguments when first required param is not a string."""
-        tool_definition = {
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "count": {"type": "integer"},
-                    "text": {"type": "string"},
-                },
-                "required": ["count", "text"],
-            }
-        }
-        task = "Test task"
-        result = build_arguments(tool_definition, task)
-        assert result == {"text": task}
+        # Should use the first required parameter even if not in common names
+        assert result == {"unknown_param": task}
 
-    def test_build_arguments_with_multiple_task_params(self) -> None:
-        """Test build_arguments prioritizes task parameters."""
-        tool_definition = {
+    def test_build_arguments_with_no_required(self):
+        """Test building arguments when schema has no required parameters."""
+        tool = {
+            "name": "test_tool",
             "inputSchema": {
-                "type": "object",
                 "properties": {
                     "query": {"type": "string"},
-                    "prompt": {"type": "string"},
-                    "context": {"type": "string"},
-                },
-                "required": ["query", "prompt"],
+                    "optional": {"type": "string"}
+                }
             }
         }
-        task = "Search query"
-        result = build_arguments(tool_definition, task)
+        task = "test task"
+
+        result = build_arguments(tool, task)
+
         assert result == {"query": task}
 
-    def test_build_arguments_case_sensitivity(self) -> None:
-        """Test build_arguments is case sensitive."""
-        tool_definition = {
-            "inputSchema": {
-                "type": "object",
+    def test_build_arguments_with_input_schema_alt_key(self):
+        """Test building arguments when tool uses 'input_schema' instead of 'inputSchema'."""
+        tool = {
+            "name": "test_tool",
+            "input_schema": {
                 "properties": {
-                    "Task": {"type": "string"},  # Capital T
-                    "query": {"type": "string"},
+                    "query": {"type": "string"}
                 },
-                "required": ["Task"],
+                "required": ["query"]
             }
         }
-        task = "Test task"
-        result = build_arguments(tool_definition, task)
-        assert result == {"query": task}  # Uses query from common list
+        task = "test task"
 
-    def test_build_arguments_with_complex_schema(self) -> None:
-        """Test build_arguments with complex nested schema."""
-        tool_definition = {
+        result = build_arguments(tool, task)
+
+        assert result == {"query": task}
+
+    def test_build_arguments_with_untyped_required_param(self):
+        """Test building arguments with untyped required parameter."""
+        tool = {
+            "name": "test_tool",
             "inputSchema": {
-                "type": "object",
                 "properties": {
-                    "prompt": {"type": "string"},
-                    "options": {
-                        "type": "object",
-                        "properties": {
-                            "max_tokens": {"type": "integer"},
-                            "temperature": {"type": "number"},
-                        },
-                    },
+                    "data": {}  # No type specified
                 },
-                "required": ["prompt"],
+                "required": ["data"]
             }
         }
-        task = "Generate a story"
-        result = build_arguments(tool_definition, task)
-        assert result == {"prompt": task}
+        task = "test data"
+
+        result = build_arguments(tool, task)
+
+        assert result == {"data": task}
+
+    def test_build_arguments_with_complex_task(self):
+        """Test building arguments with complex task containing special characters."""
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {
+                "properties": {
+                    "query": {"type": "string"}
+                },
+                "required": ["query"]
+            }
+        }
+        task = "search for files with pattern '*.py' and content 'import pytest'"
+
+        result = build_arguments(tool, task)
+
+        assert result == {"query": task}
+
+    def test_build_arguments_with_unicode_task(self):
+        """Test building arguments with unicode characters in task."""
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {
+                "properties": {
+                    "query": {"type": "string"}
+                },
+                "required": ["query"]
+            }
+        }
+        task = "buscar archivos con emoji 🚀 y caracteres ñáéíóú"
+
+        result = build_arguments(tool, task)
+
+        assert result == {"query": task}
+
+    def test_build_arguments_with_empty_task(self):
+        """Test building arguments with empty task string."""
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {
+                "properties": {
+                    "query": {"type": "string"}
+                },
+                "required": ["query"]
+            }
+        }
+        task = ""
+
+        result = build_arguments(tool, task)
+
+        assert result == {"query": ""}
+
+    def test_build_arguments_parameter_priority_order(self):
+        """Test that parameters are checked in the correct priority order."""
+        # Create a tool with multiple task parameters
+        tool = {
+            "name": "test_tool",
+            "inputSchema": {
+                "properties": {
+                    "message": {"type": "string"},  # Later in list
+                    "query": {"type": "string"},    # First in list
+                    "task": {"type": "string"}     # Middle in list
+                },
+                "required": ["message", "query", "task"]
+            }
+        }
+        task = "test task"
+
+        result = build_arguments(tool, task)
+
+        # Should use "query" since it's first in TASK_PARAM_NAMES
+        assert result == {"query": task}
