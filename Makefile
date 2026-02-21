@@ -1,11 +1,7 @@
-<<<<<<< Updated upstream
 # MCP Gateway - Simplified Makefile (Phase 3: Command Simplification)
 # Reduced from 50+ targets to 12 core targets for easier onboarding
-=======
-.PHONY: start stop gateway-only register register-wait jwt list-prompts list-servers refresh-mcp-client-jwt use-mcp-client-wrapper verify-mcp-client-setup mcp-client-pull reset-db cleanup-duplicates generate-secrets lint shellcheck test pre-commit-install refresh-cursor-jwt use-cursor-wrapper verify-cursor-setup cursor-pull
->>>>>>> Stashed changes
 
-.PHONY: setup start stop register status ide-setup auth lint lint-strict shellcheck test deps help clean quickstart
+.PHONY: setup start stop register status ide-setup auth lint lint-strict test deps help clean quickstart
 
 # Default target
 .DEFAULT_GOAL := help
@@ -111,7 +107,6 @@ lint: ## Run all linters (replaces lint-python, lint-typescript, shellcheck, lin
 	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
 	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS || echo "⚠️ Shell lint issues found"; fi
 
-<<<<<<< Updated upstream
 lint-strict: ## Run all linters without fallbacks (CI-friendly)
 	@echo "🔍 Running strict linters (no fallbacks)..."
 	@echo "==> Python..."
@@ -119,12 +114,6 @@ lint-strict: ## Run all linters without fallbacks (CI-friendly)
 	@echo "==> TypeScript..."
 	@if [ -f package.json ]; then npm run lint; fi
 	@echo "==> Shell scripts..."
-	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
-	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
-	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS; fi
-
-shellcheck: ## Run shellcheck on all shell scripts
-	@echo "🔍 Running shellcheck..."
 	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
 	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
 	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS; fi
@@ -266,110 +255,3 @@ quickstart: ## Quick start for new users
 	@echo "5. make ide-setup IDE=all"
 	@echo ""
 	@echo "📚 More help: make help"
-=======
-list-prompts:
-	./scripts/gateway/list-prompts.sh
-
-list-servers:
-	./scripts/virtual-servers/list.sh
-
-refresh-mcp-client-jwt:
-	./scripts/mcp-client/refresh-jwt.sh
-
-use-mcp-client-wrapper:
-	./scripts/mcp-client/use-wrapper.sh
-
-verify-mcp-client-setup:
-	./scripts/mcp-client/verify-setup.sh
-
-mcp-client-pull:
-	@echo "Pulling Context Forge image (used by MCP client wrapper; avoids first-start timeout)..."
-	docker pull ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
-
-# Backward compatibility aliases
-refresh-cursor-jwt: refresh-mcp-client-jwt
-use-cursor-wrapper: use-mcp-client-wrapper
-verify-cursor-setup: verify-mcp-client-setup
-cursor-pull: mcp-client-pull
-
-cleanup-duplicates:
-	./scripts/virtual-servers/cleanup-duplicates.sh
-
-# Build system targets
-.PHONY: build build-ts build-py clean clean-ts clean-py install install-ts install-py
-
-build: build-ts build-py
-	@echo "✓ Build complete (TypeScript + Python)"
-
-build-ts:
-	@echo "Building TypeScript client..."
-	npm run build
-	@echo "✓ TypeScript build complete"
-
-build-py:
-	@echo "Verifying Python package structure..."
-	@test -d tool_router || (echo "Error: tool_router/ directory not found" && exit 1)
-	@test -f pyproject.toml || (echo "Error: pyproject.toml not found" && exit 1)
-	@echo "✓ Python package structure verified"
-
-clean: clean-ts clean-py
-	@echo "✓ Clean complete"
-
-clean-ts:
-	@echo "Cleaning TypeScript build artifacts..."
-	rm -rf build/ node_modules/.cache/
-	@echo "✓ TypeScript artifacts cleaned"
-
-clean-py:
-	@echo "Cleaning Python build artifacts..."
-	find tool_router -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find tool_router -type f -name "*.pyc" -delete 2>/dev/null || true
-	rm -rf tool_router.egg-info/ .pytest_cache/ .coverage coverage.xml
-	@echo "✓ Python artifacts cleaned"
-
-install: install-ts install-py
-	@echo "✓ Dependencies installed (TypeScript + Python)"
-
-install-ts:
-	@echo "Installing TypeScript dependencies..."
-	npm install
-	@echo "✓ TypeScript dependencies installed"
-
-install-py:
-	@echo "Installing Python dependencies..."
-	@if ! python3 -m pip install -e .; then \
-		echo "Error: pip install failed. Please check your Python environment and dependencies." >&2; \
-		exit 1; \
-	fi
-	@echo "Python dependencies installed"
-
-# Quality checks
-lint:
-	$(MAKE) shellcheck
-	python3 -m ruff check tool_router/
-
-shellcheck:
-	shellcheck -s bash -S warning start.sh scripts/lib/*.sh scripts/gateway/*.sh scripts/mcp-client/*.sh scripts/virtual-servers/*.sh scripts/utils/*.sh
-
-test:
-	python3 -m pytest tool_router/ -v
-
-test-coverage:
-	python3 -m pytest tool_router/ -v --cov=tool_router --cov-report=term --cov-report=xml
-
-pre-commit-install:
-	pre-commit install
-	@echo "Run 'pre-commit run --all-files' once to check the whole repo."
-
-# Development workflow
-.PHONY: dev check ci
-
-dev: install build
-	@echo "✓ Development environment ready"
-
-check: lint test
-	@echo "✓ All checks passed"
-
-ci: install build lint test-coverage
-	@echo "✓ CI pipeline complete"
->>>>>>> Stashed changes
