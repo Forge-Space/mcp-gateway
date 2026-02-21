@@ -92,7 +92,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
-        uses: actions/actions/checkout@v4
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -180,7 +180,7 @@ jobs:
           client-payload: |
             {
               "repository": "mcp-gateway",
-              "version": "${{ steps.version.outputs.version }",
+              "version": "${{ steps.version.outputs.version }}",
               "package": "mcp-gateway",
               "platform": "pypi"
             }

@@ -4,20 +4,17 @@
 name: NPM Release - Core Package
 
 on:
-  # Trigger on release branch merges
+  # Trigger on release branch merges or version tags
   push:
     branches: [release/core]
+    tags:
+      - 'core-v*'
     paths:
       - 'package.json'
       - 'src/**'
       - 'README.md'
       - 'LICENSE'
-  
-  # Trigger on version tags
-  push:
-    tags:
-      - 'core-v*'
-  
+
   # Allow manual triggering
   workflow_dispatch:
     inputs:
