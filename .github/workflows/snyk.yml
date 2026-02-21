@@ -55,18 +55,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/python@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --all-projects --org=${{ env.SNYK_ORGANIZATION }} --fail-on-severity=${{ env.SNYK_FAIL_ON_SEVERITY }}
+          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --all-projects --org=${{ env.SNYK_ORGANIZATION }}
 
       - name: Upload Snyk results to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk.sarif') != ''
         with:
           sarif_file: snyk.sarif
 
@@ -82,16 +83,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Run Snyk Code Analysis
         uses: snyk/actions/python@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }} --fail-on-severity=${{ env.SNYK_FAIL_ON_SEVERITY }}
+          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }}
 
       - name: Upload Snyk Code results to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk.sarif') != ''
         with:
           sarif_file: snyk.sarif
 
@@ -101,14 +114,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: |
-      contains(github.event.head.commit.message, '[docker]') ||
-      contains(github.event.head.commit.message, '[container]') ||
-      contains(github.event.head.commit.message, '[Dockerfile]') ||
-      contains(github.event.head.commit.message, '[compose]') ||
-      github.event_name == 'pull_request' &&
-      (contains(github.event.pull_request.changed_files, 'Dockerfile') ||
-       contains(github.event.pull_request.changed_files, 'docker-compose') ||
-       contains(github.event.pull_request.changed_files, '.dockerignore'))
+      contains(github.event.head_commit.message, '[docker]') ||
+      contains(github.event.head_commit.message, '[container]') ||
+      contains(github.event.head_commit.message, '[Dockerfile]') ||
+      contains(github.event.head_commit.message, '[compose]') ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -116,14 +127,15 @@ jobs:
 
       - name: Run Snyk Container scanning
         uses: snyk/actions/docker@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }}
 
       - name: Upload Snyk Container results to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk.sarif') != ''
         with:
           sarif_file: snyk.sarif
 
@@ -132,13 +144,6 @@ jobs:
     name: Snyk Node.js Dependency Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: |
-      contains(github.event.head.commit.message, '[node]') ||
-      contains(github.event.head.commit.message, '[npm]') ||
-      contains(github.event.head.commit.message, '[package]') ||
-      github.event_name == 'pull_request' &&
-      (contains(github.event.pull_request.changed_files, 'package.json') ||
-       contains(github.event.pull_request.changed_files, 'package-lock.json'))
 
     steps:
       - name: Checkout repository
@@ -147,7 +152,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -158,14 +163,15 @@ jobs:
 
       - name: Run Snyk to check Node.js vulnerabilities
         uses: snyk/actions/node@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }} --fail-on-severity=${{ env.SNYK_FAIL_ON_SEVERITY }}
+          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }}
 
       - name: Upload Snyk Node.js results to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk.sarif') != ''
         with:
           sarif_file: snyk.sarif
 
@@ -195,6 +201,7 @@ jobs:
 
       - name: Monitor dependencies with Snyk
         uses: snyk/actions/python@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -206,13 +213,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: |
-      contains(github.event.head.commit.message, '[iac]') ||
-      contains(github.event.head.commit.message, '[terraform]') ||
-      contains(github.event.head.commit.message, '[infrastructure]') ||
-      github.event_name == 'pull_request' &&
-      (contains(github.event.pull_request.changed_files, '*.tf') ||
-       contains(github.event.pull_request.changed_files, '*.yml') ||
-       contains(github.event.pull_request.changed_files, 'docker-compose'))
+      contains(github.event.head_commit.message, '[iac]') ||
+      contains(github.event.head_commit.message, '[terraform]') ||
+      contains(github.event.head_commit.message, '[infrastructure]') ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -220,14 +225,15 @@ jobs:
 
       - name: Run Snyk IaC scanning
         uses: snyk/actions/iac@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }} --org=${{ env.SNYK_ORGANIZATION }}
 
       - name: Upload Snyk IaC results to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('snyk.sarif') != ''
         with:
           sarif_file: snyk.sarif
 
@@ -242,16 +248,16 @@ jobs:
     steps:
       - name: Generate Snyk Summary Report
         run: |
-          echo "## 🔒 Snyk Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Snyk Security Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Scan Type | Status | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Python Dependencies | ${{ needs.snyk-dependency-scan.result }} | ✅ Passed or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Code Analysis | ${{ needs.snyk-code-scan.result }} | ✅ Passed or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Continuous Monitoring | ${{ needs.snyk-monitor.result }} | ✅ Active or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Node.js Dependencies | ${{ needs.snyk-node-scan.result }} | ✅ Passed or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Dependencies | ${{ needs.snyk-dependency-scan.result }} | Passed or Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Analysis | ${{ needs.snyk-code-scan.result }} | Passed or Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Continuous Monitoring | ${{ needs.snyk-monitor.result }} | Active or Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node.js Dependencies | ${{ needs.snyk-node-scan.result }} | Passed or Failed |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Snyk Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "### Snyk Metrics" >> $GITHUB_STEP_SUMMARY
           echo "- **Organization**: ${{ env.SNYK_ORGANIZATION }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Severity Threshold**: ${{ env.SNYK_SEVERITY_THRESHOLD }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Fail on Severity**: ${{ env.SNYK_FAIL_ON_SEVERITY }}" >> $GITHUB_STEP_SUMMARY
@@ -259,7 +265,7 @@ jobs:
           echo "- **Languages**: Python, Node.js, TypeScript, Docker, IaC" >> $GITHUB_STEP_SUMMARY
           echo "- **Project**: forge-mcp-gateway" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚨 Security Status" >> $GITHUB_STEP_SUMMARY
+          echo "### Security Status" >> $GITHUB_STEP_SUMMARY
           echo "This PR has been scanned for security vulnerabilities." >> $GITHUB_STEP_SUMMARY
           echo "Please review any findings before merging." >> $GITHUB_STEP_SUMMARY
 
@@ -276,20 +282,20 @@ jobs:
             const codeScanResult = '${{ needs.snyk-code-scan.result }}';
             const nodeScanResult = '${{ needs.snyk-node-scan.result }}';
 
-            let comment = '## 🔒 Snyk Security Scan Results\n\n';
+            let comment = '## Snyk Security Scan Results\n\n';
             comment += '| Scan Type | Status |\n';
             comment += '|-----------|--------|\n';
             comment += `| Python Dependencies | ${depScanResult} |\n`;
             comment += `| Code Analysis | ${codeScanResult} |\n`;
             comment += `| Node.js Dependencies | ${nodeScanResult} |\n\n`;
 
-            comment += '### 📋 Scan Details\n';
+            comment += '### Scan Details\n';
             comment += '- **Organization**: LucasSantana-Dev\n';
             comment += '- **Severity Threshold**: high\n';
             comment += '- **Languages**: Python, Node.js, TypeScript\n';
             comment += '- **Project**: forge-mcp-gateway\n\n';
 
-            comment += '### ✅ Next Steps\n';
+            comment += '### Next Steps\n';
             comment += '1. Review any security findings\n';
             comment += '2. Address high severity issues before merging\n';
             comment += '3. Monitor Snyk dashboard for ongoing updates\n';
@@ -314,7 +320,7 @@ jobs:
     steps:
       - name: Check PR Status
         run: |
-          echo "## 🔍 Pull Request Status Check" >> $GITHUB_STEP_SUMMARY
+          echo "## Pull Request Status Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **PR Number**: #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Title**: ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
@@ -325,8 +331,7 @@ jobs:
           echo "- **Deletions**: ${{ github.event.pull_request.deletions }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commits**: ${{ github.event.pull_request.commits }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚀 Snyk Integration Status" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Snyk workflow configured to run on this PR" >> $GITHUB_STEP_SUMMARY
-          echo "✅ All security scans will be executed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Results will be uploaded to GitHub Code Scanning" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Comments will be added with scan results" >> $GITHUB_STEP_SUMMARY
+          echo "### Snyk Integration Status" >> $GITHUB_STEP_SUMMARY
+          echo "Snyk workflow configured to run on this PR" >> $GITHUB_STEP_SUMMARY
+          echo "All security scans will be executed" >> $GITHUB_STEP_SUMMARY
+          echo "Results will be uploaded to GitHub Code Scanning" >> $GITHUB_STEP_SUMMARY

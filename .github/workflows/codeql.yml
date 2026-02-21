@@ -24,27 +24,26 @@ jobs:
     timeout-minutes: 30
 
     strategy:
+      fail-fast: false
       matrix:
-        language: ['python', 'javascript']
+        include:
+          - language: python
+            build-mode: none
+          - language: javascript
+            build-mode: none
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
-          build-mode: autobuild
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-        if: matrix.language == 'javascript'
-        with:
-          working-directory: apps/web-admin
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{matrix.language}}"

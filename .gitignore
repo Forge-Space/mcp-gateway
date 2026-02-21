@@ -63,3 +63,22 @@ htmlcov/
 .coverage
 *.cover
 bandit-report.json
+coverage.xml
+safety-report.json
+
+# Security scan reports (generated artifacts - use CI/CD artifacts instead)
+grype-scan-*.json
+grype-scan-*.txt
+docker-security-report-*.md
+snyk.sarif
+*.sarif
+
+# Backup files (use version control for history)
+Makefile.backup
+Makefile.original
+*.backup
+*.original
+
+# Timestamped generated files
+*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-*.md
+*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-*.json
