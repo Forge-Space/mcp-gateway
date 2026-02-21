@@ -3,46 +3,46 @@
  * Provides real-time connection and API integration with the MCP Gateway
  */
 
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 export interface GatewayStatus {
-  status: 'online' | 'offline' | 'error'
-  uptime: number
-  version: string
-  lastCheck: Date
+  status: 'online' | 'offline' | 'error';
+  uptime: number;
+  version: string;
+  lastCheck: Date;
 }
 
 export interface ServerMetrics {
-  id: string
-  name: string
-  status: 'running' | 'stopped' | 'error'
-  cpu: number
-  memory: number
-  requests: number
-  errors: number
-  lastActivity: Date
+  id: string;
+  name: string;
+  status: 'running' | 'stopped' | 'error';
+  cpu: number;
+  memory: number;
+  requests: number;
+  errors: number;
+  lastActivity: Date;
 }
 
 export interface GatewayConfig {
-  apiUrl: string
-  apiKey: string
-  wsUrl: string
-  reconnectInterval: number
-  maxReconnectAttempts: number
+  apiUrl: string;
+  apiKey: string;
+  wsUrl: string;
+  reconnectInterval: number;
+  maxReconnectAttempts: number;
 }
 
 interface GatewayState {
-  status: GatewayStatus | null
-  servers: ServerMetrics[]
-  connected: boolean
-  loading: boolean
-  error: string | null
-  config: GatewayConfig
-  connect: () => void
-  disconnect: () => void
-  fetchStatus: () => Promise<void>
-  fetchServers: () => Promise<void>
-  updateConfig: (config: Partial<GatewayConfig>) => void
+  status: GatewayStatus | null;
+  servers: ServerMetrics[];
+  connected: boolean;
+  loading: boolean;
+  error: string | null;
+  config: GatewayConfig;
+  connect: () => void;
+  disconnect: () => void;
+  fetchStatus: () => Promise<void>;
+  fetchServers: () => Promise<void>;
+  updateConfig: (config: Partial<GatewayConfig>) => void;
 }
 
 export const useGatewayStore = create<GatewayState>((set, get) => ({
@@ -60,27 +60,27 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
   },
 
   connect: () => {
-    const { config } = get()
+    const { config } = get();
 
     if (!config.apiUrl || !config.apiKey) {
-      set({ error: 'Gateway configuration missing' })
-      return
+      set({ error: 'Gateway configuration missing' });
+      return;
     }
 
-    set({ loading: true, error: null })
+    set({ loading: true, error: null });
 
     // Test connection first
     fetch(config.apiUrl + '/health', {
       headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${config.apiKey}`,
         'Content-Type': 'application/json',
       },
     })
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        return response.json()
+        return response.json();
       })
       .then((data: { uptime?: number; version?: string }) => {
         set({
@@ -93,18 +93,18 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
           connected: true,
           loading: false,
           error: null,
-        })
+        });
 
         // Start WebSocket connection
-        connectWebSocket()
+        connectWebSocket();
       })
       .catch((error: unknown) => {
         set({
           error: error instanceof Error ? error.message : String(error),
           connected: false,
           loading: false,
-        })
-      })
+        });
+      });
   },
 
   disconnect: () => {
@@ -113,25 +113,25 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
       status: null,
       servers: [],
       error: null,
-    })
+    });
   },
 
   fetchStatus: async () => {
-    const { config } = get()
+    const { config } = get();
 
     try {
       const response = await fetch(config.apiUrl + '/health', {
         headers: {
-          'Authorization': `Bearer ${config.apiKey}`,
+          Authorization: `Bearer ${config.apiKey}`,
           'Content-Type': 'application/json',
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json() as { uptime?: number; version?: string }
+      const data = (await response.json()) as { uptime?: number; version?: string };
 
       set({
         status: {
@@ -142,7 +142,7 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
         },
         connected: true,
         error: null,
-      })
+      });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : String(error),
@@ -153,120 +153,122 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
           version: 'unknown',
           lastCheck: new Date(),
         },
-      })
+      });
     }
   },
 
   fetchServers: async () => {
-    const { config } = get()
+    const { config } = get();
 
     try {
       const response = await fetch(config.apiUrl + '/api/servers', {
         headers: {
-          'Authorization': `Bearer ${config.apiKey}`,
+          Authorization: `Bearer ${config.apiKey}`,
           'Content-Type': 'application/json',
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const servers = await response.json()
+      const servers = await response.json();
 
       set({
-        servers: (servers as Array<ServerMetrics & { lastActivity?: string | number }>).map(server => ({
-          ...server,
-          lastActivity: new Date(server.lastActivity || Date.now()),
-        }))
-      })
+        servers: (servers as Array<ServerMetrics & { lastActivity?: string | number }>).map(
+          (server) => ({
+            ...server,
+            lastActivity: new Date(server.lastActivity || Date.now()),
+          })
+        ),
+      });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : String(error) })
+      set({ error: error instanceof Error ? error.message : String(error) });
     }
   },
 
   updateConfig: (newConfig: Partial<GatewayConfig>) => {
-    set({ config: { ...get().config, ...newConfig } })
+    set({ config: { ...get().config, ...newConfig } });
   },
-}))
+}));
 
 // WebSocket connection management
-let ws: WebSocket | null = null
-let reconnectAttempts = 0
-let reconnectTimer: NodeJS.Timeout | null = null
+let ws: WebSocket | null = null;
+let reconnectAttempts = 0;
+let reconnectTimer: NodeJS.Timeout | null = null;
 
 function connectWebSocket() {
-  const { config } = useGatewayStore.getState()
+  const { config } = useGatewayStore.getState();
 
   if (ws) {
-    ws.close()
+    ws.close();
   }
 
   try {
-    ws = new WebSocket(config.wsUrl)
+    ws = new WebSocket(config.wsUrl);
 
     ws.onopen = () => {
-      console.log('WebSocket connected to MCP Gateway')
-      reconnectAttempts = 0
-      useGatewayStore.setState({ connected: true })
-    }
+      console.log('WebSocket connected to MCP Gateway');
+      reconnectAttempts = 0;
+      useGatewayStore.setState({ connected: true });
+    };
 
     ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data)
+        const data = JSON.parse(event.data);
 
         switch (data.type) {
           case 'server_update':
             useGatewayStore.setState({
-              servers: useGatewayStore.getState().servers.map(server =>
-                server.id === data.server.id
-                  ? { ...server, ...data.server }
-                  : server
-              )
-            })
-            break
+              servers: useGatewayStore
+                .getState()
+                .servers.map((server) =>
+                  server.id === data.server.id ? { ...server, ...data.server } : server
+                ),
+            });
+            break;
           case 'status_update':
             useGatewayStore.setState({
-              status: data.status
-            })
-            break
+              status: data.status,
+            });
+            break;
           case 'metrics_update':
             useGatewayStore.setState({
-              servers: data.servers
-            })
-            break
+              servers: data.servers,
+            });
+            break;
         }
       } catch (error) {
-        console.error('WebSocket message error:', error)
+        console.error('WebSocket message error:', error);
       }
-    }
+    };
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected')
-      useGatewayStore.setState({ connected: false })
+      console.log('WebSocket disconnected');
+      useGatewayStore.setState({ connected: false });
 
       // Attempt reconnection
       if (reconnectAttempts < config.maxReconnectAttempts) {
         reconnectTimer = setTimeout(() => {
-          reconnectAttempts++
-          connectWebSocket()
-        }, config.reconnectInterval)
+          reconnectAttempts++;
+          connectWebSocket();
+        }, config.reconnectInterval);
       }
-    }
+    };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
+      console.error('WebSocket error:', error);
       useGatewayStore.setState({
         error: 'WebSocket connection error',
-        connected: false
-      })
-    }
+        connected: false,
+      });
+    };
   } catch (error) {
-    console.error('WebSocket connection error:', error)
+    console.error('WebSocket connection error:', error);
     useGatewayStore.setState({
       error: 'Failed to connect to WebSocket',
-      connected: false
-    })
+      connected: false,
+    });
   }
 }
 
@@ -274,10 +276,10 @@ function connectWebSocket() {
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     if (ws) {
-      ws.close()
+      ws.close();
     }
     if (reconnectTimer) {
-      clearTimeout(reconnectTimer)
+      clearTimeout(reconnectTimer);
     }
-  })
+  });
 }

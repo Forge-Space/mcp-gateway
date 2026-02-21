@@ -26,8 +26,22 @@ class VirtualServerManager:
     """Manages virtual server lifecycle."""
 
     def __init__(self, config_file: str = None):
-        self.config_file = config_file or "config/virtual-servers.txt"
-        self.config_path = Path(self.config_file)
+        # Validate and sanitize config file path to prevent path traversal
+        default_config = "config/virtual-servers.txt"
+        self.config_file = config_file or default_config
+
+        if self.config_file != default_config:
+            # Only allow relative paths within config directory
+            if ".." in self.config_file or self.config_file.startswith("/"):
+                raise ValueError("Invalid config file path: must be within config directory")
+
+        self.config_path = Path(self.config_file).resolve()
+        # Ensure the resolved path is within the current working directory
+        try:
+            self.config_path.relative_to(Path.cwd())
+        except ValueError:
+            raise ValueError("Config file path must be within current working directory")
+
         self.servers: Dict[str, VirtualServer] = {}
         self.load_servers()
 
@@ -91,7 +105,8 @@ class VirtualServerManager:
             backup_path.write_text(self.config_path.read_text())
 
         # Write new configuration
-        with open(self.config_path, 'w') as f:
+        config_path_str = str(self.config_path.resolve())
+        with open(config_path_str, 'w') as f:
             f.write("# Virtual servers: Name|enabled|gateways|description\n")
             f.write("# enabled: true/false - controls server creation\n")
             f.write("# gateways: comma-separated list of gateway names\n")

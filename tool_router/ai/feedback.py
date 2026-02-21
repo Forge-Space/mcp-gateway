@@ -7,7 +7,6 @@ import logging
 import os
 import re
 import time
-from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from tempfile import gettempdir
@@ -84,10 +83,7 @@ class FeedbackStore:
     """
 
     def __init__(self, feedback_file: str | None = None) -> None:
-        self._file = Path(
-            feedback_file
-            or os.getenv(_FEEDBACK_FILE_ENV, _DEFAULT_FEEDBACK_FILE)
-        )
+        self._file = Path(feedback_file or os.getenv(_FEEDBACK_FILE_ENV, _DEFAULT_FEEDBACK_FILE))
         self._entries: list[FeedbackEntry] = []
         self._stats: dict[str, ToolStats] = {}
         self._patterns: dict[str, TaskPattern] = {}
@@ -158,7 +154,7 @@ class FeedbackStore:
         entities = []
 
         # File paths
-        path_pattern = r'[/\\]?[\w\-./\\]+'
+        path_pattern = r"[/\\]?[\w\-./\\]+"
         paths = re.findall(path_pattern, task)
         entities.extend([p for p in paths if len(p) > 2])
 
@@ -282,12 +278,12 @@ class FeedbackStore:
 
         # Enhanced boost calculation considering multiple factors
         base_boost = 0.5 + stats.success_rate  # Historical success rate
-        
+
         # For confidence and recent boosts, only apply if there's some success
         # to avoid penalizing tools that have never succeeded
         confidence_boost = 0.0
         recent_boost = 0.0
-        
+
         if stats.success_count > 0:
             confidence_boost = (stats.avg_confidence - 0.5) * 0.3  # Confidence factor
             recent_boost = (stats.recent_success_rate - 0.5) * 0.2  # Recent performance
@@ -315,7 +311,9 @@ class FeedbackStore:
             return 1.0
 
         # Calculate success rate for this specific intent
-        intent_entries = [e for e in self._entries if e.selected_tool == tool_name and e.intent_category == intent_category]
+        intent_entries = [
+            e for e in self._entries if e.selected_tool == tool_name and e.intent_category == intent_category
+        ]
         if not intent_entries:
             return 1.0
 
@@ -334,9 +332,9 @@ class FeedbackStore:
 
         # Weighted combination
         comprehensive_boost = (
-            base_boost * 0.5 +  # Historical performance
-            task_type_boost * 0.3 +  # Task type performance
-            intent_boost * 0.2  # Intent performance
+            base_boost * 0.5  # Historical performance
+            + task_type_boost * 0.3  # Task type performance
+            + intent_boost * 0.2  # Intent performance
         )
 
         return comprehensive_boost
@@ -366,15 +364,8 @@ class FeedbackStore:
             }
 
             # Sort tools by success rate
-            sorted_tools = sorted(
-                pattern.preferred_tools.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )
-            insights["recommended_tools"] = [
-                {"tool": tool, "success_rate": rate}
-                for tool, rate in sorted_tools[:3]
-            ]
+            sorted_tools = sorted(pattern.preferred_tools.items(), key=lambda x: x[1], reverse=True)
+            insights["recommended_tools"] = [{"tool": tool, "success_rate": rate} for tool, rate in sorted_tools[:3]]
 
         return insights
 
@@ -449,9 +440,7 @@ class FeedbackStore:
             self._file.parent.mkdir(parents=True, exist_ok=True)
             data = {
                 "entries": [asdict(e) for e in self._entries],
-                "stats": {
-                    name: asdict(s) for name, s in self._stats.items()
-                },
+                "stats": {name: asdict(s) for name, s in self._stats.items()},
             }
             self._file.write_text(json.dumps(data, indent=2))
         except Exception as exc:  # noqa: BLE001
@@ -463,13 +452,8 @@ class FeedbackStore:
             return
         try:
             data = json.loads(self._file.read_text())
-            self._entries = [
-                FeedbackEntry(**e) for e in data.get("entries", [])
-            ]
-            self._stats = {
-                name: ToolStats(**s)
-                for name, s in data.get("stats", {}).items()
-            }
+            self._entries = [FeedbackEntry(**e) for e in data.get("entries", [])]
+            self._stats = {name: ToolStats(**s) for name, s in data.get("stats", {}).items()}
             logger.debug(
                 "Loaded %d feedback entries from %s",
                 len(self._entries),

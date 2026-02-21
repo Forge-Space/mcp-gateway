@@ -34,37 +34,37 @@ print_status() {
 # Check prerequisites
 check_prerequisites() {
     print_status "$BLUE" "🔍 Checking prerequisites..."
-    
+
     # Check Docker
     if ! command -v docker >/dev/null 2>&1; then
         print_status "$RED" "❌ Docker is not installed"
         exit 1
     fi
-    
+
     # Check Docker Compose
     if ! command -v docker-compose >/dev/null 2>&1; then
         print_status "$RED" "❌ Docker Compose is not installed"
         exit 1
     fi
-    
+
     # Check if production files exist
     if [[ ! -f "$COMPOSE_FILE" ]]; then
         print_status "$RED" "❌ Production compose file not found: $COMPOSE_FILE"
         exit 1
     fi
-    
+
     if [[ ! -f "$ENV_FILE" ]]; then
         print_status "$RED" "❌ Production environment file not found: $ENV_FILE"
         print_status "$YELLOW" "💡 Copy .env.production.example to $ENV_FILE and configure it"
         exit 1
     fi
-    
+
     # Check Docker is running
     if ! docker info >/dev/null 2>&1; then
         print_status "$RED" "❌ Docker is not running"
         exit 1
     fi
-    
+
     print_status "$GREEN" "✅ Prerequisites check passed"
     log "Prerequisites check completed"
 }
@@ -72,29 +72,29 @@ check_prerequisites() {
 # Backup current deployment
 backup_current_deployment() {
     print_status "$BLUE" "📦 Backing up current deployment..."
-    
+
     mkdir -p "$BACKUP_DIR"
-    
+
     # Backup docker-compose files
     if [[ -f "$COMPOSE_FILE" ]]; then
         cp "$COMPOSE_FILE" "$BACKUP_DIR/"
     fi
-    
+
     if [[ -f "$ENV_FILE" ]]; then
         cp "$ENV_FILE" "$BACKUP_DIR/"
     fi
-    
+
     # Backup current running containers info
     if docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" > "$BACKUP_DIR/running_containers.txt" 2>/dev/null; then
         print_status "$GREEN" "✅ Backed up running containers info"
     fi
-    
+
     # Backup volumes if they exist
     if docker volume ls --format "{{.Name}}" | grep -q "forge"; then
         docker volume ls --format "{{.Name}}" | grep forge > "$BACKUP_DIR/volumes.txt"
         print_status "$GREEN" "✅ Backed up volumes list"
     fi
-    
+
     print_status "$GREEN" "✅ Backup completed: $BACKUP_DIR"
     log "Backup completed: $BACKUP_DIR"
 }
@@ -102,7 +102,7 @@ backup_current_deployment() {
 # Validate configuration
 validate_configuration() {
     print_status "$BLUE" "🔍 Validating production configuration..."
-    
+
     # Validate docker-compose file
     if docker-compose -f "$COMPOSE_FILE" config >/dev/null 2>&1; then
         print_status "$GREEN" "✅ Docker Compose configuration is valid"
@@ -111,7 +111,7 @@ validate_configuration() {
         docker-compose -f "$COMPOSE_FILE" config
         exit 1
     fi
-    
+
     # Check required environment variables
     local required_vars=(
         "JWT_SECRET"
@@ -119,7 +119,7 @@ validate_configuration() {
         "REDIS_PASSWORD"
         "GRAFANA_PASSWORD"
     )
-    
+
     for var in "${required_vars[@]}"; do
         if ! grep -q "^${var}=" "$ENV_FILE" || grep -q "^${var}=your-" "$ENV_FILE"; then
             print_status "$RED" "❌ Required environment variable $var is not configured"
@@ -127,7 +127,7 @@ validate_configuration() {
             exit 1
         fi
     done
-    
+
     print_status "$GREEN" "✅ Configuration validation passed"
     log "Configuration validation completed"
 }
@@ -135,20 +135,20 @@ validate_configuration() {
 # Prepare production environment
 prepare_environment() {
     print_status "$BLUE" "🔧 Preparing production environment..."
-    
+
     # Create necessary directories
     local dirs=("data" "logs" "config/prometheus" "config/grafana/provisioning" "config/grafana/dashboards")
-    
+
     for dir in "${dirs[@]}"; do
         if [[ ! -d "$dir" ]]; then
             mkdir -p "$dir"
             print_status "$GREEN" "✅ Created directory: $dir"
         fi
     done
-    
+
     # Set proper permissions
     chmod 755 data logs config
-    
+
     # Create Prometheus configuration if not exists
     if [[ ! -f "config/prometheus/prometheus.yml" ]]; then
         cat > config/prometheus/prometheus.yml << 'EOF'
@@ -176,7 +176,7 @@ scrape_configs:
 EOF
         print_status "$GREEN" "✅ Created Prometheus configuration"
     fi
-    
+
     print_status "$GREEN" "✅ Environment preparation completed"
     log "Environment preparation completed"
 }
@@ -184,33 +184,33 @@ EOF
 # Deploy services
 deploy_services() {
     print_status "$BLUE" "🚀 Deploying MCP Gateway services..."
-    
+
     # Pull latest images
     print_status "$BLUE" "📥 Pulling latest images..."
     docker-compose -f "$COMPOSE_FILE" pull
-    
+
     # Stop existing services if running
     if docker-compose -f "$COMPOSE_FILE" ps -q | grep -q .; then
         print_status "$YELLOW" "🛑 Stopping existing services..."
         docker-compose -f "$COMPOSE_FILE" down
     fi
-    
+
     # Start services
     print_status "$BLUE" "🔄 Starting services..."
     docker-compose -f "$COMPOSE_FILE" up -d
-    
+
     # Wait for services to be healthy
     print_status "$BLUE" "⏳ Waiting for services to be healthy..."
     sleep 30
-    
+
     # Check service health
     local unhealthy_services=0
     local services=("gateway" "service-manager" "postgres" "redis")
-    
+
     for service in "${services[@]}"; do
         local health_status
         health_status=$(docker-compose -f "$COMPOSE_FILE" ps -q "$service" | xargs docker inspect --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
-        
+
         if [[ "$health_status" == "healthy" ]]; then
             print_status "$GREEN" "✅ $service is healthy"
         else
@@ -218,26 +218,26 @@ deploy_services() {
             ((unhealthy_services++))
         fi
     done
-    
+
     if (( unhealthy_services > 0 )); then
         print_status "$YELLOW" "⚠️  $unhealthy_services services may need more time to start"
     else
         print_status "$GREEN" "✅ All core services are healthy"
     fi
-    
+
     log "Services deployment completed"
 }
 
 # Verify deployment
 verify_deployment() {
     print_status "$BLUE" "🔍 Verifying deployment..."
-    
+
     # Check if all services are running
     local running_services
     running_services=$(docker-compose -f "$COMPOSE_FILE" ps --services --filter "status=running" | wc -l)
-    
+
     print_status "$GREEN" "📊 Running services: $running_services"
-    
+
     # Check accessible endpoints
     local endpoints=(
         "Gateway:http://localhost:8000/health"
@@ -245,13 +245,13 @@ verify_deployment() {
         "Grafana:http://localhost:3001"
         "Prometheus:http://localhost:9090"
     )
-    
+
     for endpoint in "${endpoints[@]}"; do
         local service_name=$(echo "$endpoint" | cut -d':' -f1)
         local url=$(echo "$endpoint" | cut -d':' -f2-)
-        
+
         print_status "$BLUE" "🔗 Checking $service_name: $url"
-        
+
         # Simple connectivity check
         if curl -s --connect-timeout 5 "$url" >/dev/null 2>&1; then
             print_status "$GREEN" "✅ $service_name is accessible"
@@ -259,11 +259,11 @@ verify_deployment() {
             print_status "$YELLOW" "⚠️  $service_name may not be ready yet"
         fi
     done
-    
+
     # Show resource usage
     print_status "$BLUE" "📊 Resource usage:"
     docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}" || true
-    
+
     print_status "$GREEN" "✅ Deployment verification completed"
     log "Deployment verification completed"
 }
@@ -392,9 +392,9 @@ done
 main() {
     print_status "$BLUE" "🚀 MCP Gateway Production Deployment"
     echo "=================================================="
-    
+
     log "Starting production deployment"
-    
+
     # Run deployment steps based on flags
     if [[ "$RUN_ALL" == "true" ]]; then
         check_prerequisites
@@ -407,28 +407,28 @@ main() {
         if [[ "$RUN_CHECK" == "true" ]]; then
             check_prerequisites
         fi
-        
+
         if [[ "$RUN_BACKUP" == "true" ]]; then
             backup_current_deployment
         fi
-        
+
         if [[ "$RUN_VALIDATE" == "true" ]]; then
             validate_configuration
         fi
-        
+
         if [[ "$RUN_PREPARE" == "true" ]]; then
             prepare_environment
         fi
-        
+
         if [[ "$RUN_DEPLOY" == "true" ]]; then
             deploy_services
             verify_deployment
         fi
     fi
-    
+
     # Show summary
     show_deployment_summary
-    
+
     log "Production deployment completed successfully"
 }
 

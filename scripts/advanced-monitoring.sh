@@ -36,12 +36,12 @@ alert() {
     local severity=$1
     local message=$2
     local service=$3
-    
+
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local alert_entry="{\"timestamp\":\"$timestamp\",\"severity\":\"$severity\",\"service\":\"$service\",\"message\":\"$message\"}"
-    
+
     echo "$alert_entry" | tee -a "$ALERT_LOG"
-    
+
     case $severity in
         "CRITICAL")
             echo -e "${RED}🚨 CRITICAL ALERT${NC}: $message (Service: $service)"
@@ -59,23 +59,23 @@ alert() {
 check_service_health() {
     local service=$1
     local health_url=$2
-    
+
     if ! curl -s --connect-timeout 5 --max-time 10 "$health_url" >/dev/null 2>&1; then
         alert "CRITICAL" "Service is not responding" "$service"
         return 1
     fi
-    
+
     # Check response time
     local response_time
     response_time=$(curl -o /dev/null -s -w '%{time_total}' --connect-timeout 5 --max-time 10 "$health_url" 2>/dev/null || echo "999")
-    
+
     # Convert to milliseconds
     local response_time_ms=$(echo "$response_time * 1000" | bc 2>/dev/null || echo "999999")
-    
+
     if (( $(echo "$response_time_ms > $RESPONSE_TIME_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
         alert "WARNING" "High response time: ${response_time_ms}ms" "$service"
     fi
-    
+
     echo "$response_time_ms"
 }
 
@@ -83,36 +83,36 @@ check_service_health() {
 check_container_metrics() {
     local container_name=$1
     local service_name=$2
-    
+
     if ! docker ps --format "{{.Names}}" | grep -q "^${container_name}$"; then
         alert "CRITICAL" "Container is not running" "$service_name"
         return 1
     fi
-    
+
     # Get container stats
     local stats
     stats=$(docker stats --no-stream --format "{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}" "$container_name" 2>/dev/null || echo "")
-    
+
     if [[ -z "$stats" ]]; then
         alert "WARNING" "Could not retrieve container stats" "$service_name"
         return 1
     fi
-    
+
     # Parse stats
     local cpu_percent=$(echo "$stats" | cut -f1 | sed 's/%//')
     local mem_usage=$(echo "$stats" | cut -f2)
     local mem_percent=$(echo "$stats" | cut -f3 | sed 's/%//')
-    
+
     # Check CPU usage
     if (( $(echo "$cpu_percent > $CPU_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
         alert "WARNING" "High CPU usage: ${cpu_percent}%" "$service_name"
     fi
-    
+
     # Check memory usage
     if (( $(echo "$mem_percent > $MEMORY_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
         alert "WARNING" "High memory usage: ${mem_percent} (${mem_usage})" "$service_name"
     fi
-    
+
     echo "{\"cpu_percent\":$cpu_percent,\"memory_percent\":$mem_percent,\"memory_usage\":\"$mem_usage\"}"
 }
 
@@ -121,27 +121,27 @@ check_system_resources() {
     # CPU usage
     local cpu_usage
     cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | sed 's/%us,//' 2>/dev/null || echo "0")
-    
+
     if (( $(echo "$cpu_usage > $CPU_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
         alert "WARNING" "High system CPU usage: ${cpu_usage}%" "System"
     fi
-    
+
     # Memory usage
     local mem_usage
     mem_usage=$(free | grep Mem | awk '{printf "%.1f", $3/$2 * 100.0}' 2>/dev/null || echo "0")
-    
+
     if (( $(echo "$mem_usage > $MEMORY_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
         alert "WARNING" "High system memory usage: ${mem_usage}%" "System"
     fi
-    
+
     # Disk usage
     local disk_usage
     disk_usage=$(df / | tail -1 | awk '{print $5}' | sed 's/%//' 2>/dev/null || echo "0")
-    
+
     if (( disk_usage > DISK_THRESHOLD )); then
         alert "CRITICAL" "High disk usage: ${disk_usage}%" "System"
     fi
-    
+
     echo "{\"cpu_percent\":$cpu_usage,\"memory_percent\":$mem_usage,\"disk_percent\":$disk_usage}"
 }
 
@@ -150,23 +150,23 @@ check_error_rates() {
     local service=$1
     local log_pattern=$2
     local time_window=5  # minutes
-    
+
     # Count errors in recent logs
     local error_count
     error_count=$(docker-compose -f "$COMPOSE_FILE" logs --since="${time_window}m" "$service" 2>/dev/null | grep -i -c "error\|exception\|failed" || echo "0")
-    
+
     # Count total log entries
     local total_count
     total_count=$(docker-compose -f "$COMPOSE_FILE" logs --since="${time_window}m" "$service" 2>/dev/null | wc -l || echo "1")
-    
+
     # Calculate error rate
     local error_rate
     error_rate=$(echo "scale=2; $error_count * 100 / $total_count" | bc 2>/dev/null || echo "0")
-    
+
     if (( $(echo "$error_rate > $ERROR_RATE_THRESHOLD" | bc -l 2>/dev/null || echo "0") )); then
         alert "WARNING" "High error rate: ${error_rate}% (${error_count}/${total_count} entries)" "$service"
     fi
-    
+
     echo "{\"error_count\":$error_count,\"total_count\":$total_count,\"error_rate\":$error_rate}"
 }
 
@@ -175,7 +175,7 @@ incident_response() {
     local severity=$1
     local service=$2
     local issue=$3
-    
+
     case $severity in
         "CRITICAL")
             # Restart service if critical
@@ -184,7 +184,7 @@ incident_response() {
                 docker-compose -f "$COMPOSE_FILE" restart "$service" 2>/dev/null || true
                 alert "INFO" "Automatic restart initiated for $service" "IncidentResponse"
             fi
-            
+
             # Scale up if resource constraints
             if [[ "$issue" == *"High CPU"* ]] || [[ "$issue" == *"High memory"* ]]; then
                 log "Resource constraint detected, checking scaling options..."
@@ -202,23 +202,23 @@ incident_response() {
 # Generate metrics report
 generate_metrics_report() {
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+
     echo "{"
     echo "  \"timestamp\": \"$timestamp\","
     echo "  \"services\": {"
-    
+
     local services=("gateway" "service-manager" "postgres" "redis" "web-admin")
     local first=true
-    
+
     for service in "${services[@]}"; do
         if [[ "$first" == "true" ]]; then
             first=false
         else
             echo ","
         fi
-        
+
         echo "    \"$service\": {"
-        
+
         # Get container metrics
         local container_name="forge-${service}-prod"
         if docker ps --format "{{.Names}}" | grep -q "$container_name"; then
@@ -227,7 +227,7 @@ generate_metrics_report() {
         else
             echo "      \"container_metrics\": null,"
         fi
-        
+
         # Get health metrics if applicable
         case $service in
             "gateway")
@@ -239,27 +239,27 @@ generate_metrics_report() {
                 echo "      \"response_time_ms\": $health_time,"
                 ;;
         esac
-        
+
         # Get error rates
         local error_metrics=$(check_error_rates "$service" ".*")
         echo "      \"error_metrics\": $error_metrics"
-        
+
         echo -n "    }"
     done
-    
+
     echo ""
     echo "  },"
-    
+
     # System metrics
     local system_metrics=$(check_system_resources)
     echo "  \"system_metrics\": $system_metrics,"
-    
+
     # Alert summary
     local critical_count
     local warning_count
     critical_count=$(grep -c '"severity":"CRITICAL"' "$ALERT_LOG" 2>/dev/null || echo "0")
     warning_count=$(grep -c '"severity":"WARNING"' "$ALERT_LOG" 2>/dev/null || echo "0")
-    
+
     echo "  \"alert_summary\": {"
     echo "    \"critical_alerts\": $critical_count,"
     echo "    \"warning_alerts\": $warning_count"
@@ -270,25 +270,25 @@ generate_metrics_report() {
 # Continuous monitoring mode
 continuous_monitoring() {
     local interval=${1:-60}  # seconds
-    
+
     log "Starting continuous monitoring with ${interval}s interval..."
-    
+
     while true; do
         log "Running monitoring cycle..."
-        
+
         # Clear current alert log for this cycle
         > "$ALERT_LOG"
-        
+
         # Check all services
         local services=("gateway" "service-manager" "postgres" "redis" "web-admin")
-        
+
         for service in "${services[@]}"; do
             log "Checking $service..."
-            
+
             # Container metrics
             local container_name="forge-${service}-prod"
             check_container_metrics "$container_name" "$service"
-            
+
             # Health checks for applicable services
             case $service in
                 "gateway")
@@ -298,32 +298,32 @@ continuous_monitoring() {
                     check_service_health "service-manager" "http://localhost:9000/health"
                     ;;
             esac
-            
+
             # Error rate monitoring
             check_error_rates "$service" ".*"
         done
-        
+
         # System resources
         check_system_resources
-        
+
         # Generate metrics report
         generate_metrics_report > "$METRICS_FILE"
-        
+
         # Check for critical alerts and trigger incident response
         if grep -q '"severity":"CRITICAL"' "$ALERT_LOG" 2>/dev/null; then
             log "Critical alerts detected, triggering incident response..."
-            
+
             while IFS= read -r line; do
                 local severity=$(echo "$line" | jq -r '.severity' 2>/dev/null || echo "UNKNOWN")
                 local service=$(echo "$line" | jq -r '.service' 2>/dev/null || echo "UNKNOWN")
                 local message=$(echo "$line" | jq -r '.message' 2>/dev/null || echo "UNKNOWN")
-                
+
                 if [[ "$severity" == "CRITICAL" ]]; then
                     incident_response "$severity" "$service" "$message"
                 fi
             done < "$ALERT_LOG"
         fi
-        
+
         log "Monitoring cycle completed. Next cycle in ${interval}s..."
         sleep "$interval"
     done
@@ -411,9 +411,9 @@ done
 main() {
     echo "🔍 MCP Gateway Advanced Monitoring"
     echo "=================================="
-    
+
     log "Starting advanced monitoring"
-    
+
     if [[ "$RUN_MONITOR" == "true" ]]; then
         continuous_monitoring "$MONITOR_INTERVAL"
     elif [[ "$RUN_REPORT" == "true" ]]; then
@@ -428,15 +428,15 @@ main() {
     else
         # Default: single check
         > "$ALERT_LOG"
-        
+
         local services=("gateway" "service-manager" "postgres" "redis" "web-admin")
-        
+
         for service in "${services[@]}"; do
             log "Checking $service..."
-            
+
             local container_name="forge-${service}-prod"
             check_container_metrics "$container_name" "$service"
-            
+
             case $service in
                 "gateway")
                     check_service_health "gateway" "http://localhost:8000/health"
@@ -445,13 +445,13 @@ main() {
                     check_service_health "service-manager" "http://localhost:9000/health"
                     ;;
             esac
-            
+
             check_error_rates "$service" ".*"
         done
-        
+
         check_system_resources
         generate_metrics_report
-        
+
         log "Monitoring check completed"
         echo "Log file: $LOG_FILE"
         echo "Alerts: $ALERT_LOG"

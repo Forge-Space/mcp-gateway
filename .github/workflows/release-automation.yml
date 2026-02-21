@@ -143,27 +143,27 @@ jobs:
           release_name: Release v${{ steps.version.outputs.version }}
           body: |
             ## Changes in v${{ steps.version.outputs.version }}
-            
+
             ### 🚀 Features
             - Automated release pipeline implementation
             - Enhanced CI/CD with quality gates
             - Docker multi-platform builds
             - Comprehensive testing and security scanning
-            
+
             ### 🐛 Fixes
             - Improved test coverage and reliability
             - Enhanced error handling and logging
-            
+
             ### 📦 Package Information
             - **PyPI**: https://pypi.org/project/mcp-gateway/
             - **Docker**: Multi-platform image available
             - **Documentation**: Updated README and API docs
-            
+
             ### 🔧 Installation
             ```bash
             pip install mcp-gateway==${{ steps.version.outputs.version }}
             ```
-            
+
             ### 📋 Verification
             - [x] All quality gates passed
             - [x] Docker build successful

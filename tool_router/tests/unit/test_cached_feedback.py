@@ -11,9 +11,9 @@ import pytest
 from tool_router.ai.cached_feedback import (
     CachedFeedbackStore,
     FeedbackEntry,
-    ToolStats,
-    TaskPattern,
     FeedbackStore,  # Backward compatibility alias
+    TaskPattern,
+    ToolStats,
 )
 
 
@@ -30,7 +30,7 @@ class TestFeedbackEntry:
             confidence=0.8,
             task_type="test_type",
             intent_category="create",
-            entities=["entity1", "entity2"]
+            entities=["entity1", "entity2"],
         )
 
         assert entry.task == "test task"
@@ -45,11 +45,7 @@ class TestFeedbackEntry:
 
     def test_feedback_entry_defaults(self):
         """Test feedback entry with default values."""
-        entry = FeedbackEntry(
-            task="test task",
-            selected_tool="test_tool",
-            success=False
-        )
+        entry = FeedbackEntry(task="test task", selected_tool="test_tool", success=False)
 
         assert entry.task == "test task"
         assert entry.selected_tool == "test_tool"
@@ -74,7 +70,7 @@ class TestToolStats:
             avg_confidence=0.75,
             task_types={"file_ops": 8, "search": 7},
             intent_categories={"create": 6, "read": 9},
-            recent_success_rate=0.67
+            recent_success_rate=0.67,
         )
 
         assert stats.tool_name == "test_tool"
@@ -87,12 +83,7 @@ class TestToolStats:
 
     def test_tool_stats_properties(self):
         """Test tool stats calculated properties."""
-        stats = ToolStats(
-            tool_name="test_tool",
-            success_count=8,
-            failure_count=2,
-            avg_confidence=0.6
-        )
+        stats = ToolStats(tool_name="test_tool", success_count=8, failure_count=2, avg_confidence=0.6)
 
         assert stats.total == 10
         assert stats.success_rate == 0.8
@@ -120,7 +111,7 @@ class TestTaskPattern:
             preferred_tools={"tool_a": 0.8, "tool_b": 0.6},
             common_entities=["file.txt", "/path/to/file"],
             avg_confidence=0.7,
-            total_occurrences=25
+            total_occurrences=25,
         )
 
         assert pattern.task_type == "file_operations"
@@ -161,11 +152,7 @@ class TestCachedFeedbackStore:
         """Test store initialization with custom parameters."""
         with tempfile.TemporaryDirectory() as temp_dir:
             custom_file = Path(temp_dir) / "custom_feedback.json"
-            store = CachedFeedbackStore(
-                feedback_file=str(custom_file),
-                cache_ttl=1800,
-                cache_size=500
-            )
+            store = CachedFeedbackStore(feedback_file=str(custom_file), cache_ttl=1800, cache_size=500)
 
         assert store._file == custom_file
         assert store._boost_cache.maxsize == 500
@@ -183,7 +170,7 @@ class TestCachedFeedbackStore:
             ("fetch from api", "network_operations"),
             ("run system command", "system_operations"),
             ("edit the code", "code_operations"),
-            ("general task", "general_operations")
+            ("general task", "general_operations"),
         ]
 
         for task, expected_type in test_cases:
@@ -203,7 +190,7 @@ class TestCachedFeedbackStore:
             ("remove the file", "delete"),
             ("search for pattern", "search"),
             ("find the item", "search"),
-            ("unknown action", "unknown")
+            ("unknown action", "unknown"),
         ]
 
         for task, expected_intent in test_cases:
@@ -216,9 +203,9 @@ class TestCachedFeedbackStore:
             ("read /path/to/file.txt", ["/path/to/file.txt", "read"]),  # The regex is broad and matches "read"
             ("edit 'important file'", ["important file", "edit", "important", "file"]),  # Multiple matches
             ("visit https://example.com", ["https://example.com", "visit"]),
-            ("use \"quoted string\" here", ["quoted string", "use"]),
+            ('use "quoted string" here', ["quoted string", "use"]),
             ("no entities here", []),  # No matches over 2 chars
-            ("mixed /path/file.txt and \"quoted\"", ["/path/file.txt", "quoted", "mixed"])
+            ('mixed /path/file.txt and "quoted"', ["/path/file.txt", "quoted", "mixed"]),
         ]
 
         for task, expected_entities in test_cases:
@@ -230,13 +217,7 @@ class TestCachedFeedbackStore:
         store = CachedFeedbackStore()
 
         # Record initial feedback
-        store.record(
-            task="test task",
-            selected_tool="test_tool",
-            success=True,
-            context="test context",
-            confidence=0.8
-        )
+        store.record(task="test task", selected_tool="test_tool", success=True, context="test context", confidence=0.8)
 
         # Verify entry was created
         assert len(store._entries) == 1
@@ -273,7 +254,7 @@ class TestCachedFeedbackStore:
         assert stats1.success_count == 2
         assert stats1.failure_count == 1
         assert stats1.total == 3
-        assert stats1.success_rate == 2/3
+        assert stats1.success_rate == 2 / 3
         assert stats1.avg_confidence == (0.9 + 0.3 + 0.7) / 3
 
         # Verify stats for tool2
@@ -319,8 +300,8 @@ class TestCachedFeedbackStore:
         assert pattern.avg_confidence == (0.8 + 0.9 + 0.3 + 0.7) / 4
 
         # Verify tool preferences in pattern
-        assert pattern.preferred_tools["tool_a"] == 2/2  # 100% success rate
-        assert pattern.preferred_tools["tool_b"] == 1/2  # 50% success rate
+        assert pattern.preferred_tools["tool_a"] == 2 / 2  # 100% success rate
+        assert pattern.preferred_tools["tool_b"] == 1 / 2  # 50% success rate
 
     def test_boost_calculation(self):
         """Test boost calculation based on performance."""
@@ -606,7 +587,7 @@ class TestCachedFeedbackStore:
                         "timestamp": 1234567890.0,
                         "task_type": "loaded_type",
                         "intent_category": "loaded_intent",
-                        "entities": ["loaded_entity"]
+                        "entities": ["loaded_entity"],
                     }
                 ],
                 "stats": {
@@ -617,9 +598,9 @@ class TestCachedFeedbackStore:
                         "avg_confidence": 0.75,
                         "task_types": {"loaded_type": 3},
                         "intent_categories": {"loaded_intent": 4},
-                        "recent_success_rate": 0.6
+                        "recent_success_rate": 0.6,
                     }
-                }
+                },
             }
             feedback_file.write_text(json.dumps(test_data, indent=2))
 
@@ -637,12 +618,12 @@ class TestCachedFeedbackStore:
         store = CachedFeedbackStore()
 
         # Mock file operations to raise exception
-        with patch.object(store._file, 'write_text', side_effect=IOError("Write error")):
+        with patch.object(store._file, "write_text", side_effect=OSError("Write error")):
             # Should not raise exception
             store._persist()
 
-        with patch.object(store._file, 'exists', return_value=True):
-            with patch.object(store._file, 'read_text', side_effect=IOError("Read error")):
+        with patch.object(store._file, "exists", return_value=True):
+            with patch.object(store._file, "read_text", side_effect=OSError("Read error")):
                 # Should not raise exception
                 store._load()
 
@@ -777,17 +758,14 @@ class TestFeedbackStoreIntegration:
             ("create json file", "json_tool", True, 0.8),
             ("create yaml file", "yaml_tool", False, 0.3),
             ("read markdown file", "markdown_tool", True, 0.7),
-
             # Search operations
             ("search in files", "search_tool", True, 0.8),
             ("find patterns", "search_tool", True, 0.6),
             ("grep content", "search_tool", False, 0.4),
-
             # Code operations
             ("refactor code", "code_tool", True, 0.7),
             ("format code", "code_tool", True, 0.9),
             ("lint code", "code_tool", False, 0.2),
-
             # System operations
             ("run command", "system_tool", True, 0.6),
             ("execute script", "system_tool", True, 0.8),

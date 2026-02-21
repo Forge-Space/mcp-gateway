@@ -255,3 +255,9 @@ quickstart: ## Quick start for new users
 	@echo "5. make ide-setup IDE=all"
 	@echo ""
 	@echo "📚 More help: make help"
+
+# Shellcheck target for pre-commit hooks
+shellcheck:
+	@echo "Running shellcheck on shell scripts..."
+	@find . -name "*.sh" -not -path "./node_modules/*" -not -path "./.git/*" -exec shellcheck {} \;
+	@echo "Shellcheck complete"

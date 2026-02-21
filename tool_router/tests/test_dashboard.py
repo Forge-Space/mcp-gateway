@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-import pytest
 import time
 from unittest.mock import Mock, patch
 
 from tool_router.cache.dashboard import (
-    CachePerformanceMetrics,
     CacheAlert,
-    CachePerformanceSnapshot,
-    CachePerformanceCollector,
     CacheAlertManager,
+    CachePerformanceCollector,
     CachePerformanceDashboard,
+    CachePerformanceMetrics,
+    CachePerformanceSnapshot,
     get_cache_performance_dashboard,
     start_dashboard_collection,
     stop_dashboard_collection,
@@ -30,7 +29,7 @@ class TestCachePerformanceMetrics:
             backend_type="memory",
             hits=100,
             misses=20,
-            total_requests=120
+            total_requests=120,
         )
 
         assert metrics.cache_name == "test_cache"
@@ -53,7 +52,7 @@ class TestCacheAlert:
             severity="warning",
             message="High miss rate detected",
             cache_name="test_cache",
-            timestamp=time.time()
+            timestamp=time.time(),
         )
 
         assert alert.alert_id == "test_alert"
@@ -71,7 +70,7 @@ class TestCacheAlert:
             severity="warning",
             message="High miss rate detected",
             cache_name="test_cache",
-            timestamp=time.time()
+            timestamp=time.time(),
         )
 
         # Resolve alert
@@ -101,6 +100,7 @@ class TestCachePerformanceCollector:
 
         # Setup metrics
         from tool_router.cache.types import CacheMetrics
+
         metrics = CacheMetrics()
         metrics.hits = 80
         metrics.misses = 20
@@ -124,17 +124,16 @@ class TestCachePerformanceCollector:
         """Test collecting metrics from Redis cache."""
         # Setup mock Redis cache
         from tool_router.cache.redis_cache import RedisCache
+
         mock_redis_cache = Mock(spec=RedisCache)
         mock_redis_cache._redis_client = Mock()
         mock_redis_cache._is_healthy = True
-        mock_redis_cache.get_info.return_value = {
-            "memory_usage": 1024000,
-            "key_count": 25
-        }
+        mock_redis_cache.get_info.return_value = {"memory_usage": 1024000, "key_count": 25}
         self.mock_cache_manager.get_cache.return_value = mock_redis_cache
 
         # Setup metrics
         from tool_router.cache.types import CacheMetrics
+
         metrics = CacheMetrics()
         metrics.hits = 90
         metrics.misses = 10
@@ -182,7 +181,7 @@ class TestCacheAlertManager:
             backend_type="memory",
             hits=20,
             misses=80,
-            total_requests=100
+            total_requests=100,
         )
 
         # Check for alerts
@@ -202,7 +201,7 @@ class TestCacheAlertManager:
             backend_type="memory",
             hits=30,
             misses=70,
-            total_requests=100
+            total_requests=100,
         )
 
         # Check for alerts
@@ -223,7 +222,7 @@ class TestCacheAlertManager:
             hits=50,
             misses=50,
             total_requests=100,
-            redis_connected=False
+            redis_connected=False,
         )
 
         # Check for alerts
@@ -243,7 +242,7 @@ class TestCacheAlertManager:
             backend_type="memory",
             hits=20,
             misses=80,
-            total_requests=100
+            total_requests=100,
         )
 
         # Check for alerts (should trigger)
@@ -257,7 +256,7 @@ class TestCacheAlertManager:
             backend_type="memory",
             hits=80,
             misses=20,
-            total_requests=100
+            total_requests=100,
         )
 
         # Check for alerts (should resolve)
@@ -278,7 +277,7 @@ class TestCacheAlertManager:
             backend_type="memory",
             hits=20,
             misses=80,
-            total_requests=100
+            total_requests=100,
         )
 
         # Check for alerts
@@ -302,14 +301,16 @@ class TestCachePerformanceDashboard:
     def test_collect_snapshot(self):
         """Test collecting a snapshot."""
         # Mock the collector
-        self.dashboard.collector.collect_metrics = Mock(return_value=CachePerformanceMetrics(
-            timestamp=time.time(),
-            cache_name="test_cache",
-            backend_type="memory",
-            hits=50,
-            misses=50,
-            total_requests=100
-        ))
+        self.dashboard.collector.collect_metrics = Mock(
+            return_value=CachePerformanceMetrics(
+                timestamp=time.time(),
+                cache_name="test_cache",
+                backend_type="memory",
+                hits=50,
+                misses=50,
+                total_requests=100,
+            )
+        )
 
         # Collect snapshot
         snapshot = self.dashboard.collect_snapshot()
@@ -321,12 +322,7 @@ class TestCachePerformanceDashboard:
     def test_get_current_snapshot(self):
         """Test getting current snapshot."""
         # Mock collection
-        snapshot = CachePerformanceSnapshot(
-            timestamp=time.time(),
-            metrics={},
-            alerts=[],
-            summary={}
-        )
+        snapshot = CachePerformanceSnapshot(timestamp=time.time(), metrics={}, alerts=[], summary={})
         self.dashboard._snapshots.append(snapshot)
 
         # Get current snapshot
@@ -353,12 +349,7 @@ class TestCachePerformanceDashboard:
     def test_export_metrics_json(self):
         """Test exporting metrics as JSON."""
         # Mock snapshot
-        snapshot = CachePerformanceSnapshot(
-            timestamp=time.time(),
-            metrics={},
-            alerts=[],
-            summary={"test": "data"}
-        )
+        snapshot = CachePerformanceSnapshot(timestamp=time.time(), metrics={}, alerts=[], summary={"test": "data"})
         self.dashboard._snapshots.append(snapshot)
 
         # Export as JSON
@@ -375,13 +366,10 @@ class TestCachePerformanceDashboard:
             backend_type="memory",
             hits=50,
             misses=50,
-            total_requests=100
+            total_requests=100,
         )
         snapshot = CachePerformanceSnapshot(
-            timestamp=time.time(),
-            metrics={"test_cache": metrics},
-            alerts=[],
-            summary={}
+            timestamp=time.time(), metrics={"test_cache": metrics}, alerts=[], summary={}
         )
         self.dashboard._snapshots.append(snapshot)
 
@@ -394,7 +382,7 @@ class TestCachePerformanceDashboard:
 class TestGlobalFunctions:
     """Test global dashboard functions."""
 
-    @patch('tool_router.cache.dashboard._cache_performance_dashboard')
+    @patch("tool_router.cache.dashboard._cache_performance_dashboard")
     def test_get_cache_performance_dashboard(self, mock_global):
         """Test getting global dashboard."""
         mock_dashboard = Mock()
@@ -403,7 +391,7 @@ class TestGlobalFunctions:
         result = get_cache_performance_dashboard()
         assert result is mock_dashboard
 
-    @patch('tool_router.cache.dashboard.get_cache_performance_dashboard')
+    @patch("tool_router.cache.dashboard.get_cache_performance_dashboard")
     def test_start_dashboard_collection(self, mock_get_dashboard):
         """Test starting dashboard collection."""
         mock_dashboard = Mock()
@@ -412,7 +400,7 @@ class TestGlobalFunctions:
         start_dashboard_collection(interval=30)
         mock_dashboard.start_collection.assert_called_once_with(30)
 
-    @patch('tool_router.cache.dashboard.get_cache_performance_dashboard')
+    @patch("tool_router.cache.dashboard.get_cache_performance_dashboard")
     def test_stop_dashboard_collection(self, mock_get_dashboard):
         """Test stopping dashboard collection."""
         mock_dashboard = Mock()
@@ -442,12 +430,7 @@ if __name__ == "__main__":
 
     # Create metrics that should trigger alerts
     metrics = CachePerformanceMetrics(
-        timestamp=time.time(),
-        cache_name="test_cache",
-        backend_type="memory",
-        hits=10,
-        misses=90,
-        total_requests=100
+        timestamp=time.time(), cache_name="test_cache", backend_type="memory", hits=10, misses=90, total_requests=100
     )
 
     alerts = alert_manager.check_alerts(metrics)

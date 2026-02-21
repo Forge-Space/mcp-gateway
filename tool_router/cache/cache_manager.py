@@ -5,10 +5,10 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Any, Dict, Optional
 from collections import defaultdict
+from typing import Any
 
-from cachetools import TTLCache, LRUCache
+from cachetools import LRUCache, TTLCache
 
 from .redis_cache import RedisCache, RedisConfig, create_redis_cache
 from .types import CacheConfig, CacheMetrics
@@ -21,8 +21,8 @@ class CacheManager:
     """Centralized cache management with metrics and cleanup."""
 
     def __init__(self):
-        self._caches: Dict[str, Any] = {}
-        self._metrics: Dict[str, CacheMetrics] = defaultdict(CacheMetrics)
+        self._caches: dict[str, Any] = {}
+        self._metrics: dict[str, CacheMetrics] = defaultdict(CacheMetrics)
         self._lock = threading.RLock()
         self._last_cleanup = time.time()
         self._cleanup_interval = 300  # 5 minutes
@@ -31,7 +31,7 @@ class CacheManager:
         self._global_metrics = CacheMetrics()
         self._global_metrics.last_reset_time = time.time()
 
-    def create_ttl_cache(self, name: str, config: Optional[CacheConfig] = None) -> TTLCache:
+    def create_ttl_cache(self, name: str, config: CacheConfig | None = None) -> TTLCache:
         """Create a TTL cache with optional configuration."""
         config = config or CacheConfig()
         cache = TTLCache(maxsize=config.max_size, ttl=config.ttl)
@@ -45,7 +45,7 @@ class CacheManager:
         logger.info(f"Created TTL cache '{name}' with max_size={config.max_size}, ttl={config.ttl}s")
         return cache
 
-    def create_lru_cache(self, name: str, config: Optional[CacheConfig] = None) -> LRUCache:
+    def create_lru_cache(self, name: str, config: CacheConfig | None = None) -> LRUCache:
         """Create an LRU cache with optional configuration."""
         config = config or CacheConfig()
         cache = LRUCache(maxsize=config.max_size)
@@ -60,21 +60,13 @@ class CacheManager:
         return cache
 
     def create_redis_cache(
-        self,
-        name: str,
-        redis_config: Optional[RedisConfig] = None,
-        fallback_config: Optional[CacheConfig] = None,
-        **kwargs
+        self, name: str, redis_config: RedisConfig | None = None, fallback_config: CacheConfig | None = None, **kwargs
     ) -> RedisCache:
         """Create a Redis cache with optional fallback configuration."""
         redis_config = redis_config or RedisConfig()
         fallback_config = fallback_config or CacheConfig()
 
-        cache = create_redis_cache(
-            config=redis_config,
-            fallback_config=fallback_config,
-            **kwargs
-        )
+        cache = create_redis_cache(config=redis_config, fallback_config=fallback_config, **kwargs)
 
         with self._lock:
             self._caches[name] = cache
@@ -134,7 +126,7 @@ class CacheManager:
         if self._global_metrics.total_requests > 0:
             self._global_metrics.hit_rate = self._global_metrics.hits / self._global_metrics.total_requests
 
-    def get_metrics(self, cache_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_metrics(self, cache_name: str | None = None) -> dict[str, Any]:
         """Get cache metrics, optionally for a specific cache."""
         with self._lock:
             if cache_name:
@@ -149,35 +141,33 @@ class CacheManager:
                         "cache_size": len(self._caches.get(cache_name, [])),
                         "last_reset_time": metrics.last_reset_time,
                     }
-                else:
-                    return {"error": f"Cache '{cache_name}' not found"}
-            else:
-                # Return all cache metrics
-                result = {
-                    "global": {
-                        "hits": self._global_metrics.hits,
-                        "misses": self._global_metrics.misses,
-                        "evictions": self._global_metrics.evictions,
-                        "total_requests": self._global_metrics.total_requests,
-                        "hit_rate": self._global_metrics.hit_rate,
-                        "last_reset_time": self._global_metrics.last_reset_time,
-                    }
+                return {"error": f"Cache '{cache_name}' not found"}
+            # Return all cache metrics
+            result = {
+                "global": {
+                    "hits": self._global_metrics.hits,
+                    "misses": self._global_metrics.misses,
+                    "evictions": self._global_metrics.evictions,
+                    "total_requests": self._global_metrics.total_requests,
+                    "hit_rate": self._global_metrics.hit_rate,
+                    "last_reset_time": self._global_metrics.last_reset_time,
+                }
+            }
+
+            for name, metrics in self._metrics.items():
+                result[name] = {
+                    "hits": metrics.hits,
+                    "misses": metrics.misses,
+                    "evictions": metrics.evictions,
+                    "total_requests": metrics.total_requests,
+                    "hit_rate": metrics.hit_rate,
+                    "cache_size": len(self._caches.get(name, [])),
+                    "last_reset_time": metrics.last_reset_time,
                 }
 
-                for name, metrics in self._metrics.items():
-                    result[name] = {
-                        "hits": metrics.hits,
-                        "misses": metrics.misses,
-                        "evictions": metrics.evictions,
-                        "total_requests": metrics.total_requests,
-                        "hit_rate": metrics.hit_rate,
-                        "cache_size": len(self._caches.get(name, [])),
-                        "last_reset_time": metrics.last_reset_time,
-                    }
+            return result
 
-                return result
-
-    def reset_metrics(self, cache_name: Optional[str] = None) -> None:
+    def reset_metrics(self, cache_name: str | None = None) -> None:
         """Reset metrics for a specific cache or all caches."""
         current_time = time.time()
 
@@ -211,7 +201,7 @@ class CacheManager:
                 if isinstance(cache, TTLCache):
                     # No manual cleanup needed for TTLCache
                     continue
-                elif isinstance(cache, LRUCache):
+                if isinstance(cache, LRUCache):
                     # LRU cache doesn't have built-in expiration
                     # Could implement size-based cleanup if needed
                     pass
@@ -223,7 +213,7 @@ class CacheManager:
         with self._lock:
             if cache_name in self._caches:
                 cache = self._caches[cache_name]
-                if hasattr(cache, 'clear'):
+                if hasattr(cache, "clear"):
                     cache.clear()
                 logger.info(f"Cleared cache '{cache_name}'")
 
@@ -231,27 +221,23 @@ class CacheManager:
         """Clear all caches."""
         with self._lock:
             for name, cache in self._metrics.items():
-                if hasattr(cache, 'clear'):
+                if hasattr(cache, "clear"):
                     cache.clear()
                 logger.info(f"Cleared cache '{name}'")
 
             logger.info("Cleared all caches")
 
-    def get_cache_info(self) -> Dict[str, Any]:
+    def get_cache_info(self) -> dict[str, Any]:
         """Get information about all caches."""
         with self._lock:
-            info = {
-                "total_caches": len(self._metrics),
-                "global_metrics": self.get_metrics(),
-                "cache_details": {}
-            }
+            info = {"total_caches": len(self._metrics), "global_metrics": self.get_metrics(), "cache_details": {}}
 
             for name, cache in self._caches.items():
                 cache_info = {
                     "type": type(cache).__name__,
-                    "size": len(cache) if hasattr(cache, '__len__') else "unknown",
-                    "max_size": getattr(cache, 'maxsize', 'unknown'),
-                    "ttl": getattr(cache, 'ttl', 'unknown'),
+                    "size": len(cache) if hasattr(cache, "__len__") else "unknown",
+                    "max_size": getattr(cache, "maxsize", "unknown"),
+                    "ttl": getattr(cache, "ttl", "unknown"),
                 }
 
                 if name in self._metrics:
@@ -278,12 +264,12 @@ def create_lru_cache(name: str, max_size: int = 1000) -> LRUCache:
     return cache_manager.create_lru_cache(name, config)
 
 
-def get_cache_metrics(cache_name: Optional[str] = None) -> Dict[str, Any]:
+def get_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
     """Convenience function to get cache metrics."""
     return cache_manager.get_metrics(cache_name)
 
 
-def reset_cache_metrics(cache_name: Optional[str] = None) -> None:
+def reset_cache_metrics(cache_name: str | None = None) -> None:
     """Convenience function to reset cache metrics."""
     cache_manager.reset_metrics(cache_name)
 
@@ -299,8 +285,9 @@ def clear_all_caches() -> None:
 
 
 # Cache decorator factory
-def cached(ttl: int = 3600, max_size: int = 1000, cache_name: Optional[str] = None):
+def cached(ttl: int = 3600, max_size: int = 1000, cache_name: str | None = None):
     """Decorator factory for caching function results."""
+
     def decorator(func):
         cache_name = cache_name or f"function_{func.__name__}"
         cache = create_ttl_cache(cache_name, max_size=max_size, ttl=ttl)

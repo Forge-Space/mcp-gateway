@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from ..cache import get_cache_metrics, cache_manager
-from ..ai.cached_feedback import CachedFeedbackStore
-from ..security.enhanced_rate_limiter import EnhancedRateLimiter
+from ..cache import cache_manager, get_cache_metrics
 from ..database.query_cache import get_query_cache
 
 
@@ -21,30 +20,33 @@ router = APIRouter(prefix="/monitoring", tags=["monitoring"])
 
 class CacheMetricsResponse(BaseModel):
     """Response model for cache metrics."""
+
     cache_hit_rate: float
     total_hits: int
     total_misses: int
     total_requests: int
-    cache_sizes: Dict[str, int]
-    hits_by_type: Dict[str, int]
-    misses_by_type: Dict[str, int]
+    cache_sizes: dict[str, int]
+    hits_by_type: dict[str, int]
+    misses_by_type: dict[str, int]
 
 
 class SystemMetricsResponse(BaseModel):
     """Response model for system metrics."""
+
     timestamp: float
     uptime: float
     cache_metrics: CacheMetricsResponse
-    feedback_metrics: Dict[str, Any]
-    rate_limiter_metrics: Dict[str, Any]
-    query_cache_metrics: Dict[str, Any]
+    feedback_metrics: dict[str, Any]
+    rate_limiter_metrics: dict[str, Any]
+    query_cache_metrics: dict[str, Any]
 
 
 class HealthResponse(BaseModel):
     """Response model for health check."""
+
     status: str
     timestamp: float
-    checks: Dict[str, Any]
+    checks: dict[str, Any]
 
 
 # Global start time for uptime calculation
@@ -56,7 +58,7 @@ async def health_check() -> HealthResponse:
     """Comprehensive health check with cache status."""
     current_time = time.time()
     uptime = current_time - _start_time
-    
+
     checks = {
         "uptime_seconds": uptime,
         "timestamp": current_time,
@@ -77,16 +79,12 @@ async def health_check() -> HealthResponse:
             "cache_enabled": get_query_cache().config.enabled,
         },
     }
-    
+
     # Determine overall health status
     all_healthy = all(check["status"] == "healthy" for check in checks.values() if isinstance(check, dict))
     status = "healthy" if all_healthy else "degraded"
-    
-    return HealthResponse(
-        status=status,
-        timestamp=current_time,
-        checks=checks
-    )
+
+    return HealthResponse(status=status, timestamp=current_time, checks=checks)
 
 
 @router.get("/metrics/cache", response_model=CacheMetricsResponse)
@@ -94,7 +92,7 @@ async def get_cache_metrics() -> CacheMetricsResponse:
     """Get comprehensive cache performance metrics."""
     try:
         metrics = get_cache_metrics()
-        
+
         return CacheMetricsResponse(
             cache_hit_rate=metrics.get("global", {}).get("hit_rate", 0.0),
             total_hits=metrics.get("global", {}).get("hits", 0),
@@ -114,7 +112,7 @@ async def get_system_metrics() -> SystemMetricsResponse:
     """Get comprehensive system performance metrics."""
     current_time = time.time()
     uptime = current_time - _start_time
-    
+
     try:
         # Get cache metrics
         cache_metrics_data = get_cache_metrics()
@@ -127,25 +125,25 @@ async def get_system_metrics() -> SystemMetricsResponse:
             hits_by_type=cache_metrics_data.get("global", {}).get("hits_by_type", {}),
             misses_by_type=cache_metrics_data.get("global", {}).get("misses_by_type", {}),
         )
-        
+
         # Get feedback store metrics (mock for now)
         feedback_metrics = {
             "cache_enabled": True,
             "cache_size": 0,  # Would need access to actual feedback store instance
             "cache_hit_rate": 0.0,
         }
-        
+
         # Get rate limiter metrics (mock for now)
         rate_limiter_metrics = {
             "cache_enabled": True,
             "cache_hit_rate": 0.0,
             "redis_enabled": False,
         }
-        
+
         # Get query cache metrics
         query_cache_instance = get_query_cache()
         query_cache_metrics = query_cache_instance.get_metrics()
-        
+
         return SystemMetricsResponse(
             timestamp=current_time,
             uptime=uptime,
@@ -154,21 +152,21 @@ async def get_system_metrics() -> SystemMetricsResponse:
             rate_limiter_metrics=rate_limiter_metrics,
             query_cache_metrics=query_cache_metrics,
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to get system metrics: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve system metrics")
 
 
 @router.post("/metrics/cache/reset")
-async def reset_cache_metrics(cache_name: str | None = None) -> Dict[str, Any]:
+async def reset_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
     """Reset cache metrics for a specific cache or all caches."""
     try:
         reset_cache_metrics(cache_name)
-        
+
         message = f"Reset metrics for cache: {cache_name}" if cache_name else "Reset all cache metrics"
         logger.info(message)
-        
+
         return {
             "status": "success",
             "message": message,
@@ -180,20 +178,22 @@ async def reset_cache_metrics(cache_name: str | None = None) -> Dict[str, Any]:
 
 
 @router.post("/cache/clear")
-async def clear_cache(cache_name: str | None = None) -> Dict[str, Any]:
+async def clear_cache(cache_name: str | None = None) -> dict[str, Any]:
     """Clear a specific cache or all caches."""
     try:
         if cache_name:
             from ..cache import clear_cache as clear_specific_cache
+
             clear_specific_cache(cache_name)
             message = f"Cleared cache: {cache_name}"
         else:
             from ..cache import clear_all_caches
+
             clear_all_caches()
             message = "Cleared all caches"
-        
+
         logger.info(message)
-        
+
         return {
             "status": "success",
             "message": message,
@@ -205,7 +205,7 @@ async def clear_cache(cache_name: str | None = None) -> Dict[str, Any]:
 
 
 @router.get("/cache/info")
-async def get_cache_info() -> Dict[str, Any]:
+async def get_cache_info() -> dict[str, Any]:
     """Get detailed information about all caches."""
     try:
         return cache_manager.get_cache_info()
@@ -215,20 +215,20 @@ async def get_cache_info() -> Dict[str, Any]:
 
 
 @router.post("/query-cache/invalidate")
-async def invalidate_query_cache(table: str | None = None) -> Dict[str, Any]:
+async def invalidate_query_cache(table: str | None = None) -> dict[str, Any]:
     """Invalidate query cache for a specific table or all queries."""
     try:
         query_cache = get_query_cache()
-        
+
         if table:
             query_cache.invalidate_table(table)
             message = f"Invalidated query cache for table: {table}"
         else:
             query_cache.invalidate_all()
             message = "Invalidated all query cache entries"
-        
+
         logger.info(message)
-        
+
         return {
             "status": "success",
             "message": message,
@@ -240,20 +240,20 @@ async def invalidate_query_cache(table: str | None = None) -> Dict[str, Any]:
 
 
 @router.get("/performance")
-async def get_performance_summary() -> Dict[str, Any]:
+async def get_performance_summary() -> dict[str, Any]:
     """Get a performance summary with key metrics."""
     try:
         current_time = time.time()
         uptime = current_time - _start_time
-        
+
         # Get cache metrics
         cache_metrics_data = get_cache_metrics()
         global_metrics = cache_metrics_data.get("global", {})
-        
+
         # Get query cache metrics
         query_cache_instance = get_query_cache()
         query_metrics = query_cache_instance.get_metrics()
-        
+
         performance_summary = {
             "timestamp": current_time,
             "uptime_seconds": uptime,
@@ -268,38 +268,38 @@ async def get_performance_summary() -> Dict[str, Any]:
                 "hit_rate": query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0),
             },
             "recommendations": _generate_performance_recommendations(
-                global_metrics.get("hit_rate", 0.0),
-                query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0),
-                uptime
+                global_metrics.get("hit_rate", 0.0), query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0), uptime
             ),
         }
-        
+
         return performance_summary
-        
+
     except Exception as e:
         logger.error(f"Failed to get performance summary: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve performance summary")
 
 
-def _generate_performance_recommendations(cache_hit_rate: float, query_cache_hit_rate: float, uptime: float) -> list[str]:
+def _generate_performance_recommendations(
+    cache_hit_rate: float, query_cache_hit_rate: float, uptime: float
+) -> list[str]:
     """Generate performance recommendations based on metrics."""
     recommendations = []
-    
+
     # Cache hit rate recommendations
     if cache_hit_rate < 0.5:
         recommendations.append("Consider increasing cache TTL or size to improve hit rate")
     elif cache_hit_rate > 0.9:
         recommendations.append("Cache hit rate is excellent - consider reducing cache size to save memory")
-    
+
     # Query cache recommendations
     if query_cache_hit_rate < 0.3:
         recommendations.append("Query cache hit rate is low - review query patterns and caching strategy")
-    
+
     # Uptime-based recommendations
     if uptime < 300:  # Less than 5 minutes
         recommendations.append("System recently started - metrics may not be representative yet")
-    
+
     if not recommendations:
         recommendations.append("Performance metrics look good - no immediate recommendations")
-    
+
     return recommendations

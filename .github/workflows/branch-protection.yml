@@ -47,7 +47,7 @@ jobs:
             echo "❌ Release branch must follow pattern: release/vX.Y.Z"
             exit 1
           fi
-          
+
           # Check if main branch is up to date
           git fetch origin main
           MAIN_BEHIND=$(git rev-list --count HEAD..origin/main)
@@ -55,7 +55,7 @@ jobs:
             echo "❌ Main branch is $MAIN_BEHIND commits behind. Please sync first."
             exit 1
           fi
-          
+
           echo "✅ Release branch validation passed"
 
       - name: Set up Python
@@ -141,16 +141,16 @@ jobs:
           cd tool_router && python -c "
           import psutil
           import os
-          
+
           # Monitor memory usage during startup
           process = psutil.Process(os.getpid())
           initial_memory = process.memory_info().rss / 1024 / 1024  # MB
           print(f'Initial memory usage: {initial_memory:.2f} MB')
-          
+
           # Simulate some work
           import time
           time.sleep(2)
-          
+
           final_memory = process.memory_info().rss / 1024 / 1024  # MB
           print(f'Final memory usage: {final_memory:.2f} MB')
           print(f'Memory increase: {final_memory - initial_memory:.2f} MB')

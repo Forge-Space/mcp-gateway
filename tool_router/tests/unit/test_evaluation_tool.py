@@ -3,19 +3,9 @@
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
-import pytest
 
-from tool_router.mcp_tools.evaluation_tool import (
-    EvaluationTool,
-    EVALUATION_SCHEMA,
-    evaluation_handler
-)
-from tool_router.training.evaluation import (
-    SpecialistEvaluator,
-    EvaluationResult,
-    EvaluationMetric,
-    BenchmarkSuite
-)
+from tool_router.mcp_tools.evaluation_tool import EVALUATION_SCHEMA, EvaluationTool, evaluation_handler
+from tool_router.training.evaluation import BenchmarkSuite, EvaluationMetric, EvaluationResult, SpecialistEvaluator
 
 
 class TestEvaluationTool:
@@ -50,13 +40,10 @@ class TestEvaluationTool:
         mock_result2.details = {"performance": 0.87}
         mock_result2.timestamp = "2023-01-01T00:00:00"
 
-        with patch.object(tool.evaluator, 'evaluate_specialist') as mock_evaluate:
+        with patch.object(tool.evaluator, "evaluate_specialist") as mock_evaluate:
             mock_evaluate.return_value = [mock_result1, mock_result2]
 
-            result = tool.run_evaluation(
-                specialist_name="ui_specialist",
-                benchmark_suite=None
-            )
+            result = tool.run_evaluation(specialist_name="ui_specialist", benchmark_suite=None)
 
         # Business logic: successful evaluation should return results
         assert "results" in result
@@ -64,7 +51,7 @@ class TestEvaluationTool:
         assert result["summary"]["average_score"] == round((0.95 + 0.87) / 2, 2)
         assert result["summary"]["total_test_cases"] == 18  # 10 + 8
         assert result["summary"]["passed_test_cases"] == 17  # 10 + 7
-        assert result["summary"]["pass_rate"] == round(17/18 * 100, 2)
+        assert result["summary"]["pass_rate"] == round(17 / 18 * 100, 2)
         assert result["message"] == "Evaluation completed successfully"
         assert "error" not in result
 
@@ -72,7 +59,7 @@ class TestEvaluationTool:
         """Test evaluation run with no results."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, 'evaluate_specialist') as mock_evaluate:
+        with patch.object(tool.evaluator, "evaluate_specialist") as mock_evaluate:
             mock_evaluate.return_value = []
 
             result = tool.run_evaluation("ui_specialist")
@@ -96,26 +83,20 @@ class TestEvaluationTool:
         mock_result.timestamp = "2024-01-01T00:00:00Z"
         mock_result.details = {"test": "data"}
 
-        with patch.object(tool.evaluator, 'evaluate_specialist') as mock_evaluate:
+        with patch.object(tool.evaluator, "evaluate_specialist") as mock_evaluate:
             mock_evaluate.return_value = [mock_result]
 
-            result = tool.run_evaluation(
-                specialist_name="ui_specialist",
-                benchmark_suite=mock_suite
-            )
+            result = tool.run_evaluation(specialist_name="ui_specialist", benchmark_suite=mock_suite)
 
         # Business logic: should use provided benchmark suite
-        mock_evaluate.assert_called_once_with(
-            specialist_type="ui_specialist",
-            benchmark_suite=mock_suite
-        )
+        mock_evaluate.assert_called_once_with(specialist_type="ui_specialist", benchmark_suite=mock_suite)
         assert result["summary"]["average_score"] == 0.9
 
     def test_run_evaluation_evaluation_error(self) -> None:
         """Test evaluation run with evaluation error."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, 'evaluate_specialist') as mock_evaluate:
+        with patch.object(tool.evaluator, "evaluate_specialist") as mock_evaluate:
             mock_evaluate.side_effect = Exception("Evaluation failed")
 
             result = tool.run_evaluation("ui_specialist")
@@ -147,13 +128,10 @@ class TestEvaluationTool:
         mock_result2.timestamp = "2024-01-01T00:00:00Z"
         mock_result2.details = {"test": "data"}
 
-        with patch.object(tool.evaluator, 'get_evaluation_results') as mock_get:
+        with patch.object(tool.evaluator, "get_evaluation_results") as mock_get:
             mock_get.return_value = [mock_result1, mock_result2]
 
-            result = tool.get_evaluation_history(
-                specialist_name="ui_specialist",
-                limit=10
-            )
+            result = tool.get_evaluation_history(specialist_name="ui_specialist", limit=10)
 
         assert len(result["results"]) == 2
         assert result["results"][0]["metric"] == "accuracy"
@@ -172,7 +150,7 @@ class TestEvaluationTool:
         """Test evaluation history retrieval with no results."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, 'get_evaluation_results') as mock_get:
+        with patch.object(tool.evaluator, "get_evaluation_results") as mock_get:
             mock_get.return_value = []
 
             result = tool.get_evaluation_history("ui_specialist")
@@ -186,7 +164,7 @@ class TestEvaluationTool:
         """Test evaluation history retrieval with error."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, 'get_evaluation_results') as mock_get:
+        with patch.object(tool.evaluator, "get_evaluation_results") as mock_get:
             mock_get.side_effect = Exception("Database error")
 
             result = tool.get_evaluation_history("ui_specialist")
@@ -200,7 +178,7 @@ class TestEvaluationTool:
         """Test successful available specialists retrieval."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, 'benchmark_suites') as mock_suites:
+        with patch.object(tool.evaluator, "benchmark_suites") as mock_suites:
             # Mock the benchmark suites data structure
             mock_suite1 = MagicMock()
             mock_suite1.description = "UI specialist for user interface patterns"
@@ -212,10 +190,7 @@ class TestEvaluationTool:
             mock_suite2.test_cases = ["test3", "test4"]
             mock_suite2.metrics = [MagicMock(value="creativity"), MagicMock(value="clarity")]
 
-            mock_suites.items.return_value = [
-                ("ui_specialist", mock_suite1),
-                ("prompt_architect", mock_suite2)
-            ]
+            mock_suites.items.return_value = [("ui_specialist", mock_suite1), ("prompt_architect", mock_suite2)]
 
             result = tool.get_available_specialists()
 
@@ -231,7 +206,7 @@ class TestEvaluationTool:
         """Test available specialists retrieval with no specialists."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, 'benchmark_suites') as mock_suites:
+        with patch.object(tool.evaluator, "benchmark_suites") as mock_suites:
             mock_suites.__contains__ = MagicMock(return_value=False)
             mock_suites.keys = MagicMock(return_value=[])
 
@@ -262,7 +237,6 @@ class TestEvaluationTool:
         for metric in result["metrics"]:
             assert "name" in metric
             assert "description" in metric
-
 
     def test_get_evaluation_summary_success(self) -> None:
         """Test successful evaluation summary retrieval."""
@@ -296,7 +270,7 @@ class TestEvaluationTool:
         mock_result3.timestamp = "2024-01-03T00:00:00"
         mock_result3.details = {"test": "data"}
 
-        with patch.object(tool.evaluator, 'evaluation_history') as mock_history:
+        with patch.object(tool.evaluator, "evaluation_history") as mock_history:
             mock_history.__iter__ = MagicMock(return_value=iter([mock_result1, mock_result2, mock_result3]))
             mock_history.__len__ = MagicMock(return_value=3)
 
@@ -316,7 +290,7 @@ class TestEvaluationTool:
         """Test evaluation summary with no evaluations."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, 'evaluation_history') as mock_history:
+        with patch.object(tool.evaluator, "evaluation_history") as mock_history:
             mock_history.__iter__ = MagicMock(return_value=iter([]))
             mock_history.__len__ = MagicMock(return_value=0)
 
@@ -347,13 +321,7 @@ class TestEvaluationSchema:
     def test_schema_actions(self) -> None:
         """Test that all valid actions are in schema."""
         actions = EVALUATION_SCHEMA["properties"]["action"]["enum"]
-        expected_actions = [
-            "run_evaluation",
-            "get_history",
-            "get_specialists",
-            "get_metrics",
-            "get_summary"
-        ]
+        expected_actions = ["run_evaluation", "get_history", "get_specialists", "get_metrics", "get_summary"]
 
         # Business logic: all expected actions should be present
         for action in expected_actions:
@@ -365,22 +333,15 @@ class TestEvaluationHandler:
 
     def test_handler_run_evaluation_success(self) -> None:
         """Test handler with successful run_evaluation action."""
-        args = {
-            "action": "run_evaluation",
-            "specialist_name": "ui_specialist"
-        }
+        args = {"action": "run_evaluation", "specialist_name": "ui_specialist"}
 
-        with patch.object(EvaluationTool, 'run_evaluation') as mock_run:
+        with patch.object(EvaluationTool, "run_evaluation") as mock_run:
             mock_run.return_value = {"message": "Evaluation completed"}
 
             result = evaluation_handler(args)
 
         # Business logic: handler should call appropriate method
-        mock_run.assert_called_once_with(
-            specialist_name="ui_specialist",
-            benchmark_suite=None,
-            test_cases=None
-        )
+        mock_run.assert_called_once_with(specialist_name="ui_specialist", benchmark_suite=None, test_cases=None)
         assert result["message"] == "Evaluation completed"
 
     def test_handler_run_evaluation_missing_specialist(self) -> None:
@@ -398,12 +359,9 @@ class TestEvaluationHandler:
 
     def test_handler_get_evaluation_history_success(self) -> None:
         """Test handler with successful get_history action."""
-        args = {
-            "action": "get_history",
-            "specialist_name": "ui_specialist"
-        }
+        args = {"action": "get_history", "specialist_name": "ui_specialist"}
 
-        with patch.object(EvaluationTool, 'get_evaluation_history') as mock_get:
+        with patch.object(EvaluationTool, "get_evaluation_history") as mock_get:
             mock_get.return_value = {"results": []}
 
             result = evaluation_handler(args)
@@ -413,13 +371,9 @@ class TestEvaluationHandler:
 
     def test_handler_get_evaluation_history_with_limit(self) -> None:
         """Test handler with limit parameter for get_history."""
-        args = {
-            "action": "get_history",
-            "specialist_name": "ui_specialist",
-            "limit": 5
-        }
+        args = {"action": "get_history", "specialist_name": "ui_specialist", "limit": 5}
 
-        with patch.object(EvaluationTool, 'get_evaluation_history') as mock_get:
+        with patch.object(EvaluationTool, "get_evaluation_history") as mock_get:
             mock_get.return_value = {"results": []}
 
             result = evaluation_handler(args)
@@ -429,9 +383,7 @@ class TestEvaluationHandler:
 
     def test_handler_unknown_action(self) -> None:
         """Test handler with unknown action."""
-        args = {
-            "action": "unknown_action"
-        }
+        args = {"action": "unknown_action"}
 
         result = evaluation_handler(args)
 
@@ -442,11 +394,9 @@ class TestEvaluationHandler:
 
     def test_handler_get_specialists_success(self) -> None:
         """Test handler with successful get_specialists action."""
-        args = {
-            "action": "get_specialists"
-        }
+        args = {"action": "get_specialists"}
 
-        with patch.object(EvaluationTool, 'get_available_specialists') as mock_get:
+        with patch.object(EvaluationTool, "get_available_specialists") as mock_get:
             mock_get.return_value = {"specialists": []}
 
             result = evaluation_handler(args)
@@ -456,11 +406,9 @@ class TestEvaluationHandler:
 
     def test_handler_get_metrics_success(self) -> None:
         """Test handler with successful get_metrics action."""
-        args = {
-            "action": "get_metrics"
-        }
+        args = {"action": "get_metrics"}
 
-        with patch.object(EvaluationTool, 'get_evaluation_metrics') as mock_get:
+        with patch.object(EvaluationTool, "get_evaluation_metrics") as mock_get:
             mock_get.return_value = {"metrics": []}
 
             result = evaluation_handler(args)

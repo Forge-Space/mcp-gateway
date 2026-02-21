@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import os
 import logging
-from typing import Optional
+import os
 from dataclasses import dataclass
 
 from .redis_cache import RedisConfig
 from .types import CacheConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +16,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CacheBackendConfig:
     """Configuration for cache backend selection and settings."""
+
     backend_type: str = "memory"  # "memory", "redis", "hybrid"
-    redis_config: Optional[RedisConfig] = None
-    fallback_config: Optional[CacheConfig] = None
+    redis_config: RedisConfig | None = None
+    fallback_config: CacheConfig | None = None
 
     @classmethod
     def from_environment(cls) -> CacheBackendConfig:
@@ -83,8 +84,7 @@ def get_redis_url() -> str:
 
     if password:
         return f"redis://:{password}@{host}:{port}/{db}"
-    else:
-        return f"redis://{host}:{port}/{db}"
+    return f"redis://{host}:{port}/{db}"
 
 
 def validate_cache_config() -> bool:

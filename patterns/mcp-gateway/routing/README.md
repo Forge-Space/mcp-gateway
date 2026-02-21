@@ -119,33 +119,33 @@ export class CoreRouter extends EventEmitter {
 
   async routeRequest(request: RoutingRequest): Promise<RoutingResult> {
     const startTime = Date.now();
-    
+
     try {
       // Find matching routes
       const matchingRoutes = this.findMatchingRoutes(request);
-      
+
       if (matchingRoutes.length === 0) {
         throw new Error('No matching route found');
       }
 
       // Select best route based on priority
       const route = this.selectBestRoute(matchingRoutes);
-      
+
       // Select target service using load balancer
       const target = this.selectTarget(route);
-      
+
       if (!target) {
         throw new Error('No healthy targets available');
       }
 
       // Execute request with retry policy
       const response = await this.executeRequest(request, target, route);
-      
+
       // Update metrics
       this.updateMetrics(route, target, Date.now() - startTime, true);
-      
+
       this.emit('requestRouted', { request, route, target, response });
-      
+
       return {
         success: true,
         route,
@@ -156,7 +156,7 @@ export class CoreRouter extends EventEmitter {
 
     } catch (error) {
       this.emit('routingError', { request, error });
-      
+
       return {
         success: false,
         error: error.message,
@@ -204,8 +204,8 @@ export class CoreRouter extends EventEmitter {
   }
 
   private async executeRequest(
-    request: RoutingRequest, 
-    target: ServiceTarget, 
+    request: RoutingRequest,
+    target: ServiceTarget,
     route: Route
   ): Promise<any> {
     const maxRetries = this.config.retryPolicy.enabled ? this.config.retryPolicy.maxRetries : 0;
@@ -218,7 +218,7 @@ export class CoreRouter extends EventEmitter {
 
         // Execute request with timeout
         const response = await this.executeWithTimeout(request, target);
-        
+
         // Decrement connection count
         target.activeConnections--;
 
@@ -249,7 +249,7 @@ export class CoreRouter extends EventEmitter {
 
   private async executeWithTimeout(request: RoutingRequest, target: ServiceTarget): Promise<any> {
     const timeout = this.config.timeoutPolicy.request;
-    
+
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         reject(new Error('Request timeout'));
@@ -272,7 +272,7 @@ export class CoreRouter extends EventEmitter {
     // Implementation for making HTTP request
     // This would use fetch, axios, or similar
     const url = `${target.endpoint}${request.path}`;
-    
+
     const response = await fetch(url, {
       method: request.method,
       headers: request.headers,
@@ -289,24 +289,24 @@ export class CoreRouter extends EventEmitter {
   private pathMatches(routePath: string, requestPath: string): boolean {
     // Simple path matching (can be enhanced with regex)
     if (routePath === requestPath) return true;
-    
+
     // Handle wildcard paths
     if (routePath.endsWith('*')) {
       const prefix = routePath.slice(0, -1);
       return requestPath.startsWith(prefix);
     }
-    
+
     // Handle parameterized paths
     const routeParts = routePath.split('/');
     const requestParts = requestPath.split('/');
-    
+
     if (routeParts.length !== requestParts.length) return false;
-    
+
     for (let i = 0; i < routeParts.length; i++) {
       if (routeParts[i].startsWith(':')) continue; // Parameter
       if (routeParts[i] !== requestParts[i]) return false;
     }
-    
+
     return true;
   }
 
@@ -329,8 +329,8 @@ export class CoreRouter extends EventEmitter {
     if (error.message.includes('timeout')) return true;
     if (error.message.includes('connection')) return true;
     if (error.message.includes('HTTP 5')) return true; // 5xx errors
-    
-    return this.config.retryPolicy.retryableStatusCodes.some(code => 
+
+    return this.config.retryPolicy.retryableStatusCodes.some(code =>
       error.message.includes(`HTTP ${code}`)
     );
   }
@@ -369,7 +369,7 @@ export class CoreRouter extends EventEmitter {
       this.healthChecker.on('healthUpdate', (serviceId: string, healthy: boolean) => {
         this.updateServiceHealth(serviceId, healthy);
       });
-      
+
       this.healthChecker.start();
     }
   }
@@ -431,7 +431,7 @@ export class CoreRouter extends EventEmitter {
       totalRoutes: this.routes.size,
       totalServices: this.services.size,
       totalTargets: Array.from(this.services.values()).reduce((sum, targets) => sum + targets.length, 0),
-      healthyTargets: Array.from(this.services.values()).reduce((sum, targets) => 
+      healthyTargets: Array.from(this.services.values()).reduce((sum, targets) =>
         sum + targets.filter(t => t.healthy).length, 0)
     };
   }
@@ -450,12 +450,12 @@ export class RoundRobinLoadBalancer implements LoadBalancer {
 
   selectTarget(targets: ServiceTarget[]): ServiceTarget | null {
     const healthyTargets = targets.filter(t => t.healthy);
-    
+
     if (healthyTargets.length === 0) return null;
 
     const target = healthyTargets[this.currentIndex % healthyTargets.length];
     this.currentIndex++;
-    
+
     return target;
   }
 }
@@ -465,22 +465,22 @@ export class WeightedRoundRobinLoadBalancer implements LoadBalancer {
 
   selectTarget(targets: ServiceTarget[]): ServiceTarget | null {
     const healthyTargets = targets.filter(t => t.healthy);
-    
+
     if (healthyTargets.length === 0) return null;
 
     // Calculate total weight
     const totalWeight = healthyTargets.reduce((sum, target) => sum + target.weight, 0);
-    
+
     // Select target based on weight
     let random = Math.random() * totalWeight;
-    
+
     for (const target of healthyTargets) {
       random -= target.weight;
       if (random <= 0) {
         return target;
       }
     }
-    
+
     return healthyTargets[healthyTargets.length - 1];
   }
 }
@@ -488,10 +488,10 @@ export class WeightedRoundRobinLoadBalancer implements LoadBalancer {
 export class LeastConnectionsLoadBalancer implements LoadBalancer {
   selectTarget(targets: ServiceTarget[]): ServiceTarget | null {
     const healthyTargets = targets.filter(t => t.healthy);
-    
+
     if (healthyTargets.length === 0) return null;
 
-    return healthyTargets.reduce((min, target) => 
+    return healthyTargets.reduce((min, target) =>
       target.activeConnections < min.activeConnections ? target : min
     );
   }
@@ -500,10 +500,10 @@ export class LeastConnectionsLoadBalancer implements LoadBalancer {
 export class ResponseTimeBasedLoadBalancer implements LoadBalancer {
   selectTarget(targets: ServiceTarget[]): ServiceTarget | null {
     const healthyTargets = targets.filter(t => t.healthy);
-    
+
     if (healthyTargets.length === 0) return null;
 
-    return healthyTargets.reduce((fastest, target) => 
+    return healthyTargets.reduce((fastest, target) =>
       target.responseTime < fastest.responseTime ? target : fastest
     );
   }
@@ -512,11 +512,11 @@ export class ResponseTimeBasedLoadBalancer implements LoadBalancer {
 export class HealthBasedLoadBalancer implements LoadBalancer {
   selectTarget(targets: ServiceTarget[]): ServiceTarget | null {
     const healthyTargets = targets.filter(t => t.healthy);
-    
+
     if (healthyTargets.length === 0) return null;
 
     // Prefer targets that were recently health checked
-    return healthyTargets.reduce((best, target) => 
+    return healthyTargets.reduce((best, target) =>
       target.lastHealthCheck > best.lastHealthCheck ? target : best
     );
   }
@@ -577,7 +577,7 @@ export class HealthChecker extends EventEmitter {
     for (const endpoint of service.endpoints) {
       try {
         const healthy = await this.checkEndpointHealth(endpoint);
-        
+
         const wasHealthy = service.healthy.get(endpoint) || false;
         service.healthy.set(endpoint, healthy);
         service.lastCheck.set(endpoint, new Date());
@@ -589,7 +589,7 @@ export class HealthChecker extends EventEmitter {
       } catch (error) {
         service.healthy.set(endpoint, false);
         service.lastCheck.set(endpoint, new Date());
-        
+
         this.emit('healthUpdate', serviceId, false);
       }
     }
@@ -598,7 +598,7 @@ export class HealthChecker extends EventEmitter {
   private async checkEndpointHealth(endpoint: string): Promise<boolean> {
     try {
       const url = `${endpoint}${this.config.path}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         signal: AbortSignal.timeout(this.config.timeout),

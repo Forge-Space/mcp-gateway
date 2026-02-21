@@ -1,15 +1,15 @@
 """Test Enhanced Rate Limiter - Multi-strategy rate limiting with configurable caching."""
 
-import time
 import threading
+import time
 from unittest.mock import Mock, patch
 
 from tool_router.security.enhanced_rate_limiter import (
     EnhancedRateLimiter,
     LimitType,
     RateLimitConfig,
-    RateLimitResult,
     RateLimiter,  # Backward compatibility alias
+    RateLimitResult,
 )
 
 
@@ -52,7 +52,7 @@ class TestRateLimitConfig:
             adaptive_scaling=False,
             penalty_multiplier=3.0,
             cache_ttl=120,
-            cache_size=5000
+            cache_size=5000,
         )
 
         assert config.requests_per_minute == 30
@@ -77,7 +77,7 @@ class TestRateLimitResult:
             reset_time=1234567890,
             retry_after=30,
             penalty_applied=False,
-            metadata={"window": "minute"}
+            metadata={"window": "minute"},
         )
 
         assert result.allowed is True
@@ -89,11 +89,7 @@ class TestRateLimitResult:
 
     def test_rate_limit_result_defaults(self):
         """Test rate limit result with default values."""
-        result = RateLimitResult(
-            allowed=False,
-            remaining=0,
-            reset_time=1234567890
-        )
+        result = RateLimitResult(allowed=False, remaining=0, reset_time=1234567890)
 
         assert result.allowed is False
         assert result.remaining == 0
@@ -114,7 +110,7 @@ class TestEnhancedRateLimiter:
             requests_per_day=1000,
             burst_capacity=5,
             cache_ttl=1,  # Short TTL for testing
-            cache_size=100
+            cache_size=100,
         )
         self.limiter = EnhancedRateLimiter(use_redis=False, config=self.config)
 
@@ -138,7 +134,7 @@ class TestEnhancedRateLimiter:
 
     def test_initialization_redis_unavailable(self):
         """Test initialization when Redis is not available."""
-        with patch('tool_router.security.enhanced_rate_limiter.REDIS_AVAILABLE', False):
+        with patch("tool_router.security.enhanced_rate_limiter.REDIS_AVAILABLE", False):
             limiter = EnhancedRateLimiter(use_redis=True)
             assert limiter.use_redis is False
             assert limiter.redis_client is None
@@ -250,11 +246,7 @@ class TestEnhancedRateLimiter:
 
     def test_adaptive_scaling(self):
         """Test adaptive scaling when enabled."""
-        config = RateLimitConfig(
-            requests_per_minute=10,
-            adaptive_scaling=True,
-            penalty_multiplier=2.0
-        )
+        config = RateLimitConfig(requests_per_minute=10, adaptive_scaling=True, penalty_multiplier=2.0)
         limiter = EnhancedRateLimiter(config=config)
 
         identifier = "test_user"
@@ -266,16 +258,13 @@ class TestEnhancedRateLimiter:
 
         # Check if adaptive scaling was applied
         result = limiter.check_rate_limit(identifier)
-        if result.allowed and result.metadata.get('adaptive_scaling_applied'):
+        if result.allowed and result.metadata.get("adaptive_scaling_applied"):
             # Remaining should be reduced due to adaptive scaling
             assert result.remaining < 2
 
     def test_adaptive_scaling_disabled(self):
         """Test adaptive scaling when disabled."""
-        config = RateLimitConfig(
-            requests_per_minute=10,
-            adaptive_scaling=False
-        )
+        config = RateLimitConfig(requests_per_minute=10, adaptive_scaling=False)
         limiter = EnhancedRateLimiter(config=config)
 
         identifier = "test_user"
@@ -287,7 +276,7 @@ class TestEnhancedRateLimiter:
 
         # Adaptive scaling should not be applied
         result = limiter.check_rate_limit(identifier)
-        assert result.metadata.get('adaptive_scaling_applied') is None
+        assert result.metadata.get("adaptive_scaling_applied") is None
 
     def test_get_usage_stats(self):
         """Test getting usage statistics."""
@@ -299,11 +288,11 @@ class TestEnhancedRateLimiter:
 
         stats = self.limiter.get_usage_stats(identifier)
 
-        assert 'minute' in stats
-        assert 'hour' in stats
-        assert 'day' in stats
-        assert stats['minute']['count'] == 3
-        assert stats['penalty_active'] is False
+        assert "minute" in stats
+        assert "hour" in stats
+        assert "day" in stats
+        assert stats["minute"]["count"] == 3
+        assert stats["penalty_active"] is False
 
     def test_get_usage_stats_with_penalty(self):
         """Test getting usage statistics with active penalty."""
@@ -314,8 +303,8 @@ class TestEnhancedRateLimiter:
 
         stats = self.limiter.get_usage_stats(identifier)
 
-        assert stats['penalty_active'] is True
-        assert 'penalty_end' in stats
+        assert stats["penalty_active"] is True
+        assert "penalty_end" in stats
 
     def test_cache_metrics(self):
         """Test cache performance metrics."""
@@ -331,13 +320,13 @@ class TestEnhancedRateLimiter:
 
         metrics = self.limiter.get_cache_metrics()
 
-        assert 'cache_hit_rate' in metrics
-        assert 'total_hits' in metrics
-        assert 'total_misses' in metrics
-        assert 'total_requests' in metrics
-        assert 'cache_sizes' in metrics
-        assert metrics['redis_enabled'] is False
-        assert metrics['redis_connected'] is False
+        assert "cache_hit_rate" in metrics
+        assert "total_hits" in metrics
+        assert "total_misses" in metrics
+        assert "total_requests" in metrics
+        assert "cache_sizes" in metrics
+        assert metrics["redis_enabled"] is False
+        assert metrics["redis_connected"] is False
 
     def test_clear_caches(self):
         """Test clearing all caches."""
@@ -352,8 +341,8 @@ class TestEnhancedRateLimiter:
 
         # Check cache metrics
         metrics = self.limiter.get_cache_metrics()
-        assert metrics['total_hits'] == 0
-        assert metrics['total_misses'] == 0
+        assert metrics["total_hits"] == 0
+        assert metrics["total_misses"] == 0
 
     def test_cleanup_expired_data(self):
         """Test cleanup of expired rate limit data."""
@@ -368,7 +357,7 @@ class TestEnhancedRateLimiter:
 
         # Should still be able to get stats
         stats = self.limiter.get_usage_stats(identifier)
-        assert stats['minute']['count'] >= 3
+        assert stats["minute"]["count"] >= 3
 
     def test_thread_safety(self):
         """Test thread safety of rate limiter."""
@@ -412,7 +401,7 @@ class TestEnhancedRateLimiter:
 
     def test_redis_connection_failure(self):
         """Test fallback when Redis connection fails."""
-        with patch('redis.from_url') as mock_redis:
+        with patch("redis.from_url") as mock_redis:
             mock_redis.side_effect = Exception("Connection failed")
 
             limiter = EnhancedRateLimiter(use_redis=True, redis_url="redis://localhost")
@@ -423,7 +412,7 @@ class TestEnhancedRateLimiter:
 
     def test_redis_operation_failure(self):
         """Test fallback when Redis operations fail."""
-        with patch('redis.from_url') as mock_redis:
+        with patch("redis.from_url") as mock_redis:
             mock_client = Mock()
             mock_client.ping.return_value = True
             mock_redis.return_value = mock_client

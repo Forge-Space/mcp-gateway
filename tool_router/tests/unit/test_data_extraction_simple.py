@@ -11,15 +11,13 @@ Tests the pattern extraction functionality including:
 
 from unittest.mock import Mock, patch
 
-import pytest
-
 from tool_router.training.data_extraction import (
-    PatternExtractor,
-    ExtractedPattern,
-    PatternCategory,
     DataSource,
+    ExtractedPattern,
+    GitHubRepositoryExtractor,
+    PatternCategory,
+    PatternExtractor,
     WebDocumentationExtractor,
-    GitHubRepositoryExtractor
 )
 
 
@@ -41,7 +39,7 @@ class TestPatternExtractor:
         url = "https://react.dev/docs/components"
         source_type = DataSource.WEB_DOCUMENTATION
 
-        with patch.object(self.extractor.extractors[source_type], 'extract_patterns', return_value=[]) as mock_extract:
+        with patch.object(self.extractor.extractors[source_type], "extract_patterns", return_value=[]) as mock_extract:
             result = self.extractor.extract_from_url(url, source_type)
 
             assert isinstance(result, list)
@@ -52,7 +50,7 @@ class TestPatternExtractor:
         url = "https://github.com/facebook/react"
         source_type = DataSource.GITHUB_REPOSITORY
 
-        with patch.object(self.extractor.extractors[source_type], 'extract_patterns', return_value=[]) as mock_extract:
+        with patch.object(self.extractor.extractors[source_type], "extract_patterns", return_value=[]) as mock_extract:
             result = self.extractor.extract_from_url(url, source_type)
 
             assert isinstance(result, list)
@@ -62,10 +60,10 @@ class TestPatternExtractor:
         """Test extraction from multiple sources."""
         sources = [
             {"url": "https://react.dev/docs/components", "type": "web_documentation"},
-            {"url": "https://github.com/facebook/react", "type": "github_repository"}
+            {"url": "https://github.com/facebook/react", "type": "github_repository"},
         ]
 
-        with patch.object(self.extractor, 'extract_from_url', return_value=[]) as mock_extract:
+        with patch.object(self.extractor, "extract_from_url", return_value=[]) as mock_extract:
             result = self.extractor.extract_from_multiple_sources(sources)
 
             assert isinstance(result, list)
@@ -78,14 +76,14 @@ class TestPatternExtractor:
                 category=PatternCategory.REACT_PATTERN,
                 title="React Component",
                 description="A React component",
-                source_url="https://example.com/react"
+                source_url="https://example.com/react",
             ),
             ExtractedPattern(
                 category=PatternCategory.ACCESSIBILITY,
                 title="Accessibility Pattern",
                 description="An accessibility pattern",
-                source_url="https://example.com/a11y"
-            )
+                source_url="https://example.com/a11y",
+            ),
         ]
 
         categorized = self.extractor.categorize_patterns(patterns)
@@ -103,15 +101,15 @@ class TestPatternExtractor:
                 title="High Confidence",
                 description="High confidence pattern",
                 confidence_score=0.9,
-                source_url="https://example.com/high"
+                source_url="https://example.com/high",
             ),
             ExtractedPattern(
                 category=PatternCategory.REACT_PATTERN,
                 title="Low Confidence",
                 description="Low confidence pattern",
                 confidence_score=0.5,
-                source_url="https://example.com/low"
-            )
+                source_url="https://example.com/low",
+            ),
         ]
 
         filtered = self.extractor.filter_by_confidence(patterns, min_confidence=0.7)
@@ -127,22 +125,22 @@ class TestPatternExtractor:
                 title="Pattern 1",
                 description="First pattern",
                 confidence_score=0.8,
-                source_url="https://example.com/1"
+                source_url="https://example.com/1",
             ),
             ExtractedPattern(
                 category=PatternCategory.REACT_PATTERN,
                 title="Pattern 2",
                 description="Second pattern",
                 confidence_score=0.9,
-                source_url="https://example.com/2"
+                source_url="https://example.com/2",
             ),
             ExtractedPattern(
                 category=PatternCategory.REACT_PATTERN,
                 title="Pattern 3",
                 description="Third pattern",
                 confidence_score=0.7,
-                source_url="https://example.com/3"
-            )
+                source_url="https://example.com/3",
+            ),
         ]
 
         top_patterns = self.extractor.get_top_patterns(patterns, limit=2)
@@ -185,7 +183,7 @@ class TestWebDocumentationExtractor:
         </html>
         """
 
-        with patch.object(self.extractor.session, 'get') as mock_get:
+        with patch.object(self.extractor.session, "get") as mock_get:
             mock_response = Mock()
             mock_response.content = html_content.encode()
             mock_response.raise_for_status.return_value = None
@@ -198,7 +196,7 @@ class TestWebDocumentationExtractor:
 
     def test_extract_patterns_network_error(self):
         """Test pattern extraction with network error."""
-        with patch.object(self.extractor.session, 'get', side_effect=Exception("Network error")):
+        with patch.object(self.extractor.session, "get", side_effect=Exception("Network error")):
             result = self.extractor.extract_patterns("https://react.dev/docs")
 
             assert result == []
@@ -267,10 +265,10 @@ class TestGitHubRepositoryExtractor:
             "description": "A JavaScript library for building user interfaces",
             "stargazers_count": 1000,
             "language": "JavaScript",
-            "topics": ["javascript", "library", "ui"]
+            "topics": ["javascript", "library", "ui"],
         }
 
-        with patch.object(self.extractor.session, 'get') as mock_get:
+        with patch.object(self.extractor.session, "get") as mock_get:
             mock_response = Mock()
             mock_response.json.return_value = repo_data
             mock_response.raise_for_status.return_value = None
@@ -291,7 +289,7 @@ class TestGitHubRepositoryExtractor:
 
     def test_extract_patterns_network_error(self):
         """Test pattern extraction with network error."""
-        with patch.object(self.extractor.session, 'get', side_effect=Exception("Network error")):
+        with patch.object(self.extractor.session, "get", side_effect=Exception("Network error")):
             result = self.extractor.extract_patterns("https://github.com/facebook/react")
 
             assert result == []
@@ -310,7 +308,7 @@ class TestExtractedPattern:
             tags=["test", "react"],
             confidence_score=0.85,
             source_url="https://example.com/test",
-            metadata={"test": True}
+            metadata={"test": True},
         )
 
         assert pattern.title == "Test Pattern"
@@ -328,7 +326,7 @@ class TestExtractedPattern:
             category=PatternCategory.UI_COMPONENT,
             title="Minimal Pattern",
             description="Minimal description",
-            source_url="https://example.com/minimal"
+            source_url="https://example.com/minimal",
         )
 
         assert pattern.code_example is None
@@ -343,7 +341,7 @@ class TestExtractedPattern:
             category=PatternCategory.REACT_PATTERN,
             title="Test Pattern",
             description="Test description",
-            source_url="https://example.com/test"
+            source_url="https://example.com/test",
         )
 
         # Should initialize empty lists and dicts
@@ -406,10 +404,10 @@ class TestDataExtractionIntegration:
         """Test end-to-end extraction process."""
         sources = [
             {"url": "https://react.dev/docs/components", "type": "web_documentation"},
-            {"url": "https://github.com/facebook/react", "type": "github_repository"}
+            {"url": "https://github.com/facebook/react", "type": "github_repository"},
         ]
 
-        with patch.object(self.extractor, 'extract_from_url', return_value=[]) as mock_extract:
+        with patch.object(self.extractor, "extract_from_url", return_value=[]) as mock_extract:
             result = self.extractor.extract_from_multiple_sources(sources)
 
             assert isinstance(result, list)
@@ -428,22 +426,22 @@ class TestDataExtractionIntegration:
                 title="High Quality Pattern",
                 description="High quality pattern with examples",
                 confidence_score=0.95,
-                source_url="https://example.com/high"
+                source_url="https://example.com/high",
             ),
             ExtractedPattern(
                 category=PatternCategory.REACT_PATTERN,
                 title="Medium Quality Pattern",
                 description="Medium quality pattern",
                 confidence_score=0.75,
-                source_url="https://example.com/medium"
+                source_url="https://example.com/medium",
             ),
             ExtractedPattern(
                 category=PatternCategory.ACCESSIBILITY,
                 title="Low Quality Pattern",
                 description="Low quality pattern",
                 confidence_score=0.5,
-                source_url="https://example.com/low"
-            )
+                source_url="https://example.com/low",
+            ),
         ]
 
         # Filter by confidence
@@ -464,7 +462,7 @@ class TestDataExtractionIntegration:
         """Test error handling in extraction workflow."""
         sources = [
             {"url": "https://invalid-url.com/docs", "type": "web_documentation"},
-            {"url": "https://github.com/invalid/repo", "type": "github_repository"}
+            {"url": "https://github.com/invalid/repo", "type": "github_repository"},
         ]
 
         # Should handle errors gracefully

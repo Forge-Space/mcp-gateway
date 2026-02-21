@@ -68,18 +68,18 @@ export class TokenBucketRateLimiter extends EventEmitter {
   async checkLimit(key: string): Promise<RateLimitResult> {
     const bucket = this.getOrCreateBucket(key);
     const now = Date.now();
-    
+
     // Add tokens based on elapsed time
     const elapsed = now - bucket.lastRefill;
     const tokensToAdd = Math.floor(elapsed / this.config.windowMs) * this.config.maxRequests;
-    
+
     bucket.tokens = Math.min(bucket.tokens + tokensToAdd, this.config.maxRequests);
     bucket.lastRefill = now;
 
     if (bucket.tokens >= 1) {
       bucket.tokens--;
       bucket.totalHits++;
-      
+
       return {
         allowed: true,
         remaining: bucket.tokens,
@@ -126,13 +126,13 @@ export class SlidingWindowRateLimiter {
   async checkLimit(key: string): Promise<RateLimitResult> {
     const window = this.getOrCreateWindow(key);
     const now = Date.now();
-    
+
     // Remove old requests outside the window
     window.requests = window.requests.filter(timestamp => timestamp > now - this.config.windowMs);
-    
+
     if (window.requests.length < this.config.maxRequests) {
       window.requests.push(now);
-      
+
       return {
         allowed: true,
         remaining: this.config.maxRequests - window.requests.length,
@@ -200,11 +200,11 @@ export class RequestValidator {
 
     for (const rule of this.rules) {
       const result = await rule.validate(req);
-      
+
       if (!result.valid) {
         errors.push(...result.errors);
       }
-      
+
       if (result.sanitized) {
         sanitized = result.sanitized;
       }
@@ -233,7 +233,7 @@ export class RequestValidator {
         };
 
         const errors: string[] = [];
-        
+
         // Check query parameters
         for (const [key, value] of Object.entries(req.query)) {
           if (typeof value === 'string' && checkValue(value)) {
@@ -269,7 +269,7 @@ export class RequestValidator {
         ];
 
         const errors: string[] = [];
-        
+
         const checkValue = (value: string): boolean => {
           return xssPatterns.some(pattern => pattern.test(value));
         };
@@ -301,7 +301,7 @@ export class RequestValidator {
       name: 'input-sanitization',
       validate: (req: Request) => {
         const sanitized = { ...req.body };
-        
+
         // Sanitize string values
         const sanitizeString = (value: string): string => {
           return value
@@ -352,12 +352,12 @@ export class SecurityHeaders {
       res.setHeader('X-XSS-Protection', '1; mode=block');
       res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
       res.setHeader('Permissions-Policy', 'default-src \'self\'');
-      
+
       // HSTS (HTTPS only)
       if (req.secure) {
         res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
       }
-      
+
       // Content Security Policy
       const csp = [
         "default-src 'self'",
@@ -372,21 +372,21 @@ export class SecurityHeaders {
         "form-action 'self'",
         "upgrade-insecure-requests",
       ].join('; ');
-      
+
       res.setHeader('Content-Security-Policy', csp);
-      
+
       // CORS Headers
       res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGINS || '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Access-Control-Max-Age', '86400');
-      
+
       // Cache Control
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
-      
+
       next();
     };
   }
@@ -427,7 +427,7 @@ export class APIKeyManager extends EventEmitter {
   generateKey(name: string, permissions: string[], rateLimit: APIKey['rateLimit'], expiresIn?: Date): APIKey {
     const id = crypto.randomUUID();
     const key = crypto.randomBytes(32).toString('hex');
-    
+
     const apiKey: APIKey = {
       id,
       key,
@@ -443,15 +443,15 @@ export class APIKeyManager extends EventEmitter {
 
     this.keys.set(id, apiKey);
     this.keyUsage.set(id, new UsageTracker());
-    
+
     this.emit('keyGenerated', apiKey);
-    
+
     return apiKey;
   }
 
   validateKey(keyId: string, key: string): APIKey | null {
     const apiKey = this.keys.get(keyId);
-    
+
     if (!apiKey || !apiKey.isActive) {
       return null;
     }
@@ -467,7 +467,7 @@ export class APIKeyManager extends EventEmitter {
 
     // Update last used
     apiKey.lastUsed = new Date();
-    
+
     return apiKey;
   }
 
@@ -477,10 +477,10 @@ export class APIKeyManager extends EventEmitter {
 
     const usage = this.keyUsage.get(keyId);
     const now = Date.now();
-    
+
     let windowMs: number;
     let maxRequests: number;
-    
+
     switch (limitType) {
       case 'minute':
         windowMs = 60 * 1000;
@@ -514,7 +514,7 @@ export class APIKeyManager extends EventEmitter {
 
     apiKey.isActive = false;
     this.emit('keyDeactivated', apiKey);
-    
+
     return true;
   }
 
@@ -524,7 +524,7 @@ export class APIKeyManager extends EventEmitter {
       this.keyUsage.delete(keyId);
       this.emit('keyRevoked', keyId);
     }
-    
+
     return removed;
   }
 
@@ -553,7 +553,7 @@ export class APIKeyManager extends EventEmitter {
 
   private cleanupExpiredKeys(): void {
     const now = new Date();
-    
+
     for (const [keyId, apiKey] of this.keys.entries()) {
       if (apiKey.expiresAt && apiKey.expiresAt < now) {
         this.revokeKey(keyId);
@@ -628,27 +628,27 @@ app.use(SecurityHeaders.middleware);
 app.use('/api/mcp/*', async (req, res, next) => {
   const keyId = req.headers['x-api-key'] as string;
   const key = req.headers['x-authorization']?.replace('Bearer ', '');
-  
+
   if (!keyId || !key) {
     return res.status(401).json({ error: 'API key required' });
   }
-  
+
   const apiKey = apiKeyManager.validateKey(keyId, key);
   if (!apiKey) {
     return res.status(401).json({ error: 'Invalid API key' });
   }
-  
+
   // Check rate limits
   if (!apiKeyManager.checkRateLimit(keyId, 'minute')) {
-    return res.status(429).json({ 
+    return res.status(429).json({
       error: 'Rate limit exceeded',
       retryAfter: 60,
     });
   }
-  
+
   // Record usage
   apiKeyManager.recordUsage(keyId);
-  
+
   // Add API key info to request
   req.apiKey = apiKey;
   next();
@@ -657,19 +657,19 @@ app.use('/api/mcp/*', async (req, res, next) => {
 // Request validation middleware
 app.use('/api/mcp/*', async (req, res, next) => {
   const validation = await validator.validateRequest(req);
-  
+
   if (!validation.valid) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Invalid request',
       details: validation.errors,
     });
   }
-  
+
   // Use sanitized data if available
   if (validation.sanitized) {
     req.body = validation.sanitized;
   }
-  
+
   next();
 });
 ```

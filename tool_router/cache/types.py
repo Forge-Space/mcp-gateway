@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Optional
 from dataclasses import dataclass
 
 
 @dataclass
 class CacheConfig:
     """Configuration for cache instances."""
+
     max_size: int = 1000
     ttl: int = 3600  # 1 hour default TTL
     cleanup_interval: int = 300  # 5 minutes
@@ -18,6 +18,7 @@ class CacheConfig:
 @dataclass
 class CacheMetrics:
     """Cache performance metrics."""
+
     hits: int = 0
     misses: int = 0
     evictions: int = 0

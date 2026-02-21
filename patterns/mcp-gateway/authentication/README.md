@@ -110,13 +110,13 @@ export class AuthenticationMiddleware {
   authenticate() {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
       const token = this.extractToken(req);
-      
+
       if (!token) {
         return res.status(401).json({ error: 'No token provided' });
       }
 
       const payload = this.tokenManager.validateToken(token);
-      
+
       if (!payload) {
         return res.status(401).json({ error: 'Invalid token' });
       }
@@ -152,7 +152,7 @@ export class AuthenticationMiddleware {
 
   private extractToken(req: Request): string | null {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return null;
     }
@@ -205,7 +205,7 @@ export class SessionManager extends EventEmitter {
 
   getSession(sessionId: string): Session | null {
     const session = this.sessions.get(sessionId);
-    
+
     if (!session || session.expiresAt < new Date()) {
       return null;
     }
@@ -213,13 +213,13 @@ export class SessionManager extends EventEmitter {
     // Update last activity
     session.lastActivity = new Date();
     session.expiresAt = new Date(Date.now() + this.sessionTimeout);
-    
+
     return session;
   }
 
   destroySession(sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
-    
+
     if (!session) {
       return false;
     }
@@ -359,7 +359,7 @@ export class ServiceAuthMiddleware {
   authenticateService() {
     return (req: Request, res: Response, next: NextFunction) => {
       const apiKey = req.headers['x-api-key'] as string;
-      
+
       if (!apiKey || !this.apiKeys.has(apiKey)) {
         return res.status(401).json({ error: 'Invalid API key' });
       }

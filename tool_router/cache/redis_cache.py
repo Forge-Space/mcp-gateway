@@ -7,12 +7,14 @@ import logging
 import pickle
 import threading
 import time
-from typing import Any, Dict, Optional, Union
-from dataclasses import dataclass
 from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import Any
+
 
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -22,22 +24,24 @@ from cachetools import TTLCache
 
 from .types import CacheConfig
 
+
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class RedisConfig:
     """Configuration for Redis cache backend."""
+
     host: str = "localhost"
     port: int = 6379
     db: int = 0
-    password: Optional[str] = None
+    password: str | None = None
     socket_timeout: int = 5
     socket_connect_timeout: int = 5
     retry_on_timeout: bool = True
     health_check_interval: int = 30
     max_connections: int = 10
-    connection_pool_kwargs: Optional[Dict[str, Any]] = None
+    connection_pool_kwargs: dict[str, Any] | None = None
 
 
 class RedisCache:
@@ -46,9 +50,9 @@ class RedisCache:
     def __init__(
         self,
         config: RedisConfig,
-        fallback_cache: Optional[TTLCache] = None,
+        fallback_cache: TTLCache | None = None,
         key_prefix: str = "mcp_cache:",
-        serializer: str = "pickle"  # "pickle" or "json"
+        serializer: str = "pickle",  # "pickle" or "json"
     ):
         self.config = config
         self.key_prefix = key_prefix
@@ -109,10 +113,9 @@ class RedisCache:
         try:
             if self.serializer == "pickle":
                 return pickle.dumps(value)
-            elif self.serializer == "json":
-                return json.dumps(value).encode('utf-8')
-            else:
-                raise ValueError(f"Unsupported serializer: {self.serializer}")
+            if self.serializer == "json":
+                return json.dumps(value).encode("utf-8")
+            raise ValueError(f"Unsupported serializer: {self.serializer}")
         except Exception as e:
             logger.error(f"Failed to serialize value: {e}")
             raise
@@ -122,10 +125,9 @@ class RedisCache:
         try:
             if self.serializer == "pickle":
                 return pickle.loads(value)
-            elif self.serializer == "json":
-                return json.loads(value.decode('utf-8'))
-            else:
-                raise ValueError(f"Unsupported serializer: {self.serializer}")
+            if self.serializer == "json":
+                return json.loads(value.decode("utf-8"))
+            raise ValueError(f"Unsupported serializer: {self.serializer}")
         except Exception as e:
             logger.error(f"Failed to deserialize value: {e}")
             raise
@@ -181,7 +183,7 @@ class RedisCache:
 
         return default
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache with optional TTL."""
         success = False
 
@@ -269,7 +271,7 @@ class RedisCache:
 
         return False
 
-    def get_many(self, keys: list[str]) -> Dict[str, Any]:
+    def get_many(self, keys: list[str]) -> dict[str, Any]:
         """Get multiple values from cache."""
         result = {}
 
@@ -296,7 +298,7 @@ class RedisCache:
 
         return result
 
-    def set_many(self, mapping: Dict[str, Any], ttl: Optional[int] = None) -> bool:
+    def set_many(self, mapping: dict[str, Any], ttl: int | None = None) -> bool:
         """Set multiple values in cache."""
         success = True
 
@@ -326,7 +328,7 @@ class RedisCache:
 
         return success
 
-    def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> dict[str, Any]:
         """Get Redis cache information."""
         info = {
             "redis_available": REDIS_AVAILABLE,
@@ -339,22 +341,26 @@ class RedisCache:
         if self._is_healthy and self._redis_client:
             try:
                 redis_info = self._redis_client.info()
-                info.update({
-                    "redis_version": redis_info.get("redis_version"),
-                    "used_memory": redis_info.get("used_memory"),
-                    "used_memory_human": redis_info.get("used_memory_human"),
-                    "connected_clients": redis_info.get("connected_clients"),
-                    "total_commands_processed": redis_info.get("total_commands_processed"),
-                })
+                info.update(
+                    {
+                        "redis_version": redis_info.get("redis_version"),
+                        "used_memory": redis_info.get("used_memory"),
+                        "used_memory_human": redis_info.get("used_memory_human"),
+                        "connected_clients": redis_info.get("connected_clients"),
+                        "total_commands_processed": redis_info.get("total_commands_processed"),
+                    }
+                )
             except Exception as e:
                 logger.debug(f"Failed to get Redis info: {e}")
 
         if self.fallback_cache:
-            info.update({
-                "fallback_size": len(self.fallback_cache),
-                "fallback_currsize": self.fallback_cache.currsize,
-                "fallback_maxsize": self.fallback_cache.maxsize,
-            })
+            info.update(
+                {
+                    "fallback_size": len(self.fallback_cache),
+                    "fallback_currsize": self.fallback_cache.currsize,
+                    "fallback_maxsize": self.fallback_cache.maxsize,
+                }
+            )
 
         return info
 
@@ -371,9 +377,7 @@ class RedisCache:
 
 
 def create_redis_cache(
-    config: Optional[RedisConfig] = None,
-    fallback_config: Optional[CacheConfig] = None,
-    **kwargs
+    config: RedisConfig | None = None, fallback_config: CacheConfig | None = None, **kwargs
 ) -> RedisCache:
     """Create a Redis cache instance with fallback."""
     if config is None:
@@ -382,13 +386,6 @@ def create_redis_cache(
     # Create fallback cache
     fallback_cache = None
     if fallback_config:
-        fallback_cache = TTLCache(
-            maxsize=fallback_config.max_size,
-            ttl=fallback_config.ttl
-        )
+        fallback_cache = TTLCache(maxsize=fallback_config.max_size, ttl=fallback_config.ttl)
 
-    return RedisCache(
-        config=config,
-        fallback_cache=fallback_cache,
-        **kwargs
-    )
+    return RedisCache(config=config, fallback_cache=fallback_cache, **kwargs)

@@ -577,7 +577,7 @@ class AppConfig:
             cleanup_interval=int(os.getenv('CACHE_CLEANUP_INTERVAL', 300)),
             enable_metrics=os.getenv('CACHE_METRICS_ENABLED', 'true').lower() == 'true'
         )
-        
+
         self.security_config = CacheSecurityConfig(
             encryption_key=os.getenv('CACHE_ENCRYPTION_KEY'),
             access_control_enabled=os.getenv('CACHE_ACCESS_CONTROL_ENABLED', 'true').lower() == 'true',
@@ -1119,7 +1119,7 @@ GET /api/metrics/retention
 
 ---
 
-**Version**: 1.35.1  
-**Last Updated**: 2026-02-20  
-**Status**: ✅ Production Ready with Advanced Security Features  
+**Version**: 1.35.1
+**Last Updated**: 2026-02-20
+**Status**: ✅ Production Ready with Advanced Security Features
 **Next Release**: 1.36.0 (Planned: Advanced Analytics)

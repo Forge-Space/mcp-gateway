@@ -134,19 +134,19 @@ export default function RealTimeMonitoring() {
       // In a real implementation, this would connect to a WebSocket endpoint
       // For now, we'll simulate the connection with polling
       setIsConnected(true)
-      
+
       // Simulate real-time updates
       if (config.autoRefresh) {
         const interval = setInterval(() => {
           generateMockMetrics()
         }, config.refreshRate)
-        
+
         return () => clearInterval(interval)
       }
     }
 
     const cleanup = connectWebSocket()
-    
+
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
@@ -302,7 +302,7 @@ export default function RealTimeMonitoring() {
       }
     ]
 
-    const filteredServices = config.services.length > 0 
+    const filteredServices = config.services.length > 0
       ? mockServices.filter(s => config.services.includes(s.id))
       : mockServices
 
@@ -394,7 +394,7 @@ export default function RealTimeMonitoring() {
     return 'text-red-600'
   }
 
-  const filteredServices = metrics?.services?.filter(service => 
+  const filteredServices = metrics?.services?.filter(service =>
     !config.showOnlyActive || service.status === 'running'
   ).filter(service =>
     !searchTerm || service.name.toLowerCase().includes(searchTerm.toLowerCase())

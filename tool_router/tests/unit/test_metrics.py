@@ -5,12 +5,10 @@ from __future__ import annotations
 import time
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from tool_router.observability.metrics import (
+    MetricsCollector,
     MetricStats,
     MetricValue,
-    MetricsCollector,
     TimingContext,
     get_metrics,
 )
@@ -243,12 +241,12 @@ class TestMetricsCollector:
     def test_get_all_metrics_with_data(self) -> None:
         """Test getting all metrics with data."""
         collector = MetricsCollector()
-        
+
         # Add timing data
         collector.record_timing("timing1", 100.0)
         collector.record_timing("timing1", 200.0)
         collector.record_timing("timing2", 50.0)
-        
+
         # Add counter data
         collector.increment_counter("counter1", 5)
         collector.increment_counter("counter2", 10)
@@ -258,12 +256,12 @@ class TestMetricsCollector:
         assert "timings" in result
         assert "counters" in result
         assert result["counters"] == {"counter1": 5, "counter2": 10}
-        
+
         # Check timing stats
         timings = result["timings"]
         assert "timing1" in timings
         assert "timing2" in timings
-        
+
         timing1_stats = timings["timing1"]
         assert timing1_stats["count"] == 2
         assert timing1_stats["avg_ms"] == 150.0
@@ -288,18 +286,18 @@ class TestMetricsCollector:
     def test_reset(self) -> None:
         """Test resetting all metrics."""
         collector = MetricsCollector()
-        
+
         # Add data
         collector.record_timing("test_metric", 100.0)
         collector.increment_counter("test_counter", 5)
-        
+
         # Verify data exists
         assert len(collector._metrics) == 1
         assert len(collector._counters) == 1
-        
+
         # Reset
         collector.reset()
-        
+
         # Verify data is cleared
         assert len(collector._metrics) == 0
         assert len(collector._counters) == 0
@@ -307,16 +305,16 @@ class TestMetricsCollector:
     def test_thread_safety_basic(self) -> None:
         """Test basic thread safety with lock usage."""
         collector = MetricsCollector()
-        
+
         # This test verifies that the lock is used by checking that
         # the operations complete without raising exceptions
         collector.record_timing("test", 100.0)
         collector.increment_counter("test", 1)
-        
+
         # These operations should work without issues
         stats = collector.get_stats("test")
         counter = collector.get_counter("test")
-        
+
         assert stats is not None
         assert counter == 1
 
@@ -328,7 +326,7 @@ class TestGetMetrics:
         """Test that get_metrics returns the same instance."""
         metrics1 = get_metrics()
         metrics2 = get_metrics()
-        
+
         assert metrics1 is metrics2
         assert isinstance(metrics1, MetricsCollector)
 
@@ -336,19 +334,19 @@ class TestGetMetrics:
         """Test that get_metrics is cached (lru_cache)."""
         # Clear the cache first to ensure clean test
         get_metrics.cache_clear()
-        
+
         with patch("tool_router.observability.metrics.MetricsCollector") as mock_collector_class:
             mock_instance = MagicMock()
             mock_collector_class.return_value = mock_instance
-            
+
             # First call should create instance
             metrics1 = get_metrics()
             mock_collector_class.assert_called_once()
-            
+
             # Second call should use cached instance
             metrics2 = get_metrics()
             mock_collector_class.assert_called_once()  # Still only called once
-            
+
             assert metrics1 is metrics2
             assert metrics1 is mock_instance
 
@@ -360,7 +358,7 @@ class TestTimingContext:
         """Test TimingContext initialization."""
         collector = MetricsCollector()
         context = TimingContext("test_metric", collector)
-        
+
         assert context.metric_name == "test_metric"
         assert context.metrics is collector
         assert context.start_time == 0.0
@@ -368,7 +366,7 @@ class TestTimingContext:
     def test_timing_context_initialization_default_metrics(self) -> None:
         """Test TimingContext initialization with default metrics."""
         context = TimingContext("test_metric")
-        
+
         assert context.metric_name == "test_metric"
         assert context.metrics is not None
         assert isinstance(context.metrics, MetricsCollector)
@@ -377,12 +375,12 @@ class TestTimingContext:
         """Test TimingContext enter method."""
         collector = MetricsCollector()
         context = TimingContext("test_metric", collector)
-        
+
         with patch("time.perf_counter") as mock_perf_counter:
             mock_perf_counter.return_value = 123456.789
-            
+
             result = context.__enter__()
-            
+
             assert result is context
             assert context.start_time == 123456.789
             mock_perf_counter.assert_called_once()
@@ -391,14 +389,14 @@ class TestTimingContext:
         """Test TimingContext exit records timing metric."""
         collector = MetricsCollector()
         context = TimingContext("test_metric", collector)
-        
+
         with patch("time.perf_counter") as mock_perf_counter:
             # Setup timing
             mock_perf_counter.side_effect = [1000.0, 1100.0]  # start, end
-            
+
             with context:
                 pass  # Context body
-            
+
             # Verify metric was recorded
             assert "test_metric" in collector._metrics
             assert len(collector._metrics["test_metric"]) == 1
@@ -409,16 +407,16 @@ class TestTimingContext:
         """Test TimingContext works correctly with exceptions."""
         collector = MetricsCollector()
         context = TimingContext("test_metric", collector)
-        
+
         with patch("time.perf_counter") as mock_perf_counter:
             mock_perf_counter.side_effect = [1000.0, 1100.0]
-            
+
             try:
                 with context:
                     raise ValueError("Test error")
             except ValueError:
                 pass  # Expected
-            
+
             # Metric should still be recorded despite exception
             assert "test_metric" in collector._metrics
             assert len(collector._metrics["test_metric"]) == 1
@@ -426,13 +424,13 @@ class TestTimingContext:
     def test_timing_context_as_context_manager(self) -> None:
         """Test TimingContext as context manager."""
         collector = MetricsCollector()
-        
+
         with patch("time.perf_counter") as mock_perf_counter:
             mock_perf_counter.side_effect = [1000.0, 1050.0]  # 50ms duration
-            
+
             with TimingContext("test_metric", collector):
                 pass
-            
+
             # Verify metric was recorded
             stats = collector.get_stats("test_metric")
             assert stats is not None
@@ -442,22 +440,22 @@ class TestTimingContext:
     def test_timing_context_nested(self) -> None:
         """Test nested TimingContext usage."""
         collector = MetricsCollector()
-        
+
         with patch("time.perf_counter") as mock_perf_counter:
             # Outer context: 1000.0 -> 1100.0 (100ms)
             # Inner context: 1100.0 -> 1150.0 (50ms)
             mock_perf_counter.side_effect = [1000.0, 1100.0, 1100.0, 1150.0]
-            
+
             with TimingContext("outer_metric", collector):
                 with TimingContext("inner_metric", collector):
                     pass
-            
+
             # Both metrics should be recorded
             outer_stats = collector.get_stats("outer_metric")
             inner_stats = collector.get_stats("inner_metric")
-            
+
             assert outer_stats is not None
             assert inner_stats is not None
             # Outer context includes the inner context duration (150ms total)
             assert outer_stats.avg == 150000.0  # 150ms total
-            assert inner_stats.avg == 50000.0   # 50ms
+            assert inner_stats.avg == 50000.0  # 50ms

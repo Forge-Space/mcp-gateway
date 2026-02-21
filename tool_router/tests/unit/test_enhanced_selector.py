@@ -1,10 +1,8 @@
 """Unit tests for AI enhanced_selector module."""
 
-import json
 from unittest.mock import MagicMock, patch
 
 import httpx
-import pytest
 
 from tool_router.ai.enhanced_selector import (
     AIModel,
@@ -92,6 +90,7 @@ class TestBaseAISelector:
 
     def test_initialization(self) -> None:
         """Test BaseAISelector initialization."""
+
         # Create a concrete implementation for testing
         class TestSelector(BaseAISelector):
             def select_tool(self, task, tools, context="", similar_tools=None):
@@ -109,6 +108,7 @@ class TestBaseAISelector:
 
     def test_initialization_defaults(self) -> None:
         """Test BaseAISelector initialization with defaults."""
+
         class TestSelector(BaseAISelector):
             def select_tool(self, task, tools, context="", similar_tools=None):
                 return {"tool": "test"}
@@ -148,7 +148,7 @@ class TestOllamaSelector:
 
         tools = [{"name": "test_tool", "description": "Test description"}]
 
-        with patch.object(selector, '_call_ollama') as mock_call:
+        with patch.object(selector, "_call_ollama") as mock_call:
             mock_call.return_value = '{"tool_name": "test_tool", "confidence": 0.8, "reasoning": "Good match"}'
 
             result = selector.select_tool("test task", tools)
@@ -173,7 +173,7 @@ class TestOllamaSelector:
 
         tools = [{"name": "test_tool", "description": "Test description"}]
 
-        with patch.object(selector, '_call_ollama') as mock_call:
+        with patch.object(selector, "_call_ollama") as mock_call:
             mock_call.return_value = None
 
             result = selector.select_tool("test task", tools)
@@ -186,7 +186,7 @@ class TestOllamaSelector:
 
         tools = [{"name": "test_tool", "description": "Test description"}]
 
-        with patch.object(selector, '_call_ollama') as mock_call:
+        with patch.object(selector, "_call_ollama") as mock_call:
             mock_call.return_value = '{"tool_name": "test_tool", "confidence": 0.5, "reasoning": "Poor match"}'
 
             result = selector.select_tool("test task", tools)
@@ -197,12 +197,9 @@ class TestOllamaSelector:
         """Test successful multi-tool selection."""
         selector = OllamaSelector("http://localhost:11434")
 
-        tools = [
-            {"name": "tool1", "description": "Tool 1"},
-            {"name": "tool2", "description": "Tool 2"}
-        ]
+        tools = [{"name": "tool1", "description": "Tool 1"}, {"name": "tool2", "description": "Tool 2"}]
 
-        with patch.object(selector, '_call_ollama') as mock_call:
+        with patch.object(selector, "_call_ollama") as mock_call:
             mock_call.return_value = '{"tools": ["tool1", "tool2"], "confidence": 0.8, "reasoning": "Good combination"}'
 
             result = selector.select_tools_multi("test task", tools, max_tools=2)
@@ -223,7 +220,7 @@ class TestOllamaSelector:
         """Test successful Ollama API call."""
         selector = OllamaSelector("http://localhost:11434")
 
-        with patch('httpx.Client') as mock_client:
+        with patch("httpx.Client") as mock_client:
             mock_response = MagicMock()
             mock_response.json.return_value = {"response": "test response"}
             mock_client.return_value.__enter__.return_value = mock_response
@@ -241,14 +238,14 @@ class TestOllamaSelector:
                         "temperature": 0.1,
                         "num_predict": 200,
                     },
-                }
+                },
             )
 
     def test_call_ollama_timeout(self) -> None:
         """Test Ollama API call timeout."""
         selector = OllamaSelector("http://localhost:11434")
 
-        with patch('httpx.Client') as mock_client:
+        with patch("httpx.Client") as mock_client:
             mock_client.return_value.__enter__.side_effect = httpx.TimeoutException("Timeout")
 
             result = selector._call_ollama("test prompt")
@@ -259,7 +256,7 @@ class TestOllamaSelector:
         """Test Ollama API call HTTP error."""
         selector = OllamaSelector("http://localhost:11434")
 
-        with patch('httpx.Client') as mock_client:
+        with patch("httpx.Client") as mock_client:
             mock_client.return_value.__enter__.side_effect = httpx.HTTPStatusError("HTTP error")
 
             result = selector._call_ollama("test prompt")
@@ -270,7 +267,7 @@ class TestOllamaSelector:
         """Test Ollama API call general exception."""
         selector = OllamaSelector("http://localhost:11434")
 
-        with patch('httpx.Client') as mock_client:
+        with patch("httpx.Client") as mock_client:
             mock_client.return_value.__enter__.side_effect = Exception("General error")
 
             result = selector._call_ollama("test prompt")
@@ -337,9 +334,9 @@ class TestCostTracker:
         # Verifies that the cost tracking system starts in a clean state
 
         # Should have methods ready for cost calculation
-        assert hasattr(tracker, 'track_selection')
-        assert hasattr(tracker, 'calculate_total_savings')
-        assert hasattr(tracker, 'get_usage_summary')
+        assert hasattr(tracker, "track_selection")
+        assert hasattr(tracker, "calculate_total_savings")
+        assert hasattr(tracker, "get_usage_summary")
 
         # Tests cost tracker setup and business logic readiness
 
@@ -393,13 +390,11 @@ class TestEnhancedAISelector:
             "cpu_cores": 8,
             "max_model_ram_gb": 16,
             "network_speed_mbps": 2000,
-            "hardware_tier": "n100"
+            "hardware_tier": "n100",
         }
 
         selector = EnhancedAISelector(
-            providers=providers,
-            hardware_constraints=hardware_constraints,
-            cost_optimization=False
+            providers=providers, hardware_constraints=hardware_constraints, cost_optimization=False
         )
 
         assert selector.cost_optimization is False
@@ -449,7 +444,7 @@ class TestEnhancedAISelector:
         selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
 
         # Mock no suitable models
-        with patch.object(selector, 'select_optimal_model') as mock_select:
+        with patch.object(selector, "select_optimal_model") as mock_select:
             mock_select.return_value = AIModel.LLAMA32_3B.value  # Fallback
 
             model = selector.select_optimal_model("simple", "balanced")
@@ -513,18 +508,14 @@ class TestEnhancedAISelector:
         selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
 
         # Test local model (free)
-        cost = selector.estimate_request_cost(
-            AIModel.LLAMA32_3B.value, 100, 50
-        )
+        cost = selector.estimate_request_cost(AIModel.LLAMA32_3B.value, 100, 50)
 
         assert cost["input_cost"] == 0.0
         assert cost["output_cost"] == 0.0
         assert cost["total_cost"] == 0.0
 
         # Test paid model
-        cost = selector.estimate_request_cost(
-            AIModel.GPT4O_MINI.value, 100, 50
-        )
+        cost = selector.estimate_request_cost(AIModel.GPT4O_MINI.value, 100, 50)
 
         assert cost["input_cost"] == 1.5e-05  # 100/1M * 0.15
         assert cost["output_cost"] == 3.0e-05  # 50/1M * 0.60
@@ -536,13 +527,13 @@ class TestEnhancedAISelector:
 
         tools = [{"name": "test_tool", "description": "Test description"}]
 
-        with patch.object(selector, '_analyze_task_complexity') as mock_analyze:
+        with patch.object(selector, "_analyze_task_complexity") as mock_analyze:
             mock_analyze.return_value = "simple"
 
-        with patch.object(selector, 'select_optimal_model') as mock_model:
+        with patch.object(selector, "select_optimal_model") as mock_model:
             mock_model.return_value = AIModel.TINYLLAMA.value
 
-            with patch.object(selector.providers[0], 'select_tool') as mock_select:
+            with patch.object(selector.providers[0], "select_tool") as mock_select:
                 mock_select.return_value = {"tool_name": "test_tool", "confidence": 0.8}
 
                 result = selector.select_tool_with_cost_optimization("test task", tools)
@@ -568,13 +559,13 @@ class TestEnhancedAISelector:
 
         tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
 
-        with patch.object(selector, '_analyze_task_complexity') as mock_analyze:
+        with patch.object(selector, "_analyze_task_complexity") as mock_analyze:
             mock_analyze.return_value = "moderate"
 
-        with patch.object(selector, 'select_optimal_model') as mock_model:
+        with patch.object(selector, "select_optimal_model") as mock_model:
             mock_model.return_value = AIModel.LLAMA32_3B.value
 
-            with patch.object(selector.providers[0], 'select_tools_multi') as mock_select:
+            with patch.object(selector.providers[0], "select_tools_multi") as mock_select:
                 mock_select.return_value = {"tools": ["tool1", "tool2"], "confidence": 0.8}
 
                 result = selector.select_tools_multi_with_cost_optimization("test task", tools, max_tools=2)
@@ -619,7 +610,7 @@ class TestEnhancedAISelector:
 
         tools = [{"name": "test_tool", "description": "Test description"}]
 
-        with patch.object(selector, 'select_tool_with_cost_optimization') as mock_optimized:
+        with patch.object(selector, "select_tool_with_cost_optimization") as mock_optimized:
             mock_optimized.return_value = {"tool_name": "test_tool"}
 
             result = selector.select_tool("test task", tools)
@@ -633,7 +624,7 @@ class TestEnhancedAISelector:
 
         tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
 
-        with patch.object(selector, 'select_tools_multi_with_cost_optimization') as mock_optimized:
+        with patch.object(selector, "select_tools_multi_with_cost_optimization") as mock_optimized:
             mock_optimized.return_value = {"tools": ["tool1", "tool2"]}
 
             result = selector.select_tools_multi("test task", tools)

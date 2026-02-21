@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/lib/store'
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Shield, 
-  Mail, 
+import {
+  Users,
+  Plus,
+  Search,
+  Shield,
+  Mail,
   Calendar,
   Activity,
   Settings,
@@ -236,8 +236,8 @@ export default function UsersPage() {
                       <Settings className="mr-2 h-4 w-4" />
                       Edit
                     </Button>
-                    <Button 
-                      variant={user.active ? "outline" : "default"} 
+                    <Button
+                      variant={user.active ? "outline" : "default"}
                       size="sm"
                     >
                       {user.active ? 'Disable' : 'Enable'}
@@ -254,8 +254,8 @@ export default function UsersPage() {
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No users found</h3>
               <p className="text-muted-foreground text-center mb-4">
-                {searchTerm || selectedRole !== 'all' 
-                  ? 'Try adjusting your search or filters' 
+                {searchTerm || selectedRole !== 'all'
+                  ? 'Try adjusting your search or filters'
                   : 'Get started by inviting your first user to the admin interface.'
                 }
               </p>

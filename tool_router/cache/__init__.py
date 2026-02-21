@@ -20,17 +20,52 @@ Security Components:
 
 # Basic cache management
 from .cache_manager import (
-    CacheManager,
     CacheConfig,
+    CacheManager,
     CacheMetrics,
     cache_manager,
-    create_ttl_cache,
+    cached,
+    clear_all_caches,
+    clear_cache,
     create_lru_cache,
+    create_ttl_cache,
     get_cache_metrics,
     reset_cache_metrics,
-    clear_cache,
-    clear_all_caches,
-    cached,
+)
+
+# Configuration and utilities
+from .config import (
+    CacheBackendConfig,
+    get_cache_backend_config,
+    get_redis_url,
+    is_redis_enabled,
+    validate_cache_config,
+)
+
+# Performance monitoring
+from .dashboard import (
+    CacheAlertManager,
+    CachePerformanceCollector,
+    CachePerformanceDashboard,
+    get_alert_summary,
+    get_cache_performance_dashboard,
+    get_dashboard_data,
+    get_dashboard_trends,
+    start_dashboard_collection,
+    stop_dashboard_collection,
+)
+
+# Cache invalidation
+from .invalidation import (
+    AdvancedInvalidationManager,
+    DependencyInvalidationManager,
+    EventInvalidationManager,
+    InvalidationStrategy,
+    TagInvalidationManager,
+    get_advanced_invalidation_manager,
+    invalidate_by_dependency,
+    invalidate_by_event,
+    invalidate_by_tags,
 )
 
 # Redis cache integration
@@ -40,50 +75,17 @@ from .redis_cache import (
     create_redis_cache,
 )
 
-# Cache invalidation
-from .invalidation import (
-    TagInvalidationManager,
-    EventInvalidationManager,
-    DependencyInvalidationManager,
-    AdvancedInvalidationManager,
-    InvalidationStrategy,
-    invalidate_by_tags,
-    invalidate_by_event,
-    invalidate_by_dependency,
-    get_advanced_invalidation_manager,
-)
-
-# Configuration and utilities
-from .config import (
-    CacheBackendConfig,
-    get_cache_backend_config,
-    is_redis_enabled,
-    get_redis_url,
-    validate_cache_config,
-)
-
-# Performance monitoring
-from .dashboard import (
-    CachePerformanceDashboard,
-    CachePerformanceCollector,
-    CacheAlertManager,
-    get_cache_performance_dashboard,
-    start_dashboard_collection,
-    stop_dashboard_collection,
-    get_dashboard_data,
-    get_dashboard_trends,
-    get_alert_summary,
-)
 
 # Security and compliance features
 try:
     from .security import (
-        CacheEncryption,
         AccessControlManager,
+        CacheEncryption,
+        CacheSecurityManager,
         GDPRComplianceManager,
         RetentionPolicyManager,
-        CacheSecurityManager,
     )
+
     SECURITY_AVAILABLE = True
 except ImportError:
     SECURITY_AVAILABLE = False
@@ -91,20 +93,24 @@ except ImportError:
 try:
     from .compliance import (
         ComplianceManager,
-        GDPRComplianceHandler,
         ComplianceReporter,
+        GDPRComplianceHandler,
     )
+
     COMPLIANCE_AVAILABLE = True
 except ImportError:
     COMPLIANCE_AVAILABLE = False
 
 try:
     from .retention import (
-        RetentionPolicyManager as RetentionPolicyManagerMain,
         LifecycleManager,
-        RetentionScheduler,
         RetentionAuditor,
+        RetentionScheduler,
     )
+    from .retention import (
+        RetentionPolicyManager as RetentionPolicyManagerMain,
+    )
+
     RETENTION_AVAILABLE = True
 except ImportError:
     RETENTION_AVAILABLE = False
@@ -116,6 +122,7 @@ try:
         get_cache_security_api,
         shutdown_cache_security_api,
     )
+
     API_AVAILABLE = True
 except ImportError:
     API_AVAILABLE = False
@@ -133,97 +140,110 @@ __api_features_available__ = API_AVAILABLE
 
 # Main exports - basic cache management (always available)
 __all__ = [
+    "AdvancedInvalidationManager",
+    "CacheAlertManager",
+    "CacheBackendConfig",
+    "CacheConfig",
     "CacheManager",
-    "CacheConfig", 
     "CacheMetrics",
-    "cache_manager",
-    "create_ttl_cache",
-    "create_lru_cache",
-    "get_cache_metrics",
-    "reset_cache_metrics",
-    "clear_cache",
-    "clear_all_caches",
-    "cached",
+    "CachePerformanceCollector",
+    "CachePerformanceDashboard",
+    "DependencyInvalidationManager",
+    "EventInvalidationManager",
+    "InvalidationStrategy",
     "RedisCache",
     "RedisConfig",
-    "create_redis_cache",
     "TagInvalidationManager",
-    "EventInvalidationManager",
-    "DependencyInvalidationManager",
-    "AdvancedInvalidationManager",
-    "InvalidationStrategy",
-    "invalidate_by_tags",
-    "invalidate_by_event",
-    "invalidate_by_dependency",
+    "cache_manager",
+    "cached",
+    "clear_all_caches",
+    "clear_cache",
+    "create_lru_cache",
+    "create_redis_cache",
+    "create_ttl_cache",
     "get_advanced_invalidation_manager",
-    "CacheBackendConfig",
+    "get_alert_summary",
     "get_cache_backend_config",
-    "is_redis_enabled",
-    "get_redis_url",
-    "validate_cache_config",
-    "CachePerformanceDashboard",
-    "CachePerformanceCollector",
-    "CacheAlertManager",
+    "get_cache_metrics",
     "get_cache_performance_dashboard",
-    "start_dashboard_collection",
-    "stop_dashboard_collection",
     "get_dashboard_data",
     "get_dashboard_trends",
-    "get_alert_summary",
+    "get_redis_url",
+    "invalidate_by_dependency",
+    "invalidate_by_event",
+    "invalidate_by_tags",
+    "is_redis_enabled",
+    "reset_cache_metrics",
+    "start_dashboard_collection",
+    "stop_dashboard_collection",
+    "validate_cache_config",
 ]
 
 # Security exports (if available)
 if SECURITY_AVAILABLE:
-    __all__.extend([
-        "CacheEncryption",
-        "AccessControlManager",
-        "GDPRComplianceManager", 
-        "RetentionPolicyManager",
-        "CacheSecurityManager",
-    ])
+    __all__.extend(
+        [
+            "AccessControlManager",
+            "CacheEncryption",
+            "CacheSecurityManager",
+            "GDPRComplianceManager",
+            "RetentionPolicyManager",
+        ]
+    )
 
 # Compliance exports (if available)
 if COMPLIANCE_AVAILABLE:
-    __all__.extend([
-        "ComplianceManager",
-        "GDPRComplianceHandler",
-        "ComplianceReporter",
-    ])
+    __all__.extend(
+        [
+            "ComplianceManager",
+            "ComplianceReporter",
+            "GDPRComplianceHandler",
+        ]
+    )
 
 # Retention exports (if available)
 if RETENTION_AVAILABLE:
-    __all__.extend([
-        "RetentionPolicyManagerMain",
-        "LifecycleManager",
-        "RetentionScheduler", 
-        "RetentionAuditor",
-    ])
+    __all__.extend(
+        [
+            "LifecycleManager",
+            "RetentionAuditor",
+            "RetentionPolicyManagerMain",
+            "RetentionScheduler",
+        ]
+    )
 
 # API exports (if available)
 if API_AVAILABLE:
-    __all__.extend([
-        "CacheSecurityAPI",
-        "create_cache_security_api",
-        "get_cache_security_api",
-        "shutdown_cache_security_api",
-    ])
+    __all__.extend(
+        [
+            "CacheSecurityAPI",
+            "create_cache_security_api",
+            "get_cache_security_api",
+            "shutdown_cache_security_api",
+        ]
+    )
+
 
 # Convenience functions for feature availability
 def has_security_features() -> bool:
     """Check if security features are available."""
     return __security_features_available__
 
+
 def has_compliance_features() -> bool:
     """Check if compliance features are available."""
     return __compliance_available__
+
 
 def has_retention_features() -> bool:
     """Check if retention features are available."""
     return __retention_available__
 
+
 def has_api_features() -> bool:
     """Check if API features are available."""
     return __api_available__
+
 
 def get_available_features() -> dict:
     """Get dictionary of available features."""

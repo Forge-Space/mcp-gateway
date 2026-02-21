@@ -89,7 +89,7 @@ MCP_TOOLS_IMPLEMENTATION_SUMMARY.md  # This summary document
     "action": "add_pattern|search_patterns|get_pattern|update_pattern|delete_pattern|get_patterns_by_category|get_statistics|get_categories",
     "item_id": "integer (for specific pattern operations)",
     "title": "string",
-    "description": "string", 
+    "description": "string",
     "category": "string (react_pattern|ui_component|accessibility|prompt_engineering|architecture|code_pattern|best_practice)",
     "content": "string",
     "confidence": "number (0-1)",
@@ -167,7 +167,7 @@ result = training_manager_handler({
     "sources": [
         {
             "name": "react_docs",
-            "type": "web", 
+            "type": "web",
             "url": "https://react.dev",
             "category": "react_pattern"
         }

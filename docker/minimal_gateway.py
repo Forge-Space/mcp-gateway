@@ -71,10 +71,10 @@ async def list_tools():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 4444))
     host = os.environ.get("HOST", "0.0.0.0")
-    
+
     logger.info(f"🚀 Starting minimal MCP Gateway on {host}:{port}")
     logger.info("⚠️  Running in minimal mode - migrations bypassed")
-    
+
     uvicorn.run(
         app,
         host=host,

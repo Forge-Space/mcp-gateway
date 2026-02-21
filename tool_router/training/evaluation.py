@@ -17,15 +17,17 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from .knowledge_base import KnowledgeBase, KnowledgeItem, PatternCategory
+from .knowledge_base import KnowledgeBase, PatternCategory
+
 
 logger = logging.getLogger(__name__)
 
 
 class EvaluationMetric(Enum):
     """Types of evaluation metrics."""
+
     ACCURACY = "accuracy"
     PRECISION = "precision"
     RECALL = "recall"
@@ -41,13 +43,14 @@ class EvaluationMetric(Enum):
 @dataclass
 class EvaluationResult:
     """Represents an evaluation result."""
+
     specialist_type: str
     metric: EvaluationMetric
     value: float
     timestamp: datetime = field(default_factory=datetime.now)
     test_cases: int = 0
     passed_cases: int = 0
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
     @property
     def success_rate(self) -> float:
@@ -58,12 +61,13 @@ class EvaluationResult:
 @dataclass
 class BenchmarkSuite:
     """Represents a benchmark suite for evaluation."""
+
     name: str
     description: str
-    test_cases: List[Dict[str, Any]]
-    expected_outputs: List[Any]
-    metrics: List[EvaluationMetric]
-    category: Optional[PatternCategory] = None
+    test_cases: list[dict[str, Any]]
+    expected_outputs: list[Any]
+    metrics: list[EvaluationMetric]
+    category: PatternCategory | None = None
 
 
 class SpecialistEvaluator:
@@ -72,10 +76,10 @@ class SpecialistEvaluator:
     def __init__(self, knowledge_base: KnowledgeBase) -> None:
         """Initialize the evaluator."""
         self.knowledge_base = knowledge_base
-        self.evaluation_history: List[EvaluationResult] = []
+        self.evaluation_history: list[EvaluationResult] = []
         self.benchmark_suites = self._create_benchmark_suites()
 
-    def _create_benchmark_suites(self) -> Dict[str, BenchmarkSuite]:
+    def _create_benchmark_suites(self) -> dict[str, BenchmarkSuite]:
         """Create benchmark suites for different specialist types."""
         return {
             "ui_specialist": BenchmarkSuite(
@@ -85,32 +89,31 @@ class SpecialistEvaluator:
                     {
                         "input": "Create a React button component with primary styling",
                         "context": {"framework": "react", "component_type": "button"},
-                        "requirements": ["accessible", "responsive", "typescript"]
+                        "requirements": ["accessible", "responsive", "typescript"],
                     },
                     {
                         "input": "Build a form component with validation",
                         "context": {"framework": "react", "component_type": "form"},
-                        "requirements": ["validation", "accessibility", "typescript"]
+                        "requirements": ["validation", "accessibility", "typescript"],
                     },
                     {
                         "input": "Create a navigation bar with dropdown menus",
                         "context": {"framework": "react", "component_type": "navigation"},
-                        "requirements": ["responsive", "accessible", "keyboard-navigation"]
-                    }
+                        "requirements": ["responsive", "accessible", "keyboard-navigation"],
+                    },
                 ],
                 expected_outputs=[
                     "Functional React component with proper props and TypeScript types",
                     "Form with validation logic and error handling",
-                    "Navigation with ARIA labels and keyboard support"
+                    "Navigation with ARIA labels and keyboard support",
                 ],
                 metrics=[
                     EvaluationMetric.CODE_QUALITY,
                     EvaluationMetric.ACCESSIBILITY_SCORE,
-                    EvaluationMetric.RESPONSE_TIME
+                    EvaluationMetric.RESPONSE_TIME,
                 ],
-                category=PatternCategory.UI_COMPONENT
+                category=PatternCategory.UI_COMPONENT,
             ),
-
             "prompt_architect": BenchmarkSuite(
                 name="Prompt Architect Benchmark",
                 description="Evaluates prompt optimization and task categorization",
@@ -118,32 +121,27 @@ class SpecialistEvaluator:
                     {
                         "input": "I need to create a user authentication system",
                         "context": {"project_type": "web_app", "complexity": "medium"},
-                        "requirements": ["security", "user_experience"]
+                        "requirements": ["security", "user_experience"],
                     },
                     {
                         "input": "Build a data visualization dashboard",
                         "context": {"project_type": "analytics", "complexity": "high"},
-                        "requirements": ["performance", "interactivity"]
+                        "requirements": ["performance", "interactivity"],
                     },
                     {
                         "input": "Implement a real-time chat application",
                         "context": {"project_type": "communication", "complexity": "high"},
-                        "requirements": ["scalability", "real-time"]
-                    }
+                        "requirements": ["scalability", "real-time"],
+                    },
                 ],
                 expected_outputs=[
                     "Well-structured prompt with security considerations",
                     "Clear task breakdown with visualization requirements",
-                    "Comprehensive prompt covering real-time architecture"
+                    "Comprehensive prompt covering real-time architecture",
                 ],
-                metrics=[
-                    EvaluationMetric.ACCURACY,
-                    EvaluationMetric.PRECISION,
-                    EvaluationMetric.RESPONSE_TIME
-                ],
-                category=PatternCategory.PROMPT_ENGINEERING
+                metrics=[EvaluationMetric.ACCURACY, EvaluationMetric.PRECISION, EvaluationMetric.RESPONSE_TIME],
+                category=PatternCategory.PROMPT_ENGINEERING,
             ),
-
             "router_specialist": BenchmarkSuite(
                 name="Router Specialist Benchmark",
                 description="Evaluates tool selection and task routing",
@@ -151,35 +149,32 @@ class SpecialistEvaluator:
                     {
                         "input": "Create a React component with TypeScript",
                         "context": {"framework": "react", "language": "typescript"},
-                        "available_tools": ["react_generator", "typescript_validator"]
+                        "available_tools": ["react_generator", "typescript_validator"],
                     },
                     {
                         "input": "Design a database schema for e-commerce",
                         "context": {"domain": "e-commerce", "database": "postgresql"},
-                        "available_tools": ["schema_designer", "sql_generator"]
+                        "available_tools": ["schema_designer", "sql_generator"],
                     },
                     {
                         "input": "Optimize application performance",
                         "context": {"app_type": "web_app", "performance_issue": "slow_loading"},
-                        "available_tools": ["performance_analyzer", "code_optimizer"]
-                    }
+                        "available_tools": ["performance_analyzer", "code_optimizer"],
+                    },
                 ],
                 expected_outputs=[
                     "Selected react_generator with TypeScript support",
                     "Chosen schema_designer for e-commerce patterns",
-                    "Used performance_analyzer for bottleneck identification"
+                    "Used performance_analyzer for bottleneck identification",
                 ],
-                metrics=[
-                    EvaluationMetric.ACCURACY,
-                    EvaluationMetric.F1_SCORE,
-                    EvaluationMetric.RESPONSE_TIME
-                ],
-                category=PatternCategory.ARCHITECTURE
-            )
+                metrics=[EvaluationMetric.ACCURACY, EvaluationMetric.F1_SCORE, EvaluationMetric.RESPONSE_TIME],
+                category=PatternCategory.ARCHITECTURE,
+            ),
         }
 
-    def evaluate_specialist(self, specialist_type: str,
-                          benchmark_suite: Optional[BenchmarkSuite] = None) -> List[EvaluationResult]:
+    def evaluate_specialist(
+        self, specialist_type: str, benchmark_suite: BenchmarkSuite | None = None
+    ) -> list[EvaluationResult]:
         """Evaluate a specialist agent."""
         if benchmark_suite is None:
             benchmark_suite = self.benchmark_suites.get(specialist_type)
@@ -198,41 +193,39 @@ class SpecialistEvaluator:
         logger.info(f"Evaluated {specialist_type} with {len(results)} metrics")
         return results
 
-    def _evaluate_metric(self, specialist_type: str, metric: EvaluationMetric,
-                        benchmark_suite: BenchmarkSuite) -> EvaluationResult:
+    def _evaluate_metric(
+        self, specialist_type: str, metric: EvaluationMetric, benchmark_suite: BenchmarkSuite
+    ) -> EvaluationResult:
         """Evaluate a specific metric for a specialist."""
 
         if metric == EvaluationMetric.ACCURACY:
             return self._evaluate_accuracy(specialist_type, benchmark_suite)
-        elif metric == EvaluationMetric.PRECISION:
+        if metric == EvaluationMetric.PRECISION:
             return self._evaluate_precision(specialist_type, benchmark_suite)
-        elif metric == EvaluationMetric.RECALL:
+        if metric == EvaluationMetric.RECALL:
             return self._evaluate_recall(specialist_type, benchmark_suite)
-        elif metric == EvaluationMetric.F1_SCORE:
+        if metric == EvaluationMetric.F1_SCORE:
             return self._evaluate_f1_score(specialist_type, benchmark_suite)
-        elif metric == EvaluationMetric.RESPONSE_TIME:
+        if metric == EvaluationMetric.RESPONSE_TIME:
             return self._evaluate_response_time(specialist_type, benchmark_suite)
-        elif metric == EvaluationMetric.CODE_QUALITY:
+        if metric == EvaluationMetric.CODE_QUALITY:
             return self._evaluate_code_quality(specialist_type, benchmark_suite)
-        elif metric == EvaluationMetric.ACCESSIBILITY_SCORE:
+        if metric == EvaluationMetric.ACCESSIBILITY_SCORE:
             return self._evaluate_accessibility_score(specialist_type, benchmark_suite)
-        else:
-            # Default evaluation
-            return EvaluationResult(
-                specialist_type=specialist_type,
-                metric=metric,
-                value=0.8,  # Default score
-                test_cases=len(benchmark_suite.test_cases),
-                passed_cases=int(len(benchmark_suite.test_cases) * 0.8),
-                details={"evaluation_method": "default"}
-            )
+        # Default evaluation
+        return EvaluationResult(
+            specialist_type=specialist_type,
+            metric=metric,
+            value=0.8,  # Default score
+            test_cases=len(benchmark_suite.test_cases),
+            passed_cases=int(len(benchmark_suite.test_cases) * 0.8),
+            details={"evaluation_method": "default"},
+        )
 
     def _evaluate_accuracy(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
         """Evaluate accuracy metric."""
         # Simulate accuracy evaluation based on knowledge base patterns
-        relevant_patterns = self.knowledge_base.get_patterns_by_category(
-            benchmark_suite.category, limit=50
-        )
+        relevant_patterns = self.knowledge_base.get_patterns_by_category(benchmark_suite.category, limit=50)
 
         if not relevant_patterns:
             return EvaluationResult(
@@ -241,7 +234,7 @@ class SpecialistEvaluator:
                 value=0.0,
                 test_cases=len(benchmark_suite.test_cases),
                 passed_cases=0,
-                details={"error": "No relevant patterns found"}
+                details={"error": "No relevant patterns found"},
             )
 
         # Calculate accuracy based on pattern relevance and confidence
@@ -260,8 +253,8 @@ class SpecialistEvaluator:
             details={
                 "patterns_used": len(relevant_patterns),
                 "avg_pattern_confidence": avg_confidence,
-                "evaluation_method": "pattern_based"
-            }
+                "evaluation_method": "pattern_based",
+            },
         )
 
     def _evaluate_precision(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
@@ -269,9 +262,7 @@ class SpecialistEvaluator:
         # Precision = True Positives / (True Positives + False Positives)
         # Simulate based on pattern specificity
 
-        relevant_patterns = self.knowledge_base.get_patterns_by_category(
-            benchmark_suite.category, limit=50
-        )
+        relevant_patterns = self.knowledge_base.get_patterns_by_category(benchmark_suite.category, limit=50)
 
         if not relevant_patterns:
             return EvaluationResult(
@@ -279,7 +270,7 @@ class SpecialistEvaluator:
                 metric=EvaluationMetric.PRECISION,
                 value=0.0,
                 test_cases=len(benchmark_suite.test_cases),
-                passed_cases=0
+                passed_cases=0,
             )
 
         # Calculate precision based on pattern specificity (tags, metadata)
@@ -298,10 +289,7 @@ class SpecialistEvaluator:
             value=avg_precision,
             test_cases=len(benchmark_suite.test_cases),
             passed_cases=passed_cases,
-            details={
-                "avg_specificity": avg_precision,
-                "patterns_evaluated": len(relevant_patterns)
-            }
+            details={"avg_specificity": avg_precision, "patterns_evaluated": len(relevant_patterns)},
         )
 
     def _evaluate_recall(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
@@ -309,9 +297,7 @@ class SpecialistEvaluator:
         # Recall = True Positives / (True Positives + False Negatives)
         # Simulate based on knowledge base coverage
 
-        total_patterns = self.knowledge_base.get_patterns_by_category(
-            benchmark_suite.category, limit=100
-        )
+        total_patterns = self.knowledge_base.get_patterns_by_category(benchmark_suite.category, limit=100)
 
         if not total_patterns:
             return EvaluationResult(
@@ -319,7 +305,7 @@ class SpecialistEvaluator:
                 metric=EvaluationMetric.RECALL,
                 value=0.0,
                 test_cases=len(benchmark_suite.test_cases),
-                passed_cases=0
+                passed_cases=0,
             )
 
         # Calculate recall based on coverage of relevant patterns
@@ -332,10 +318,7 @@ class SpecialistEvaluator:
             value=coverage,
             test_cases=len(benchmark_suite.test_cases),
             passed_cases=passed_cases,
-            details={
-                "coverage": coverage,
-                "total_patterns": len(total_patterns)
-            }
+            details={"coverage": coverage, "total_patterns": len(total_patterns)},
         )
 
     def _evaluate_f1_score(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
@@ -360,8 +343,8 @@ class SpecialistEvaluator:
             details={
                 "precision": precision,
                 "recall": recall,
-                "f1_calculation": "2 * (precision * recall) / (precision + recall)"
-            }
+                "f1_calculation": "2 * (precision * recall) / (precision + recall)",
+            },
         )
 
     def _evaluate_response_time(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
@@ -387,17 +370,15 @@ class SpecialistEvaluator:
             details={
                 "avg_response_time_ms": avg_response_time,
                 "max_acceptable_time_ms": max_acceptable_time,
-                "response_times": response_times
-            }
+                "response_times": response_times,
+            },
         )
 
     def _evaluate_code_quality(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
         """Evaluate code quality metric."""
         # Simulate code quality evaluation based on patterns
 
-        relevant_patterns = self.knowledge_base.get_patterns_by_category(
-            benchmark_suite.category, limit=50
-        )
+        relevant_patterns = self.knowledge_base.get_patterns_by_category(benchmark_suite.category, limit=50)
 
         if not relevant_patterns:
             return EvaluationResult(
@@ -405,7 +386,7 @@ class SpecialistEvaluator:
                 metric=EvaluationMetric.CODE_QUALITY,
                 value=0.0,
                 test_cases=len(benchmark_suite.test_cases),
-                passed_cases=0
+                passed_cases=0,
             )
 
         # Quality factors: code examples, best practices, confidence
@@ -444,16 +425,14 @@ class SpecialistEvaluator:
             details={
                 "quality_factors": quality_factors,
                 "patterns_with_code": len([p for p in relevant_patterns if p.code_example]),
-                "best_practice_patterns": len([p for p in relevant_patterns if p.best_practice])
-            }
+                "best_practice_patterns": len([p for p in relevant_patterns if p.best_practice]),
+            },
         )
 
     def _evaluate_accessibility_score(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:
         """Evaluate accessibility score metric."""
         # Get accessibility patterns
-        accessibility_patterns = self.knowledge_base.get_patterns_by_category(
-            PatternCategory.ACCESSIBILITY, limit=50
-        )
+        accessibility_patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.ACCESSIBILITY, limit=50)
 
         if not accessibility_patterns:
             return EvaluationResult(
@@ -462,7 +441,7 @@ class SpecialistEvaluator:
                 value=0.0,
                 test_cases=len(benchmark_suite.test_cases),
                 passed_cases=0,
-                details={"error": "No accessibility patterns found"}
+                details={"error": "No accessibility patterns found"},
             )
 
         # Calculate accessibility coverage
@@ -500,11 +479,11 @@ class SpecialistEvaluator:
                 "wcag_coverage": wcag_coverage,
                 "aria_usage": aria_usage,
                 "semantic_html": semantic_html,
-                "accessibility_patterns": total_patterns
-            }
+                "accessibility_patterns": total_patterns,
+            },
         )
 
-    def get_evaluation_summary(self, specialist_type: Optional[str] = None) -> Dict[str, Any]:
+    def get_evaluation_summary(self, specialist_type: str | None = None) -> dict[str, Any]:
         """Get evaluation summary for a specialist or all specialists."""
         results = self.evaluation_history
 
@@ -528,7 +507,7 @@ class SpecialistEvaluator:
                 "test_cases": result.test_cases,
                 "passed_cases": result.passed_cases,
                 "success_rate": result.success_rate,
-                "details": result.details
+                "details": result.details,
             }
 
         # Calculate overall scores
@@ -542,7 +521,7 @@ class SpecialistEvaluator:
 
         return summary
 
-    def compare_specialists(self, specialist_types: List[str]) -> Dict[str, Any]:
+    def compare_specialists(self, specialist_types: list[str]) -> dict[str, Any]:
         """Compare performance between multiple specialists."""
         comparison = {}
 
@@ -552,23 +531,19 @@ class SpecialistEvaluator:
             if specialist_type in summary:
                 comparison[specialist_type] = {
                     "overall_score": summary[specialist_type].get("overall_score", 0.0),
-                    "metrics": summary[specialist_type]
+                    "metrics": summary[specialist_type],
                 }
 
         # Rank specialists by overall score
-        ranked_specialists = sorted(
-            comparison.items(),
-            key=lambda x: x[1]["overall_score"],
-            reverse=True
-        )
+        ranked_specialists = sorted(comparison.items(), key=lambda x: x[1]["overall_score"], reverse=True)
 
         return {
             "rankings": ranked_specialists,
             "comparison_data": comparison,
-            "evaluation_timestamp": datetime.now().isoformat()
+            "evaluation_timestamp": datetime.now().isoformat(),
         }
 
-    def generate_improvement_recommendations(self, specialist_type: str) -> List[str]:
+    def generate_improvement_recommendations(self, specialist_type: str) -> list[str]:
         """Generate improvement recommendations for a specialist."""
         summary = self.get_evaluation_summary(specialist_type)
 
@@ -605,7 +580,7 @@ class SpecialistEvaluator:
 
         return recommendations
 
-    def get_evaluation_results(self, specialist_type: str, limit: int = 100) -> List[EvaluationResult]:
+    def get_evaluation_results(self, specialist_type: str, limit: int = 100) -> list[EvaluationResult]:
         """Get evaluation results for a specific specialist.
 
         Args:
@@ -616,10 +591,7 @@ class SpecialistEvaluator:
             List of evaluation results sorted by timestamp (most recent first)
         """
         # Filter results by specialist type
-        results = [
-            result for result in self.evaluation_history
-            if result.specialist_type == specialist_type
-        ]
+        results = [result for result in self.evaluation_history if result.specialist_type == specialist_type]
 
         # Sort by timestamp (most recent first)
         results.sort(key=lambda x: x.timestamp, reverse=True)
@@ -639,7 +611,7 @@ class SpecialistEvaluator:
                     "test_cases": result.test_cases,
                     "passed_cases": result.passed_cases,
                     "success_rate": result.success_rate,
-                    "details": result.details
+                    "details": result.details,
                 }
                 for result in self.evaluation_history
             ],
@@ -649,11 +621,11 @@ class SpecialistEvaluator:
                     "description": suite.description,
                     "test_cases_count": len(suite.test_cases),
                     "metrics": [m.value for m in suite.metrics],
-                    "category": suite.category.value if suite.category else None
+                    "category": suite.category.value if suite.category else None,
                 }
                 for name, suite in self.benchmark_suites.items()
             },
-            "export_timestamp": datetime.now().isoformat()
+            "export_timestamp": datetime.now().isoformat(),
         }
 
         with export_path.open("w", encoding="utf-8") as f:
@@ -678,8 +650,7 @@ if __name__ == "__main__":
         results = evaluator.evaluate_specialist(specialist_name)
 
         for result in results:
-            print(f"  {result.metric.value}: {result.value:.2f} "
-                  f"({result.passed_cases}/{result.test_cases} passed)")
+            print(f"  {result.metric.value}: {result.value:.2f} " f"({result.passed_cases}/{result.test_cases} passed)")
 
     # Get evaluation summary
     print("\nEvaluation Summary:")

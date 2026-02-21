@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
-import time
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
-from dataclasses import dataclass, asdict
-from enum import Enum
-
-import hashlib
 import uuid
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import Enum
+from typing import Any
 
 
 class SecurityEventType(Enum):
     """Types of security events."""
+
     REQUEST_RECEIVED = "request_received"
     REQUEST_BLOCKED = "request_blocked"
     RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
@@ -30,6 +29,7 @@ class SecurityEventType(Enum):
 
 class SecuritySeverity(Enum):
     """Security event severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -39,58 +39,58 @@ class SecuritySeverity(Enum):
 @dataclass
 class SecurityEvent:
     """Security audit event."""
+
     event_id: str
     timestamp: datetime
     event_type: SecurityEventType
     severity: SecuritySeverity
-    user_id: Optional[str]
-    session_id: Optional[str]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
-    request_id: Optional[str]
-    endpoint: Optional[str]
-    details: Dict[str, Any]
+    user_id: str | None
+    session_id: str | None
+    ip_address: str | None
+    user_agent: str | None
+    request_id: str | None
+    endpoint: str | None
+    details: dict[str, Any]
     risk_score: float
     blocked: bool
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class SecurityAuditLogger:
     """Security audit logging system."""
-    
-    def __init__(self, log_file: Optional[str] = None, enable_console: bool = True):
+
+    def __init__(self, log_file: str | None = None, enable_console: bool = True):
         self.log_file = log_file
         self.enable_console = enable_console
         self._init_logger()
-    
+
     def _init_logger(self) -> None:
         """Initialize the security audit logger."""
         self.logger = logging.getLogger("security_audit")
         self.logger.setLevel(logging.INFO)
-        
+
         # Remove existing handlers
         self.logger.handlers.clear()
-        
+
         # Create formatter
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
-        
+
         # Console handler
         if self.enable_console:
             console_handler = logging.StreamHandler()
             console_handler.setLevel(logging.INFO)
             console_handler.setFormatter(formatter)
             self.logger.addHandler(console_handler)
-        
+
         # File handler
         if self.log_file:
             file_handler = logging.FileHandler(self.log_file)
             file_handler.setLevel(logging.INFO)
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
-    
+
     def log_security_event(self, event: SecurityEvent) -> None:
         """Log a security event."""
         # Convert event to JSON for structured logging
@@ -108,28 +108,34 @@ class SecurityAuditLogger:
             "details": event.details,
             "risk_score": event.risk_score,
             "blocked": event.blocked,
-            "metadata": event.metadata
+            "metadata": event.metadata,
         }
-        
+
         # Log the event
         log_message = f"SECURITY_EVENT: {json.dumps(event_data)}"
-        
+
         if event.severity in [SecuritySeverity.HIGH, SecuritySeverity.CRITICAL]:
             self.logger.error(log_message)
         elif event.severity == SecuritySeverity.MEDIUM:
             self.logger.warning(log_message)
         else:
             self.logger.info(log_message)
-    
-    def log_request_received(self, user_id: Optional[str], session_id: Optional[str], 
-                            ip_address: Optional[str], user_agent: Optional[str],
-                            request_id: Optional[str], endpoint: Optional[str],
-                            details: Dict[str, Any]) -> str:
+
+    def log_request_received(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        user_agent: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        details: dict[str, Any],
+    ) -> str:
         """Log a received request."""
         event_id = str(uuid.uuid4())
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.REQUEST_RECEIVED,
             severity=SecuritySeverity.LOW,
             user_id=user_id,
@@ -141,23 +147,31 @@ class SecurityAuditLogger:
             details=details,
             risk_score=0.0,
             blocked=False,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_request_blocked(self, user_id: Optional[str], session_id: Optional[str],
-                           ip_address: Optional[str], user_agent: Optional[str],
-                           request_id: Optional[str], endpoint: Optional[str],
-                           reason: str, risk_score: float, details: Dict[str, Any]) -> str:
+
+    def log_request_blocked(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        user_agent: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        reason: str,
+        risk_score: float,
+        details: dict[str, Any],
+    ) -> str:
         """Log a blocked request."""
         event_id = str(uuid.uuid4())
         severity = SecuritySeverity.HIGH if risk_score >= 0.8 else SecuritySeverity.MEDIUM
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.REQUEST_BLOCKED,
             severity=severity,
             user_id=user_id,
@@ -169,22 +183,30 @@ class SecurityAuditLogger:
             details={"reason": reason, **details},
             risk_score=risk_score,
             blocked=True,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_rate_limit_exceeded(self, user_id: Optional[str], session_id: Optional[str],
-                               ip_address: Optional[str], request_id: Optional[str],
-                               endpoint: Optional[str], limit_type: str, 
-                               current_count: int, limit: int, details: Dict[str, Any]) -> str:
+
+    def log_rate_limit_exceeded(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        limit_type: str,
+        current_count: int,
+        limit: int,
+        details: dict[str, Any],
+    ) -> str:
         """Log a rate limit exceeded event."""
         event_id = str(uuid.uuid4())
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.RATE_LIMIT_EXCEEDED,
             severity=SecuritySeverity.MEDIUM,
             user_id=user_id,
@@ -193,31 +215,33 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={
-                "limit_type": limit_type,
-                "current_count": current_count,
-                "limit": limit,
-                **details
-            },
+            details={"limit_type": limit_type, "current_count": current_count, "limit": limit, **details},
             risk_score=0.6,
             blocked=True,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_prompt_injection_detected(self, user_id: Optional[str], session_id: Optional[str],
-                                     ip_address: Optional[str], request_id: Optional[str],
-                                     endpoint: Optional[str], patterns: list[str],
-                                     risk_score: float, details: Dict[str, Any]) -> str:
+
+    def log_prompt_injection_detected(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        patterns: list[str],
+        risk_score: float,
+        details: dict[str, Any],
+    ) -> str:
         """Log a prompt injection detection event."""
         event_id = str(uuid.uuid4())
         severity = SecuritySeverity.CRITICAL if risk_score >= 0.8 else SecuritySeverity.HIGH
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.PROMPT_INJECTION_DETECTED,
             severity=severity,
             user_id=user_id,
@@ -226,28 +250,32 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={
-                "detected_patterns": patterns,
-                **details
-            },
+            details={"detected_patterns": patterns, **details},
             risk_score=risk_score,
             blocked=True,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_authentication_failed(self, user_id: Optional[str], ip_address: Optional[str],
-                               user_agent: Optional[str], request_id: Optional[str],
-                               endpoint: Optional[str], auth_method: str,
-                               reason: str, details: Dict[str, Any]) -> str:
+
+    def log_authentication_failed(
+        self,
+        user_id: str | None,
+        ip_address: str | None,
+        user_agent: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        auth_method: str,
+        reason: str,
+        details: dict[str, Any],
+    ) -> str:
         """Log an authentication failure."""
         event_id = str(uuid.uuid4())
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.AUTHENTICATION_FAILED,
             severity=SecuritySeverity.HIGH,
             user_id=user_id,
@@ -256,29 +284,32 @@ class SecurityAuditLogger:
             user_agent=user_agent,
             request_id=request_id,
             endpoint=endpoint,
-            details={
-                "auth_method": auth_method,
-                "reason": reason,
-                **details
-            },
+            details={"auth_method": auth_method, "reason": reason, **details},
             risk_score=0.7,
             blocked=True,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_authorization_failed(self, user_id: Optional[str], session_id: Optional[str],
-                                ip_address: Optional[str], request_id: Optional[str],
-                                endpoint: Optional[str], required_permission: str,
-                                user_permissions: list[str], details: Dict[str, Any]) -> str:
+
+    def log_authorization_failed(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        required_permission: str,
+        user_permissions: list[str],
+        details: dict[str, Any],
+    ) -> str:
         """Log an authorization failure."""
         event_id = str(uuid.uuid4())
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.AUTHORIZATION_FAILED,
             severity=SecuritySeverity.MEDIUM,
             user_id=user_id,
@@ -287,31 +318,34 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={
-                "required_permission": required_permission,
-                "user_permissions": user_permissions,
-                **details
-            },
+            details={"required_permission": required_permission, "user_permissions": user_permissions, **details},
             risk_score=0.5,
             blocked=True,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_validation_failed(self, user_id: Optional[str], session_id: Optional[str],
-                             ip_address: Optional[str], request_id: Optional[str],
-                             endpoint: Optional[str], validation_type: str,
-                             violations: list[str], risk_score: float,
-                             details: Dict[str, Any]) -> str:
+
+    def log_validation_failed(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        validation_type: str,
+        violations: list[str],
+        risk_score: float,
+        details: dict[str, Any],
+    ) -> str:
         """Log a validation failure."""
         event_id = str(uuid.uuid4())
         severity = SecuritySeverity.HIGH if risk_score >= 0.7 else SecuritySeverity.MEDIUM
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.VALIDATION_FAILED,
             severity=severity,
             user_id=user_id,
@@ -320,29 +354,33 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={
-                "validation_type": validation_type,
-                "violations": violations,
-                **details
-            },
+            details={"validation_type": validation_type, "violations": violations, **details},
             risk_score=risk_score,
             blocked=True,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_penalty_applied(self, user_id: Optional[str], session_id: Optional[str],
-                           ip_address: Optional[str], request_id: Optional[str],
-                           endpoint: Optional[str], penalty_type: str,
-                           duration: int, reason: str, details: Dict[str, Any]) -> str:
+
+    def log_penalty_applied(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        penalty_type: str,
+        duration: int,
+        reason: str,
+        details: dict[str, Any],
+    ) -> str:
         """Log a penalty application."""
         event_id = str(uuid.uuid4())
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.PENALTY_APPLIED,
             severity=SecuritySeverity.MEDIUM,
             user_id=user_id,
@@ -351,31 +389,33 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={
-                "penalty_type": penalty_type,
-                "duration": duration,
-                "reason": reason,
-                **details
-            },
+            details={"penalty_type": penalty_type, "duration": duration, "reason": reason, **details},
             risk_score=0.6,
             blocked=False,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def log_suspicious_activity(self, user_id: Optional[str], session_id: Optional[str],
-                              ip_address: Optional[str], request_id: Optional[str],
-                              endpoint: Optional[str], activity_type: str,
-                              risk_score: float, details: Dict[str, Any]) -> str:
+
+    def log_suspicious_activity(
+        self,
+        user_id: str | None,
+        session_id: str | None,
+        ip_address: str | None,
+        request_id: str | None,
+        endpoint: str | None,
+        activity_type: str,
+        risk_score: float,
+        details: dict[str, Any],
+    ) -> str:
         """Log suspicious activity."""
         event_id = str(uuid.uuid4())
         severity = SecuritySeverity.HIGH if risk_score >= 0.7 else SecuritySeverity.MEDIUM
-        
+
         event = SecurityEvent(
             event_id=event_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             event_type=SecurityEventType.SUSPICIOUS_ACTIVITY,
             severity=severity,
             user_id=user_id,
@@ -384,19 +424,16 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={
-                "activity_type": activity_type,
-                **details
-            },
+            details={"activity_type": activity_type, **details},
             risk_score=risk_score,
             blocked=risk_score >= 0.8,
-            metadata={}
+            metadata={},
         )
-        
+
         self.log_security_event(event)
         return event_id
-    
-    def get_security_summary(self, hours: int = 24) -> Dict[str, Any]:
+
+    def get_security_summary(self, hours: int = 24) -> dict[str, Any]:
         """Get security summary for the last N hours."""
         # This would typically query a database or log aggregation system
         # For now, return a placeholder summary
@@ -408,11 +445,11 @@ class SecurityAuditLogger:
             "critical_events": 0,
             "top_event_types": [],
             "top_ip_addresses": [],
-            "risk_trends": []
+            "risk_trends": [],
         }
-    
-    def create_request_hash(self, request_data: Dict[str, Any]) -> str:
+
+    def create_request_hash(self, request_data: dict[str, Any]) -> str:
         """Create a hash for request deduplication."""
         # Create a normalized string representation
-        normalized_data = json.dumps(request_data, sort_keys=True, separators=(',', ':'))
+        normalized_data = json.dumps(request_data, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(normalized_data.encode()).hexdigest()[:16]

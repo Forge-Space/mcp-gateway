@@ -1,9 +1,5 @@
 """Unit tests for AI prompt_architect module."""
 
-from unittest.mock import MagicMock, patch
-
-import pytest
-
 from tool_router.ai.prompt_architect import (
     PromptArchitect,
     PromptRefiner,
@@ -48,7 +44,7 @@ class TestRequirement:
             type=RequirementType.FUNCTIONALITY,
             description="Test requirement",
             priority="high",
-            constraints=["constraint1", "constraint2"]
+            constraints=["constraint1", "constraint2"],
         )
 
         assert req.type == RequirementType.FUNCTIONALITY
@@ -58,10 +54,7 @@ class TestRequirement:
 
     def test_requirement_creation_minimal(self) -> None:
         """Test Requirement creation with minimal fields."""
-        req = Requirement(
-            type=RequirementType.PERFORMANCE,
-            description="Performance requirement"
-        )
+        req = Requirement(type=RequirementType.PERFORMANCE, description="Performance requirement")
 
         assert req.type == RequirementType.PERFORMANCE
         assert req.description == "Performance requirement"
@@ -80,7 +73,7 @@ class TestQualityScore:
             completeness=0.7,
             specificity=0.8,
             token_efficiency=0.6,
-            context_preservation=0.7
+            context_preservation=0.7,
         )
 
         assert score.overall_score == 0.8
@@ -469,11 +462,9 @@ class TestPromptArchitect:
 
         prompt = "Create a function"
         task_type = TaskType.CODE_GENERATION
-        requirements = [Requirement(
-            type=RequirementType.FUNCTIONALITY,
-            description="Test requirement",
-            priority="high"
-        )]
+        requirements = [
+            Requirement(type=RequirementType.FUNCTIONALITY, description="Test requirement", priority="high")
+        ]
 
         enhanced = architect._enhance_for_quality(prompt, task_type, requirements)
 
@@ -587,7 +578,9 @@ class TestPromptArchitect:
         """Test specificity calculation with high score."""
         architect = PromptArchitect()
 
-        prompt = "Create UserAuthentication class with validateCredentials method that accepts string and returns boolean"
+        prompt = (
+            "Create UserAuthentication class with validateCredentials method that accepts string and returns boolean"
+        )
         quality_score = architect._calculate_specificity(prompt)
 
         assert quality_score >= 0.7  # Has specific details

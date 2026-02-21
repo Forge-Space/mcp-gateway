@@ -128,7 +128,7 @@ multi_cloud:
         storage: s3
         database: rds
         monitoring: cloudwatch
-    
+
     azure:
       subscription_id: "12345678-1234-1234-1234-123456789012"
       tenant_id: "12345678-1234-1234-1234-123456789012"
@@ -140,7 +140,7 @@ multi_cloud:
         storage: blob
         database: sql
         monitoring: monitor
-    
+
     gcp:
       project_id: "my-project-12345"
       region: us-central1
@@ -163,11 +163,11 @@ class AWSProvider(CloudProvider):
         self.eks_client = boto3.client('eks')
         self.cloudwatch_client = boto3.client('cloudwatch')
         self.ce_client = boto3.client('ce')
-    
+
     def deploy_service(self, service_config: ServiceConfig) -> DeploymentResult:
         # Deploy to ECS/EKS based on configuration
         pass
-    
+
     def scale_service(self, service_id: str, replicas: int) -> ScaleResult:
         # Scale ECS/EKS service
         pass
@@ -180,7 +180,7 @@ class AzureProvider(CloudProvider):
         self.container_client = ContainerManagementClient
         self.monitor_client = MonitorManagementClient
         self.cost_client = CostManagementClient
-    
+
     def deploy_service(self, service_config: ServiceConfig) -> DeploymentResult:
         # Deploy to AKS or Container Instances
         pass
@@ -193,7 +193,7 @@ class GCPProvider(CloudProvider):
         self.container_client = container_v1.ContainerManagerClient
         self.monitoring_client = monitoring_v3.MetricServiceClient
         self.billing_client = cloud_billing_v1.CloudBillingClient
-    
+
     def deploy_service(self, service_config: ServiceConfig) -> DeploymentResult:
         # Deploy to GKE or Cloud Run
         pass
@@ -208,15 +208,15 @@ class MultiCloudServiceRegistry:
         self.providers = {}
         self.services = {}
         self.health_checker = HealthChecker()
-    
+
     def register_provider(self, name: str, provider: CloudProvider):
         self.providers[name] = provider
-    
-    def deploy_service(self, service_config: ServiceConfig, 
+
+    def deploy_service(self, service_config: ServiceConfig,
                        providers: List[str] = None) -> DeploymentResult:
         # Deploy service to specified or optimal providers
         pass
-    
+
     def get_service_endpoints(self, service_id: str) -> List[ServiceEndpoint]:
         # Get all endpoints for a service across providers
         pass
