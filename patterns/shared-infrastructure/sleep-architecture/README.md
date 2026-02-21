@@ -88,10 +88,10 @@ export class SleepStateManager extends EventEmitter {
 
     this.services.set(config.name, service);
     this.metrics.set(config.name, this.createMetrics(service));
-    
+
     // Start idle timeout monitoring
     this.startIdleTimeout(config.name);
-    
+
     this.emit('serviceRegistered', service);
   }
 
@@ -110,7 +110,7 @@ export class SleepStateManager extends EventEmitter {
 
     // Pause the container
     await this.pauseContainer(service.containerId, service.config);
-    
+
     // Update metrics
     const metrics = this.metrics.get(serviceName)!;
     metrics.state = ServiceState.SLEEPING;
@@ -139,7 +139,7 @@ export class SleepStateManager extends EventEmitter {
 
     // Resume the container
     await this.resumeContainer(service.containerId, service.config);
-    
+
     service.state = ServiceState.RUNNING;
     service.wakeCount++;
     service.lastActivity = new Date();
@@ -168,9 +168,9 @@ export class SleepStateManager extends EventEmitter {
 
     // Stop the container
     await this.stopContainer(service.containerId);
-    
+
     service.state = ServiceState.STOPPED;
-    
+
     // Clear idle timeout
     if (this.sleepTimers.has(serviceName)) {
       clearTimeout(this.sleepTimers.get(serviceName)!);
@@ -235,14 +235,14 @@ export class SleepStateManager extends EventEmitter {
 
     // Start container using Docker API
     const container = await this.docker.createContainer(containerConfig);
-    
+
     return container.id;
   }
 
   private async pauseContainer(containerId: string, config: ServiceConfig): Promise<void> {
     // Pause the container using Docker API
     await this.docker.pauseContainer(containerId);
-    
+
     // Set resource limits for sleep state
     await this.docker.updateContainer(containerId, {
       Memory: config.memoryReservation,
@@ -279,7 +279,7 @@ export class SleepStateManager extends EventEmitter {
       if (service.state === ServiceState.RUNNING) {
         // Get container stats
         const stats = await this.docker.getContainerStats(service.containerId);
-        
+
         const metrics = this.metrics.get(serviceName)!;
         metrics.resourceUsage = {
           memory: stats.memory_usage,
@@ -372,7 +372,7 @@ export class SleepPolicyEngine {
   evaluateSleepDecision(serviceName: string): 'sleep' | 'wake' | 'none' {
     const service = this.getServiceInstance(serviceName);
     const metrics = this.getServiceMetrics(serviceName);
-    
+
     if (!service || !metrics) {
       return 'none';
     }
@@ -509,7 +509,7 @@ export class ServiceOrchestrator {
 
   private async ensureServiceRunning(serviceName: string): Promise<void> {
     const currentState = this.sleepStateManager.getServiceState(serviceName);
-    
+
     if (currentState === ServiceState.STOPPED) {
       // Service is stopped, need to restart
       console.log(`Starting stopped service: ${serviceName}`);
@@ -529,10 +529,10 @@ export class ServiceOrchestrator {
     }
 
     const request = queue.shift();
-    
+
     // Process the request
     console.log(`Processing request for ${serviceName}:`, request.type);
-    
+
     // Update last activity
     const service = this.sleepStateManager.getService(serviceName);
     if (service) {
@@ -590,18 +590,18 @@ export class ServiceOrchestrator {
     const services = this.sleepStateManager.getAllServices();
     const sleepingServices = services.filter(s => s.state === ServiceState.SLEEPING);
     const stoppedServices = services.filter(s => s.state === ServiceState.STOPPED);
-    
+
     // Estimate resource savings (simplified)
     const sleepingSavings = sleepingServices.length * 0.9; // 90% savings for sleeping
     const stoppedSavings = stoppedServices.length * 1.0; // 100% savings for stopped
-    
+
     return (sleepingSavings + stoppedSavings) / services.length;
   }
 
   private calculateAverageWakeTime(): number {
     const metrics = Array.from(this.sleepStateManager.metrics.values());
     const wakeTimes = metrics.map(m => m.totalUptime / Math.max(1, m.wakeCount));
-    
+
     return wakeTimes.reduce((sum, time) => sum + time, 0) / wakeTimes.length;
   }
 }
@@ -719,12 +719,12 @@ orchestrator.sleepPolicyEngine.addPolicy({
 // Monitor service health and performance
 setInterval(() => {
   const status = orchestrator.getSystemStatus();
-  
+
   // Alert on high resource usage or poor performance
   if (status.resourceSavings < 0.5) {
     console.warn('Low resource savings detected');
   }
-  
+
   if (status.averageWakeTime > 500) {
     console.warn('High wake times detected');
   }

@@ -12,10 +12,11 @@ This enhanced UI Specialist incorporates:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ..training.knowledge_base import KnowledgeBase, PatternCategory
 from ..training.data_extraction import PatternCategory
+from ..training.knowledge_base import KnowledgeBase, PatternCategory
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +24,14 @@ logger = logging.getLogger(__name__)
 class EnhancedUISpecialist:
     """Enhanced UI Specialist with modern React patterns and accessibility."""
 
-    def __init__(self, knowledge_base: Optional[KnowledgeBase] = None) -> None:
+    def __init__(self, knowledge_base: KnowledgeBase | None = None) -> None:
         """Initialize the enhanced UI specialist."""
         self.knowledge_base = knowledge_base or KnowledgeBase()
         self.framework_preferences = {
             "react": {"priority": 1.0, "patterns": ["hooks", "functional", "typescript"]},
             "vue": {"priority": 0.8, "patterns": ["composition", "typescript"]},
             "angular": {"priority": 0.7, "patterns": ["standalone", "typescript"]},
-            "svelte": {"priority": 0.6, "patterns": ["modern", "typescript"]}
+            "svelte": {"priority": 0.6, "patterns": ["modern", "typescript"]},
         }
 
         # Component architecture patterns
@@ -40,18 +41,18 @@ class EnhancedUISpecialist:
                 "molecules": ["form", "card", "navbar", "dropdown"],
                 "organisms": ["header", "sidebar", "table", "modal"],
                 "templates": ["page_layout", "dashboard", "form_page"],
-                "pages": ["home", "about", "contact", "profile"]
+                "pages": ["home", "about", "contact", "profile"],
             },
             "feature_sliced": {
                 "app": ["app_root", "layout", "routing"],
                 "pages": ["list_page", "details_page", "edit_page"],
                 "widgets": ["data_table", "chart", "form"],
                 "features": ["auth", "user_management", "content"],
-                "shared": ["ui_kit", "api", "utils"]
-            }
+                "shared": ["ui_kit", "api", "utils"],
+            },
         }
 
-    def generate_component(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_component(self, request: dict[str, Any]) -> dict[str, Any]:
         """Generate a UI component based on the request."""
         try:
             # Extract requirements from request
@@ -84,7 +85,7 @@ class EnhancedUISpecialist:
             logger.error(f"Error generating component: {e}")
             return self._get_fallback_component(request)
 
-    def _get_relevant_patterns(self, component_type: str, framework: str) -> List[Dict[str, Any]]:
+    def _get_relevant_patterns(self, component_type: str, framework: str) -> list[dict[str, Any]]:
         """Get relevant patterns from the knowledge base."""
         patterns = []
 
@@ -92,40 +93,47 @@ class EnhancedUISpecialist:
         framework_patterns = self.knowledge_base.search_knowledge(
             f"{framework} {component_type}",
             PatternCategory.REACT_PATTERN if framework == "react" else PatternCategory.UI_COMPONENT,
-            limit=10
+            limit=10,
         )
 
         for pattern in framework_patterns:
-            patterns.append({
-                "title": pattern.title,
-                "description": pattern.description,
-                "code_example": pattern.code_example,
-                "confidence": pattern.confidence_score,
-                "tags": pattern.tags
-            })
-
-        # Search for accessibility patterns
-        if "accessibility" in component_type or "a11y" in component_type:
-            accessibility_patterns = self.knowledge_base.search_knowledge(
-                "accessibility",
-                PatternCategory.ACCESSIBILITY,
-                limit=5
-            )
-
-            for pattern in accessibility_patterns:
-                patterns.append({
+            patterns.append(
+                {
                     "title": pattern.title,
                     "description": pattern.description,
                     "code_example": pattern.code_example,
                     "confidence": pattern.confidence_score,
-                    "tags": pattern.tags + ["accessibility"]
-                })
+                    "tags": pattern.tags,
+                }
+            )
+
+        # Search for accessibility patterns
+        if "accessibility" in component_type or "a11y" in component_type:
+            accessibility_patterns = self.knowledge_base.search_knowledge(
+                "accessibility", PatternCategory.ACCESSIBILITY, limit=5
+            )
+
+            for pattern in accessibility_patterns:
+                patterns.append(
+                    {
+                        "title": pattern.title,
+                        "description": pattern.description,
+                        "code_example": pattern.code_example,
+                        "confidence": pattern.confidence_score,
+                        "tags": pattern.tags + ["accessibility"],
+                    }
+                )
 
         return patterns
 
-    def _build_component(self, component_type: str, framework: str,
-                        requirements: List[str], context: Dict[str, Any],
-                        patterns: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_component(
+        self,
+        component_type: str,
+        framework: str,
+        requirements: list[str],
+        context: dict[str, Any],
+        patterns: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """Build the component based on patterns and requirements."""
         component = {
             "type": component_type,
@@ -136,33 +144,31 @@ class EnhancedUISpecialist:
             "code": self._generate_component_code(component_type, framework, patterns),
             "props": self._generate_component_props(component_type, patterns),
             "styling": self._generate_component_styling(component_type, framework),
-            "dependencies": self._generate_dependencies(framework, requirements)
+            "dependencies": self._generate_dependencies(framework, requirements),
         }
 
         return component
 
-    def _generate_component_code(self, component_type: str, framework: str,
-                                 patterns: List[Dict[str, Any]]) -> str:
+    def _generate_component_code(self, component_type: str, framework: str, patterns: list[dict[str, Any]]) -> str:
         """Generate component code based on framework and patterns."""
         if framework == "react":
             return self._generate_react_component(component_type, patterns)
-        elif framework == "vue":
+        if framework == "vue":
             return self._generate_vue_component(component_type, patterns)
-        elif framework == "angular":
+        if framework == "angular":
             return self._generate_angular_component(component_type, patterns)
-        elif framework == "svelte":
+        if framework == "svelte":
             return self._generate_svelte_component(component_type, patterns)
-        else:
-            return self._generate_generic_component(component_type, patterns)
+        return self._generate_generic_component(component_type, patterns)
 
-    def _generate_react_component(self, component_type: str, patterns: List[Dict[str, Any]]) -> str:
+    def _generate_react_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
         """Generate React component with 2024 best practices."""
 
         # Get the best pattern for this component type
         best_pattern = max(patterns, key=lambda p: p["confidence"]) if patterns else None
 
         if component_type == "button":
-            return '''import React from 'react';
+            return """import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -204,10 +210,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
-export { Button };'''
+export { Button };"""
 
-        elif component_type == "form":
-            return '''import React from 'react';
+        if component_type == "form":
+            return """import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -281,10 +287,10 @@ export function Form({ onSubmit, loading = false }: FormProps) {
       </Button>
     </form>
   );
-}'''
+}"""
 
-        elif component_type == "card":
-            return '''import React from 'react';
+        if component_type == "card":
+            return """import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
@@ -362,12 +368,11 @@ const CardFooter = React.forwardRef<
 ));
 CardFooter.displayName = 'CardFooter';
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };'''
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };"""
 
-        else:
-            # Generic component template
-            component_name = component_type.title()
-            return f'''import React from 'react';
+        # Generic component template
+        component_name = component_type.title()
+        return f"""import React from 'react';
 import {{ cn }} from '@/lib/utils';
 
 interface {component_name}Props extends React.HTMLAttributes<HTMLDivElement> {{
@@ -386,11 +391,11 @@ const {component_name} = React.forwardRef<HTMLDivElement, {component_name}Props>
 
 {component_name}.displayName = '{component_name}';
 
-export {{ {component_name} }};'''
+export {{ {component_name} }};"""
 
-    def _generate_vue_component(self, component_type: str, patterns: List[Dict[str, Any]]) -> str:
+    def _generate_vue_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
         """Generate Vue 3 component with Composition API."""
-        return f'''<template>
+        return f"""<template>
   <div class="{component_type}-component">
     <!-- Component content here -->
   </div>
@@ -412,11 +417,11 @@ const props = defineProps<Props>();
 .{component_type}-component {{
   /* Component styles here */
 }}
-</style>'''
+</style>"""
 
-    def _generate_angular_component(self, component_type: str, patterns: List[Dict[str, Any]]) -> str:
+    def _generate_angular_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
         """Generate Angular 17+ standalone component."""
-        return f'''import {{ Component, Input }} from '@angular/core';
+        return rf"""import {{ Component, Input }} from '@angular/core';
 import {{ CommonModule }} from '@angular/common';
 
 @Component({{
@@ -437,11 +442,11 @@ import {{ CommonModule }} from '@angular/common';
 export class {component_type.title()}Component {{
   // Define inputs here
   @Input() data: any;
-}}'''
+}}"""
 
-    def _generate_svelte_component(self, component_type: str, patterns: List[Dict[str, Any]]) -> str:
+    def _generate_svelte_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
         """Generate Svelte 5+ component."""
-        return f'''<script lang="ts">
+        return f"""<script lang="ts">
   // Component logic here
   let {{ props }} = $props();
 </script>
@@ -454,29 +459,33 @@ export class {component_type.title()}Component {{
   .{component_type} {{
     /* Component styles here */
   }}
-</style>'''
+</style>"""
 
         base_props = [
             {"name": "children", "type": "ReactNode", "required": False, "description": "Child components"},
-            {"name": "id", "type": "string", "required": False, "description": "Unique identifier"}
+            {"name": "id", "type": "string", "required": False, "description": "Unique identifier"},
         ]
 
         # Add component-specific props based on patterns
         if component_type == "button":
-            base_props.extend([
-                {"name": "variant", "type": "string", "required": False, "description": "Button variant style"},
-                {"name": "size", "type": "string", "required": False, "description": "Button size"},
-                {"name": "disabled", "type": "boolean", "required": False, "description": "Disable the button"}
-            ])
+            base_props.extend(
+                [
+                    {"name": "variant", "type": "string", "required": False, "description": "Button variant style"},
+                    {"name": "size", "type": "string", "required": False, "description": "Button size"},
+                    {"name": "disabled", "type": "boolean", "required": False, "description": "Disable the button"},
+                ]
+            )
         elif component_type == "form":
-            base_props.extend([
-                {"name": "onSubmit", "type": "function", "required": True, "description": "Form submit handler"},
-                {"name": "loading", "type": "boolean", "required": False, "description": "Loading state"}
-            ])
+            base_props.extend(
+                [
+                    {"name": "onSubmit", "type": "function", "required": True, "description": "Form submit handler"},
+                    {"name": "loading", "type": "boolean", "required": False, "description": "Loading state"},
+                ]
+            )
 
         return base_props
 
-    def _generate_component_styling(self, component_type: str, framework: str) -> Dict[str, Any]:
+    def _generate_component_styling(self, component_type: str, framework: str) -> dict[str, Any]:
         """Generate styling configuration for the component."""
         return {
             "framework": framework,
@@ -484,10 +493,10 @@ export class {component_type.title()}Component {{
             "theme_integration": True,
             "responsive": True,
             "customizable": True,
-            "design_tokens": True
+            "design_tokens": True,
         }
 
-    def _generate_dependencies(self, framework: str, requirements: List[str]) -> List[str]:
+    def _generate_dependencies(self, framework: str, requirements: list[str]) -> list[str]:
         """Generate dependency list for the component."""
         dependencies = []
 
@@ -520,7 +529,7 @@ export class {component_type.title()}Component {{
 
         return dependencies
 
-    def _enhance_accessibility(self, component: Dict[str, Any], requirements: List[str]) -> Dict[str, Any]:
+    def _enhance_accessibility(self, component: dict[str, Any], requirements: list[str]) -> dict[str, Any]:
         """Enhance component with accessibility features."""
         if "accessibility" not in requirements:
             return component
@@ -532,7 +541,7 @@ export class {component_type.title()}Component {{
             "screen_reader_support": True,
             "focus_management": True,
             "color_contrast": True,
-            "semantic_html": True
+            "semantic_html": True,
         }
 
         # Add accessibility attributes to code
@@ -554,35 +563,31 @@ export class {component_type.title()}Component {{
     def _add_button_accessibility(self, code: str) -> str:
         """Add accessibility attributes to button code."""
         # Add proper ARIA attributes and keyboard support
-        return code.replace(
-            'className={cn(',
-            'aria-label={props["aria-label"]}\n          className={cn('
-        )
+        return code.replace("className={cn(", 'aria-label={props["aria-label"]}\n          className={cn(')
 
     def _add_form_accessibility(self, code: str) -> str:
         """Add accessibility attributes to form code."""
         # Add form validation and error handling
         return code.replace(
-            'placeholder="Enter your email"',
-            'placeholder="Enter your email"\n          aria-label="Email address"'
+            'placeholder="Enter your email"', 'placeholder="Enter your email"\n          aria-label="Email address"'
         )
 
     def _add_input_accessibility(self, code: str) -> str:
         """Add accessibility attributes to input code."""
         # Add proper labeling and validation
         return code.replace(
-            '<Input',
-            '<Input\n          aria-label={props["aria-label"]}\n          aria-invalid={errors ? "true" : "false"}'
+            "<Input",
+            '<Input\n          aria-label={props["aria-label"]}\n          aria-invalid={errors ? "true" : "false"}',
         )
 
-    def _optimize_performance(self, component: Dict[str, Any], framework: str) -> Dict[str, Any]:
+    def _optimize_performance(self, component: dict[str, Any], framework: str) -> dict[str, Any]:
         """Add performance optimizations to the component."""
         component["performance"] = {
             "memoization": framework == "react",
             "lazy_loading": True,
             "code_splitting": True,
             "tree_shaking": True,
-            "bundle_optimization": True
+            "bundle_optimization": True,
         }
 
         # Add React.memo for React components
@@ -591,27 +596,21 @@ export class {component_type.title()}Component {{
 
             # Wrap with React.memo if not already wrapped
             if "React.memo" not in code and "React.forwardRef" in code:
-                code = code.replace(
-                    'React.forwardRef',
-                    'React.memo(React.forwardRef'
-                )
-                code = code.replace(
-                    '});',
-                    '}));'
-                )
+                code = code.replace("React.forwardRef", "React.memo(React.forwardRef")
+                code = code.replace("});", "}));")
 
             component["code"] = code
 
         return component
 
-    def _generate_typescript_types(self, component: Dict[str, Any]) -> str:
+    def _generate_typescript_types(self, component: dict[str, Any]) -> str:
         """Generate TypeScript type definitions for the component."""
         component_name = component.get("type", "Component").title()
         props = component.get("props", [])
 
-        types = f'''// TypeScript types for {component_name}
+        types = f"""// TypeScript types for {component_name}
 export interface {component_name}Props {{
-'''
+"""
 
         for prop in props:
             if prop.get("required", False):
@@ -619,11 +618,11 @@ export interface {component_name}Props {{
             else:
                 types += f'\n  {prop["name"]}?: {prop["type"]};'
 
-        types += '\n}'
+        types += "\n}"
 
         return types
 
-    def _get_fallback_component(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_fallback_component(self, request: dict[str, Any]) -> dict[str, Any]:
         """Get fallback component when generation fails."""
         component_type = request.get("component_type", "generic")
         framework = request.get("framework", "react")
@@ -631,7 +630,7 @@ export interface {component_name}Props {{
         return {
             "type": component_type,
             "framework": framework,
-            "code": f'''// Fallback {component_type} component
+            "code": f"""// Fallback {component_type} component
 // This is a basic implementation that should be enhanced
 
 import React from 'react';
@@ -640,14 +639,14 @@ const {component_type.title()} = () => {{
   return <div>{component_type.title()} Component</div>;
 }};
 
-export default {component_type.title()};''',
+export default {component_type.title()};""",
             "props": [{"name": "className", "type": "string", "required": False}],
             "styling": {"framework": framework, "styling_approach": "inline"},
             "dependencies": ["react"],
-            "fallback": True
+            "fallback": True,
         }
 
-    def get_component_recommendations(self, component_type: str, framework: str) -> List[str]:
+    def get_component_recommendations(self, component_type: str, framework: str) -> list[str]:
         """Get recommendations for component improvements."""
         recommendations = []
 
@@ -676,14 +675,9 @@ export default {component_type.title()};''',
 
         return recommendations
 
-    def validate_component(self, component: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_component(self, component: dict[str, Any]) -> dict[str, Any]:
         """Validate generated component for quality and completeness."""
-        validation_result = {
-            "valid": True,
-            "issues": [],
-            "recommendations": [],
-            "score": 0.0
-        }
+        validation_result = {"valid": True, "issues": [], "recommendations": [], "score": 0.0}
 
         # Check required fields
         required_fields = ["type", "framework", "code", "props"]
@@ -711,8 +705,11 @@ export default {component_type.title()};''',
         penalty_per_issue = 10
         penalty_per_recommendation = 5
 
-        score = base_score - (len(validation_result["issues"]) * penalty_per_issue) - \
-                (len(validation_result["recommendations"]) * penalty_per_recommendation)
+        score = (
+            base_score
+            - (len(validation_result["issues"]) * penalty_per_issue)
+            - (len(validation_result["recommendations"]) * penalty_per_recommendation)
+        )
 
         validation_result["score"] = max(0, score / 100.0)  # Normalize to 0-1
 
@@ -728,7 +725,7 @@ if __name__ == "__main__":
         "component_type": "button",
         "framework": "react",
         "requirements": ["typescript", "accessibility", "styling"],
-        "context": {"theme": "material", "size": "medium"}
+        "context": {"theme": "material", "size": "medium"},
     }
 
     print("Generating enhanced UI component...")
@@ -756,6 +753,6 @@ if __name__ == "__main__":
 
     # Get recommendations
     recommendations = specialist.get_component_recommendations("button", "react")
-    print(f"\nComponent Recommendations:")
+    print("\nComponent Recommendations:")
     for rec in recommendations:
         print(f"  - {rec}")

@@ -140,9 +140,7 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
 
     if ai_selector:
         try:
-            ai_result = ai_selector.select_tool(
-                task, tools, context=context or "", similar_tools=similar_tools or None
-            )
+            ai_result = ai_selector.select_tool(task, tools, context=context or "", similar_tools=similar_tools or None)
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
@@ -165,7 +163,10 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
             hybrid_score = (ai_score * ai_weight) + (normalized_keyword_score * (1 - ai_weight))
             logger.info(
                 "Hybrid score for %s: AI=%.2f, Keyword=%.2f, Hybrid=%.2f",
-                tool_name, ai_score, normalized_keyword_score, hybrid_score,
+                tool_name,
+                ai_score,
+                normalized_keyword_score,
+                hybrid_score,
             )
         else:
             # Non-AI-selected tools get keyword-only scoring
@@ -224,9 +225,7 @@ def select_top_matching_tools_enhanced(  # noqa: PLR0913
 
     if ai_selector:
         try:
-            ai_result = ai_selector.select_tool(
-                task, tools, context=context or "", similar_tools=similar_tools or None
-            )
+            ai_result = ai_selector.select_tool(task, tools, context=context or "", similar_tools=similar_tools or None)
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)

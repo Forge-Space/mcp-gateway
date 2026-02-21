@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import re
-from typing import Any, Dict, List
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
 
 class TaskType(Enum):
     """Task types for prompt optimization."""
+
     CODE_GENERATION = "code_generation"
     CODE_REFACTORING = "code_refactoring"
     CODE_DEBUGGING = "code_debugging"
@@ -28,6 +29,7 @@ class TaskType(Enum):
 
 class RequirementType(Enum):
     """Types of requirements extracted from prompts."""
+
     FUNCTIONALITY = "functionality"
     PERFORMANCE = "performance"
     SECURITY = "security"
@@ -41,15 +43,17 @@ class RequirementType(Enum):
 @dataclass
 class Requirement:
     """Extracted requirement from a prompt."""
+
     type: RequirementType
     description: str
     priority: str  # "high", "medium", "low"
-    constraints: List[str] | None = None
+    constraints: list[str] | None = None
 
 
 @dataclass
 class QualityScore:
     """Quality score for a prompt."""
+
     overall_score: float
     clarity: float
     completeness: float
@@ -64,33 +68,91 @@ class TaskAnalyzer:
     def __init__(self) -> None:
         self.task_keywords = {
             TaskType.CODE_GENERATION: [
-                "create", "generate", "build", "implement", "write", "develop",
-                "make", "construct", "design", "code", "function", "class", "component"
+                "create",
+                "generate",
+                "build",
+                "implement",
+                "write",
+                "develop",
+                "make",
+                "construct",
+                "design",
+                "code",
+                "function",
+                "class",
+                "component",
             ],
             TaskType.CODE_REFACTORING: [
-                "refactor", "improve", "optimize", "clean up", "restructure",
-                "reorganize", "simplify", "modernize", "update"
+                "refactor",
+                "improve",
+                "optimize",
+                "clean up",
+                "restructure",
+                "reorganize",
+                "simplify",
+                "modernize",
+                "update",
             ],
             TaskType.CODE_DEBUGGING: [
-                "debug", "fix", "error", "issue", "problem", "bug", "broken",
-                "not working", "fail", "crash", "exception"
+                "debug",
+                "fix",
+                "error",
+                "issue",
+                "problem",
+                "bug",
+                "broken",
+                "not working",
+                "fail",
+                "crash",
+                "exception",
             ],
             TaskType.CODE_ANALYSIS: [
-                "analyze", "review", "examine", "inspect", "check", "audit",
-                "evaluate", "assess", "understand", "explain"
+                "analyze",
+                "review",
+                "examine",
+                "inspect",
+                "check",
+                "audit",
+                "evaluate",
+                "assess",
+                "understand",
+                "explain",
             ],
             TaskType.DOCUMENTATION: [
-                "document", "explain", "describe", "comment", "readme", "guide",
-                "manual", "tutorial", "instruction", "help"
+                "document",
+                "explain",
+                "describe",
+                "comment",
+                "readme",
+                "guide",
+                "manual",
+                "tutorial",
+                "instruction",
+                "help",
             ],
             TaskType.OPTIMIZATION: [
-                "optimize", "improve performance", "speed up", "enhance", "boost",
-                "make faster", "reduce", "minimize", "streamline"
+                "optimize",
+                "improve performance",
+                "speed up",
+                "enhance",
+                "boost",
+                "make faster",
+                "reduce",
+                "minimize",
+                "streamline",
             ],
             TaskType.CREATIVE: [
-                "design", "create", "imagine", "brainstorm", "innovate", "invent",
-                "conceptualize", "visualize", "artistic", "creative"
-            ]
+                "design",
+                "create",
+                "imagine",
+                "brainstorm",
+                "innovate",
+                "invent",
+                "conceptualize",
+                "visualize",
+                "artistic",
+                "creative",
+            ],
         }
 
     def identify_task_type(self, prompt: str) -> TaskType:
@@ -110,7 +172,7 @@ class TaskAnalyzer:
         # Return the task type with the highest score
         return max(task_scores, key=task_scores.get)
 
-    def extract_requirements(self, prompt: str, task_type: TaskType) -> List[Requirement]:
+    def extract_requirements(self, prompt: str, task_type: TaskType) -> list[Requirement]:
         """Extract specific requirements from the prompt."""
         requirements = []
         prompt_lower = prompt.lower()
@@ -121,52 +183,59 @@ class TaskAnalyzer:
         # Extract functional requirements
         functional_reqs = self._extract_functional_requirements(prompt_lower)
         for req in functional_reqs:
-            requirements.append(Requirement(
-                type=RequirementType.FUNCTIONALITY,
-                description=req,
-                priority="high",
-                constraints=constraints
-            ))
+            requirements.append(
+                Requirement(
+                    type=RequirementType.FUNCTIONALITY, description=req, priority="high", constraints=constraints
+                )
+            )
 
         # Extract performance requirements
         if any(keyword in prompt_lower for keyword in ["fast", "performance", "speed", "optimize", "efficient"]):
-            requirements.append(Requirement(
-                type=RequirementType.PERFORMANCE,
-                description="Performance optimization required",
-                priority="medium",
-                constraints=constraints
-            ))
+            requirements.append(
+                Requirement(
+                    type=RequirementType.PERFORMANCE,
+                    description="Performance optimization required",
+                    priority="medium",
+                    constraints=constraints,
+                )
+            )
 
         # Extract security requirements
         if any(keyword in prompt_lower for keyword in ["secure", "security", "safe", "protect", "authenticate"]):
-            requirements.append(Requirement(
-                type=RequirementType.SECURITY,
-                description="Security considerations required",
-                priority="high",
-                constraints=constraints
-            ))
+            requirements.append(
+                Requirement(
+                    type=RequirementType.SECURITY,
+                    description="Security considerations required",
+                    priority="high",
+                    constraints=constraints,
+                )
+            )
 
         # Extract maintainability requirements
         if any(keyword in prompt_lower for keyword in ["maintainable", "clean", "readable", "organized", "structured"]):
-            requirements.append(Requirement(
-                type=RequirementType.MAINTAINABILITY,
-                description="Code maintainability required",
-                priority="medium",
-                constraints=constraints
-            ))
+            requirements.append(
+                Requirement(
+                    type=RequirementType.MAINTAINABILITY,
+                    description="Code maintainability required",
+                    priority="medium",
+                    constraints=constraints,
+                )
+            )
 
         # Extract accessibility requirements
         if any(keyword in prompt_lower for keyword in ["accessible", "a11y", "screen reader", "keyboard", "wcag"]):
-            requirements.append(Requirement(
-                type=RequirementType.ACCESSIBILITY,
-                description="Accessibility compliance required",
-                priority="high",
-                constraints=constraints
-            ))
+            requirements.append(
+                Requirement(
+                    type=RequirementType.ACCESSIBILITY,
+                    description="Accessibility compliance required",
+                    priority="high",
+                    constraints=constraints,
+                )
+            )
 
         return requirements
 
-    def _extract_constraints(self, prompt: str) -> List[str]:
+    def _extract_constraints(self, prompt: str) -> list[str]:
         """Extract constraints from the prompt."""
         constraints = []
 
@@ -174,27 +243,27 @@ class TaskAnalyzer:
         import re
 
         # Language/framework constraints
-        if re.search(r'\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b', prompt, re.IGNORECASE):
-            matches = re.findall(r'\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b', prompt, re.IGNORECASE)
+        if re.search(r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b", prompt, re.IGNORECASE):
+            matches = re.findall(r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b", prompt, re.IGNORECASE)
             constraints.extend([f"Use {match}" for match in matches])
 
         # Technology constraints
-        if re.search(r'\b(react|vue|angular|node|express|flask|django)\b', prompt, re.IGNORECASE):
-            matches = re.findall(r'\b(react|vue|angular|node|express|flask|django)\b', prompt, re.IGNORECASE)
+        if re.search(r"\b(react|vue|angular|node|express|flask|django)\b", prompt, re.IGNORECASE):
+            matches = re.findall(r"\b(react|vue|angular|node|express|flask|django)\b", prompt, re.IGNORECASE)
             constraints.extend([f"Use {match}" for match in matches])
 
         # Version constraints
-        version_matches = re.findall(r'\b(version\s+\d+|v\d+|\d+\.\d+(\.\d+)?)\b', prompt, re.IGNORECASE)
+        version_matches = re.findall(r"\b(version\s+\d+|v\d+|\d+\.\d+(\.\d+)?)\b", prompt, re.IGNORECASE)
         constraints.extend(version_matches)
 
         # Style constraints
-        if re.search(r'\b(modern|clean|simple|minimal|enterprise|production)\b', prompt, re.IGNORECASE):
-            matches = re.findall(r'\b(modern|clean|simple|minimal|enterprise|production)\b', prompt, re.IGNORECASE)
+        if re.search(r"\b(modern|clean|simple|minimal|enterprise|production)\b", prompt, re.IGNORECASE):
+            matches = re.findall(r"\b(modern|clean|simple|minimal|enterprise|production)\b", prompt, re.IGNORECASE)
             constraints.extend([f"{match.capitalize()} style" for match in matches])
 
         return constraints
 
-    def _extract_functional_requirements(self, prompt: str) -> List[str]:
+    def _extract_functional_requirements(self, prompt: str) -> list[str]:
         """Extract functional requirements from the prompt."""
         requirements = []
 
@@ -202,17 +271,25 @@ class TaskAnalyzer:
         import re
 
         # "Create X that does Y" pattern
-        create_patterns = re.findall(r'create\s+(?:a\s+)?(\w+(?:\s+\w+)*)\s+(?:that\s+)?(?:should\s+)?(?:will\s+)?(?:must\s+)?(\w+(?:\s+\w+)*)', prompt, re.IGNORECASE)
+        create_patterns = re.findall(
+            r"create\s+(?:a\s+)?(\w+(?:\s+\w+)*)\s+(?:that\s+)?(?:should\s+)?(?:will\s+)?(?:must\s+)?(\w+(?:\s+\w+)*)",
+            prompt,
+            re.IGNORECASE,
+        )
         for subject, action in create_patterns:
             requirements.append(f"Create {subject} that {action}")
 
         # "Implement X with Y" pattern
-        implement_patterns = re.findall(r'implement\s+(\w+(?:\s+\w+)*)\s+(?:with|using|for)\s+(\w+(?:\s+\w+)*)', prompt, re.IGNORECASE)
+        implement_patterns = re.findall(
+            r"implement\s+(\w+(?:\s+\w+)*)\s+(?:with|using|for)\s+(\w+(?:\s+\w+)*)", prompt, re.IGNORECASE
+        )
         for subject, feature in implement_patterns:
             requirements.append(f"Implement {subject} with {feature}")
 
         # "Support X functionality" pattern
-        support_patterns = re.findall(r'support\s+(\w+(?:\s+\w+)*)\s+(?:functionality|feature|capability)', prompt, re.IGNORECASE)
+        support_patterns = re.findall(
+            r"support\s+(\w+(?:\s+\w+)*)\s+(?:functionality|feature|capability)", prompt, re.IGNORECASE
+        )
         for feature in support_patterns:
             requirements.append(f"Support {feature} functionality")
 
@@ -279,7 +356,7 @@ class TokenOptimizer:
             processed = processed.replace(term, replacement)
 
         # Remove extra whitespace
-        processed = ' '.join(processed.split())
+        processed = " ".join(processed.split())
 
         # Preserve proper capitalization for technical terms
         processed = self._restore_technical_capitalization(processed)
@@ -290,10 +367,37 @@ class TokenOptimizer:
         """Restore proper capitalization for technical terms."""
         # Common technical terms that should be capitalized
         tech_terms = [
-            "react", "vue", "angular", "node", "express", "flask", "django",
-            "javascript", "typescript", "python", "java", "go", "rust", "cpp",
-            "api", "rest", "graphql", "sql", "nosql", "json", "xml", "html", "css",
-            "ui", "ux", "mvc", "mvp", "solid", "dry", "kiss", "yagni"
+            "react",
+            "vue",
+            "angular",
+            "node",
+            "express",
+            "flask",
+            "django",
+            "javascript",
+            "typescript",
+            "python",
+            "java",
+            "go",
+            "rust",
+            "cpp",
+            "api",
+            "rest",
+            "graphql",
+            "sql",
+            "nosql",
+            "json",
+            "xml",
+            "html",
+            "css",
+            "ui",
+            "ux",
+            "mvc",
+            "mvp",
+            "solid",
+            "dry",
+            "kiss",
+            "yagni",
         ]
 
         words = text.split()
@@ -301,7 +405,7 @@ class TokenOptimizer:
             if word.lower() in tech_terms:
                 words[i] = word.lower()
 
-        return ' '.join(words)
+        return " ".join(words)
 
 
 class PromptRefiner:
@@ -314,7 +418,7 @@ class PromptRefiner:
             "add_examples": "Include examples of desired output format",
             "specify_constraints": "Clearly specify all constraints and limitations",
             "improve_structure": "Organize prompt with clear sections",
-            "add_success_criteria": "Define what constitutes a successful response"
+            "add_success_criteria": "Define what constitutes a successful response",
         }
 
     def refine_prompt(self, prompt: str, feedback: str, task_type: TaskType) -> str:
@@ -356,15 +460,15 @@ class PromptRefiner:
 
     def _shorten_prompt(self, prompt: str) -> str:
         """Shorten prompt while preserving key information."""
-        lines = prompt.split('\n')
+        lines = prompt.split("\n")
         # Keep only essential lines
         essential_lines = []
         for line in lines:
             line = line.strip()
-            if line and not line.startswith('#') and len(line) > 10:
+            if line and not line.startswith("#") and len(line) > 10:
                 essential_lines.append(line)
 
-        return '\n'.join(essential_lines[:10])  # Limit to 10 essential lines
+        return "\n".join(essential_lines[:10])  # Limit to 10 essential lines
 
     def _add_specificity(self, prompt: str) -> str:
         """Add specificity to vague statements."""
@@ -374,7 +478,7 @@ class PromptRefiner:
             "nice": "well-structured, clean",
             "better": "more efficient, optimized",
             "proper": "following best practices",
-            "simple": "minimal, easy to understand"
+            "simple": "minimal, easy to understand",
         }
 
         for vague, specific in replacements.items():
@@ -398,7 +502,7 @@ class PromptArchitect:
         user_cost_preference: str = "balanced",
         context: str = "",
         feedback: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Optimize a prompt for token efficiency and effectiveness."""
         # Analyze the task
         task_type = self.task_analyzer.identify_task_type(prompt)
@@ -438,12 +542,12 @@ class PromptArchitect:
                 "original_tokens": original_tokens,
                 "optimized_tokens": optimized_tokens,
                 "token_reduction_percent": token_reduction,
-                "cost_savings": self._calculate_cost_savings(original_tokens, optimized_tokens)
+                "cost_savings": self._calculate_cost_savings(original_tokens, optimized_tokens),
             },
-            "optimization_applied": True
+            "optimization_applied": True,
         }
 
-    def _enhance_for_quality(self, prompt: str, task_type: TaskType, requirements: List[Requirement]) -> str:
+    def _enhance_for_quality(self, prompt: str, task_type: TaskType, requirements: list[Requirement]) -> str:
         """Enhance prompt for higher quality output."""
         enhanced_prompt = prompt
 
@@ -470,12 +574,11 @@ class PromptArchitect:
         """Apply task-specific optimizations."""
         if task_type == TaskType.CODE_GENERATION:
             return self._optimize_for_code_generation(prompt)
-        elif task_type == TaskType.CODE_DEBUGGING:
+        if task_type == TaskType.CODE_DEBUGGING:
             return self._optimize_for_debugging(prompt)
-        elif task_type == TaskType.DOCUMENTATION:
+        if task_type == TaskType.DOCUMENTATION:
             return self._optimize_for_documentation(prompt)
-        else:
-            return prompt
+        return prompt
 
     def _optimize_for_code_generation(self, prompt: str) -> str:
         """Optimize prompt for code generation tasks."""
@@ -523,14 +626,14 @@ class PromptArchitect:
             completeness=completeness,
             specificity=specificity,
             token_efficiency=token_efficiency,
-            context_preservation=context_preservation
+            context_preservation=context_preservation,
         )
 
     def _calculate_clarity(self, prompt: str) -> float:
         """Calculate prompt clarity score."""
         # Check for clear structure and organization
         has_structure = any(marker in prompt for marker in ["##", "---", "Requirements:", "Example:"])
-        has_clear_instructions = len(prompt.split('.')) >= 3  # At least 3 sentences
+        has_clear_instructions = len(prompt.split(".")) >= 3  # At least 3 sentences
 
         clarity_score = 0.5
         if has_structure:
@@ -560,11 +663,11 @@ class PromptArchitect:
         vague_count = sum(1 for term in vague_terms if term in prompt.lower())
 
         # Check for specific details
-        specific_indicators = len(re.findall(r'\d+', prompt))  # Numbers
-        specific_indicators += len(re.findall(r'[A-Z][a-z]+[A-Z]', prompt))  # CamelCase
+        specific_indicators = len(re.findall(r"\d+", prompt))  # Numbers
+        specific_indicators += len(re.findall(r"[A-Z][a-z]+[A-Z]", prompt))  # CamelCase
 
         specificity_score = 0.5
-        specificity_score -= (vague_count * 0.1)
+        specificity_score -= vague_count * 0.1
         specificity_score += min(specific_indicators * 0.05, 0.5)
 
         return max(0.0, min(specificity_score, 1.0))
@@ -575,10 +678,9 @@ class PromptArchitect:
         # Ideal prompt length is 50-200 tokens
         if 50 <= tokens <= 200:
             return 1.0
-        elif tokens < 50:
+        if tokens < 50:
             return 0.8  # Might be too brief
-        else:
-            return max(0.3, 1.0 - (tokens - 200) / 500)  # Penalty for long prompts
+        return max(0.3, 1.0 - (tokens - 200) / 500)  # Penalty for long prompts
 
     def _calculate_context_preservation(self, prompt: str) -> float:
         """Calculate how well context is preserved."""
@@ -605,11 +707,11 @@ class PromptArchitect:
 
         return original_cost - optimized_cost
 
-    def get_optimization_stats(self) -> Dict[str, Any]:
+    def get_optimization_stats(self) -> dict[str, Any]:
         """Get optimization statistics."""
         return {
             "cache_size": len(self._prompt_cache),
             "total_optimizations": len(self._prompt_cache),
             "average_token_reduction": 0.0,  # Would be calculated from cache
-            "total_cost_saved": 0.0  # Would be calculated from cache
+            "total_cost_saved": 0.0,  # Would be calculated from cache
         }

@@ -75,7 +75,7 @@ export class ResponseCache extends EventEmitter {
 
   async get(key: string): Promise<any | null> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.metrics.misses++;
       this.emit('cacheMiss', key);
@@ -93,13 +93,13 @@ export class ResponseCache extends EventEmitter {
     entry.hits++;
     this.metrics.hits++;
     this.emit('cacheHit', key);
-    
+
     return entry.data;
   }
 
   async set(key: string, data: any, ttl?: number): Promise<void> {
     const size = this.calculateSize(data);
-    
+
     // Check if we need to evict entries
     if (this.cache.size >= this.config.maxSize) {
       await this.evictOldestEntry();
@@ -116,31 +116,31 @@ export class ResponseCache extends EventEmitter {
 
     this.cache.set(key, entry);
     this.metrics.totalSize += size;
-    
+
     this.emit('cacheSet', key, entry);
   }
 
   async invalidate(key: string): Promise<boolean> {
     const deleted = this.cache.delete(key);
-    
+
     if (deleted) {
       this.emit('cacheInvalidated', key);
     }
-    
+
     return deleted;
   }
 
   async invalidatePattern(pattern: string): Promise<number> {
     const regex = new RegExp(pattern);
     const keys = Array.from(this.cache.keys()).filter(key => regex.test(key));
-    
+
     let invalidated = 0;
     for (const key of keys) {
       if (await this.invalidate(key)) {
         invalidated++;
       }
     }
-    
+
     return invalidated;
   }
 
@@ -152,8 +152,8 @@ export class ResponseCache extends EventEmitter {
   }
 
   getMetrics(): CacheMetrics {
-    const hitRate = this.metrics.hits + this.metrics.misses > 0 
-      ? (this.metrics.hits / (this.metrics.hits + this.metrics.misses)) * 100 
+    const hitRate = this.metrics.hits + this.metrics.misses > 0
+      ? (this.metrics.hits / (this.metrics.hits + this.metrics.misses)) * 100
       : 0;
 
     return {
@@ -272,7 +272,7 @@ export class ConnectionPool extends EventEmitter {
 
   async acquire(): Promise<any> {
     const startTime = Date.now();
-    
+
     // Try to get an available connection
     if (this.available.length > 0) {
       const connection = this.available.shift()!;
@@ -280,7 +280,7 @@ export class ConnectionPool extends EventEmitter {
       connection.lastUsed = new Date();
       this.inUse.push(connection);
       this.metrics.acquired++;
-      
+
       this.emit('connectionAcquired', connection);
       return connection.connection;
     }
@@ -302,7 +302,7 @@ export class ConnectionPool extends EventEmitter {
         this.inUse.push(pooledConnection);
         this.metrics.created++;
         this.metrics.acquired++;
-        
+
         this.emit('connectionCreated', pooledConnection);
         return connection;
       } catch (error) {
@@ -317,7 +317,7 @@ export class ConnectionPool extends EventEmitter {
 
   async release(connection: any): Promise<void> {
     const pooledConnection = this.findConnection(connection);
-    
+
     if (!pooledConnection) {
       throw new Error('Connection not found in pool');
     }
@@ -327,27 +327,27 @@ export class ConnectionPool extends EventEmitter {
     if (index > -1) {
       this.inUse.splice(index, 1);
     }
-    
+
     pooledConnection.inUse = false;
     pooledConnection.lastUsed = new Date();
     pooledConnection.retryCount = 0;
-    
+
     this.available.push(pooledConnection);
     this.metrics.released++;
-    
+
     this.emit('connectionReleased', pooledConnection);
   }
 
   async destroy(connection: any): Promise<void> {
     const pooledConnection = this.findConnection(connection);
-    
+
     if (!pooledConnection) {
       return;
     }
 
     // Remove from any pool
     this.removeFromPools(pooledConnection);
-    
+
     try {
       await this.destroyConnection(connection);
       this.metrics.destroyed++;
@@ -388,7 +388,7 @@ export class ConnectionPool extends EventEmitter {
           connection.lastUsed = new Date();
           this.inUse.push(connection);
           this.metrics.acquired++;
-          
+
           resolve(connection.connection);
         } else {
           setTimeout(checkAvailable, 100);
@@ -413,7 +413,7 @@ export class ConnectionPool extends EventEmitter {
     if (!found) {
       found = searchIn(this.available);
     }
-    
+
     return found;
   }
 
@@ -452,16 +452,16 @@ export class ConnectionPool extends EventEmitter {
 
   private async checkConnectionHealth(): Promise<void> {
     const allConnections = [...this.available, ...this.inUse];
-    
+
     for (const pooledConnection of allConnections) {
       try {
         // Simple health check - can be customized per connection type
         const isHealthy = await this.performHealthCheck(pooledConnection.connection);
-        
+
         if (!isHealthy) {
           pooledConnection.healthy = false;
           pooledConnection.retryCount++;
-          
+
           if (pooledConnection.retryCount >= this.config.maxRetries) {
             await this.destroy(pooledConnection.connection);
           }
@@ -594,7 +594,7 @@ export class RequestBatcher extends EventEmitter {
 
   private groupRequests(requests: BatchRequest[]): BatchRequest[] {
     const batches: BatchRequest[] = [];
-    
+
     let currentBatch: BatchRequest | null = null;
 
     for (const request of requests) {
@@ -618,11 +618,11 @@ export class RequestBatcher extends EventEmitter {
 
   private async processBatch(batch: BatchRequest, batchId: string): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
       // Process the batch
       const responses = await this.processBatchRequests(batch.requests);
-      
+
       const processingTime = Date.now() - startTime;
       this.updateMetrics(batch.requests.length, processingTime);
 
@@ -666,9 +666,9 @@ export class RequestBatcher extends EventEmitter {
 
   private updateMetrics(requestCount: number, processingTime: number): void {
     this.metrics.totalBatches++;
-    this.metrics.averageBatchSize = 
+    this.metrics.averageBatchSize =
       (this.metrics.averageBatchSize * (this.metrics.totalBatches - 1) + requestCount) / this.metrics.totalBatches;
-    this.metrics.averageProcessingTime = 
+    this.metrics.averageProcessingTime =
       (this.metrics.averageProcessingTime * (this.metrics.totalBatches - 1) + processingTime) / this.metrics.totalBatches;
   }
 
@@ -755,7 +755,7 @@ export class PerformanceMonitor extends EventEmitter {
   recordRequest(latency: number, error: boolean = false): void {
     this.metrics.requestCount++;
     this.metrics.latencies.push(latency);
-    
+
     if (error) {
       this.metrics.errors++;
     }
@@ -820,7 +820,7 @@ export class PerformanceMonitor extends EventEmitter {
       cpuUsage: 0,
       activeConnections: 0,
     };
-    
+
     this.emit('metricsReset');
   }
 
@@ -837,13 +837,13 @@ export class PerformanceMonitor extends EventEmitter {
     // For now, we'll use mock values
     const memoryUsage = Math.random() * 100;
     const cpuUsage = Math.random() * 100;
-    
+
     this.recordResourceUsage(memoryUsage, cpuUsage);
   }
 
   private checkAlertThresholds(): void {
     const metrics = this.getMetrics();
-    
+
     // Check latency thresholds
     if (metrics.averageLatency > this.config.alertThresholds.latency) {
       this.emit('alert', {
@@ -958,36 +958,36 @@ app.use('/api/mcp/*', async (req, res, next) => {
   // Check cache first
   const cacheKey = `${req.method}:${req.path}:${JSON.stringify(req.query)}`;
   const cached = await responseCache.get(cacheKey);
-  
+
   if (cached) {
     return res.json(cached);
   }
 
   // Acquire connection
   const connection = await connectionPool.acquire();
-  
+
   try {
     // Process request through connection
     const result = await processRequestWithConnection(connection, req);
-    
+
     // Cache the response
     await responseCache.set(cacheKey, result, 300000); // 5 minutes
-    
+
     // Release connection
     await connectionPool.release(connection);
-    
+
     res.json(result);
-    
+
     // Record performance metrics
     performanceMonitor.recordRequest(100, false);
-    
+
   } catch (error) {
     // Release connection on error
     await connectionPool.release(connection);
-    
+
     // Record error metrics
     performanceMonitor.recordRequest(0, true);
-    
+
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -998,19 +998,19 @@ app.use('/api/mcp/*', async (req, res, next) => {
 // Setup request batching for similar requests
 app.post('/api/mcp/batch', async (req, res) => {
   const requests = Array.isArray(req.body) ? req.body : [req.body];
-  
+
   try {
     // Add requests to batcher
     const responses = await Promise.all(
       requests.map(request => requestBatcher.addRequest(request))
     );
-    
+
     res.json({
       batchId: responses[0]?.id,
       responses: responses.map(r => r),
       processingTime: 0, // Would be calculated in real implementation
     });
-    
+
   } catch (error) {
     res.status(500).json({ error: 'Batch processing failed' });
   }
@@ -1060,14 +1060,14 @@ app.use('/api/mcp/*', performanceMiddleware);
 
 function performanceMiddleware(req: Request, res: Response, next: NextFunction) {
   const startTime = Date.now();
-  
+
   // Continue with request processing
   next();
-  
+
   // Record performance metrics after response
   const endTime = Date.now();
   const latency = endTime - startTime;
-  
+
   performanceMonitor.recordRequest(latency, false);
 }
 ```
@@ -1077,7 +1077,7 @@ function performanceMiddleware(req: Request, res: Response, next: NextFunction) 
 // Real-time performance monitoring
 setInterval(() => {
   const metrics = performanceMonitor.getMetrics();
-  
+
   console.log('Performance Metrics:');
   console.log(`  Requests: ${metrics.requestCount}`);
   console.log(`  Avg Latency: ${metrics.averageLatency}ms`);
@@ -1087,7 +1087,7 @@ setInterval(() => {
   console.log(` Memory Usage: ${metrics.memoryUsage}%`);
   console.log(` CPU Usage: ${metrics.cpuUsage}%`);
   console.log(` Active Connections: ${metrics.activeConnections}`);
-  
+
   // Check for alerts
   performanceMonitor.on('alert', (alert) => {
     console.warn(`🚨 Performance Alert: ${alert.type}`);
