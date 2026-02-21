@@ -291,7 +291,20 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
       line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
       [[ -z "$line" || "$line" =~ ^# ]] && continue
       server_name=$(echo "$line" | cut -d'|' -f1)
-      gateways_str=$(echo "$line" | cut -d'|' -f2- | tr -d ' ')
+      field2=$(echo "$line" | cut -d'|' -f2 | tr -d ' ')
+      field_count=$(echo "$line" | awk -F'|' '{print NF}')
+      if [[ "$field_count" -ge 4 ]]; then
+        # New format: name|enabled|gateways|description
+        enabled_flag=$(echo "$field2" | tr '[:upper:]' '[:lower:]')
+        if [[ "$enabled_flag" != "true" && "$enabled_flag" != "1" && "$enabled_flag" != "yes" ]]; then
+          log_info "Skipping disabled server: $server_name"
+          continue
+        fi
+        gateways_str=$(echo "$line" | cut -d'|' -f3 | tr -d ' ')
+      else
+        # Legacy format: name|gateways
+        gateways_str="$field2"
+      fi
       [[ -z "$server_name" || -z "$gateways_str" ]] && continue
       gates_json=$(echo "$gateways_str" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length > 0))' 2>/dev/null)
       [[ -z "$gates_json" || "$gates_json" == "null" ]] && continue
@@ -373,19 +386,19 @@ if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$resources_f
   log_step "Registering resources from $resources_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    [[ -z "$line" || "$line" =~ ^# ]] && continue
-    IFS='|' read -r name uri desc mime <<< "$line"
+    [[ -z "${line}" || "${line}" =~ ^# ]] && continue
+    IFS='|' read -r name uri desc mime <<< "${line}"
     desc=$(echo "${desc:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     mime=$(echo "${mime:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    if [[ -z "$name" || -z "$uri" ]]; then continue; fi
-    payload=$(jq -n --arg n "$name" --arg u "$uri" --arg d "$desc" --arg m "${mime:-text/plain}" '{resource: {name: $n, uri: $u, description: $desc, mime_type: $m}}')
-    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/resources" 2>/dev/null)
-    if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "resource $name"; fi
-  done < "$resources_file"
+    if [[ -z "${name}" || -z "${uri}" ]]; then continue; fi
+    payload=$(jq -n --arg n "${name}" --arg u "${uri}" --arg d "${desc}" --arg m "${mime:-text/plain}" '{resource: {name: $n, uri: $u, description: $desc, mime_type: $m}}')
+    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer ${JWT}" -H "Content-Type: application/json" -d "${payload}" "${GATEWAY_URL}/resources" 2>/dev/null)
+    if [[ "${code}" =~ ^2[0-9][0-9]$ ]]; then log_ok "resource ${name}"; fi
+  done < "${resources_file}"
 fi
 
-if [[ -z "$EXTRA_GATEWAYS" && ! -f "$gateways_file" ]]; then
-  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to $gateways_file (Name|URL|Transport)."
+if [[ -z "${EXTRA_GATEWAYS}" && ! -f "${gateways_file}" ]]; then
+  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to ${gateways_file} (Name|URL|Transport)."
 else
   log_line
   log_ok "Done."

@@ -1,143 +1,129 @@
 x-translate: &translate
-  image: mcp-gateway-translate:latest
+  image: forge-mcp-gateway-translate:latest
   restart: unless-stopped
+  deploy:
+    resources:
+      limits:
+        cpus: "0.25"
+        memory: 128M
+        pids: 20
+      reservations:
+        cpus: "0.05"
+        memory: 64M
+  memswap_limit: 192M
+  ulimits:
+    nofile:
+      soft: 1024
+      hard: 2048
+  logging:
+    driver: json-file
+    options:
+      max-size: 5m
+      max-file: 2
 
 services:
+  # Core Gateway Services Only
   gateway:
-    image: ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
-    container_name: mcpgateway
+    image: ghcr.io/ibm/mcp-gateway:latest
+    container_name: forge-mcpgateway
+    restart: unless-stopped
+    entrypoint: ["/app/docker/entrypoint.sh"]
+    ports:
+      - "${GATEWAY_PORT:-4444}:4444"
+    env_file:
+      - .env.shared
+      - .env.development
+    environment:
+      HOST: ${GATEWAY_HOST:-0.0.0.0}
+      PORT: ${GATEWAY_PORT:-4444}
+      DATABASE_URL: ${DATABASE_URL}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      FORGE_ENABLE_DYNAMIC_SERVICES: true
+      FORGE_SERVICE_MANAGER_URL: http://service-manager:9000
+      SKIP_MIGRATIONS: true
+      # Redis Configuration (optional)
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      ENABLE_REDIS_CACHE: ${ENABLE_REDIS_CACHE:-false}
+    volumes:
+      - ./docker/entrypoint.sh:/app/docker/entrypoint.sh:ro
+      - ./docker/minimal_gateway.py:/app/docker/minimal_gateway.py:ro
+    depends_on:
+      - service-manager
+      - tool-router
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+          pids: 50
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+    memswap_limit: 768M
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Dynamic Service Manager (handles all MCP servers)
+  service-manager:
+    build:
+      context: ./service-manager
+      dockerfile: Dockerfile
+    container_name: forge-service-manager
     restart: unless-stopped
     ports:
-      - "${PORT:-4444}:4444"
-    env_file: .env
-    environment:
-      HOST: 0.0.0.0
-      PORT: 4444
-      DATABASE_URL: sqlite:////data/mcp.db
+      - "${FORGE_SERVICE_MANAGER_PORT:-9000}:9000"
     volumes:
+      - ./config:/config:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/data
-
-  sequential-thinking:
-    <<: *translate
-    build:
-      context: .
-      dockerfile: Dockerfile.translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-sequential-thinking" --expose-sse --port 8013 --host 0.0.0.0'
-    ports:
-      - "${SEQUENTIAL_THINKING_PORT:-8013}:8013"
-
-  chrome-devtools:
-    <<: *translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y chrome-devtools-mcp@latest" --expose-sse --port 8014 --host 0.0.0.0'
-    ports:
-      - "${CHROME_DEVTOOLS_PORT:-8014}:8014"
-
-  playwright:
-    <<: *translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @playwright/mcp@latest" --expose-sse --port 8015 --host 0.0.0.0'
-    ports:
-      - "${PLAYWRIGHT_PORT:-8015}:8015"
-
-  magicuidesign-mcp:
-    <<: *translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @magicuidesign/mcp@latest" --expose-sse --port 8016 --host 0.0.0.0'
-    ports:
-      - "${MAGICUIDESIGN_PORT:-8016}:8016"
-
-  desktop-commander:
-    <<: *translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @wonderwhy-er/desktop-commander@latest" --expose-sse --port 8017 --host 0.0.0.0'
-    ports:
-      - "${DESKTOP_COMMANDER_PORT:-8017}:8017"
-
-  puppeteer:
-    <<: *translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-puppeteer" --expose-sse --port 8018 --host 0.0.0.0'
-    ports:
-      - "${PUPPETEER_PORT:-8018}:8018"
-
-  browser-tools:
-    <<: *translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @agentdeskai/browser-tools-mcp" --expose-sse --port 8019 --host 0.0.0.0'
-    ports:
-      - "${BROWSER_TOOLS_PORT:-8019}:8019"
-
-  tavily:
-    <<: *translate
-    env_file: .env
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y tavily-mcp@latest" --expose-sse --port 8020 --host 0.0.0.0'
-    ports:
-      - "${TAVILY_PORT:-8020}:8020"
-
-  filesystem:
-    <<: *translate
     environment:
-      FILESYSTEM_PATH: "${FILESYSTEM_PATH:-/workspace}"
-    volumes:
-      - "${FILESYSTEM_VOLUME:-./workspace}:/workspace"
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-filesystem ${FILESYSTEM_PATH:-/workspace}" --expose-sse --port 8021 --host 0.0.0.0'
-    ports:
-      - "${FILESYSTEM_PORT:-8021}:8021"
+      - CONFIG_PATH=/config
+      - LOG_LEVEL=${FORGE_SERVICE_MANAGER_LOG_LEVEL:-info}
+      - DATA_PATH=/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+          pids: 30
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    memswap_limit: 384M
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 23
 
-  reactbits:
-    <<: *translate
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y reactbits-dev-mcp-server" --expose-sse --port 8022 --host 0.0.0.0'
-    ports:
-      - "${REACTBITS_PORT:-8022}:8022"
-
-  snyk:
-    <<: *translate
-    env_file: .env
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y snyk mcp -t stdio --experimental" --expose-sse --port 8023 --host 0.0.0.0'
-    ports:
-      - "${SNYK_PORT:-8023}:8023"
-
-  sqlite:
-    <<: *translate
-    environment:
-      SQLITE_DB_PATH: "${SQLITE_DB_PATH:-/data/sqlite.db}"
-    volumes:
-      - "${SQLITE_VOLUME:-./data}:/data"
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "npx -y mcp-sqlite ${SQLITE_DB_PATH:-/data/sqlite.db}" --expose-sse --port 8024 --host 0.0.0.0'
-    ports:
-      - "${SQLITE_PORT:-8024}:8024"
-
+<<<<<<< Updated upstream
+  # Intelligent Tool Router
+=======
   github:
     <<: *translate
     env_file: .env
@@ -147,16 +133,6 @@ services:
       - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-github" --expose-sse --port 8025 --host 0.0.0.0'
     ports:
       - "${GITHUB_PORT:-8025}:8025"
-
-  uiforge:
-    build:
-      context: .
-      dockerfile: Dockerfile.uiforge
-    image: mcp-gateway-uiforge:latest
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - "${UIFORGE_PORT:-8026}:8026"
 
   memory:
     <<: *translate
@@ -211,19 +187,250 @@ services:
       - 'python3 -m mcpgateway.translate --stdio "npx -y mongodb-mcp-server ${MONGODB_CONNECTION_STRING}" --expose-sse --port 8032 --host 0.0.0.0'
     ports:
       - "${MONGODB_PORT:-8032}:8032"
+
+  uiforge:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @uiforge/mcp-server" --expose-sse --port 8026 --host 0.0.0.0'
+    ports:
+      - "${UIFORGE_PORT:-8026}:8026"
+
+>>>>>>> Stashed changes
   tool-router:
     build:
       context: .
       dockerfile: Dockerfile.tool-router
-    image: mcp-gateway-tool-router:latest
+    image: forge-mcp-gateway-tool-router:latest
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env.shared
+      - .env.development
     environment:
-      GATEWAY_URL: "${GATEWAY_URL:-http://gateway:4444}"
-      GATEWAY_JWT: "${GATEWAY_JWT:-}"
-    command:
-      - sh
-      - -c
-      - 'python3 -m mcpgateway.translate --stdio "python3 -m tool_router" --expose-sse --port 8030 --host 0.0.0.0'
+      FORGE_GATEWAY_URL: http://gateway:4444
+      FORGE_ENABLE_HEALTH_CHECK: ${FORGE_ENABLE_HEALTH_CHECK}
+      FORGE_SERVICE_MANAGER_URL: http://service-manager:9000
+      # AI Router Configuration
+      ROUTER_AI_ENABLED: ${ROUTER_AI_ENABLED:-false}
+      ROUTER_AI_PROVIDER: ${ROUTER_AI_PROVIDER:-ollama}
+      ROUTER_AI_MODEL: ${ROUTER_AI_MODEL:-llama3.2:3b}
+      ROUTER_AI_ENDPOINT: ${ROUTER_AI_ENDPOINT:-http://ollama:11434}
+      ROUTER_AI_TIMEOUT_MS: ${ROUTER_AI_TIMEOUT_MS:-2000}
+      ROUTER_AI_WEIGHT: ${ROUTER_AI_WEIGHT:-0.7}
     ports:
-      - "${TOOL_ROUTER_PORT:-8030}:8030"
+      - "${FORGE_TOOL_ROUTER_PORT:-8030}:8030"
+    depends_on:
+      - service-manager
+      - ollama
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+          pids: 30
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    memswap_limit: 384M
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8030/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Ollama AI Service (for AI-powered tool selection)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: forge-ollama
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_MODELS=${ROUTER_AI_MODEL:-llama3.2:3b}
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+          pids: 50
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+    memswap_limit: 3G
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Admin UI Interface
+  forge-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.uiforge.consolidated
+    image: forge-mcp-gateway-ui:latest
+    restart: unless-stopped
+    env_file:
+      - .env.shared
+      - .env.development
+    volumes:
+      - ./data-dev:/data-dev
+    ports:
+      - "${FORGE_UI_PORT:-8026}:8026"
+    depends_on:
+      - gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8026/sse || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+          pids: 50
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+    memswap_limit: 768M
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+  # Core translate service (on-demand, supports dynamic services)
+  forge-translate:
+    <<: *translate
+    container_name: forge-translate
+    ports:
+      - "${FORGE_TRANSLATE_PORT:-8000}:8000"
+    environment:
+      FORGE_SERVICE_MODE: sse
+      FORGE_MAX_REQUEST_SIZE: ${FORGE_MAX_REQUEST_SIZE}
+      # High-efficiency configuration for on-demand service
+      FORGE_SLEEP_POLICY_ENABLED: true
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_AUTO_START: false
+      FORGE_IDLE_TIMEOUT: 300 # 5 minutes
+      FORGE_MIN_SLEEP_TIME: 60
+      FORGE_MEMORY_RESERVATION: 64MB
+      FORGE_WAKE_TIME_TARGET: 200 # < 200ms wake time
+    command: ["python3", "-m", "mcpgateway.translate", "--connect-sse", "http://gateway:4444"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import mcpgateway.translate; import sys; sys.exit(0)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Optional Redis service for distributed caching
+  redis:
+    image: redis:7-alpine
+    container_name: forge-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_MAXMEMORY=${REDIS_MAXMEMORY:-256mb}
+      - REDIS_MAXMEMORY_POLICY=${REDIS_MAXMEMORY_POLICY:-allkeys-lru}
+    command: >
+      sh -c "
+        if [ -n \"$$REDIS_PASSWORD\" ]; then
+          redis-server --requirepass \"$$REDIS_PASSWORD\" --maxmemory \"$$REDIS_MAXMEMORY\" --maxmemory-policy \"$$REDIS_MAXMEMORY_POLICY\"
+        else
+          redis-server --maxmemory \"$$REDIS_MAXMEMORY\" --maxmemory-policy \"$$REDIS_MAXMEMORY_POLICY\"
+        fi
+      "
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 300M
+          pids: 30
+        reservations:
+          cpus: "0.05"
+          memory: 128M
+    memswap_limit: 450M
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 2
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - redis
+
+# All other MCP services are now managed dynamically by the service-manager
+# Service definitions are in config/services.yml
+# Scaling policies are in config/scaling-policies.yml
+# Gateway registrations are in config/gateways.txt
+#
+# This scalable architecture reduces docker-compose.yml from 20+ services to 6 core services:
+# 1. gateway - Main Context Forge instance
+# 2. service-manager - Dynamic service lifecycle management
+# 3. tool-router - Intelligent routing and AI-powered tool selection
+# 4. ollama - AI service for intelligent tool selection
+# 5. forge-ui - Admin interface for management
+# 6. forge-translate - Core translate service for dynamic containers
+#
+# Benefits:
+# - Simplified maintenance (only 6 services to manage manually)
+# - On-demand scaling (services start only when needed)
+# - Resource optimization (better CPU/memory utilization)
+# - Configuration-driven (add/remove services via config files)
+# - Serverless-like behavior (auto-sleep/wake capabilities)
+# - AI-powered tool selection (intelligent routing with Ollama)
+
+volumes:
+  ollama_data:
+    driver: local
+  redis_data:
+    driver: local

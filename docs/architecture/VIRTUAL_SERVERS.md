@@ -207,7 +207,7 @@ curl -H "Authorization: Bearer <JWT>" \
       "command": "npx",
       "args": [
         "-y",
-        "@mcp-gateway/client",
+        "@forge-mcp-gateway/client",
         "--url=http://localhost:4444/servers/abc123/mcp",
         "--token=<JWT>"
       ]
@@ -216,7 +216,7 @@ curl -H "Authorization: Bearer <JWT>" \
       "command": "npx",
       "args": [
         "-y",
-        "@mcp-gateway/client",
+        "@forge-mcp-gateway/client",
         "--url=http://localhost:4444/servers/def456/mcp",
         "--token=<JWT>"
       ]
@@ -233,7 +233,7 @@ curl -H "Authorization: Bearer <JWT>" \
     "search-server": {
       "command": "node",
       "args": [
-        "/path/to/mcp-gateway/build/index.js"
+        "/path/to/forge-mcp-gateway/build/index.js"
       ],
       "env": {
         "GATEWAY_URL": "http://localhost:4444",

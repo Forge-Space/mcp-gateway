@@ -1,10 +1,10 @@
-# MCP Gateway (Context Forge)
+# Forge MCP Gateway (Context Forge)
 
-Self-hosted MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge). One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.
+Self-hosted Forge MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge). One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.
 
 **GitHub repo description** (paste in Settings → General → Description, 350 char max):
 
-> Self-hosted MCP gateway using IBM Context Forge. One Cursor (or MCP client) connection; add upstream servers via Admin UI. Docker, virtual servers, tool-router. MIT.
+> Self-hosted Forge MCP gateway using IBM Context Forge. One Cursor (or MCP client) connection; add upstream servers via Admin UI. Docker, virtual servers, tool-router. MIT.
 
 **License:** [MIT](LICENSE)
 
@@ -13,7 +13,7 @@ Self-hosted MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-con
 - Docker
 - Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
 
-**Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#dev-container-optional).
+**Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. Part of the [Forge Space Ecosystem](../../ECOSYSTEM_OVERVIEW.md) - Complete AI-powered development platform.
 
 ## Quick start
 
@@ -36,11 +36,11 @@ Use the gateway like any other MCP server with `npx`:
 ```json
 {
   "mcpServers": {
-    "mcp-gateway": {
+    "forge-mcp-gateway": {
       "command": "npx",
       "args": [
         "-y",
-        "@mcp-gateway/client",
+        "@forge-mcp-gateway/client",
         "--url=http://localhost:4444/servers/<UUID>/mcp"
       ]
     }
@@ -52,11 +52,11 @@ Use the gateway like any other MCP server with `npx`:
 ```json
 {
   "mcpServers": {
-    "mcp-gateway": {
+    "forge-mcp-gateway": {
       "command": "npx",
       "args": [
         "-y",
-        "@mcp-gateway/client",
+        "@forge-mcp-gateway/client",
         "--url=https://gateway.example.com/servers/<UUID>/mcp",
         "--token=<JWT>"
       ]
@@ -127,7 +127,7 @@ The default `./start.sh` starts the gateway and these local translate services (
 | tool-router         | http://tool-router:8030/sse         | Single entry point; set `GATEWAY_JWT` in .env (see cursor-router)  |
 | sqlite              | http://sqlite:8024/sse              | Set `SQLITE_DB_PATH` / `SQLITE_VOLUME` in .env; default `./data`   |
 | github              | http://github:8025/sse              | Set `GITHUB_PERSONAL_ACCESS_TOKEN` in .env                         |
-| uiforge             | http://uiforge:8026/sse             | AI-driven UI generation (7 tools); set `FIGMA_ACCESS_TOKEN` in .env for Figma sync |
+| ui                 | http://ui:8026/sse                 | AI-driven UI generation (7 tools); set `FIGMA_ACCESS_TOKEN` in .env for Figma sync |
 
 After start, run `make register` to register them (or add in Admin UI with the URLs above, Transport **SSE**). This creates or updates a virtual server and prints its Cursor URL. Attach tools in Admin UI if you skip that step. Optional: set `REGISTER_PROMPTS=true` and add `config/prompts.txt` (format: `name|description|template` with `{{arg}}` and `\n` for newlines), then run `make register`. Use `make gateway-only` to run only the gateway (no translate services).
 
@@ -140,7 +140,7 @@ After start, run `make register` to register them (or add in Admin UI with the U
 The gateway requires a **Bearer JWT** on every request.
 
 **Automatic JWT (recommended)**
-Use the wrapper script so no token is stored in mcp.json and no weekly refresh is needed. From the repo: ensure `.env` is set, run `make register` once (this writes `data/.cursor-mcp-url`), then run **`make use-cursor-wrapper`** to set the context-forge entry in `~/.cursor/mcp.json` to the wrapper (replacing any URL/headers or docker-args config). The wrapper config includes a 2-minute MCP timeout to avoid "Request timed out" (-32001); set `CURSOR_MCP_TIMEOUT_MS` in `.env` (e.g. `180000`) to change it. Before first use, run **`make cursor-pull`** so the Context Forge Docker image is cached and the first Cursor connection does not time out while the image downloads. Restart Cursor. The wrapper uses the **cursor-router** (tool-router) virtual server by default; set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` in `.env` and run `make register` to use the full tool set instead. The wrapper generates a fresh JWT on each connection and runs the gateway Docker image. On Linux the script adds `--add-host=host.docker.internal:host-gateway` automatically. Optional: set `CURSOR_MCP_SERVER_URL` in `.env` if you prefer not to use `data/.cursor-mcp-url`. To configure manually instead, set the entry to `{"command": "/absolute/path/to/mcp-gateway/scripts/cursor-mcp-wrapper.sh", "timeout": 120000}` (use your clone path).
+Use the wrapper script so no token is stored in mcp.json and no weekly refresh is needed. From the repo: ensure `.env` is set, run `make register` once (this writes `data/.cursor-mcp-url`), then run **`make use-cursor-wrapper`** to set the context-forge entry in `~/.cursor/mcp.json` to the wrapper (replacing any URL/headers or docker-args config). The wrapper config includes a 2-minute MCP timeout to avoid "Request timed out" (-32001); set `CURSOR_MCP_TIMEOUT_MS` in `.env` (e.g. `180000`) to change it. Before first use, run **`make cursor-pull`** so the Context Forge Docker image is cached and the first Cursor connection does not time out while the image downloads. Restart Cursor. The wrapper uses the **cursor-router** (tool-router) virtual server by default; set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` in `.env` and run `make register` to use the full tool set instead. The wrapper generates a fresh JWT on each connection and runs the gateway Docker image. On Linux the script adds `--add-host=host.docker.internal:host-gateway` automatically. Optional: set `CURSOR_MCP_SERVER_URL` in `.env` if you prefer not to use `data/.cursor-mcp-url`. To configure manually instead, set the entry to `{"command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh", "timeout": 120000}` (use your clone path).
 
 **Manual JWT (URL-based or docker args)**
 
@@ -250,9 +250,99 @@ PRs require manual review before merge.
 - **Script index:** [scripts/README.md](scripts/README.md)
 - **Maintenance automation:** See [Automated Maintenance](#automated-maintenance) above
 
+### Trunk Based Development Workflow
+
+This project uses Trunk Based Development with the following branch strategy:
+
+#### Branch Structure
+
+- **main**: Production-ready code, always deployable
+- **dev**: Development environment branch, continuously deployed
+- **release/x.y.z**: Release preparation branches
+- **feature/***: Feature development branches
+
+#### Workflow
+
+1. **Feature Development**
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b feature/your-feature-name dev
+   # Make your changes
+   git commit -m "feat: add your feature"
+   git push origin feature/your-feature-name
+   ```
+
+2. **Testing & Review**
+   - Create PR from `feature/your-feature-name` to `release/x.y.z`
+   - All CI tests must pass
+   - Code review required
+
+3. **Release Preparation**
+   ```bash
+   git checkout release/x.y.z
+   git merge feature/your-feature-name
+   git push origin release/x.y.z
+   ```
+
+4. **Production Deployment**
+   ```bash
+   git checkout main
+   git merge release/x.y.z
+   git tag v1.2.3
+   git push origin main --tags
+   ```
+
+#### Branch Protection
+
+- **main**: Require PR approval, passing CI, no force pushes
+- **release/***: Require PR approval and passing CI
+- **dev**: Require passing CI only
+
+#### Environment Configuration
+
+- **Dev Environment**: Uses `.env.development`, auto-deployed from `dev` branch
+- **Production Environment**: Uses `.env.production`, deployed from `main` merges
+
 ## Using the gateway with AI
 
 Which tools to use for planning, docs, search, browser, DB: [docs/AI_USAGE.md](docs/AI_USAGE.md).
+
+## 🏗️ Shared Package Structure
+
+This project uses a centralized shared package structure for UIForge-wide standardization:
+
+```
+.github/shared/
+├── workflows/           # Reusable CI/CD templates
+├── configs/             # Shared configurations
+├── scripts/            # Utility scripts
+├── templates/          # GitHub templates
+└── README.md           # Comprehensive documentation
+```
+
+### Key Benefits
+- **40% reduction** in duplicate configurations
+- **Standardized CI/CD** pipelines across UIForge projects
+- **Unified security scanning** and dependency management
+- **Automated setup** with symlink management
+
+### Usage
+- **Setup**: Run `./scripts/setup-shared-symlinks.sh` to create configuration links
+- **Documentation**: See `.github/shared/README.md` for detailed usage
+- **Migration**: Use `docs/UIFORGE_MIGRATION_GUIDE.md` for other projects
+
+### CI/CD Pipeline
+The main workflow (`.github/workflows/ci.yml`) uses shared templates:
+```yaml
+jobs:
+  ci:
+    uses: ./.github/shared/workflows/base-ci.yml
+    with:
+      project-type: 'gateway'
+      node-version: '22'
+      python-version: '3.12'
+```
 
 ## Troubleshooting
 

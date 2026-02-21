@@ -119,7 +119,7 @@ fetch_registered_servers_list() {
 get_mcp_client_key() {
   local mcp_config_file="${1:-${MCP_CLIENT_CONFIG:-$HOME/.cursor/mcp.json}}"
   local config_key
-  for config_key in ${MCP_CLIENT_KEY:-mcp-gateway context-forge user-context-forge}; do
+  for config_key in ${MCP_CLIENT_KEY:-forge-mcp-gateway mcp-gateway user-mcp-gateway}; do
     if jq -e --arg config_key "$config_key" '.mcpServers[$config_key] // .[$config_key]' "$mcp_config_file" &>/dev/null; then
       echo "$config_key"
       return 0
@@ -129,6 +129,6 @@ get_mcp_client_key() {
 }
 
 # Backward compatibility alias
-get_context_forge_key() {
+get_mcp_gateway_key() {
   get_mcp_client_key "$@"
 }

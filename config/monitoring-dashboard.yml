@@ -1,0 +1,222 @@
+# High-Efficiency Docker Standards Monitoring Dashboard Configuration
+# Based on forge-patterns high-efficiency-docker-standards-c1f908.md
+
+dashboard:
+  title: "MCP Gateway High-Efficiency Docker Monitor"
+  refresh_interval: 30 # seconds
+
+metrics:
+  # Service State Metrics
+  service_states:
+    title: "Service States"
+    type: "pie_chart"
+    query: "service_states"
+    labels:
+      - "Running"
+      - "Sleeping"
+      - "Stopped"
+      - "Error"
+
+  # Resource Usage Metrics
+  resource_usage:
+    title: "Resource Usage"
+    type: "line_chart"
+    metrics:
+      - name: "CPU Usage (%)"
+        query: "cpu_usage"
+        color: "#FF6B6B"
+        target: 5.0 # < 5% for sleeping services
+      - name: "Memory Usage (MB)"
+        query: "memory_usage"
+        color: "#4ECDC4"
+
+  # Efficiency Metrics
+  efficiency_metrics:
+    title: "Efficiency Metrics"
+    type: "gauge"
+    metrics:
+      - name: "Sleep Ratio (%)"
+        query: "sleep_ratio"
+        target: 70.0 # 70% of services should be sleeping when idle
+        color: "#45B7D1"
+      - name: "Wake Time (ms)"
+        query: "avg_wake_time"
+        target: 200.0 # < 200ms wake time
+        color: "#96CEB4"
+      - name: "Memory Reduction (%)"
+        query: "avg_sleep_efficiency"
+        target: 60.0 # > 60% memory reduction
+        color: "#FFEAA7"
+
+  # System Health
+  system_health:
+    title: "System Health"
+    type: "status_panel"
+    checks:
+      - name: "Docker Connection"
+        query: "docker_connection"
+        healthy: "ok"
+      - name: "Service Manager"
+        query: "service_manager_health"
+        healthy: "healthy"
+      - name: "Auto-Sleep Manager"
+        query: "auto_sleep_status"
+        healthy: "active"
+
+alerts:
+  # Performance Alerts
+  high_cpu_usage:
+    name: "High CPU Usage"
+    condition: "cpu_usage > 10"
+    severity: "warning"
+    message: "CPU usage exceeds 10% for sleeping services"
+
+  high_memory_usage:
+    name: "High Memory Usage"
+    condition: "memory_usage > 512"
+    severity: "warning"
+    message: "Memory usage exceeds 512MB"
+
+  slow_wake_times:
+    name: "Slow Wake Times"
+    condition: "avg_wake_time > 500"
+    severity: "critical"
+    message: "Average wake time exceeds 500ms"
+
+  low_sleep_ratio:
+    name: "Low Sleep Ratio"
+    condition: "sleep_ratio < 30"
+    severity: "warning"
+    message: "Less than 30% of services are sleeping"
+
+  service_errors:
+    name: "Service Errors"
+    condition: "error_services > 0"
+    severity: "critical"
+    message: "One or more services are in error state"
+
+# Service-specific monitoring
+services:
+  # High Priority Services (should always be running)
+  high_priority:
+    services:
+      - gateway
+      - service-manager
+      - tool-router
+    monitoring:
+      availability_target: 99.9
+      wake_time_target: 50 # < 50ms
+      alerts:
+        - service_down
+        - slow_response
+
+  # On-Demand Services (normal priority)
+  on_demand:
+    services:
+      - filesystem
+      - memory
+      - fetch
+      - github
+      - git-mcp
+    monitoring:
+      availability_target: 99.8
+      wake_time_target: 200 # < 200ms
+      sleep_efficiency_target: 60 # > 60%
+
+  # Browser Services (low priority, resource intensive)
+  browser_services:
+    services:
+      - chrome-devtools
+      - playwright
+      - puppeteer
+      - browser-tools
+    monitoring:
+      availability_target: 99.5
+      wake_time_target: 500 # < 500ms
+      sleep_efficiency_target: 80 # > 80%
+
+  # Security Services
+  security_services:
+    services:
+      - snyk
+    monitoring:
+      availability_target: 99.8
+      wake_time_target: 300 # < 300ms
+      sleep_efficiency_target: 70 # > 70%
+
+# Compliance Tracking
+compliance:
+  standards_version: "high-efficiency-docker-standards-c1f908"
+  checks:
+    - name: "Resource Constraints"
+      description: "All services have memory and CPU limits/reservations"
+      check: "resource_constraints_present"
+
+    - name: "Sleep Policies"
+      description: "All services have sleep policies configured"
+      check: "sleep_policies_configured"
+
+    - name: "Health Checks"
+      description: "All core services have health checks"
+      check: "health_checks_enabled"
+
+    - name: "Monitoring"
+      description: "Resource monitoring is active"
+      check: "monitoring_active"
+
+    - name: "Auto-Sleep"
+      description: "Auto-sleep manager is running"
+      check: "auto_sleep_enabled"
+
+  reporting:
+    frequency: "daily"
+    format: "json"
+    include_recommendations: true
+
+# Performance Targets (from standards)
+performance_targets:
+  wake_times:
+    high_priority: 50 # < 50ms
+    normal_priority: 200 # < 200ms
+    low_priority: 500 # < 500ms
+
+  resource_usage:
+    sleeping_cpu: 5 # < 5% CPU
+    sleeping_memory: 30 # < 30% of running memory
+
+  efficiency:
+    memory_reduction: 60 # > 60% reduction
+    cost_savings: 50 # > 50% cost reduction
+    service_density: 3 # 3-4x more services per resource
+
+  reliability:
+    running_availability: 99.9 # 99.9% for running services
+    effective_availability: 99.8 # 99.8% including wake time
+    state_transition_success: 99.9 # 99.9% successful transitions
+
+# Dashboard Layout
+layout:
+  rows:
+    - title: "System Overview"
+      panels:
+        - service_states
+        - system_health
+        - efficiency_metrics
+
+    - title: "Resource Monitoring"
+      panels:
+        - resource_usage
+        - memory_breakdown
+        - cpu_breakdown
+
+    - title: "Service Performance"
+      panels:
+        - wake_times_chart
+        - sleep_efficiency_chart
+        - service_uptime_chart
+
+    - title: "Compliance & Alerts"
+      panels:
+        - compliance_status
+        - active_alerts
+        - performance_trends

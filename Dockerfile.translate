@@ -1,13 +1,39 @@
-FROM python:3.12-slim
+FROM python:3.12-alpine
 
-RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm curl ca-certificates \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install only essential packages for security and functionality
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    curl \
+    ca-certificates \
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /tmp/*
 
-RUN pip install --no-cache-dir mcp-contextforge-gateway==0.9.0
+# Install Context Forge Gateway with security optimizations
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir mcp-contextforge-gateway==0.9.0 && \
+    rm -rf /root/.cache/pip && \
+    rm -rf /tmp/*
 
 WORKDIR /app
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python3 -c "import mcpgateway.translate; import sys; sys.exit(0)"
+# Create non-root user with proper UID/GID
+RUN addgroup -g 1000 -S app && \
+    adduser -S app -u 1000 -G app
 
-CMD ["python3", "-m", "mcpgateway.translate"]
+# Set proper permissions
+RUN chown -R app:app /app && \
+    chmod -R 755 /app
+
+USER app
+
+# Set secure environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Optimized health check with proper error handling
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python3 -c "import mcpgateway.translate; import sys; sys.exit(0)" || exit 1
+
+# Use optimized Python flags for performance
+CMD ["python3", "-u", "-m", "mcpgateway.translate"]

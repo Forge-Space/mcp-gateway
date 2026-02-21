@@ -58,7 +58,7 @@ def fetch_registry_servers() -> List[Dict]:
 
     try:
         req = Request(registry_url)
-        req.add_header("User-Agent", "mcp-gateway-checker/1.0")
+        req.add_header("User-Agent", "forge-mcp-gateway-checker/1.0")
 
         with urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode())

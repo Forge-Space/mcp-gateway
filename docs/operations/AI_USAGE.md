@@ -59,7 +59,7 @@ Server names in the Admin UI may differ if you changed them (e.g. custom-default
 ### How to add the gateway to Cursor (`~/.cursor/mcp.json`)
 
 **Option A – Wrapper (recommended, no JWT in mcp.json)**
-From the mcp-gateway repo (with `.env` set and gateway running):
+From the forge-mcp-gateway repo (with `.env` set and gateway running):
 
 1. Run `make register` so `data/.cursor-mcp-url` exists (optionally set `REGISTER_CURSOR_MCP_SERVER_NAME` for a server other than cursor-router).
 2. Run **`make use-cursor-wrapper`**. This sets the context-forge (or user-context-forge) entry in `~/.cursor/mcp.json` to use `scripts/cursor/mcp-wrapper.sh`; the wrapper reads the URL from `data/.cursor-mcp-url` and uses a fresh JWT.

@@ -117,7 +117,7 @@ See [TOOL_ROUTER_GUIDE.md](TOOL_ROUTER_GUIDE.md) for details.
 **Purpose:** NPX-compatible MCP client for connecting IDEs to the gateway.
 
 **Features:**
-- Standard MCP server pattern (`npx @mcp-gateway/client`)
+- Standard MCP server pattern (`npx @forge-mcp-gateway/client`)
 - JWT authentication support
 - Configurable timeouts and retries
 - Works with any MCP-compatible IDE
@@ -126,9 +126,9 @@ See [TOOL_ROUTER_GUIDE.md](TOOL_ROUTER_GUIDE.md) for details.
 ```json
 {
   "mcpServers": {
-    "mcp-gateway": {
+    "forge-mcp-gateway": {
       "command": "npx",
-      "args": ["-y", "@mcp-gateway/client", "--url=http://localhost:4444/servers/<UUID>/mcp"]
+      "args": ["-y", "@forge-mcp-gateway/client", "--url=http://localhost:4444/servers/<UUID>/mcp"]
     }
   }
 }
@@ -252,7 +252,7 @@ services:
 ## Monorepo Structure
 
 ```
-mcp-gateway/
+forge-mcp-gateway/
 ├── src/                    # TypeScript client source
 ├── build/                  # TypeScript client build
 ├── tool_router/           # Python tool router

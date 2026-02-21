@@ -1,8 +1,11 @@
+# Docker Image Updates for MCP Gateway
+# Aligned with base-dependencies.yml standards
+
 name: Docker Image Updates
 
 on:
   schedule:
-    # Run every Monday at 4 AM UTC (after Renovate and MCP check)
+    # Run every Monday at 4 AM UTC (after Renovate and MCP check, aligned with base-dependencies.yml)
     - cron: '0 4 * * 1'
   workflow_dispatch:
 
@@ -11,17 +14,26 @@ permissions:
   pull-requests: write
   issues: write
 
+# Environment variables (aligned with base-dependencies.yml standards)
+env:
+  NODE_VERSION: "22"
+  PYTHON_VERSION: "3.12"
+
 jobs:
+  # Check for Docker Updates
   check-updates:
-    name: Check Context Forge updates
+    name: Check Context Forge Updates
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     outputs:
       status: ${{ steps.check.outputs.status }}
       current_version: ${{ steps.check.outputs.current_version }}
       latest_version: ${{ steps.check.outputs.latest_version }}
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Make script executable
         run: chmod +x scripts/utils/check-docker-updates.sh
@@ -31,25 +43,38 @@ jobs:
         run: |
           scripts/utils/check-docker-updates.sh || true
 
-      - name: Upload report
+      - name: Upload update report
         if: steps.check.outputs.status == 'update-available'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: docker-update-report
           path: docker-update-report.md
           retention-days: 30
 
+      - name: Generate update summary
+        if: steps.check.outputs.status == 'update-available'
+        run: |
+          echo "🐳 Docker Update Available!"
+          echo "Current: ${{ steps.check.outputs.current_version }}"
+          echo "Latest: ${{ steps.check.outputs.latest_version }}"
+          echo "Status: ${{ steps.check.outputs.status }}"
+
+  # Create Update PR
   create-pr:
-    name: Create update PR
+    name: Create Update PR
     needs: check-updates
     if: needs.check-updates.outputs.status == 'update-available'
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+    timeout-minutes: 10
 
-      - name: Download report
-        uses: actions/download-artifact@v7
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download update report
+        uses: actions/download-artifact@v4
         with:
           name: docker-update-report
 
@@ -84,11 +109,11 @@ jobs:
           commit-message: "chore(docker): update Context Forge to ${{ needs.check-updates.outputs.latest_version }}"
           title: "chore(docker): update Context Forge to ${{ needs.check-updates.outputs.latest_version }}"
           body: |
-            ## Context Forge Gateway Update
+            ## 🐳 Context Forge Gateway Update
 
             Updates the Context Forge Docker image from `${{ needs.check-updates.outputs.current_version }}` to `${{ needs.check-updates.outputs.latest_version }}`.
 
-            ### Changes
+            ### 🔄 Changes
 
             - Updated `docker-compose.yml`
             - Updated `scripts/cursor-mcp-wrapper.sh`
@@ -97,12 +122,7 @@ jobs:
             - Updated `README.md`
             - Updated `docs/DEVELOPMENT.md`
 
-            ### Release Notes
-
-            View the full changelog at:
-            https://github.com/IBM/mcp-context-forge/releases/tag/${{ needs.check-updates.outputs.latest_version }}
-
-            ### Testing Checklist
+            ### 📋 Testing Checklist
 
             - [ ] Run `make stop` to stop current stack
             - [ ] Run `make start` to start with new version
@@ -111,9 +131,14 @@ jobs:
             - [ ] Run `make lint` and `make test` to verify CI checks
             - [ ] Test Cursor connection with wrapper
 
+            ### 📊 Release Notes
+
+            View the full changelog at:
+            https://github.com/IBM/mcp-context-forge/releases/tag/${{ needs.check-updates.outputs.latest_version }}
+
             ---
 
-            *This PR was automatically created by the Docker update checker workflow.*
+            *This PR was automatically created by the Docker update checker workflow as part of the UIForge shared GitHub patterns standardization.*
           branch: chore/update-context-forge-${{ needs.check-updates.outputs.latest_version }}
           delete-branch: true
           labels: |
@@ -121,3 +146,48 @@ jobs:
             docker
             gateway
             automated
+
+  # Update Summary
+  update-summary:
+    name: Update Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    needs: [check-updates, create-pr]
+    if: always()
+
+    steps:
+      - name: Docker Update Summary
+        run: |
+          echo "🐳 Docker Update Process Complete!"
+          echo "📊 Check Status: ${{ needs.check-updates.result }}"
+          echo "🔄 PR Creation: ${{ needs.create-pr.result }}"
+          echo ""
+          if [ "${{ needs.check-updates.outputs.status }}" == "update-available" ]; then
+            echo "✅ Update available and PR created"
+            echo "📦 Current: ${{ needs.check-updates.outputs.current_version }}"
+            echo "🚀 Latest: ${{ needs.check-updates.outputs.latest_version }}"
+          else
+            echo "ℹ️ No updates available"
+          fi
+
+      - name: Generate Summary Report
+        if: always()
+        run: |
+          echo "## 🐳 Docker Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Update Check | ${{ needs.check-updates.result }} | ✅ Checked or ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| PR Creation | ${{ needs.create-pr.result }} | ✅ Created or ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Update Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Schedule**: Weekly on Monday at 4 AM UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ghcr.io/ibm/mcp-context-forge" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.check-updates.outputs.status }}" == "update-available" ]; then
+            echo "- **Current Version**: ${{ needs.check-updates.outputs.current_version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Latest Version**: ${{ needs.check-updates.outputs.latest_version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status**: Update available" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: No updates available" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- **Automation**: Part of UIForge shared GitHub patterns" >> $GITHUB_STEP_SUMMARY

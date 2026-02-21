@@ -1,8 +1,8 @@
-# Manual registration via Context Forge Admin UI
+# Manual registration via MCP Gateway Admin UI
 
-This document describes **registrations that must be done manually** in the Context Forge Admin UI (e.g. gateways that require authentication, or when you prefer not to use `scripts/register-gateways.sh`). It uses the **exact request structure** required by the [Context Forge API](https://ibm.github.io/mcp-context-forge/manage/api-usage/).
+This document describes **registrations that must be done manually** in the MCP Gateway Admin UI (e.g. gateways that require authentication, or when you prefer not to use `scripts/register-gateways.sh`). It uses the **exact request structure** required by the [MCP Gateway API](https://ibm.github.io/mcp-gateway/manage/api-usage/).
 
-**References:** [Context Forge API Usage](https://ibm.github.io/mcp-context-forge/manage/api-usage/), [OAuth Integration](https://ibm.github.io/mcp-context-forge/manage/oauth/), [Context Forge Docs](https://ibm.github.io/mcp-context-forge/).
+**References:** [MCP Gateway API Usage](https://ibm.github.io/mcp-gateway/manage/api-usage/), [OAuth Integration](https://ibm.github.io/mcp-gateway/manage/oauth/), [MCP Gateway Docs](https://ibm.github.io/mcp-gateway/).
 
 ---
 
@@ -250,7 +250,7 @@ Copy-paste–friendly list for **remote gateways** you add in Admin UI. Fill aut
 | v0                       | `https://mcp.v0.dev`                                                     | STREAMABLEHTTP |
 | apify-dribbble           | `https://mcp.apify.com/sse?actors=practicaltools/apify-dribbble-scraper` | SSE            |
 
-**Auth:** v0 and apify-dribbble require token/API key or OAuth; configure in the gateway edit screen. Context7 often requires an API key (Passthrough Header `Authorization: Bearer <key>`). See [Context Forge OAuth](https://ibm.github.io/mcp-context-forge/manage/oauth/) for OAuth setup.
+**Auth:** v0 and apify-dribbble require token/API key or OAuth; configure in the gateway edit screen. Context7 often requires an API key (Passthrough Header `Authorization: Bearer <key>`). See [MCP Gateway OAuth](https://ibm.github.io/mcp-gateway/manage/oauth/) for OAuth setup.
 
 ---
 
@@ -271,7 +271,7 @@ If `make list-servers` returns **HTTP 500** or `make register` reports **virtual
 - **Scripts now retry** – `list-servers.sh` and `register-gateways.sh` retry `GET /servers` without query params when the first request returns 500; some gateway versions fail on `limit=0&include_pagination=false`.
 - **Delayed retries** – For 5xx or 408, `register-gateways.sh` does up to 2 extra attempts after a configurable delay (default 5s). Set `REGISTER_GET_SERVERS_RETRY_DELAY=5` in `.env` (or `0` to disable).
 - **Create when GET fails (opt-in)** – If GET /servers is still non-200 after all retries, set `REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS=true` to attempt create-only (POST) for virtual servers; no update, possible duplicates if you run register again. See `.env.example`.
-- **Check gateway logs** – Run `docker compose logs gateway` and look for Python tracebacks or errors around the `/servers` route. Report issues to [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge/issues).
+- **Check gateway logs** – Run `docker compose logs gateway` and look for Python tracebacks or errors around the `/servers` route. Report issues to [IBM/mcp-gateway](https://github.com/IBM/mcp-gateway/issues).
 - **Verbose register** – Run `REGISTER_VERBOSE=1 make register` to see the first few lines of failed POST/PUT response bodies.
 
 If virtual server create fails with **HTTP 400**:
@@ -281,17 +281,17 @@ If virtual server create fails with **HTTP 400**:
 
 If the gateway returns **"Failed to register server: This transaction is inactive"** (HTTP 400):
 
-- This is a known upstream issue in some mcp-context-forge versions: the gateway DB session/transaction is not active when `POST /servers` is called (often when `GET /servers` has already returned 500).
+- This is a known upstream issue in some mcp-gateway versions: the gateway DB session/transaction is not active when `POST /servers` is called (often when `GET /servers` has already returned 500).
 - **Workarounds:** (1) Create virtual servers manually in the Admin UI: open the gateway URL (e.g. `http://localhost:4444`), go to Virtual MCP Servers, add a server and attach tools by gateway or tool ID. (2) Retry `make register` after a minute. When `GET /servers` returns non-200, the script skips virtual server create/update and prints the same guidance.
 
-**Same error in the Admin UI:** If you see "Failed to register server: This transaction is inactive" when clicking **Add Server** in the Virtual Servers page, the same upstream bug is affecting the UI. Try: (1) **Use fewer servers and tools** — the UI warns that more than 12 MCP servers or more than 6 tools can impact performance; start with one gateway and a small set of tools, then add more. (2) Refresh the page and try again. (3) Restart the gateway (`docker compose restart gateway`), wait ~30s, then try adding a minimal virtual server (one MCP server, few tools). If it still fails, report at [IBM/mcp-context-forge issues](https://github.com/IBM/mcp-context-forge/issues) with your gateway version and that the error occurs both via API and in the Admin UI.
+**Same error in the Admin UI:** If you see "Failed to register server: This transaction is inactive" when clicking **Add Server** in the Virtual Servers page, the same upstream bug is affecting the UI. Try: (1) **Use fewer servers and tools** — the UI warns that more than 12 MCP servers or more than 6 tools can impact performance; start with one gateway and a small set of tools, then add more. (2) Refresh the page and try again. (3) Restart the gateway (`docker compose restart gateway`), wait ~30s, then try adding a minimal virtual server (one MCP server, few tools). If it still fails, report at [IBM/mcp-gateway issues](https://github.com/IBM/mcp-gateway/issues) with your gateway version and that the error occurs both via API and in the Admin UI.
 
 ---
 
 ## Troubleshooting: Prompts page infinite loading
 
-If the Admin UI **Prompts** page stays on "Loading prompts...", the frontend may be failing to handle the API response (upstream Context Forge). You can:
+If the Admin UI **Prompts** page stays on "Loading prompts...", the frontend may be failing to handle the API response (upstream MCP Gateway). You can:
 
-- **List prompts via script:** from repo root run `./scripts/list-prompts.sh` (uses .env and gateway JWT; works in any shell). **Create prompts via API:** `POST /prompts` (see [Context Forge API Usage](https://ibm.github.io/mcp-context-forge/manage/api-usage/)); JWT from gateway container as in `register-gateways.sh`.
+- **List prompts via script:** from repo root run `./scripts/list-prompts.sh` (uses .env and gateway JWT; works in any shell). **Create prompts via API:** `POST /prompts` (see [MCP Gateway API Usage](https://ibm.github.io/mcp-gateway/manage/api-usage/)); JWT from gateway container as in `register-gateways.sh`.
 - **Register prompts via script:** set `REGISTER_PROMPTS=true` in `.env`, add lines to `config/prompts.txt`, run `./scripts/register-gateways.sh`.
-- **Check Network tab:** In DevTools → Network, find the prompts request; confirm URL, status code, and response shape. If the API returns 200 with valid JSON and the UI still spins, report to [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge/issues).
+- **Check Network tab:** In DevTools → Network, find the prompts request; confirm URL, status code, and response shape. If the API returns 200 with valid JSON and the UI still spins, report to [IBM/mcp-gateway](https://github.com/IBM/mcp-gateway/issues).

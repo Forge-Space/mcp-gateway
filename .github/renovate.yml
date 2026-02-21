@@ -1,0 +1,150 @@
+# Renovate Configuration for UIForge Projects
+# This configuration automates dependency updates across all UIForge repositories
+
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":automergeDigest",
+    ":automergeBranch",
+    ":maintainLockFilesWeekly",
+    ":rebaseStalePrs",
+    ":prNotPendingReviews"
+  ],
+
+  "timezone": "UTC",
+  "schedule": ["before 3am on monday"],
+  "semanticCommits": "enabled",
+  "labels": ["dependencies"],
+
+  "prConcurrentLimit": 3,
+  "branchConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "rebaseWhen": "conflicted",
+  "updateLockFiles": true,
+
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 3am on monday"]
+  },
+
+  "packageRules": [
+    {
+      "groupName": "Production dependencies",
+      "matchPackagePatterns": ["*"],
+      "matchDepTypes": ["dependencies"],
+      "rangeStrategy": "bump",
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "groupName": "Development dependencies",
+      "matchPackagePatterns": ["*"],
+      "matchDepTypes": ["devDependencies"],
+      "rangeStrategy": "bump",
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "groupName": "GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "groupName": "Docker",
+      "matchManagers": ["dockerfile"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "groupName": "Python",
+      "matchManagers": ["pip_requirements"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "groupName": "Security updates",
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "1 day"
+    },
+    {
+      "groupName": "Major updates",
+      "matchUpdateTypes": ["major"],
+      "labels": ["major-update", "breaking-change"],
+      "automerge": false
+    }
+  ],
+
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": ["@LucasSantana-Dev"],
+    "schedule": ["at any time"]
+  },
+
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["(^|/)Dockerfile[^/]*$"],
+      "matchStrings": ["FROM\\s+(?<depName>[^:]+):(?<currentValue>[^\\s]+)"],
+      "datasourceTemplate": "docker"
+    }
+  ],
+
+  "platformAutomerge": true,
+  "platformCommit": false,
+
+  "docker": {
+    "pinDigests": true
+  },
+
+  "pip_requirements": {
+    "fileMatch": ["requirements.txt", "apps/*/requirements.txt"]
+  },
+
+  "npm": {
+    "fileMatch": ["package.json", "apps/*/package.json"]
+  },
+
+  "github-actions": {
+    "fileMatch": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+  },
+
+  "postUpdateOptions": [
+    "gomodTidy",
+    "npmDedupe",
+    "pipCompile",
+    "pythonSetup"
+  ],
+
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/venv/**",
+    "**/__pycache__/**",
+    "**/dist/**",
+    "**/build/**"
+  ],
+
+  "regexManagers": [
+    {
+      "fileMatch": ["Dockerfile.*"],
+      "matchStrings": [
+        "FROM (?<depName>[^:]+):(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "{{{depName}}}",
+      "datasourceTemplate": "docker"
+    }
+  ]
+}

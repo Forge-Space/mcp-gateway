@@ -18,8 +18,8 @@ Complete installation guide for the MCP Gateway (Context Forge).
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/mcp-gateway.git
-cd mcp-gateway
+git clone https://github.com/yourusername/forge-mcp-gateway.git
+cd forge-mcp-gateway
 ```
 
 ### 2. Configure Environment

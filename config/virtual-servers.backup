@@ -1,0 +1,37 @@
+# Virtual servers: Name|enabled|gateways|description
+# enabled: true/false - controls server creation
+# gateways: comma-separated list of gateway names
+# After editing, run: make register
+# Connect IDE to server URL from script output
+#
+cursor-default|false|sequential-thinking,filesystem,tavily,playwright,desktop-commander,chrome-devtools,uiforge,memory,fetch|Virtual server: cursor-default
+cursor-search|true|tavily|Virtual server: cursor-search
+cursor-browser|true|playwright,puppeteer,browser-tools,chrome-devtools,desktop-commander|Virtual server: cursor-browser
+cursor-git|true|git-mcp|Virtual server: cursor-git
+cursor-router|true|tool-router|Virtual server: cursor-router
+database|true|postgres,mongodb,prisma-remote|Virtual server: database
+fullstack|true|postgres,mongodb,prisma-remote,memory,git-mcp,fetch|Virtual server: fullstack
+nodejs-typescript|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7|Virtual server: nodejs-typescript
+nodejs-typescript-minimal|true|tool-router,github,filesystem,git-mcp|Virtual server: nodejs-typescript-minimal
+react-nextjs|true|tool-router,github,filesystem,memory,git-mcp,chrome-devtools,playwright,snyk,tavily,Context7|Virtual server: react-nextjs
+react-nextjs-minimal|true|tool-router,github,filesystem,chrome-devtools|Virtual server: react-nextjs-minimal
+mobile-dev|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7|Virtual server: mobile-dev
+mobile-dev-minimal|true|tool-router,github,filesystem,git-mcp|Virtual server: mobile-dev-minimal
+database-dev|true|tool-router,postgres,mongodb,prisma-remote,memory,filesystem,git-mcp|Virtual server: database-dev
+database-dev-minimal|true|tool-router,postgres,mongodb,prisma-remote|Virtual server: database-dev-minimal
+java-spring|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7|Virtual server: java-spring
+java-spring-minimal|true|tool-router,github,filesystem,git-mcp|Virtual server: java-spring-minimal
+python-dev|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7|Virtual server: python-dev
+python-dev-minimal|true|tool-router,github,filesystem,git-mcp|Virtual server: python-dev-minimal
+aws-cloud|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily|Virtual server: aws-cloud
+aws-cloud-minimal|true|tool-router,github,filesystem,git-mcp|Virtual server: aws-cloud-minimal
+testing-qa|true|tool-router,github,filesystem,playwright,chrome-devtools,snyk,memory,git-mcp|Virtual server: testing-qa
+testing-qa-minimal|true|tool-router,github,playwright,snyk|Virtual server: testing-qa-minimal
+code-quality|true|tool-router,github,snyk,filesystem,memory,git-mcp,tavily|Virtual server: code-quality
+code-quality-minimal|true|tool-router,github,snyk,git-mcp|Virtual server: code-quality-minimal
+fullstack-universal|true|tool-router,github,postgres,mongodb,prisma-remote,filesystem,memory,git-mcp,snyk,tavily,Context7|Virtual server: fullstack-universal
+fullstack-universal-minimal|true|tool-router,github,postgres,mongodb,filesystem,git-mcp|Virtual server: fullstack-universal-minimal
+monorepo-universal|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily,Context7,playwright|Virtual server: monorepo-universal
+monorepo-universal-minimal|true|tool-router,github,filesystem,git-mcp,memory|Virtual server: monorepo-universal-minimal
+devops-cicd|true|tool-router,github,filesystem,memory,git-mcp,snyk,tavily|Virtual server: devops-cicd
+devops-cicd-minimal|true|tool-router,github,filesystem,git-mcp|Virtual server: devops-cicd-minimal

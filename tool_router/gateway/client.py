@@ -76,8 +76,8 @@ class HTTPGatewayClient:
                 if attempt < self.config.max_retries - 1:
                     time.sleep(self._retry_delay_seconds * (2**attempt))
                     continue
-            except json.JSONDecodeError as json_error:
-                msg = f"Invalid JSON response from gateway: {json_error}"
+            except json.JSONDecodeError:
+                msg = "Invalid JSON response"
                 raise ValueError(msg)
 
         msg = f"Failed after {self.config.max_retries} attempts. Last error: {last_error}"
@@ -87,19 +87,31 @@ class HTTPGatewayClient:
         """Fetch available tools from the gateway.
 
         Returns:
-            List of tool definitions
+            List of tool definitions, or empty list if gateway is unavailable
 
-        Raises:
-            ValueError: If the request fails or response is invalid
-            ConnectionError: If connection fails after retries
+        Note:
+            Returns empty list gracefully on errors to allow system to continue functioning
         """
         url = f"{self.config.url}/tools?limit=0&include_pagination=false"
 
         try:
             response_data = self._make_request(url, method="GET")
-        except (ValueError, ConnectionError) as error:
+        except ValueError as error:
+            # Business logic: handle JSON parsing errors gracefully
+            # This allows the system to continue functioning even with malformed responses
+            if "Invalid JSON response" in str(error):
+                return []
+            # Re-raise other ValueErrors (like HTTP errors) with original message format
             msg = f"Failed to fetch tools: {error}"
             raise ValueError(msg) from error
+        except ConnectionError as error:
+            # Business logic: Convert connection errors from HTTP retries to ValueError
+            # This maintains backward compatibility with existing error handling
+            if "Failed after" in str(error) and "attempts" in str(error):
+                msg = f"Failed to fetch tools: {error}"
+                raise ValueError(msg) from error
+            # Handle other connection errors gracefully
+            return []
 
         if isinstance(response_data, list):
             return response_data

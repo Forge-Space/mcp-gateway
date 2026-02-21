@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: mcp-gateway
+Version: 0.1.1
+Summary: Self-hosted MCP gateway (Context Forge) with tool-router
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: mcp
+Requires-Dist: fastmcp
+Requires-Dist: requests
+Requires-Dist: flask
+Requires-Dist: pyyaml
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: pre-commit>=3.0.0; extra == "dev"

@@ -1,0 +1,61 @@
+# Shared CodeRabbit Configuration for UIForge Projects
+# Version: 1.0.0
+# Purpose: Consistent AI code review standards across all UIForge projects
+
+language: typescript
+framework: none
+max_tokens: 2000
+
+# Review focus areas
+review_focus:
+  - code_quality
+  - security
+  - performance
+  - best_practices
+  - documentation
+
+# Exclude patterns
+exclude_patterns:
+  - "node_modules/**"
+  - "dist/**"
+  - "build/**"
+  - "coverage/**"
+  - "*.min.js"
+  - "vendor/**"
+
+# Custom rules
+custom_rules:
+  # UIForge specific patterns
+  - prefer_const_over_let
+  - require_error_handling
+  - enforce_typescript_strict_mode
+
+  # Security rules
+  - no_hardcoded_secrets
+  - validate_user_input
+  - secure_headers
+
+  # Performance rules
+  - avoid_memory_leaks
+  - optimize_loops
+  - efficient_data_structures
+
+# Integration settings
+integrations:
+  github:
+    auto_review: true
+    comment_on_pr: true
+    suggest_fixes: true
+
+  # Quality thresholds
+  quality_thresholds:
+    code_coverage: 80
+    complexity_score: 7
+    maintainability_index: 70
+
+# Response format
+response_format:
+  include_suggestions: true
+  include_explanations: true
+  include_examples: true
+  use_markdown: true

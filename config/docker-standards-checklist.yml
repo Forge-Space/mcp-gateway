@@ -1,0 +1,346 @@
+# Docker Standards Compliance Checklist
+# High-Efficiency Docker Standards for Forge MCP Gateway
+# Based on high-efficiency-docker-standards-c1f908.md
+
+# Compliance checklist for all services
+compliance_checklist:
+  # Core Architecture Standards
+  architecture:
+    - name: "Three-state model implemented"
+      description: "All services must implement STOPPED → STARTING → RUNNING → SLEEPING states"
+      required: true
+      verification: "Check service manager API for state transitions"
+
+    - name: "Resource constraints configured"
+      description: "All services must have memory and CPU limits/reservations"
+      required: true
+      verification: "Verify docker-compose.yml deploy.resources section"
+
+    - name: "Sleep policies defined"
+      description: "All on-demand services must have sleep policies enabled"
+      required: true
+      verification: "Check services.yml sleep_policy sections"
+
+    - name: "Health checks configured"
+      description: "All services must have health check endpoints"
+      required: true
+      verification: "Verify healthcheck sections in configurations"
+
+  # Service Classification Standards
+  service_classification:
+    - name: "High-priority services identified"
+      description: "gateway, service-manager, tool-router marked as high priority"
+      required: true
+      verification: "Check sleep_policy.priority: high for core services"
+
+    - name: "On-demand services classified"
+      description: "filesystem, memory, github, fetch marked as on-demand"
+      required: true
+      verification: "Verify auto_start: false and sleep policies"
+
+    - name: "Browser services properly classified"
+      description: "chrome-devtools, playwright, puppeteer marked as resource-intensive"
+      required: true
+      verification: "Check resource allocations and sleep policies"
+
+  # Resource Efficiency Standards
+  resource_efficiency:
+    - name: "Memory reservations configured"
+      description: "All services have memory_reservation set to 50-70% of running state"
+      required: true
+      verification: "Compare memory vs memory_reservation in services.yml"
+
+    - name: "CPU reservations configured"
+      description: "All services have cpu_reservation set appropriately"
+      required: true
+      verification: "Check cpu vs cpu_reservation ratios"
+
+    - name: "Resource limits within standards"
+      description: "Services follow lightweight/standard/intensive/heavy categories"
+      required: true
+      verification: "Compare against resource-limits.yml categories"
+
+  # Performance Standards
+  performance:
+    - name: "Wake time targets configured"
+      description: "High priority < 50ms, Normal < 200ms, Low < 500ms"
+      required: true
+      verification: "Check FORGE_WAKE_TIME_TARGET environment variables"
+
+    - name: "Idle timeout settings"
+      description: "Browser services: 3min, Standard: 5min, Security: 10min"
+      required: true
+      verification: "Verify idle_timeout in sleep policies"
+
+    - name: "Min sleep time configured"
+      description: "Prevents rapid sleep/wake cycles"
+      required: true
+      verification: "Check min_sleep_time in sleep policies"
+
+  # Security and Reliability Standards
+  security:
+    - name: "Non-root execution"
+      description: "All containers run as non-root users"
+      required: true
+      verification: "Check Dockerfile USER directives"
+
+    - name: "Read-only filesystems"
+      description: "Containers use read-only filesystems where possible"
+      required: false # Recommended but not always possible
+      verification: "Check Dockerfile VOLUME and filesystem settings"
+
+    - name: "Secret management"
+      description: "No hardcoded secrets, use environment variables"
+      required: true
+      verification: "Scan configurations for hardcoded values"
+
+    - name: "Network isolation"
+      description: "Services communicate via Docker networks"
+      required: true
+      verification: "Check docker-compose.yml network configuration"
+
+  # Monitoring and Observability
+  monitoring:
+    - name: "Metrics collection enabled"
+      description: "All services emit performance and resource metrics"
+      required: true
+      verification: "Check monitoring.yml configuration"
+
+    - name: "Health check endpoints"
+      description: "All services have /health endpoints"
+      required: true
+      verification: "Test health endpoints manually"
+
+    - name: "Logging configured"
+      "description": "Structured logging with appropriate levels"
+      required: true
+      verification: "Check log configuration and output"
+
+    - name: "Alerting rules configured"
+      description: "Performance and resource alerts set up"
+      required: true
+      verification: "Review monitoring.yml alerts section"
+
+# Specific service requirements
+service_requirements:
+  gateway:
+    - sleep_policy_enabled: false
+    - service_priority: high
+    - auto_start: true
+    - memory_limit: "512MB"
+    - cpu_limit: "0.5"
+    - wake_time_target: 50
+
+  service_manager:
+    - sleep_policy_enabled: false
+    - service_priority: high
+    - auto_start: true
+    - memory_limit: "256MB"
+    - cpu_limit: "0.25"
+    - docker_socket_mount: true
+
+  tool_router:
+    - sleep_policy_enabled: false
+    - service_priority: high
+    - auto_start: true
+    - memory_limit: "256MB"
+    - cpu_limit: "0.25"
+    - wake_time_target: 50
+
+  forge_ui:
+    - sleep_policy_enabled: true
+    - service_priority: normal
+    - auto_start: false
+    - memory_limit: "512MB"
+    - cpu_limit: "0.5"
+    - wake_time_target: 200
+
+  forge_translate:
+    - sleep_policy_enabled: true
+    - service_priority: normal
+    - auto_start: false
+    - memory_limit: "128MB"
+    - cpu_limit: "0.25"
+    - wake_time_target: 200
+
+# Resource allocation templates
+resource_templates:
+  lightweight:
+    memory_limit: "192MB"
+    cpu_limit: "0.2"
+    memory_reservation: "128MB"
+    cpu_reservation: "0.05"
+    services:
+      - sequential-thinking
+      - fetch
+      - github
+      - git-mcp
+      - reactbits
+
+  standard:
+    memory_limit: "384MB"
+    cpu_limit: "0.4"
+    memory_reservation: "256MB"
+    cpu_reservation: "0.1"
+    services:
+      - filesystem
+      - memory
+      - tavily
+      - snyk
+      - sqlite
+
+  intensive:
+    memory_limit: "768MB"
+    cpu_limit: "0.8"
+    memory_reservation: "256MB"
+    cpu_reservation: "0.1"
+    services:
+      - chrome-devtools
+      - playwright
+      - puppeteer
+      - browser-tools
+      - postgres
+      - mongodb
+      - magicuidesign-mcp
+
+# Compliance verification procedures
+verification_procedures:
+  automated_checks:
+    - name: "Docker Compose validation"
+      command: "docker-compose config"
+      description: "Validate docker-compose.yml syntax"
+
+    - name: "Resource limit validation"
+      command: "scripts/check-resource-limits.sh"
+      description: "Verify all services have proper resource limits"
+
+    - name: "Sleep policy validation"
+      command: "scripts/validate-sleep-policies.sh"
+      description: "Check sleep policy configurations"
+
+    - name: "Health check validation"
+      command: "scripts/test-health-checks.sh"
+      description: "Test all service health endpoints"
+
+  manual_checks:
+    - name: "Service state transitions"
+      description: "Manually test sleep/wake functionality"
+      procedure: |
+        1. Start a service
+        2. Wait for idle timeout
+        3. Verify service enters sleep state
+        4. Trigger wake request
+        5. Verify wake time meets targets
+
+    - name: "Resource utilization monitoring"
+      description: "Monitor actual resource usage vs limits"
+      procedure: |
+        1. Run 'docker stats' during normal operation
+        2. Compare with configured limits
+        3. Verify reservations work properly
+
+    - name: "Performance testing"
+      description: "Measure actual wake times and response times"
+      procedure: |
+        1. Time service wake from sleep state
+        2. Measure response times for requests
+        3. Compare against targets
+
+# Compliance reporting
+reporting:
+  compliance_score:
+    architecture: 25 # 25 points for architecture compliance
+    resource_efficiency: 25 # 25 points for resource efficiency
+    performance: 20 # 20 points for performance standards
+    security: 15 # 15 points for security standards
+    monitoring: 15 # 15 points for monitoring compliance
+
+  pass_threshold: 80 # 80% required to pass compliance check
+
+  report_format:
+    summary: true
+    detailed_findings: true
+    recommendations: true
+    remediation_steps: true
+
+# Non-compliance handling
+non_compliance_handling:
+  critical_issues:
+    - action: "block_deployment"
+    - description: "Critical issues must be resolved before deployment"
+
+  major_issues:
+    - action: "warning"
+    - description: "Major issues should be resolved but don't block deployment"
+
+  minor_issues:
+    - action: "documentation"
+    - description: "Minor issues should be documented for future improvement"
+
+# Continuous compliance
+continuous_compliance:
+  automated_scans:
+    - frequency: "daily"
+    - tools: ["docker-compose", "resource-limits", "security-scan"]
+
+  manual_reviews:
+    - frequency: "weekly"
+    - focus: ["performance", "resource-usage", "new-services"]
+
+  update_triggers:
+    - new_service_added: true
+    - resource_limits_changed: true
+    - architecture_modified: true
+    - compliance_standards_updated: true
+
+# Documentation requirements
+documentation:
+  required_files:
+    - "docker-compose.yml"
+    - "config/services.yml"
+    - "config/resource-limits.yml"
+    - "config/monitoring.yml"
+    - "config/sleep-policies/default.yaml"
+
+  documentation_content:
+    - service_architecture: "Document three-state model implementation"
+    - resource_allocation: "Explain resource limit decisions"
+    - sleep_policies: "Document sleep policy rationale"
+    - monitoring_setup: "Explain monitoring configuration"
+    - compliance_procedures: "Document verification processes"
+
+# Training and knowledge transfer
+training:
+  team_members:
+    - developers: "Docker standards and best practices"
+    - operators: "Monitoring and troubleshooting"
+    - architects: "System design and efficiency principles"
+
+  training_materials:
+    - "Docker Standards Overview"
+    - "Service Lifecycle Management"
+    - "Resource Optimization Techniques"
+    - "Monitoring and Alerting Setup"
+    - "Troubleshooting Common Issues"
+
+# Version control and change management
+version_control:
+  configuration_tracking:
+    - track_all_changes: true
+    - version_config_files: true
+    - document_changes: true
+
+  change_approval:
+    - architecture_changes: "require_architect_review"
+    - resource_changes: "require_operations_review"
+    - compliance_changes: "require_compliance_review"
+
+# Success metrics
+success_metrics:
+  compliance_rate: "100% services compliant"
+  efficiency_improvements:
+    - memory_reduction: "> 60% for sleeping services"
+    - cpu_reduction: "> 80% for sleeping services"
+    - wake_time_improvement: "< 200ms for 90% of services"
+  cost_reduction: "> 50% infrastructure cost savings"
+  service_density: "3-4x improvement in services per resource unit"

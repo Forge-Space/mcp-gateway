@@ -1,0 +1,32 @@
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY dribbble_mcp/requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright playwright install chromium --with-deps && \
+    rm -rf /home/app/.cache/pip /tmp/* && \
+    groupadd -g 1000 app && \
+    useradd -u 1000 -g app -s /bin/sh -m app && \
+    chown -R app:app /app && \
+    chown -R app:app /ms-playwright
+
+USER app
+
+COPY dribbble_mcp/ /app/dribbble_mcp/
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD python3 /app/dribbble_mcp/health_check.py
+
+CMD ["python3", "-m", "dribbble_mcp"]

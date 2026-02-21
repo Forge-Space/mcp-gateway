@@ -1,0 +1,8 @@
+# Performance and load testing requirements
+# Used by Enhanced CI Pipeline for comprehensive performance validation
+psutil>=5.9.0
+pytest-benchmark>=4.0.0
+locust>=2.15.0
+pytest>=7.0.0
+pytest-cov>=4.0.0
+py-cpuinfo>=9.0.0

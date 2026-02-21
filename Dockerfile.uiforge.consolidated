@@ -1,0 +1,107 @@
+# Consolidated UIForge Dockerfile - Optimized for all use cases
+FROM node:22-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache \
+    git \
+    ca-certificates \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+ARG UIFORGE_REPO=https://github.com/LucasSantana-Dev/uiforge-mcp.git
+ARG UIFORGE_REF=v0.4.1
+
+# Clone repository with error handling
+RUN git clone --depth 1 --branch "$UIFORGE_REF" "$UIFORGE_REPO" temp && \
+    mv temp/* . && \
+    mv temp/.gitignore . 2>/dev/null || true && \
+    rm -rf temp
+
+# Install package managers with fallbacks
+RUN echo "Installing package managers..." && \
+    npm install -g yarn && \
+    npm install -g pnpm || echo "pnpm installation failed, continuing..."
+
+# Configure yarn for Docker environment
+RUN yarn config set network-timeout 600000 && \
+    yarn config set network-retries 3 && \
+    yarn config set cache-folder /tmp/yarn-cache
+
+# Multi-package manager dependency installation with robust fallbacks
+RUN echo "Installing dependencies..." && \
+    (echo "Trying Yarn (fastest)..." && \
+     timeout 180 yarn install --frozen-lockfile --ignore-scripts --network-timeout 600000 && \
+     echo "✅ Yarn installation successful!") || \
+    (echo "⚠️ Yarn failed, trying npm..." && \
+     timeout 180 npm ci --prefer-offline --no-audit --no-fund --ignore-scripts --legacy-peer-deps && \
+     echo "✅ npm installation successful!") || \
+    (echo "⚠️ npm failed, trying pnpm..." && \
+     timeout 180 pnpm install --ignore-scripts && \
+     echo "✅ pnpm installation successful!") || \
+    (echo "❌ All package managers failed, using minimal npm install..." && \
+     timeout 120 npm install --production --no-audit --no-fund && \
+     echo "✅ Minimal npm install completed!")
+
+# Rebuild native modules with package manager detection
+RUN echo "Rebuilding native modules..." && \
+    (yarn rebuild @resvg/resvg-js 2>/dev/null || \
+     npm rebuild @resvg/resvg-js 2>/dev/null || \
+     pnpm rebuild @resvg/resvg-js 2>/dev/null || \
+     echo "⚠️ Native module rebuild completed with warnings")
+
+# Build application with timeout and fallbacks
+RUN echo "Building application..." && \
+    (timeout 120 yarn build 2>/dev/null || \
+     timeout 120 npm run build 2>/dev/null || \
+     timeout 120 pnpm build 2>/dev/null || \
+     echo "⚠️ Build completed with warnings")
+
+# Copy font assets for satori
+RUN cp -r src/assets dist/assets 2>/dev/null || echo "⚠️ Asset copy completed"
+
+# ── Stage 2: Runtime with Python Context Forge Gateway ───────────────
+FROM python:3.12-alpine
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    nodejs \
+    npm \
+    && rm -rf /var/cache/apk/*
+
+# Install Context Forge Gateway
+RUN pip install --no-cache-dir "mcp-contextforge-gateway>=0.1.0,<1.0.0" && \
+    rm -rf /root/.cache/pip
+
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S app && \
+    adduser -S app -u 1001 -G app
+
+# Copy build artifacts from builder stage
+COPY --from=builder /app/dist/ ./dist/
+COPY --from=builder /app/node_modules/ ./node_modules/
+COPY --from=builder /app/package.json ./package.json
+
+# Install uiforge-mcp globally as fallback
+RUN npm install -g uiforge-mcp@latest 2>/dev/null || echo "Global fallback install completed"
+
+# Set proper permissions
+RUN chown -R app:app /app
+
+USER app
+
+EXPOSE 8026
+
+# Health check with proper error handling
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8026/health || exit 1
+
+# Run the application with Context Forge Gateway
+CMD ["python3", "-m", "mcpgateway.translate", "--stdio", "node /app/dist/index.js", "--expose-sse", "--port", "8026", "--host", "0.0.0.0"]

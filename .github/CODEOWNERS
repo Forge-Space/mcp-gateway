@@ -1,0 +1,53 @@
+# Code Owners Configuration for UIForge Projects
+# This file defines who owns different parts of the codebase
+
+# Core Maintainers (global owners)
+* @LucasSantana-Dev
+
+# Security Team
+*.yml @LucasSantana-Dev
+Dockerfile* @LucasSantana-Dev
+.github/** @LucasSantana-Dev
+
+# Documentation
+docs/** @LucasSantana-Dev
+README.md @LucasSantana-Dev
+CHANGELOG.md @LucasSantana-Dev
+PROJECT_CONTEXT.md @LucasSantana-Dev
+
+# Infrastructure and DevOps
+.github/** @LucasSantana-Dev
+Dockerfile* @LucasSantana-Dev
+docker-compose.yml @LucasSantana-Dev
+Makefile @LucasSantana-Dev
+scripts/** @LucasSantana-Dev
+
+# Core Application
+src/** @LucasSantana-Dev
+tool_router/** @LucasSantana-Dev
+apps/** @LucasSantana-Dev
+
+# Configuration
+config/** @LucasSantana-Dev
+.env.example @LucasSantana-Dev
+pyproject.toml @LucasSantana-Dev
+package.json @LucasSantana-Dev
+tsconfig.json @LucasSantana-Dev
+
+# Testing
+tests/** @LucasSantana-Dev
+**/test_*.py @LucasSantana-Dev
+**/*_test.py @LucasSantana-Dev
+**/*.test.ts @LucasSantana-Dev
+**/*.spec.ts @LucasSantana-Dev
+
+# Dependencies
+requirements.txt @LucasSantana-Dev
+package-lock.json @LucasSantana-Dev
+yarn.lock @LucasSantana-Dev
+
+# CI/CD and Automation
+.github/workflows/** @LucasSantana-Dev
+.pre-commit-config.yaml @LucasSantana-Dev
+eslint.config.js @LucasSantana-Dev
+.prettierrc.json @LucasSantana-Dev

@@ -401,7 +401,7 @@ npm install
 #### Output Example
 
 ```text
-Checking /Users/user/mcp-gateway/package.json
+Checking /Users/user/forge-mcp-gateway/package.json
 [====================] 11/11 100%
 
  @types/node              ^22.10.5  →  ^22.10.6

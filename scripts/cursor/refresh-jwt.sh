@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 source "$SCRIPT_DIR/lib/bootstrap.sh"
 load_env || { log_err ".env not found in $REPO_ROOT"; exit 1; }
 source "$SCRIPT_DIR/lib/gateway.sh"
@@ -18,9 +18,9 @@ fi
 
 JWT=$(get_jwt) || { log_err "Failed to generate JWT."; exit 1; }
 
-KEY=$(get_context_forge_key "$MCP_JSON") || true
+KEY=$(get_mcp_gateway_key "$MCP_JSON") || true
 if [[ -z "$KEY" ]]; then
-  log_err "context-forge entry not found in $MCP_JSON (tried: context-forge, user-context-forge). Set CONTEXT_FORGE_MCP_KEY if your key differs."
+  log_err "mcp-gateway entry not found in $MCP_JSON"
   exit 1
 fi
 
@@ -31,7 +31,6 @@ jq --arg jwt "$JWT" --arg key "$KEY" '
   def setToken:
     (if .args then .args |= map(if type == "string" and startswith("MCP_AUTH=") then "MCP_AUTH=Bearer " + $jwt else . end) else . end) |
     (.headers = ((.headers // {}) | .["Authorization"] = "Bearer " + $jwt));
-
   if .mcpServers[$key] != null then
     .mcpServers[$key] |= setToken
   else

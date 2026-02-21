@@ -1,3 +1,16 @@
 # Runtime deps for tool_router and Docker build. See pyproject.toml for optional dev deps.
 mcp
 mcp-contextforge-gateway
+
+# Sentry integration for observability
+sentry-sdk[fastapi]>=1.40.0
+structlog>=23.0.0
+
+# PostgreSQL database support
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.0
+pydantic-settings>=2.0.0
+cachetools>=2.0.0
+
+# Redis for distributed caching
+redis>=5.0.0

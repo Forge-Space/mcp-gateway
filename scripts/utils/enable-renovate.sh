@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== Renovate Setup for mcp-gateway ===${NC}\n"
+echo -e "${BLUE}=== Renovate Setup for forge-mcp-gateway ===${NC}\n"
 
 # Check if Renovate config exists
 if [ ! -f "$REPO_ROOT/.github/renovate.json" ]; then
@@ -53,7 +53,7 @@ echo "1. Visit: https://github.com/apps/renovate"
 echo "2. Click 'Install' or 'Configure'"
 echo "3. Select 'LucasSantana-Dev' account"
 echo "4. Choose 'Only select repositories'"
-echo "5. Select 'mcp-gateway'"
+echo "5. Select 'forge-mcp-gateway'"
 echo "6. Click 'Install' or 'Save'"
 echo ""
 echo "After installation, Renovate will:"
@@ -70,7 +70,7 @@ echo -e "\n${YELLOW}Option 3: Self-Hosted${NC}"
 echo "Run Renovate locally (requires GITHUB_TOKEN):"
 echo "  npm install -g renovate"
 echo "  export GITHUB_TOKEN='your_token'"
-echo "  renovate --platform=github LucasSantana-Dev/mcp-gateway"
+echo "  renovate --platform=github LucasSantana-Dev/forge-mcp-gateway"
 
 # Offer to create trigger commit
 echo -e "\n${BLUE}=== Quick Actions ===${NC}\n"
@@ -86,7 +86,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         git push origin main
         echo -e "${GREEN}✓${NC} Pushed to origin/main"
         echo -e "\n${GREEN}Renovate should scan the repository within a few minutes.${NC}"
-        echo -e "Check: https://github.com/LucasSantana-Dev/mcp-gateway/pulls"
+        echo -e "Check: https://github.com/LucasSantana-Dev/forge-mcp-gateway/pulls"
     else
         echo -e "${YELLOW}Commit created but not pushed.${NC}"
         echo "Push manually with: git push origin main"

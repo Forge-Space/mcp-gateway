@@ -1,0 +1,23 @@
+# BuildKit configuration for optimal performance
+[worker.oci]
+  max-parallelism = 4
+  
+[gc]
+  # Keep cache for 24 hours
+  keep-storage = 86400
+  # Run GC every hour
+  gc-high-threshold = 80
+  gc-low-threshold = 70
+
+[registry."docker.io"]
+  http = false
+  insecure = false
+
+[registry."ghcr.io"]
+  http = false
+  insecure = false
+
+# Enable experimental features for better caching
+[experimental]
+  cache-frontend = "registry"
+  cache-frontend-attrs = ["ref_type=type,ref=run"]

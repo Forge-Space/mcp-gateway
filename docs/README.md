@@ -78,9 +78,9 @@ CI/CD, code quality, and automation.
 
 ## 📖 External Resources
 
-- [IBM Context Forge](https://github.com/IBM/mcp-context-forge) - Upstream project
+- [IBM MCP Gateway](https://github.com/IBM/mcp-gateway) - Upstream project
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification
-- [NPM Package](https://www.npmjs.com/package/@mcp-gateway/client) - TypeScript client
+- [NPM Package](https://www.npmjs.com/package/@forge-mcp-gateway/client) - TypeScript client
 
 ## 🤝 Contributing
 

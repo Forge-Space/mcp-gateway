@@ -1,15 +1,39 @@
-FROM python:3.12-slim
+FROM python:3.12-alpine AS base
+
+# Install only essential packages for security and functionality
+RUN apk add --no-cache \
+    curl \
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /tmp/*
 
 WORKDIR /app
 
+# Create non-root user with proper UID/GID
+RUN addgroup -g 1000 -S app && \
+    adduser -S app -u 1000 -G app
+
+# Copy and install dependencies with security optimizations
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /root/.cache/pip && \
+    rm -rf /tmp/*
 
+# Copy application and set proper permissions
 COPY tool_router /app/tool_router
+RUN chown -R app:app /app && \
+    chmod -R 755 /app
 
+USER app
+
+# Set secure environment variables
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python3 -c "import tool_router; import sys; sys.exit(0)"
+# Health check against HTTP endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD curl -sf http://localhost:8030/ || exit 1
 
-CMD ["python3", "-m", "tool_router"]
+# Run as HTTP server for health checks
+CMD ["python3", "-u", "/app/tool_router/http_server.py"]

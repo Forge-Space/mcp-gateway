@@ -316,7 +316,7 @@ Configure required API keys in your IDE's mcp.json file:
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/path/to/mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here",
@@ -333,7 +333,7 @@ See [IDE Setup Guide](IDE_SETUP_GUIDE.md) for IDE-specific examples.
 ### Step 3: Register the Profile
 
 ```bash
-cd /path/to/mcp-gateway
+cd /path/to/forge-mcp-gateway
 make register
 ```
 

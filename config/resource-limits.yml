@@ -1,0 +1,226 @@
+# Resource limits configuration for Forge MCP Gateway services
+# Updated for high-efficiency Docker standards with serverless-like efficiency
+# This file defines system-wide resource constraints and limits for maximum efficiency
+
+# Global system resource limits (optimized for efficiency)
+system_limits:
+  # Maximum total resources available to all dynamic services
+  max_memory_gb: 4 # Reduced from 6GB for efficiency
+  max_cpu_cores: 2 # Reduced from 3 cores for efficiency
+  max_total_services: 20 # Increased service density
+
+  # Resource reservation for core services (gateway, service-manager, tool-router, ui)
+  core_services_reservation:
+    memory_gb: 1.5 # Optimized core services
+    cpu_cores: 1.0
+
+  # Available resources for dynamic services (increased efficiency)
+  available_for_dynamic:
+    memory_gb: 2.5 # More efficient allocation
+    cpu_cores: 1.0
+
+# Per-service resource limits by category (efficiency-optimized)
+service_limits:
+  # Lightweight services (memory, fetch, git, etc.) - optimized for density
+  lightweight:
+    max_memory_mb: 192 # Reduced from 256MB
+    max_cpu_cores: 0.2 # Reduced from 0.25
+    max_pids: 15
+    memory_swap_mb: 288 # Reduced proportionally
+
+  # Standard services (filesystem, github, tavily, etc.) - balanced efficiency
+  standard:
+    max_memory_mb: 384 # Reduced from 512MB
+    max_cpu_cores: 0.4 # Reduced from 0.5
+    max_pids: 25
+    memory_swap_mb: 576 # Reduced proportionally
+
+  # Resource-intensive services (browser automation, databases) - optimized
+  intensive:
+    max_memory_mb: 768 # Reduced from 1024MB
+    max_cpu_cores: 0.8 # Reduced from 1.0
+    max_pids: 40
+    memory_swap_mb: 1152 # Reduced proportionally
+
+  # Heavy services (multiple browser instances, complex operations) - rare
+  heavy:
+    max_memory_mb: 1536 # Reduced from 2048MB
+    max_cpu_cores: 1.6 # Reduced from 2.0
+    max_pids: 80
+    memory_swap_mb: 2304 # Reduced proportionally
+
+# Service category mapping
+service_categories:
+  # AI and reasoning
+  sequential-thinking: lightweight
+
+  # Browser automation (resource intensive)
+  chrome-devtools: intensive
+  playwright: intensive
+  puppeteer: intensive
+  browser-tools: intensive
+
+  # Desktop automation
+  desktop-commander: lightweight
+
+  # Search and web services
+  tavily: standard
+
+  # File system and data services
+  filesystem: standard
+
+  # Development tools
+  snyk: standard
+  github: lightweight
+  git-mcp: lightweight
+  fetch: lightweight
+
+  # Database services
+  postgres: intensive
+  mongodb: intensive
+  sqlite: standard
+
+  # Memory and caching
+  memory: standard
+
+  # UI and design tools
+  magicuidesign-mcp: intensive
+  reactbits: lightweight
+
+# Scaling constraints based on available resources (efficiency-focused)
+scaling_constraints:
+  # Maximum concurrent services by category (increased density)
+  max_concurrent:
+    lightweight: 12 # Increased from 8
+    standard: 6 # Increased from 4
+    intensive: 3 # Increased from 2
+    heavy: 2 # Increased from 1
+
+  # Resource utilization thresholds (tighter for efficiency)
+  utilization_thresholds:
+    memory_warning: 0.75 # Reduced from 80%
+    memory_critical: 0.85 # Reduced from 90%
+    cpu_warning: 0.75 # Reduced from 80%
+    cpu_critical: 0.85 # Reduced from 90%
+
+  # Auto-scaling triggers (more aggressive for efficiency)
+  auto_scale:
+    scale_up_memory_threshold: 0.8 # Reduced from 85%
+    scale_up_cpu_threshold: 0.8 # Reduced from 85%
+    scale_down_memory_threshold: 0.25 # Reduced from 30%
+    scale_down_cpu_threshold: 0.25 # Reduced from 30%
+    cooldown_period: 45 # Reduced from 60s
+
+# Resource monitoring settings (efficiency-optimized)
+monitoring:
+  # Metrics collection interval (more frequent for better visibility)
+  collection_interval: 5 # Reduced from 10s
+
+  # How long to keep metrics data
+  retention_period: 86400 # 24 hours
+
+  # Alert thresholds (tighter for efficiency)
+  alerts:
+    high_memory_usage: 0.75 # Reduced from 90%
+    high_cpu_usage: 0.75 # Reduced from 90%
+    service_failure_rate: 0.05 # Reduced from 10%
+    response_time_p95_ms: 3000 # Reduced from 5000ms
+    wake_time_p95_ms: 300 # New: wake time alert
+
+  # Resource usage reporting (more frequent)
+  reporting:
+    interval: 180 # Reduced from 5 minutes to 3 minutes
+    enable_detailed_logs: true
+    enable_resource_efficiency_metrics: true
+    enable_sleep_wake_metrics: true # New: sleep/wake tracking
+
+# Quality of Service (QoS) settings (efficiency-focused)
+qos:
+  # Service priority levels (aligned with sleep policies)
+  priorities:
+    critical: 1 # Always keep running (filesystem, memory)
+    high: 2 # Fast startup, prefer running (github, fetch)
+    normal: 3 # Standard behavior (most services)
+    low: 4 # Aggressive sleep policies (browser automation)
+
+  # Priority mapping (updated for efficiency)
+  service_priorities:
+    filesystem: critical
+    memory: critical
+    github: high
+    fetch: high
+    git-mcp: high
+    sequential-thinking: normal
+    tavily: normal
+    snyk: normal
+    sqlite: normal
+    postgres: normal
+    mongodb: normal
+    reactbits: normal
+    magicuidesign-mcp: normal
+    chrome-devtools: low
+    playwright: low
+    puppeteer: low
+    browser-tools: low
+    desktop-commander: low
+
+# Emergency resource management (efficiency-optimized)
+emergency:
+  # When to trigger emergency resource reclamation (earlier intervention)
+  triggers:
+    system_memory_usage: 0.9 # Reduced from 95%
+    system_cpu_usage: 0.9 # Reduced from 95%
+    disk_space_usage: 0.85 # Reduced from 90%
+    service_failure_rate: 0.15 # New: service failure trigger
+
+  # Actions to take in emergency situations (more aggressive)
+  actions:
+    - stop_non_critical_services
+    - force_sleep_all_services
+    - reduce_service_limits
+    - enable_aggressive_gc
+    - increase_sleep_frequency # New: more aggressive sleeping
+
+  # Service protection order (critical services first)
+  protection_order:
+    - filesystem
+    - memory
+    - github
+    - fetch
+    - gateway
+    - service-manager
+    - tool-router
+    - forge-ui
+
+# Efficiency targets and metrics (new section)
+efficiency_targets:
+  # Memory efficiency goals
+  memory_reduction:
+    sleeping_services: 0.7 # 70% reduction target
+    browser_services: 0.5 # 50% reduction target
+    overall_system: 0.6 # 60% overall reduction
+
+  # CPU efficiency goals
+  cpu_reduction:
+    sleeping_services: 0.9 # 90% reduction target
+    browser_services: 0.8 # 80% reduction target
+    overall_system: 0.75 # 75% overall reduction
+
+  # Wake time targets
+  wake_time_targets:
+    critical_priority: 0.05 # 50ms
+    high_priority: 0.1 # 100ms
+    normal_priority: 0.2 # 200ms
+    low_priority: 0.5 # 500ms
+
+  # Service density goals
+  service_density:
+    services_per_gb_memory: 5 # 5 services per GB
+    services_per_cpu_core: 10 # 10 services per CPU core
+    overall_density_improvement: 3 # 3x improvement
+
+  # Cost reduction goals
+  cost_reduction:
+    infrastructure_cost: 0.5 # 50% cost reduction
+    resource_waste: 0.2 # 20% waste reduction
+    operational_overhead: 0.1 # 10% overhead reduction

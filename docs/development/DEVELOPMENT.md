@@ -20,7 +20,7 @@ This matches the pattern used by [IBM MCP Context Forge](https://github.com/IBM/
 1. Edit `config/gateways.txt`, `config/prompts.txt`, or `.env`.
 2. `make start` (or `make gateway-only` for gateway only).
 3. `make register`; optionally `make list-prompts` to verify prompts.
-4. Test in Cursor with the URL from `make register` or Admin UI. Use the [Automatic JWT wrapper](../README.md#connect-cursor) for context-forge.
+4. Test in Cursor with the URL from `make register` or Admin UI. Use the [Automatic JWT wrapper](../README.md#connect-cursor) for mcp-gateway.
 
 ## Adding a gateway
 
@@ -59,7 +59,7 @@ This repository includes three automated workflows that run weekly to minimize m
 
 Automatically updates:
 - Python dependencies (`requirements.txt`)
-- Docker images (Context Forge gateway)
+- Docker images (MCP Gateway)
 - GitHub Actions
 
 **Auto-merge behavior:**
@@ -102,7 +102,7 @@ cat mcp-registry-report.md
 **Workflow:** `.github/workflows/docker-updates.yml`
 **Script:** `scripts/utils/check-docker-updates.sh`
 
-Checks IBM/mcp-context-forge for new releases and creates PRs with:
+Checks IBM/mcp-gateway for new releases and creates PRs with:
 - Updated image tags in all files
 - Link to release changelog
 - Testing checklist
@@ -150,10 +150,10 @@ Run the same checks CI runs so failures are caught before push:
 | Lint | `make lint` (requires shellcheck and ruff; or use Dev Container) |
 | Test | `make test` (requires Python 3.12, `pip install -r requirements.txt pytest`) |
 | Docker build + gateway smoke | `docker compose build sequential-thinking tool-router`, then create a minimal `.env` (see CI workflow), `docker compose up -d gateway`, then `curl -sf http://localhost:4444/health` (requires Docker and a pullable gateway image tag) |
-| Trivy | `trivy image mcp-gateway-tool-router:latest` (optional; install [Trivy](https://github.com/aquasecurity/trivy) or run in Dev Container) |
+| Trivy | `trivy image forge-mcp-gateway-tool-router:latest` (optional; install [Trivy](https://github.com/aquasecurity/trivy) or run in Dev Container) |
 | Secret scan | `pre-commit run --all-files` (includes secret checks), or run Trufflehog manually with base/head refs |
 
 Gateway smoke requires the gateway image to be pullable (see [docker-compose.yml](../docker-compose.yml)); if the image tag is missing or changed upstream, update the tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh`.
-- **Gateway updates:** Watch [IBM/mcp-context-forge](https://github.com/IBM/mcp-context-forge) releases; update the gateway image tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh` when upgrading.
+- **Gateway updates:** Watch [IBM/mcp-gateway](https://github.com/IBM/mcp-gateway) releases; update the gateway image tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh` when upgrading.
 - **Python deps:** Bump versions in `requirements.txt` / `pyproject.toml` and run `make test`; rebuild tool-router image if needed.
 - **Cursor:** Keep `GATEWAY_JWT` set for cursor-router; run `make verify-cursor-setup` if the IDE shows "Error" or "No server info found".

@@ -1,0 +1,350 @@
+# Multi-Cloud Configuration for MCP Gateway
+# This configuration defines cloud providers and services for multi-cloud deployment
+
+multi_cloud:
+  enabled: true
+  default_provider: aws
+  load_balancing:
+    strategy: weighted_round_robin
+    health_check_interval: 30
+    failover_threshold: 3
+    geographic_routing: true
+    latency_based_routing: true
+    cost_optimization: true
+
+# Cloud Provider Configurations
+providers:
+  - name: aws
+    type: aws
+    region: us-east-1
+    credentials:
+      access_key_id: "${AWS_ACCESS_KEY_ID}"
+      secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+      account_id: "${AWS_ACCOUNT_ID}"
+    services:
+      compute: ecs
+      storage: s3
+      database: rds
+      monitoring: cloudwatch
+      networking: vpc
+      security: iam
+    enabled: true
+    priority: 1
+    cost_multiplier: 1.0
+    performance_multiplier: 1.0
+
+  - name: azure
+    type: azure
+    region: eastus
+    credentials:
+      client_id: "${AZURE_CLIENT_ID}"
+      client_secret: "${AZURE_CLIENT_SECRET}"
+      tenant_id: "${AZURE_TENANT_ID}"
+      subscription_id: "${AZURE_SUBSCRIPTION_ID}"
+    services:
+      compute: aks
+      storage: blob
+      database: sql
+      monitoring: monitor
+      networking: vnet
+      security: aad
+    enabled: false
+    priority: 2
+    cost_multiplier: 1.1
+    performance_multiplier: 0.95
+
+  - name: gcp
+    type: gcp
+    region: us-central1
+    credentials:
+      service_account_key: "${GCP_SERVICE_ACCOUNT_KEY}"
+      project_id: "${GCP_PROJECT_ID}"
+    services:
+      compute: gke
+      storage: gcs
+      database: cloudsql
+      monitoring: cloudmonitoring
+      networking: vpc
+      security: iam
+    enabled: false
+    priority: 3
+    cost_multiplier: 0.9
+    performance_multiplier: 1.05
+
+  - name: digitalocean
+    type: digitalocean
+    region: nyc1
+    credentials:
+      api_token: "${DIGITALOCEAN_API_TOKEN}"
+    services:
+      compute: kubernetes
+      storage: spaces
+      database: managed-databases
+      monitoring: monitoring
+      networking: vpc
+      security: firewall
+    enabled: false
+    priority: 4
+    cost_multiplier: 0.7
+    performance_multiplier: 0.85
+
+  - name: oracle
+    type: oracle
+    region: us-ashburn-1
+    credentials:
+      user_ocid: "${ORACLE_USER_OCID}"
+      fingerprint: "${ORACLE_FINGERPRINT}"
+      tenancy: "${ORACLE_TENANCY}"
+      compartment: "${ORACLE_COMPARTMENT}"
+    services:
+      compute: oke
+      storage: objectstorage
+      database: atp
+      monitoring: monitoring
+      networking: vcn
+      security: iam
+    enabled: false
+    priority: 5
+    cost_multiplier: 1.2
+    performance_multiplier: 1.1
+
+  - name: ibm
+    type: ibm
+    region: us-south
+    credentials:
+      api_key: "${IBM_API_KEY}"
+      account_id: "${IBM_ACCOUNT_ID}"
+      resource_group: "${IBM_RESOURCE_GROUP}"
+    services:
+      compute: kubernetes
+      storage: cos
+      database: db2
+      monitoring: sysdig
+      networking: vpc
+      security: iam
+    enabled: false
+    priority: 6
+    cost_multiplier: 1.3
+    performance_multiplier: 0.9
+
+# Service Configurations
+services:
+  - name: gateway
+    image: ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
+    replicas: 3
+    cpu_request: 500m
+    memory_request: 512Mi
+    ports: [4444]
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      JWT_SECRET_KEY: "${JWT_SECRET_KEY}"
+      AUTH_ENCRYPTION_SECRET: "${AUTH_ENCRYPTION_SECRET}"
+    providers: [aws, azure, gcp]
+    health_check:
+      path: /health
+      interval: 30
+      timeout: 10
+      retries: 3
+    scaling:
+      min_replicas: 2
+      max_replicas: 10
+      target_cpu: 70
+      target_memory: 80
+    cost_optimization:
+      spot_instances: true
+      reserved_instances: false
+      auto_scaling: true
+
+  - name: service-manager
+    image: forge-mcp-gateway-service-manager:latest
+    replicas: 2
+    cpu_request: 250m
+    memory_request: 256Mi
+    ports: [9000]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "${DATABASE_URL}"
+    providers: [aws, azure]
+    health_check:
+      path: /health
+      interval: 30
+      timeout: 5
+      retries: 3
+    scaling:
+      min_replicas: 1
+      max_replicas: 5
+      target_cpu: 60
+      target_memory: 70
+    cost_optimization:
+      spot_instances: true
+      reserved_instances: false
+      auto_scaling: true
+
+  - name: tool-router
+    image: forge-mcp-gateway-tool-router:latest
+    replicas: 2
+    cpu_request: 250m
+    memory_request: 256Mi
+    ports: [8030]
+    environment:
+      NODE_ENV: production
+      GATEWAY_JWT: "${GATEWAY_JWT}"
+    providers: [aws, azure, gcp]
+    health_check:
+      path: /health
+      interval: 30
+      timeout: 5
+      retries: 3
+    scaling:
+      min_replicas: 1
+      max_replicas: 5
+      target_cpu: 70
+      target_memory: 75
+    cost_optimization:
+      spot_instances: true
+      reserved_instances: false
+      auto_scaling: true
+
+  - name: web-admin
+    image: forge-mcp-gateway-web-admin:latest
+    replicas: 2
+    cpu_request: 500m
+    memory_request: 512Mi
+    ports: [8026]
+    environment:
+      NODE_ENV: production
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
+      DATABASE_URL: "${DATABASE_URL}"
+    providers: [aws, azure]
+    health_check:
+      path: /api/health
+      interval: 30
+      timeout: 10
+      retries: 3
+    scaling:
+      min_replicas: 1
+      max_replicas: 5
+      target_cpu: 70
+      target_memory: 80
+    cost_optimization:
+      spot_instances: false
+      reserved_instances: false
+      auto_scaling: true
+
+# Load Balancing Configuration
+load_balancing:
+  global:
+    enabled: true
+    algorithm: weighted_round_robin
+    health_check_interval: 30
+    failover_threshold: 3
+    dns_ttl: 60
+
+  strategies:
+    - name: performance
+      weight: 0.4
+      providers: [aws, gcp]
+      criteria: [latency, throughput]
+
+    - name: cost
+      weight: 0.3
+      providers: [digitalocean, gcp]
+      criteria: [cost, efficiency]
+
+    - name: reliability
+      weight: 0.3
+      providers: [aws, azure, ibm]
+      criteria: [availability, uptime]
+
+# Monitoring and Observability
+monitoring:
+  enabled: true
+  metrics_collection:
+    interval: 30
+    retention: 30d
+    aggregation: 1m
+
+  alerts:
+    enabled: true
+    channels: [email, slack, webhook]
+    thresholds:
+      cpu: 80
+      memory: 85
+      latency: 1000
+      error_rate: 5
+
+  dashboards:
+    enabled: true
+    refresh_interval: 30
+    retention: 7d
+
+# Cost Management
+cost_management:
+  enabled: true
+  budgeting:
+    monthly_budget: 1000
+    alert_threshold: 0.8
+    currency: USD
+
+  optimization:
+    auto_optimize: true
+    spot_instance_ratio: 0.3
+    reserved_instance_ratio: 0.2
+    cleanup_unused_resources: true
+
+  reporting:
+    frequency: daily
+    format: json
+    recipients: ["admin@example.com"]
+
+# Security and Compliance
+security:
+  enabled: true
+  encryption:
+    at_rest: true
+    in_transit: true
+    key_management: cloud_provider
+
+  access_control:
+    rbac: true
+    mfa: true
+    audit_logging: true
+
+  compliance:
+    frameworks: [soc2, gdpr, hipaa, pci_dss]
+    automated_checks: true
+    reporting_frequency: weekly
+
+# Networking
+networking:
+  vpc_peering:
+    enabled: true
+    auto_create: true
+
+  vpn:
+    enabled: false
+    type: site_to_site
+
+  cdn:
+    enabled: true
+    provider: cloudflare
+    cache_ttl: 3600
+
+# Data Management
+data_management:
+  replication:
+    enabled: true
+    strategy: multi_region
+    consistency: eventual
+
+  backup:
+    enabled: true
+    frequency: daily
+    retention: 30d
+
+  disaster_recovery:
+    enabled: true
+    rpo: 1h
+    rto: 4h
+    test_frequency: monthly

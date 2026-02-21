@@ -1,0 +1,86 @@
+name: Reusable Python Setup
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        required: false
+        default: '3.12'
+      cache-dependency-path:
+        description: 'Path to requirements file'
+        required: false
+        default: 'requirements.txt'
+      enable-cache:
+        description: 'Enable dependency caching'
+        required: false
+        default: true
+      requirements-files:
+        description: 'List of requirements files'
+        required: false
+        default: 'requirements.txt'
+
+jobs:
+  setup-python:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: ${{ inputs.enable-cache && 'pip' || '' }}
+          cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+      - name: Get pip cache directory
+        id: cache
+        if: inputs.enable-cache
+        run: |
+          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache pip dependencies
+        if: inputs.enable-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles(inputs.cache-dependency-path) }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ inputs.python-version }}-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libffi-dev libssl-dev
+
+      - name: Install Python dependencies
+        run: |
+          # Install requirements files
+          for req_file in ${{ inputs.requirements-files }}; do
+            if [ -f "$req_file" ]; then
+              echo "📦 Installing dependencies from $req_file"
+              pip install -r "$req_file"
+            else
+              echo "⚠️ Requirements file $req_file not found"
+            fi
+          done
+
+      - name: Install development dependencies
+        run: |
+          # Install common development tools
+          pip install pytest pytest-cov pytest-mock black flake8 mypy
+
+      - name: Verify Python installation
+        run: |
+          python --version
+          pip --version
+          pytest --version
+          echo "✅ Python ${{ inputs.python-version }} setup complete"
+
+      - name: List installed packages
+        run: |
+          pip list --format=columns

@@ -1,0 +1,42 @@
+# Global Sleep Settings for Serverless MCP Architecture
+# This configuration controls the overall sleep/wake behavior across all services
+
+sleep_settings:
+  enabled: true
+  max_sleeping_services: 15
+  system_memory_threshold: "4GB"
+  sleep_check_interval: 30
+  wake_timeout: 10
+  resource_monitoring:
+    enabled: true
+    cpu_threshold: 0.8
+    memory_threshold: 0.85
+    check_interval: 60
+  performance_optimization:
+    pre_warm_critical_services: true
+    cache_container_images: true
+    wake_prediction_enabled: true
+    memory_optimization_enabled: true
+
+# Priority-based wake ordering
+wake_priorities:
+  high: ["filesystem", "memory", "sequential-thinking"]
+  normal: ["tavily", "github", "fetch", "git-mcp"]
+  low: ["chrome-devtools", "playwright", "puppeteer", "desktop-commander"]
+
+# Resource thresholds for automatic state transitions
+resource_thresholds:
+  high_memory_pressure: 0.9
+  moderate_memory_pressure: 0.75
+  low_memory_pressure: 0.5
+  cpu_pressure_threshold: 0.8
+  idle_cpu_threshold: 0.1
+
+# Performance monitoring settings
+monitoring:
+  metrics_retention_hours: 24
+  performance_history_size: 1000
+  alert_thresholds:
+    wake_time_ms: 500
+    sleep_frequency_per_hour: 10
+    error_rate_percent: 5

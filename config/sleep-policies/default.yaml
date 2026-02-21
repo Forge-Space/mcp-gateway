@@ -1,0 +1,59 @@
+# Default Sleep Policy Configuration
+# Based on forge-patterns high-efficiency-docker-standards-c1f908.md
+
+global_settings:
+  default_idle_timeout: 300 # 5 minutes
+  min_sleep_time: 60 # 1 minute
+  check_interval: 30 # 30 seconds
+  max_wake_time: 200 # 200ms target
+
+service_classes:
+  high_priority:
+    sleep_enabled: false
+    auto_start: true
+    priority: high
+    services:
+      - gateway
+      - service-manager
+      - tool-router
+
+  on_demand:
+    sleep_enabled: true
+    auto_start: false
+    priority: normal
+    idle_timeout: 300
+    min_sleep_time: 60
+    memory_reservation: 128MB
+    services:
+      - uiforge
+      - sequential-thinking
+      - filesystem
+      - fetch
+      - memory
+
+  browser_services:
+    sleep_enabled: true
+    auto_start: false
+    priority: normal
+    idle_timeout: 180
+    min_sleep_time: 120
+    memory_reservation: 256MB
+    services:
+      - chrome-devtools
+      - playwright
+
+  security_services:
+    sleep_enabled: true
+    auto_start: false
+    priority: normal
+    idle_timeout: 600
+    min_sleep_time: 300
+    memory_reservation: 128MB
+    services:
+      - snyk
+
+monitoring:
+  metrics_enabled: true
+  health_check_interval: 30
+  performance_tracking: true
+  resource_usage_logging: true

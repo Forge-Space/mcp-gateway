@@ -1,0 +1,12 @@
+#!/bin/bash
+# commit-msg hook - conventional commit enforcement
+set -euo pipefail
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+CONVENTIONAL_PATTERN='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+'
+if [[ ! "$COMMIT_MSG" =~ $CONVENTIONAL_PATTERN ]]; then
+  echo "Commit message does not follow conventional commit format"
+  echo "Expected: <type>(<scope>): <description>"
+  exit 1
+fi
+echo "Commit message validation passed"

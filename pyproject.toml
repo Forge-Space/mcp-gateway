@@ -4,13 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-gateway"
-version = "0.1.1"
+version = "1.7.0"
 description = "Self-hosted MCP gateway (Context Forge) with tool-router"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "mcp",
     "mcp-contextforge-gateway",
+    "beautifulsoup4",
+    "httpx",
+    "lxml",
+    "Pillow",
+    "playwright",
+    "sentry-sdk[fastapi]>=2.0.0",
+    "structlog>=23.0.0",
+    "psycopg2-binary>=2.9.0",
 ]
 
 [project.optional-dependencies]
@@ -19,21 +27,43 @@ dev = [
     "pytest-cov>=4.0.0",
     "ruff>=0.1.0",
     "pre-commit>=3.0.0",
+    "psutil>=5.9.0",
+    "pytest-benchmark>=4.0.0",
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tool_router/tests"]
+minversion = "6.0"
+testpaths = ["tool_router/tests", "dribbble_mcp/tests"]
 pythonpath = ["."]
-addopts = "-v --strict-markers"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers --cov=tool_router --cov=dribbble_mcp --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=80"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "sleep_wake: marks tests related to sleep/wake functionality",
+    "resource_monitoring: marks tests related to resource monitoring",
+    "wake_prediction: marks tests related to wake prediction",
+    "priority_management: marks tests related to priority management",
+    "api_endpoints: marks tests related to API endpoints",
+    "memory_optimization: marks tests related to memory optimization",
+]
 
 [tool.coverage.run]
-source = ["tool_router"]
+source = ["tool_router", "service_manager", "dribbble_mcp"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
-    "tool_router/__main__.py",
+    "*/test_*.py",
+    "*/__main__.py",
+    "tool_router/server.py",
+    "tool_router/gateway_client.py",
+    "tool_router/scoring.py",
+    "tool_router/simple_server.py",
+    "tool_router/http_server.py",
     "tool_router/core/server.py",
-    "tool_router/tools/__init__.py",
 ]
 
 [tool.coverage.report]
@@ -42,18 +72,22 @@ exclude_lines = [
     "def __repr__",
     "raise AssertionError",
     "raise NotImplementedError",
-    "if __name__ == .__main__.:",
+    "if __name__ == \"__main__\":",
     "if TYPE_CHECKING:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
 show_missing = true
 precision = 2
+fail_under = 80
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-src = ["tool_router"]
+src = ["tool_router", "dribbble_mcp"]
 
 [tool.ruff.lint]
 # Enable comprehensive rule sets (similar to TypeScript strict mode)
@@ -126,6 +160,17 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "B017",    # Allow asserting on Exception in tests
     "PLC0415", # Allow imports inside test functions
 ]
+"dribbble_mcp/tests/**/*.py" = [
+    "S101",    # Allow assert in tests
+    "ANN",     # Don't require type hints in tests
+    "PLR2004", # Allow magic values in tests
+    "ARG",     # Allow unused arguments in test fixtures
+    "SIM117",  # Allow nested with statements in tests
+    "PT011",   # Allow broad exception types in pytest.raises
+    "B017",    # Allow asserting on Exception in tests
+    "PLC0415", # Allow imports inside test functions
+    "PT006",   # Allow @pytest.fixture() with parens
+]
 "tool_router/test_*.py" = [
     "S101",    # Allow assert in tests
     "ANN",     # Don't require type hints in tests
@@ -149,9 +194,18 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 "tool_router/scoring/matcher.py" = [
     "E501",    # Allow long lines in scoring calculations
 ]
+"tool_router/ai/prompts.py" = [
+    "E501",    # Allow long lines in prompt template strings
+]
+"tool_router/ai/selector.py" = [
+    "PLR0911", # Allow more return statements in AI response parsing functions
+]
+"tool_router/tests/test_ai_selector.py" = [
+    "E501",    # Allow long lines in test fixture strings
+]
 
 [tool.ruff.lint.isort]
-known-first-party = ["tool_router"]
+known-first-party = ["tool_router", "dribbble_mcp"]
 force-single-line = false
 lines-after-imports = 2
 

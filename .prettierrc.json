@@ -1,35 +1,40 @@
 {
-  "$schema": "https://json.schemastore.org/prettierrc",
+  "$schema": "./patterns/code-quality/prettier/base.config.json",
   "semi": true,
-  "trailingComma": "es5",
-  "singleQuote": false,
+  "singleQuote": true,
   "printWidth": 100,
   "tabWidth": 2,
   "useTabs": false,
-  "arrowParens": "always",
   "endOfLine": "lf",
-  "bracketSpacing": true,
-  "proseWrap": "preserve",
+  "trailingComma": "es5",
+  "arrowParens": "always",
   "overrides": [
+    {
+      "files": "*.json",
+      "options": {
+        "printWidth": 80,
+        "trailingComma": "none"
+      }
+    },
+    {
+      "files": ["*.yml", "*.yaml"],
+      "options": {
+        "printWidth": 80,
+        "singleQuote": false
+      }
+    },
     {
       "files": "*.md",
       "options": {
         "printWidth": 80,
         "proseWrap": "always"
       }
-    },
-    {
-      "files": ["*.json", "*.jsonc"],
-      "options": {
-        "printWidth": 120,
-        "trailingComma": "none"
-      }
-    },
-    {
-      "files": "*.yaml",
-      "options": {
-        "printWidth": 120
-      }
     }
-  ]
+  ],
+  "_patternInfo": {
+    "baseConfig": "forge-patterns/patterns/code-quality/prettier/base.config.json",
+    "mergedAt": "2026-02-18T02:43:45.634Z",
+    "project": "forge-mcp-gateway",
+    "strategy": "hybrid-preserve-custom"
+  }
 }

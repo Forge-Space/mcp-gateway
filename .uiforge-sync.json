@@ -1,0 +1,13 @@
+{
+  "variables": {
+    "project-name": "mcp-gateway",
+    "project-description": "UIForge MCP Gateway - Self-hosted aggregation gateway for MCP servers",
+    "project-repo": "mcp-gateway",
+    "package_name": "mcp_gateway"
+  },
+  "templates": {
+    "package.json/uiforge-package@1.0.0": "package.json",
+    "pyproject.toml/uiforge-python@1.0.0": "pyproject.toml",
+    "tsconfig.json/uiforge-typescript@1.0.0": "tsconfig.json"
+  }
+}

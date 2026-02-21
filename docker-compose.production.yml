@@ -1,0 +1,376 @@
+# Production Docker Compose Configuration for Forge MCP Gateway
+# This file is optimized for production deployment with security, monitoring, and scalability
+
+version: "3.8"
+
+services:
+  # Core Gateway Service (Production)
+  gateway:
+    image: ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
+    container_name: forge-mcpgateway-prod
+    restart: always
+    ports:
+      - "${GATEWAY_PORT:-8000}:8000"
+    env_file:
+      - .env.shared
+      - .env.production
+    environment:
+      NODE_ENV: production
+      HOST: ${GATEWAY_HOST:-0.0.0.0}
+      PORT: ${GATEWAY_PORT:-8000}
+      DATABASE_URL: ${DATABASE_URL}
+      FORGE_ENABLE_DYNAMIC_SERVICES: true
+      FORGE_ENABLE_SERVICE_DISCOVERY: true
+      FORGE_ENABLE_AUTO_SCALING: true
+      FORGE_ENABLE_SLEEP_POLICIES: true
+      FORGE_ENABLE_SERVERLESS_MODE: true
+      FORGE_SERVICE_MANAGER_URL: http://service-manager:9000
+      FORGE_ENABLE_MONITORING: true
+      FORGE_ENABLE_HEALTH_CHECKS: true
+    volumes:
+      - ./data:/data
+      - ./config:/config:ro
+      - ./logs:/logs
+    depends_on:
+      service-manager:
+        condition: service_healthy
+      tool-router:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+      restart_policy:
+        condition: unless-stopped
+      replicas: 1
+    memswap_limit: 1.5G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - forge-network
+
+  # Service Manager (Production)
+  service-manager:
+    build:
+      context: ./service-manager
+      dockerfile: Dockerfile
+    container_name: forge-service-manager-prod
+    restart: always
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env.shared
+      - .env.production
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      SLEEP_ENABLED: true
+      MAX_SLEEPING_SERVICES: ${MAX_SLEEPING_SERVICES:-20}
+      SYSTEM_MEMORY_THRESHOLD: ${SYSTEM_MEMORY_THRESHOLD:-4GB}
+      WAKE_TIMEOUT: 10
+      SLEEP_CHECK_INTERVAL: 30
+      ENABLE_METRICS: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data:/data
+      - ./logs:/logs
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+      restart_policy:
+        condition: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    networks:
+      - forge-network
+
+  # Tool Router (Production)
+  tool-router:
+    build:
+      context: ./tool_router
+      dockerfile: Dockerfile.tool-router
+    container_name: forge-tool-router-prod
+    restart: always
+    env_file:
+      - .env.shared
+      - .env.production
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      ROUTER_AI_ENABLED: true
+      ROUTER_AI_PROVIDER: ollama
+      ROUTER_AI_MODEL: llama3.2:3b
+      ROUTER_AI_ENDPOINT: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      ROUTER_AI_TIMEOUT_MS: 5000
+      ROUTER_AI_WEIGHT: 0.7
+      ROUTER_AI_MIN_CONFIDENCE: 0.3
+      ROUTER_FEEDBACK_FILE: /data/tool_router_feedback.json
+    volumes:
+      - ./data:/data
+      - ./logs:/logs
+    depends_on:
+      - service-manager
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+      restart_policy:
+        condition: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    networks:
+      - forge-network
+
+  # Ollama AI Service (Optional)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: forge-ollama-prod
+    restart: always
+    ports:
+      - "11434:11434"
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+      OLLAMA_PORT: 11434
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 2G
+      restart_policy:
+        condition: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - forge-network
+
+  # PostgreSQL Database (Production)
+  postgres:
+    image: postgres:15-alpine
+    container_name: forge-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-forge_mcp_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-forge_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.25"
+          memory: 1G
+      restart_policy:
+        condition: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-forge_user} -d ${POSTGRES_DB:-forge_mcp_prod}",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - forge-network
+
+  # Redis Cache (Production)
+  redis:
+    image: redis:7-alpine
+    container_name: forge-redis-prod
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+      restart_policy:
+        condition: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    networks:
+      - forge-network
+
+  # Prometheus Monitoring (Production)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: forge-prometheus-prod
+    restart: always
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+    volumes:
+      - ./config/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+        reservations:
+          cpus: "0.1"
+          memory: 512M
+      restart_policy:
+        condition: unless-stopped
+    networks:
+      - forge-network
+
+  # Grafana Dashboard (Production)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: forge-grafana-prod
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+      restart_policy:
+        condition: unless-stopped
+    networks:
+      - forge-network
+
+  # Next.js Admin UI (Production)
+  web-admin:
+    build:
+      context: ./apps/web-admin
+      dockerfile: Dockerfile
+    container_name: forge-web-admin-prod
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.shared
+      - .env.production
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_GRAFANA_URL: http://localhost:3001
+    depends_on:
+      - gateway
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 256M
+      restart_policy:
+        condition: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    networks:
+      - forge-network
+
+# Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# Networks
+networks:
+  forge-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

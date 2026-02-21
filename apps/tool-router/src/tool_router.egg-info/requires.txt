@@ -1,0 +1,11 @@
+mcp<2.0.0,>=1.0.0
+fastmcp<3.0.0,>=2.0.0
+requests<3.0.0,>=2.31.0
+flask<4.0.0,>=3.0.0
+pyyaml<7.0.0,>=6.0.0
+
+[dev]
+pytest>=7.0.0
+pytest-cov>=4.0.0
+ruff>=0.1.0
+pre-commit>=3.0.0

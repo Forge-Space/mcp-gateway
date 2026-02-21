@@ -1,6 +1,6 @@
 # CodeRabbit Setup Guide
 
-This guide covers setting up CodeRabbit for IDE, GitHub, and terminal usage in the mcp-gateway project.
+This guide covers setting up CodeRabbit for IDE, GitHub, and terminal usage in the forge-mcp-gateway project.
 
 ## Overview
 
@@ -27,7 +27,7 @@ The project uses `.coderabbit.yaml` for centralized configuration that works acr
 
 1. Visit [CodeRabbit GitHub Marketplace](https://github.com/marketplace/coderabbitai)
 2. Click "Install" or "Configure"
-3. Select repositories (grant access to `mcp-gateway`)
+3. Select repositories (grant access to `forge-mcp-gateway`)
 4. CodeRabbit will automatically review new PRs
 
 ### Usage

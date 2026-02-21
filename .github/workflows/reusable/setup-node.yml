@@ -1,0 +1,65 @@
+name: Reusable Node.js Setup
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '22'
+      cache-dependency-path:
+        description: 'Path to dependency files'
+        required: false
+        default: 'package-lock.json'
+      enable-cache:
+        description: 'Enable dependency caching'
+        required: false
+        default: true
+
+jobs:
+  setup-node:
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.enable-cache && 'npm' || '' }}
+          cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+      - name: Get npm cache directory
+        id: cache
+        if: inputs.enable-cache
+        run: |
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
+      - name: Cache node modules
+        if: inputs.enable-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.cache.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ inputs.node-version }}-${{ hashFiles(inputs.cache-dependency-path) }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ inputs.node-version }}-
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          if [ -f "package-lock.json" ]; then
+            echo "✅ Dependencies installed from package-lock.json"
+          else
+            echo "⚠️ No package-lock.json found, running npm install"
+            npm install
+          fi
+
+      - name: Verify Node.js installation
+        run: |
+          node --version
+          npm --version
+          echo "✅ Node.js ${{ inputs.node-version }} setup complete"

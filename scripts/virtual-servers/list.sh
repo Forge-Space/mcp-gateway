@@ -65,8 +65,26 @@ if [[ "$count" -eq 0 ]]; then
   exit 0
 fi
 
-printf "%-38s %-24s %s\n" "ID" "NAME" "TOOLS"
-printf "%-38s %-24s %s\n" "--------------------------------------" "------------------------" "-----"
+# Build enabled-status map from config file
+declare -A server_enabled_map
+vs_config="${REPO_ROOT}/config/virtual-servers.txt"
+if [[ -f "$vs_config" ]]; then
+  while IFS= read -r cfg_line || [[ -n "$cfg_line" ]]; do
+    cfg_line=$(echo "$cfg_line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    [[ -z "$cfg_line" || "$cfg_line" =~ ^# ]] && continue
+    cfg_name=$(echo "$cfg_line" | cut -d'|' -f1)
+    cfg_field_count=$(echo "$cfg_line" | awk -F'|' '{print NF}')
+    if [[ "$cfg_field_count" -ge 4 ]]; then
+      cfg_enabled=$(echo "$cfg_line" | cut -d'|' -f2 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+      server_enabled_map["$cfg_name"]="$cfg_enabled"
+    else
+      server_enabled_map["$cfg_name"]="true"
+    fi
+  done < "$vs_config"
+fi
+
+printf "%-38s %-24s %-10s %s\n" "ID" "NAME" "STATUS" "TOOLS"
+printf "%-38s %-24s %-10s %s\n" "--------------------------------------" "------------------------" "----------" "-----"
 while IFS= read -r line; do
   id=$(echo "$line" | jq -r '.id // empty')
   name=$(echo "$line" | jq -r '.name // "(unnamed)"')
@@ -76,7 +94,15 @@ while IFS= read -r line; do
   else
     tool_count="$tools_attr"
   fi
-  printf "%-38s %-24s %s\n" "$id" "$name" "$tool_count"
+  cfg_status="${server_enabled_map[$name]:-}"
+  if [[ "$cfg_status" == "false" || "$cfg_status" == "0" || "$cfg_status" == "no" ]]; then
+    status_label="disabled"
+  elif [[ -n "$cfg_status" ]]; then
+    status_label="enabled"
+  else
+    status_label="(no cfg)"
+  fi
+  printf "%-38s %-24s %-10s %s\n" "$id" "$name" "$status_label" "$tool_count"
 done < <(echo "$servers_json" | jq -c '.[]')
 
 url_file="$REPO_ROOT/data/.cursor-mcp-url"

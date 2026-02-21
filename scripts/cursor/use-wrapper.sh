@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 source "$SCRIPT_DIR/lib/bootstrap.sh"
 load_env || { log_err ".env not found in $REPO_ROOT"; exit 1; }
 
@@ -28,8 +28,8 @@ if [[ -z "${CURSOR_MCP_SERVER_URL:-}" && (! -f "$url_file" || ! -s "$url_file") 
 fi
 
 source "$SCRIPT_DIR/lib/gateway.sh"
-KEY=$(get_context_forge_key "$MCP_JSON") || true
-[[ -z "$KEY" ]] && KEY="context-forge"
+KEY=$(get_mcp_gateway_key "$MCP_JSON") || true
+[[ -z "$KEY" ]] && KEY="mcp-gateway"
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT

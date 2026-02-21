@@ -55,13 +55,13 @@ else
   check 1 "JWT generated"
 fi
 
-CONTEXT_FORGE_IMAGE="${CONTEXT_FORGE_IMAGE:-ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2}"
-if docker image inspect "$CONTEXT_FORGE_IMAGE" &>/dev/null; then
-  check 1 "Context Forge image present ($CONTEXT_FORGE_IMAGE)"
+MCP_GATEWAY_IMAGE="${MCP_GATEWAY_IMAGE:-ghcr.io/ibm/mcp-gateway:latest}"
+if docker image inspect "$MCP_GATEWAY_IMAGE" &>/dev/null; then
+  check 1 "MCP Gateway image present ($MCP_GATEWAY_IMAGE)"
   GATEWAY_FROM_DOCKER_URL="http://host.docker.internal:${PORT:-4444}"
   add_host_args=()
   [[ "$(uname -s)" == "Linux" ]] && add_host_args=(--add-host=host.docker.internal:host-gateway)
-  if docker run --rm "${add_host_args[@]}" "$CONTEXT_FORGE_IMAGE" python3 -c "
+  if docker run --rm "${add_host_args[@]}" "$MCP_GATEWAY_IMAGE" python3 -c "
 import urllib.request, sys
 try:
   r = urllib.request.urlopen('$GATEWAY_FROM_DOCKER_URL/health', timeout=8)
@@ -75,7 +75,7 @@ except Exception:
     ok=$((ok + 1))
   fi
 else
-  check 0 "Context Forge image missing (first Cursor start may timeout). Run: make cursor-pull"
+  check 0 "MCP Gateway image missing (first Cursor start may timeout). Run: make cursor-pull"
 fi
 
 if [[ -n "$JWT" ]]; then
@@ -124,7 +124,7 @@ if [[ "${fail}" -gt 0 ]]; then
 fi
 log_line
 log_ok "All checks passed."
-log_info "If context-forge still shows Error:"
+log_info "If mcp-gateway still shows Error:"
 log_info "  → Fully quit Cursor (Cmd+Q / Alt+F4) and reopen. Reload Window is not enough."
 log_info "  → To use default cursor-router: remove REGISTER_CURSOR_MCP_SERVER_NAME from .env, run make register, then quit and reopen Cursor."
 log_info "  → If logs show 'No server info found': ensure gateway is reachable from Docker (host.docker.internal:${PORT:-4444}); run make start, make register, then quit and reopen Cursor."

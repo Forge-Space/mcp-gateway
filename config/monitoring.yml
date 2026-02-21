@@ -1,0 +1,386 @@
+# Comprehensive Monitoring Configuration for High-Efficiency Docker Standards
+# This file defines monitoring, metrics collection, and alerting for the Forge MCP Gateway
+
+# Global monitoring settings
+global:
+  enabled: true
+  collection_interval: 10 # seconds
+  retention_period: 86400 # 24 hours
+  metrics_port: 9090
+  health_check_interval: 30
+
+# Metrics collection configuration
+metrics:
+  # Service state metrics
+  service_states:
+    enabled: true
+    metrics:
+      - name: services_running_total
+        type: gauge
+        description: "Total number of running services"
+      - name: services_sleeping_total
+        type: gauge
+        description: "Total number of sleeping services"
+      - name: services_stopped_total
+        type: gauge
+        description: "Total number of stopped services"
+      - name: service_state_transitions_total
+        type: counter
+        description: "Total number of service state transitions"
+        labels: [from_state, to_state, service_name]
+
+  # Resource utilization metrics
+  resource_usage:
+    enabled: true
+    metrics:
+      - name: memory_usage_bytes
+        type: gauge
+        description: "Memory usage in bytes"
+        labels: [service_name, state]
+      - name: cpu_usage_percent
+        type: gauge
+        description: "CPU usage percentage"
+        labels: [service_name, state]
+      - name: memory_reservation_bytes
+        type: gauge
+        description: "Memory reservation in bytes"
+        labels: [service_name]
+      - name: cpu_reservation_cores
+        type: gauge
+        description: "CPU reservation in cores"
+        labels: [service_name]
+
+  # Performance metrics
+  performance:
+    enabled: true
+    metrics:
+      - name: service_wake_time_seconds
+        type: histogram
+        description: "Service wake time in seconds"
+        labels: [service_name, priority]
+        buckets: [0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0]
+      - name: service_sleep_duration_seconds
+        type: histogram
+        description: "Service sleep duration in seconds"
+        labels: [service_name]
+        buckets: [60, 300, 600, 1800, 3600, 7200]
+      - name: request_duration_seconds
+        type: histogram
+        description: "Request duration in seconds"
+        labels: [service_name, endpoint]
+        buckets: [0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0]
+      - name: request_total
+        type: counter
+        description: "Total number of requests"
+        labels: [service_name, endpoint, status]
+
+  # Availability metrics
+  availability:
+    enabled: true
+    metrics:
+      - name: service_uptime_seconds
+        type: counter
+        description: "Service uptime in seconds"
+        labels: [service_name]
+      - name: service_downtime_seconds
+        type: counter
+        description: "Service downtime in seconds"
+        labels: [service_name]
+      - name: health_check_success_total
+        type: counter
+        description: "Total successful health checks"
+        labels: [service_name]
+      - name: health_check_failure_total
+        type: counter
+        description: "Total failed health checks"
+        labels: [service_name]
+
+# Alerting configuration
+alerts:
+  # Performance alerts
+  performance:
+    - name: high_wake_time
+      condition: "service_wake_time_seconds > 0.5"
+      severity: warning
+      message: "Service wake time exceeds 500ms"
+      labels: [service_name]
+      annotations:
+        summary: "High wake time detected for {{ $labels.service_name }}"
+        description: "Wake time of {{ $value }}s exceeds threshold of 500ms"
+
+    - name: critical_wake_time
+      condition: "service_wake_time_seconds > 1.0"
+      severity: critical
+      message: "Service wake time exceeds 1 second"
+      labels: [service_name]
+      annotations:
+        summary: "Critical wake time for {{ $labels.service_name }}"
+        description: "Wake time of {{ $value }}s exceeds critical threshold of 1s"
+
+  # Resource alerts
+  resources:
+    - name: high_memory_usage
+      condition: "memory_usage_bytes / memory_limit_bytes > 0.8"
+      severity: warning
+      message: "Memory usage exceeds 80%"
+      labels: [service_name]
+      annotations:
+        summary: "High memory usage for {{ $labels.service_name }}"
+        description: "Memory usage at {{ $value | humanizePercentage }}"
+
+    - name: critical_memory_usage
+      condition: "memory_usage_bytes / memory_limit_bytes > 0.9"
+      severity: critical
+      message: "Memory usage exceeds 90%"
+      labels: [service_name]
+      annotations:
+        summary: "Critical memory usage for {{ $labels.service_name }}"
+        description: "Memory usage at {{ $value | humanizePercentage }}"
+
+    - name: high_cpu_usage
+      condition: "cpu_usage_percent > 80"
+      severity: warning
+      message: "CPU usage exceeds 80%"
+      labels: [service_name]
+      annotations:
+        summary: "High CPU usage for {{ $labels.service_name }}"
+        description: "CPU usage at {{ $value }}%"
+
+    - name: critical_cpu_usage
+      condition: "cpu_usage_percent > 90"
+      severity: critical
+      message: "CPU usage exceeds 90%"
+      labels: [service_name]
+      annotations:
+        summary: "Critical CPU usage for {{ $labels.service_name }}"
+        description: "CPU usage at {{ $value }}%"
+
+  # Availability alerts
+  availability:
+    - name: service_down
+      condition: 'up{job="forge-mcp"} == 0'
+      severity: critical
+      message: "Service is down"
+      labels: [service_name]
+      annotations:
+        summary: "Service {{ $labels.service_name }} is down"
+        description: "Service has been down for more than 30 seconds"
+
+    - name: health_check_failure
+      condition: "rate(health_check_failure_total[5m]) > 0.1"
+      severity: warning
+      message: "Health check failure rate exceeds 10%"
+      labels: [service_name]
+      annotations:
+        summary: "High health check failure rate for {{ $labels.service_name }}"
+        description: "Health check failure rate is {{ $value | humanizePercentage }}"
+
+    - name: service_restart_frequent
+      condition: 'rate(service_state_transitions_total{to_state="running"}[10m]) > 0.1'
+      severity: warning
+      message: "Service restarting frequently"
+      labels: [service_name]
+      annotations:
+        summary: "Frequent restarts for {{ $labels.service_name }}"
+        description: "Service has restarted {{ $value }} times in the last 10 minutes"
+
+  # System alerts
+  system:
+    - name: high_system_memory
+      condition: "system_memory_usage_percent > 85"
+      severity: warning
+      message: "System memory usage exceeds 85%"
+      annotations:
+        summary: "High system memory usage"
+        description: "System memory usage at {{ $value }}%"
+
+    - name: critical_system_memory
+      condition: "system_memory_usage_percent > 95"
+      severity: critical
+      message: "System memory usage exceeds 95%"
+      annotations:
+        summary: "Critical system memory usage"
+        description: "System memory usage at {{ $value }}%"
+
+    - name: high_system_cpu
+      condition: "system_cpu_usage_percent > 85"
+      severity: warning
+      message: "System CPU usage exceeds 85%"
+      annotations:
+        summary: "High system CPU usage"
+        description: "System CPU usage at {{ $value }}%"
+
+    - name: critical_system_cpu
+      condition: "system_cpu_usage_percent > 95"
+      severity: critical
+      message: "System CPU usage exceeds 95%"
+      annotations:
+        summary: "Critical system CPU usage"
+        description: "System CPU usage at {{ $value }}%"
+
+# Dashboard configuration
+dashboards:
+  service_overview:
+    title: "Service State Overview"
+    panels:
+      - title: "Service States"
+        type: "pie"
+        metrics:
+          [
+            "services_running_total",
+            "services_sleeping_total",
+            "services_stopped_total",
+          ]
+
+      - title: "Resource Usage"
+        type: "graph"
+        metrics: ["memory_usage_bytes", "cpu_usage_percent"]
+
+      - title: "Wake Times"
+        type: "histogram"
+        metrics: ["service_wake_time_seconds"]
+
+      - title: "Service Health"
+        type: "table"
+        metrics:
+          ["up", "health_check_success_total", "health_check_failure_total"]
+
+  performance_metrics:
+    title: "Performance Metrics"
+    panels:
+      - title: "Wake Time Distribution"
+        type: "heatmap"
+        metrics: ["service_wake_time_seconds"]
+
+      - title: "Request Duration"
+        type: "graph"
+        metrics: ["request_duration_seconds"]
+
+      - title: "Service Response Times"
+        type: "table"
+        metrics: ["request_duration_seconds"]
+
+  resource_efficiency:
+    title: "Resource Efficiency"
+    panels:
+      - title: "Memory Efficiency"
+        type: "graph"
+        metrics: ["memory_usage_bytes", "memory_reservation_bytes"]
+
+      - title: "CPU Efficiency"
+        type: "graph"
+        metrics: ["cpu_usage_percent", "cpu_reservation_cores"]
+
+      - title: "Resource Utilization"
+        type: "gauge"
+        metrics: ["system_memory_usage_percent", "system_cpu_usage_percent"]
+
+  cost_analysis:
+    title: "Cost Analysis"
+    panels:
+      - title: "Resource Cost Trend"
+        type: "graph"
+        metrics: ["total_resource_cost"]
+
+      - title: "Service Cost Breakdown"
+        type: "pie"
+        metrics: ["service_resource_cost"]
+
+      - title: "Efficiency Savings"
+        type: "singlestat"
+        metrics: ["efficiency_savings_percent"]
+
+# Health check endpoints
+health_checks:
+  gateway:
+    path: "/health"
+    method: "GET"
+    expected_status: 200
+    timeout: 10
+    interval: 30
+
+  service_manager:
+    path: "/health"
+    method: "GET"
+    expected_status: 200
+    timeout: 10
+    interval: 30
+
+  tool_router:
+    path: "/health"
+    method: "GET"
+    expected_status: 200
+    timeout: 10
+    interval: 30
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  outputs:
+    - type: "file"
+      path: "/var/log/forge-mcp/monitoring.log"
+      max_size: "100MB"
+      max_files: 5
+    - type: "syslog"
+      facility: "local0"
+
+  log_metrics:
+    - name: log_entries_total
+      type: counter
+      description: "Total number of log entries"
+      labels: [level, service]
+
+    - name: log_error_total
+      type: counter
+      description: "Total number of error log entries"
+      labels: [service]
+
+# Integration settings
+integrations:
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+
+  grafana:
+    enabled: true
+    url: "http://grafana:3000"
+    api_key: "${GRAFANA_API_KEY}"
+
+  alertmanager:
+    enabled: true
+    url: "http://alertmanager:9093"
+
+  slack:
+    enabled: false
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channel: "#alerts"
+
+  email:
+    enabled: false
+    smtp_server: "${SMTP_SERVER}"
+    from: "${ALERT_EMAIL_FROM}"
+    to: "${ALERT_EMAIL_TO}"
+
+# Performance targets
+performance_targets:
+  wake_time:
+    high_priority: 0.05 # 50ms
+    normal_priority: 0.2 # 200ms
+    low_priority: 0.5 # 500ms
+
+  resource_utilization:
+    memory_warning: 0.8 # 80%
+    memory_critical: 0.9 # 90%
+    cpu_warning: 0.8 # 80%
+    cpu_critical: 0.9 # 90%
+
+  availability:
+    uptime_target: 0.999 # 99.9%
+    health_check_success: 0.99 # 99%
+
+  efficiency:
+    memory_reduction_target: 0.6 # 60% reduction for sleeping services
+    cpu_reduction_target: 0.8 # 80% reduction for sleeping services
+    cost_reduction_target: 0.5 # 50% cost reduction

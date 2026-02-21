@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --cov=service_manager --cov-report=xml --cov-report=html"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "sleep_wake: marks tests related to sleep/wake functionality",
+    "resource_monitoring: marks tests related to resource monitoring",
+    "wake_prediction: marks tests related to wake prediction",
+    "priority_management: marks tests related to priority management",
+    "api_endpoints: marks tests related to API endpoints",
+    "memory_optimization: marks tests related to memory optimization"
+]

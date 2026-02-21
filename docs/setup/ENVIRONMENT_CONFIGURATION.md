@@ -284,7 +284,7 @@ GATEWAY_JWT=<run make jwt>
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/Users/john/mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/Users/john/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_johns_personal_token",
@@ -308,7 +308,7 @@ GATEWAY_JWT=<run make jwt>
 {
   "mcpServers": {
     "fullstack-universal": {
-      "command": "/Users/jane/mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/Users/jane/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
       "args": ["--server-name", "fullstack-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_janes_token",

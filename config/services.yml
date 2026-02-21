@@ -1,0 +1,796 @@
+# Services configuration for Forge MCP Gateway
+# This file defines all available MCP services that can be dynamically started
+
+services:
+  # AI and reasoning services
+  sequential-thinking:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-sequential-thinking",
+        "--expose-sse",
+        "--port",
+        "8013",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8013
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 60 # 1 minute
+      memory_reservation: "128MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # Browser automation services
+  chrome-devtools:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y chrome-devtools-mcp@latest",
+        "--expose-sse",
+        "--port",
+        "8014",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8014
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      memory_reservation: "256MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 180 # 3 minutes for browser services
+      min_sleep_time: 120 # 2 minutes - browsers are expensive to start
+      memory_reservation: "256MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"
+
+  playwright:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @playwright/mcp@latest",
+        "--expose-sse",
+        "--port",
+        "8015",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8015
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      memory_reservation: "256MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 180 # 3 minutes for browser services
+      min_sleep_time: 120 # 2 minutes - browsers are expensive to start
+      memory_reservation: "256MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"
+
+  puppeteer:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-puppeteer",
+        "--expose-sse",
+        "--port",
+        "8018",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8018
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      memory_reservation: "256MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 180 # 3 minutes for browser services
+      min_sleep_time: 120 # 2 minutes - browsers are expensive to start
+      memory_reservation: "256MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"
+
+  browser-tools:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @agentdeskai/browser-tools-mcp",
+        "--expose-sse",
+        "--port",
+        "8019",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8019
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      memory_reservation: "256MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 180 # 3 minutes for browser services
+      min_sleep_time: 120 # 2 minutes - browsers are expensive to start
+      memory_reservation: "256MB"
+      priority: "normal"
+
+  # Desktop automation
+  desktop-commander:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @wonderwhy-er/desktop-commander@latest",
+        "--expose-sse",
+        "--port",
+        "8017",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8017
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 60 # 1 minute
+      memory_reservation: "128MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # Search and web services
+  tavily:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y tavily-mcp@latest",
+        "--expose-sse",
+        "--port",
+        "8020",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8020
+    environment:
+      TAVILY_API_KEY: "${TAVILY_API_KEY}"
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 60 # 1 minute
+      memory_reservation: "128MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # File system and data services (high priority)
+  filesystem:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-filesystem",
+        "${FORGE_FILESYSTEM_PATH:-/workspace}",
+        "--expose-sse",
+        "--port",
+        "8021",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8021
+    environment:
+      FORGE_VIRTUAL_SERVERS_CONFIG_PATH: "${FORGE_VIRTUAL_SERVERS_CONFIG_PATH}"
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for critical service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: high
+      FORGE_WAKE_TIME_TARGET: "50" # < 50ms for high priority
+    volumes:
+      "${FORGE_FILESYSTEM_VOLUME:-./workspace}": "/workspace"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: true # Filesystem is commonly needed
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes since it's commonly used
+      min_sleep_time: 120 # Don't sleep if used in last 2 minutes
+      memory_reservation: "128MB"
+      priority: "high"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # Development tools
+  snyk:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y snyk mcp -t stdio --experimental",
+        "--expose-sse",
+        "--port",
+        "8023",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8023
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for security service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      memory_reservation: "256MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes for security tools
+      min_sleep_time: 300 # 5 minutes - security tools are expensive
+      memory_reservation: "256MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"
+
+  github:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-github",
+        "--expose-sse",
+        "--port",
+        "8025",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8025
+    environment:
+      GITHUB_PERSONAL_ACCESS_TOKEN: "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for high-priority service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: high
+      FORGE_WAKE_TIME_TARGET: "50" # < 50ms for high priority
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 60 # 1 minute
+      memory_reservation: "128MB"
+      priority: "high"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  git-mcp:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-git",
+        "--repository",
+        "/repos",
+        "--expose-sse",
+        "--port",
+        "8028",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8028
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for high-priority service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: high
+      FORGE_WAKE_TIME_TARGET: "50" # < 50ms for high priority
+    volumes:
+      "${FORGE_GIT_REPO_VOLUME:-./workspace}": "/repos"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 60 # 1 minute
+      memory_reservation: "128MB"
+      priority: "high"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  fetch:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-fetch",
+        "--expose-sse",
+        "--port",
+        "8029",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8029
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for high-priority service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: high
+      FORGE_WAKE_TIME_TARGET: "50" # < 50ms for high priority
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 60 # 1 minute
+      memory_reservation: "128MB"
+      priority: "high"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # Database services
+  postgres:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-postgres",
+        "${FORGE_POSTGRES_CONNECTION_STRING}",
+        "--expose-sse",
+        "--port",
+        "8031",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8031
+    environment:
+      FORGE_POSTGRES_CONNECTION_STRING: "${FORGE_POSTGRES_CONNECTION_STRING}"
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for database service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes for database services
+      min_sleep_time: 300 # 5 minutes - databases are expensive to start
+      memory_reservation: "128MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"
+
+  mongodb:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y mongodb-mcp-server",
+        "${FORGE_MONGODB_CONNECTION_STRING}",
+        "--expose-sse",
+        "--port",
+        "8032",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8032
+    environment:
+      FORGE_MONGODB_CONNECTION_STRING: "${FORGE_MONGODB_CONNECTION_STRING}"
+      FORGE_AUTH_ENCRYPTION_SECRET: "${FORGE_AUTH_ENCRYPTION_SECRET}"
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for database service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes for database services
+      min_sleep_time: 300 # 5 minutes - databases are expensive to start
+      memory_reservation: "128MB"
+      priority: "normal"
+
+  sqlite:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y mcp-sqlite",
+        "${FORGE_SQLITE_DB_PATH:-/data/sqlite.db}",
+        "--expose-sse",
+        "--port",
+        "8024",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8024
+    environment:
+      FORGE_PLATFORM_ADMIN_EMAIL: "${FORGE_PLATFORM_ADMIN_EMAIL}"
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for database service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    volumes:
+      "${FORGE_SQLITE_VOLUME:-./data}": "/data"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes for database services
+      min_sleep_time: 300 # 5 minutes - databases are expensive to start
+      memory_reservation: "128MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"
+
+  # Memory and caching
+  memory:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @modelcontextprotocol/server-memory",
+        "--expose-sse",
+        "--port",
+        "8027",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8027
+    environment:
+      FORGE_MEMORY_FILE_PATH: "/data/memory.jsonl"
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for critical service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: high
+      FORGE_WAKE_TIME_TARGET: "50" # < 50ms for high priority
+    volumes:
+      "${FORGE_MEMORY_VOLUME:-./data/memory}": "/data"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: true # Memory is commonly needed
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes since it's commonly used
+      min_sleep_time: 120 # Don't sleep if used in last 2 minutes
+      memory_reservation: "128MB"
+      priority: "high"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # UI and design tools
+  magicuidesign-mcp:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y @magicuidesign/mcp@latest",
+        "--expose-sse",
+        "--port",
+        "8016",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8016
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for UI service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "512MB"
+      cpu: "0.5"
+      memory_reservation: "256MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 120 # 2 minutes - UI tools are expensive
+      memory_reservation: "256MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"
+
+  reactbits:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "npx -y reactbits-dev-mcp-server",
+        "--expose-sse",
+        "--port",
+        "8022",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8022
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for UI service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "200"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 60 # 1 minute
+      memory_reservation: "128MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # Forge context and project management
+  forge-context:
+    image: forge-mcp-gateway-translate:latest
+    command:
+      [
+        "python3",
+        "-m",
+        "forge.translate",
+        "--stdio",
+        "node",
+        "/app/dist/mcp-context-server/index.js",
+        "--expose-sse",
+        "--port",
+        "8026",
+        "--host",
+        "0.0.0.0",
+      ]
+    port: 8026
+    environment:
+      FORGE_MAX_REQUEST_SIZE: "${FORGE_MAX_REQUEST_SIZE}"
+      # High-efficiency configuration for critical service
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: high
+      FORGE_WAKE_TIME_TARGET: "50" # < 50ms for high priority
+    volumes:
+      "${FORGE_FORGE_PATTERNS_VOLUME:-./forge-patterns}": "/app"
+    resources:
+      memory: "256MB"
+      cpu: "0.25"
+      memory_reservation: "128MB"
+      cpu_reservation: "0.05"
+    auto_start: true # Forge context is commonly needed
+    sleep_policy:
+      enabled: true
+      idle_timeout: 600 # 10 minutes since it's commonly used
+      min_sleep_time: 120 # Don't sleep if used in last 2 minutes
+      memory_reservation: "128MB"
+      priority: "high"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "10"
+
+  # Dribbble visual reference search and image analysis (self-hosted, uiforge-mcp integration)
+  dribbble-mcp:
+    image: forge-mcp-gateway-dribbble:latest
+    command: ["python3", "-m", "dribbble_mcp"]
+    port: 8035
+    environment:
+      DRIBBBLE_SESSION_COOKIE: "${DRIBBBLE_SESSION_COOKIE:-}"
+      DRIBBBLE_RATE_LIMIT_MS: "${DRIBBBLE_RATE_LIMIT_MS:-1000}"
+      DRIBBBLE_SCREENSHOT_TIMEOUT_MS: "${DRIBBBLE_SCREENSHOT_TIMEOUT_MS:-10000}"
+      DRIBBBLE_HTTP_TIMEOUT_S: "${DRIBBBLE_HTTP_TIMEOUT_S:-15.0}"
+      FORGE_SLEEP_POLICY_ENABLED: "true"
+      FORGE_SERVICE_PRIORITY: normal
+      FORGE_WAKE_TIME_TARGET: "500"
+    resources:
+      memory: "1GB"
+      cpu: "0.5"
+      memory_reservation: "512MB"
+      cpu_reservation: "0.1"
+    auto_start: false
+    sleep_policy:
+      enabled: true
+      idle_timeout: 300 # 5 minutes
+      min_sleep_time: 120 # 2 minutes - browser startup is expensive
+      memory_reservation: "512MB"
+      priority: "normal"
+    health_check:
+      path: "/health"
+      interval: "30"
+      timeout: "15"

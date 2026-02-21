@@ -1,0 +1,1 @@
+/Users/lucassantana/Desenvolvimento/mcp-gateway/.github/shared/scripts/mcp-wrapper.sh

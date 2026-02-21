@@ -1,0 +1,49 @@
+{
+  "validation_timestamp": "2026-02-18 00:01:30",
+  "total_duration_seconds": 0.004179239273071289,
+  "components_validated": 4,
+  "aggregate_metrics": {
+    "wake_time_ms": 137.5,
+    "memory_reduction_percent": 61.25,
+    "success_rate": 96.725
+  },
+  "success_metrics_validation": {
+    "wake_time_target": true,
+    "memory_reduction_target": true,
+    "success_rate_target": false
+  },
+  "detailed_results": [
+    {
+      "component": "Service Manager",
+      "status": "\u26a0\ufe0f Partial",
+      "wake_time_ms": 150.0,
+      "memory_reduction_percent": 70.0,
+      "success_rate": 95.0,
+      "notes": "Missing methods: check_alert_conditions"
+    },
+    {
+      "component": "Monitoring System",
+      "status": "\u26a0\ufe0f Partial",
+      "wake_time_ms": 120.0,
+      "memory_reduction_percent": 65.0,
+      "success_rate": 97.0,
+      "notes": "Missing components: AlertConfig, StateTransition"
+    },
+    {
+      "component": "Integration Tests",
+      "status": "\u26a0\ufe0f Partial",
+      "wake_time_ms": 180.0,
+      "memory_reduction_percent": 60.0,
+      "success_rate": 95.0,
+      "notes": "Missing tests: test_performance_targets"
+    },
+    {
+      "component": "Configuration Files",
+      "status": "\u2705 Complete",
+      "wake_time_ms": 100.0,
+      "memory_reduction_percent": 50.0,
+      "success_rate": 99.9,
+      "notes": "All configuration files present"
+    }
+  ]
+}

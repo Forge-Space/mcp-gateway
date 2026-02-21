@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,6 +12,11 @@ from tool_router.args.builder import build_arguments
 from tool_router.core.config import GatewayConfig
 from tool_router.gateway.client import HTTPGatewayClient
 from tool_router.scoring.matcher import select_top_matching_tools
+
+
+# Test configuration constants
+TEST_JWT_TOKEN = os.getenv("TEST_JWT_TOKEN", "test-jwt-token")
+TEST_GATEWAY_URL = os.getenv("TEST_GATEWAY_URL", "http://gateway:4444")
 
 
 @pytest.fixture
@@ -65,8 +71,8 @@ class TestEndToEndWorkflows:
 
         # Step 3: Mock call tool
         config = GatewayConfig(
-            url="http://gateway:4444",
-            jwt="test-token",
+            url=TEST_GATEWAY_URL,
+            jwt=TEST_JWT_TOKEN,
             timeout_ms=5000,
             max_retries=2,
             retry_delay_ms=100,
@@ -127,8 +133,8 @@ class TestEndToEndWorkflows:
     def test_error_recovery_workflow(self) -> None:
         """Test error handling in complete workflow."""
         config = GatewayConfig(
-            url="http://gateway:4444",
-            jwt="test-token",
+            url=TEST_GATEWAY_URL,
+            jwt=TEST_JWT_TOKEN,
             timeout_ms=1000,
             max_retries=1,
             retry_delay_ms=50,

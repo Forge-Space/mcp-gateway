@@ -1,0 +1,113 @@
+# Scaling policies for Forge MCP Gateway services
+# This file defines how services should be scaled based on demand and resource usage
+
+policies:
+  # Default policy for most services
+  default:
+    min_instances: 0
+    max_instances: 1
+    idle_timeout: 300 # 5 minutes
+    target_cpu_utilization: 0.7
+    target_memory_utilization: 0.8
+    scale_up_threshold: 0.8
+    scale_down_threshold: 0.2
+
+  # High-demand services that should always be available
+  high-demand:
+    min_instances: 1
+    max_instances: 2
+    idle_timeout: 600 # 10 minutes
+    target_cpu_utilization: 0.6
+    target_memory_utilization: 0.7
+    scale_up_threshold: 0.7
+    scale_down_threshold: 0.3
+
+  # Browser automation services (resource intensive)
+  browser-automation:
+    min_instances: 0
+    max_instances: 1
+    idle_timeout: 180 # 3 minutes
+    target_cpu_utilization: 0.8
+    target_memory_utilization: 0.9
+    scale_up_threshold: 0.9
+    scale_down_threshold: 0.1
+
+  # Database services (stateful, conservative scaling)
+  database:
+    min_instances: 0
+    max_instances: 1
+    idle_timeout: 600 # 10 minutes
+    target_cpu_utilization: 0.5
+    target_memory_utilization: 0.6
+    scale_up_threshold: 0.6
+    scale_down_threshold: 0.2
+
+  # Development tools (frequently used)
+  development-tools:
+    min_instances: 0
+    max_instances: 1
+    idle_timeout: 300 # 5 minutes
+    target_cpu_utilization: 0.7
+    target_memory_utilization: 0.8
+    scale_up_threshold: 0.8
+    scale_down_threshold: 0.2
+
+# Service to policy mapping
+service_policies:
+  # AI and reasoning
+  sequential-thinking: default
+
+  # Browser automation
+  chrome-devtools: browser-automation
+  playwright: browser-automation
+  puppeteer: browser-automation
+  browser-tools: browser-automation
+
+  # Desktop automation
+  desktop-commander: default
+
+  # Search and web
+  tavily: default
+
+  # File system (always available)
+  filesystem: high-demand
+
+  # Development tools
+  snyk: development-tools
+  github: development-tools
+  git-mcp: development-tools
+  fetch: development-tools
+
+  # Database services
+  postgres: database
+  mongodb: database
+  sqlite: database
+
+  # Memory (always available)
+  memory: high-demand
+
+  # UI and design tools
+  magicuidesign-mcp: default
+  reactbits: default
+
+# Global scaling settings
+global_settings:
+  # How often to check for scaling decisions (seconds)
+  scaling_interval: 30
+
+  # How long to wait before scaling down after last request
+  cooldown_period: 60
+
+  # Maximum total services that can run simultaneously
+  max_concurrent_services: 10
+
+  # Resource limits for the entire system
+  system_limits:
+    max_memory_gb: 8
+    max_cpu_cores: 4
+
+  # Metrics collection settings
+  metrics:
+    enabled: true
+    retention_period: 86400 # 24 hours
+    collection_interval: 10 # seconds

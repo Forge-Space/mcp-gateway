@@ -1,0 +1,195 @@
+# Specialist Agent Configuration
+# Forge Ecosystem Specialist Architecture
+
+# Hardware Configuration (Intel Celeron N100)
+hardware:
+  cpu: "Intel Celeron N100"
+  cores: 4
+  threads: 4
+  ram_gb: 16
+  max_model_ram_gb: 8
+  network_speed_mbps: 1000
+  hardware_tier: "n100"
+  gpu_acceleration: false
+
+# Router Agent Configuration
+router_agent:
+  enabled: true
+  cost_optimization: true
+  hardware_aware: true
+  model_tiers:
+    ultra_fast:
+      - "llama3.2:3b"
+      - "tinyllama"
+      - "phi3:mini"
+    fast:
+      - "llama3.2:1b"
+      - "qwen2:0.5b"
+    balanced:
+      - "llama3.2:3b"
+      - "mistral:7b"
+    premium:
+      - "llama3.1:8b"
+      - "mixtral:8x7b"
+    enterprise:
+      - "claude-3.5-sonnet"
+      - "gpt-4o"
+      - "gemini-1.5-pro"
+      - "grok-beta"
+
+  cost_per_million_tokens:
+    "llama3.2:3b": 0.0
+    "tinyllama": 0.0
+    "phi3:mini": 0.0
+    "llama3.2:1b": 0.0
+    "qwen2:0.5b": 0.0
+    "mistral:7b": 0.0
+    "llama3.1:8b": 0.0
+    "mixtral:8x7b": 0.0
+    "claude-3.5-sonnet": 3.0
+    "gpt-4o": 2.5
+    "gemini-1.5-pro": 2.0
+    "grok-beta": 3.5
+
+# Prompt Architect Configuration
+prompt_architect:
+  enabled: true
+  optimization_strategies:
+    - "token_minimization"
+    - "clarity_enhancement"
+    - "context_optimization"
+    - "requirement_extraction"
+
+  quality_metrics:
+    weights:
+      clarity: 0.25
+      completeness: 0.25
+      specificity: 0.25
+      token_efficiency: 0.25
+
+    thresholds:
+      excellent: 0.9
+      good: 0.75
+      acceptable: 0.6
+      poor: 0.4
+
+# UI Specialist Configuration
+ui_specialist:
+  enabled: true
+  supported_frameworks:
+    - "react"
+    - "vue"
+    - "angular"
+    - "svelte"
+    - "nextjs"
+    - "html_css"
+    - "tailwind"
+    - "bootstrap"
+    - "material_ui"
+    - "chakra_ui"
+
+  design_systems:
+    - "material_design"
+    - "ant_design"
+    - "bootstrap"
+    - "tailwind_ui"
+    - "chakra_ui"
+    - "mantine"
+    - "semantic_ui"
+    - "custom"
+
+  accessibility_levels:
+    - "minimal"
+    - "aa"
+    - "aaa"
+
+  component_types:
+    - "form"
+    - "table"
+    - "chart"
+    - "modal"
+    - "navigation"
+    - "card"
+    - "button"
+    - "input"
+    - "layout"
+    - "dashboard"
+    - "landing"
+    - "auth"
+    - "settings"
+
+# Cost Optimization Settings
+cost_optimization:
+  enabled: true
+  default_preference: "balanced"
+  max_cost_per_request: 0.10
+  local_model_priority: true
+  enterprise_byok: true
+
+  preferences:
+    efficient:
+      max_cost_per_request: 0.01
+      prioritize_local: true
+      quality_threshold: 0.6
+
+    balanced:
+      max_cost_per_request: 0.05
+      prioritize_local: true
+      quality_threshold: 0.75
+
+    quality:
+      max_cost_per_request: 0.20
+      prioritize_local: false
+      quality_threshold: 0.9
+
+# Performance Monitoring
+monitoring:
+  metrics_collection: true
+  performance_tracking: true
+  cost_tracking: true
+  cache_management: true
+
+  cache_settings:
+    max_size: 1000
+    ttl_seconds: 3600
+    cleanup_interval: 300
+
+# Enterprise Features
+enterprise:
+  byok_support: true
+  audit_logging: true
+  usage_limits: true
+  cost_controls: true
+
+  providers:
+    openai:
+      api_key_env: "OPENAI_API_KEY"
+      models: ["gpt-4o", "gpt-4o-mini"]
+      cost_per_million_tokens: 2.5
+
+    anthropic:
+      api_key_env: "ANTHROPIC_API_KEY"
+      models: ["claude-3.5-sonnet", "claude-3.5-haiku"]
+      cost_per_million_tokens: 3.0
+
+    google:
+      api_key_env: "GOOGLE_API_KEY"
+      models: ["gemini-1.5-pro", "gemini-1.5-flash"]
+      cost_per_million_tokens: 2.0
+
+    xai:
+      api_key_env: "XAI_API_KEY"
+      models: ["grok-beta", "grok-mini"]
+      cost_per_million_tokens: 3.5
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "json"
+  specialist_logging: true
+  performance_logging: true
+  cost_logging: true
+
+  log_specialist_calls: true
+  log_cost_savings: true
+  log_performance_metrics: true

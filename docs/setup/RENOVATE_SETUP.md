@@ -1,6 +1,6 @@
 # Renovate Setup Guide
 
-This guide will help you enable Renovate for automated dependency updates in the mcp-gateway repository.
+This guide will help you enable Renovate for automated dependency updates in the forge-mcp-gateway repository.
 
 ## What is Renovate?
 
@@ -15,7 +15,7 @@ Renovate is a bot that automatically creates pull requests to update your depend
    - Click "Install" or "Configure"
    - Select "LucasSantana-Dev" account
    - Choose "Only select repositories"
-   - Select `mcp-gateway`
+   - Select `forge-mcp-gateway`
    - Click "Install" or "Save"
 
 2. **Verify Installation**
@@ -42,7 +42,7 @@ npm install -g renovate
 export GITHUB_TOKEN="your_github_token"
 
 # Run Renovate
-renovate --platform=github --token=$GITHUB_TOKEN LucasSantana-Dev/mcp-gateway
+renovate --platform=github --token=$GITHUB_TOKEN LucasSantana-Dev/forge-mcp-gateway
 ```
 
 ## Current Configuration
@@ -71,7 +71,7 @@ Multiple updates available (will be grouped in PRs)
 ### Renovate Not Creating PRs
 
 1. **Check if app is installed**: Visit https://github.com/apps/renovate
-2. **Check repository access**: Ensure Renovate has access to `mcp-gateway`
+2. **Check repository access**: Ensure Renovate has access to `forge-mcp-gateway`
 3. **Check logs**: Visit Renovate dashboard for error logs
 4. **Manual trigger**: Create an empty commit to trigger Renovate
 

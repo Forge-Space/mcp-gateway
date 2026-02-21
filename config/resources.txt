@@ -1,2 +1,2 @@
 # Resources: one per line. Format: name|uri|description|mime_type. Set REGISTER_RESOURCES=true to register.
-context-forge-docs|https://ibm.github.io/mcp-context-forge/|Context Forge documentation|text/html
+mcp-gateway-docs|https://ibm.github.io/mcp-gateway/|MCP Gateway documentation|text/html
