@@ -223,3 +223,4 @@ jobs:
           echo "| Integration Test | ${{ needs.integration-test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Performance Test | ${{ needs.performance-test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Documentation Check | ${{ needs.docs-check.result }} |" >> $GITHUB_STEP_SUMMARY
+# Trigger CI rerun
