@@ -439,3 +439,4 @@ You can fork this repo to run your own MCP gateway stack. After forking: copy `.
 - [MCP Registry](https://registry.modelcontextprotocol.io) – Discover servers; add via Admin UI
 # Trigger CI rerun for debugging
 # CI fix verification
+# CI trigger for PR #43
