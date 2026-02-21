@@ -386,19 +386,19 @@ if [[ "${REGISTER_RESOURCES:-false}" =~ ^(true|1|yes)$ ]] && [[ -f "$resources_f
   log_step "Registering resources from $resources_file..."
   while IFS= read -r line || [[ -n "$line" ]]; do
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    [[ -z "$line" || "$line" =~ ^# ]] && continue
-    IFS='|' read -r name uri desc mime <<< "$line"
+    [[ -z "${line}" || "${line}" =~ ^# ]] && continue
+    IFS='|' read -r name uri desc mime <<< "${line}"
     desc=$(echo "${desc:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     mime=$(echo "${mime:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    if [[ -z "$name" || -z "$uri" ]]; then continue; fi
-    payload=$(jq -n --arg n "$name" --arg u "$uri" --arg d "$desc" --arg m "${mime:-text/plain}" '{resource: {name: $n, uri: $u, description: $desc, mime_type: $m}}')
-    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "$payload" "$GATEWAY_URL/resources" 2>/dev/null)
-    if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then log_ok "resource $name"; fi
-  done < "$resources_file"
+    if [[ -z "${name}" || -z "${uri}" ]]; then continue; fi
+    payload=$(jq -n --arg n "${name}" --arg u "${uri}" --arg d "${desc}" --arg m "${mime:-text/plain}" '{resource: {name: $n, uri: $u, description: $desc, mime_type: $m}}')
+    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer ${JWT}" -H "Content-Type: application/json" -d "${payload}" "${GATEWAY_URL}/resources" 2>/dev/null)
+    if [[ "${code}" =~ ^2[0-9][0-9]$ ]]; then log_ok "resource ${name}"; fi
+  done < "${resources_file}"
 fi
 
-if [[ -z "$EXTRA_GATEWAYS" && ! -f "$gateways_file" ]]; then
-  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to $gateways_file (Name|URL|Transport)."
+if [[ -z "${EXTRA_GATEWAYS}" && ! -f "${gateways_file}" ]]; then
+  log_warn "No gateways to register. Set EXTRA_GATEWAYS in .env or add lines to ${gateways_file} (Name|URL|Transport)."
 else
   log_line
   log_ok "Done."
