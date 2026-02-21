@@ -48,9 +48,52 @@ jobs:
       - name: Validate UIForge patterns compliance
         run: bash scripts/validation/validate-patterns.sh
 
+<<<<<<< Updated upstream
   # Additional gateway-specific jobs
   integration-test:
     name: Integration Test
+=======
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Run lint
+        run: make lint
+
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run tests with coverage
+        run: |
+          python3 -m pytest tool_router/tests/ -v --cov=tool_router --cov-report=term --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  build:
+    name: Build TypeScript and Python
+>>>>>>> Stashed changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: ci
@@ -73,6 +116,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -80,6 +129,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
+<<<<<<< Updated upstream
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -97,6 +147,21 @@ jobs:
     timeout-minutes: 10
     needs: ci
 
+=======
+        run: make install
+
+      - name: Build all packages
+        run: make build
+
+      - name: Run quality checks
+        run: make check
+
+  docker:
+    name: Docker build and gateway smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint, test, build]
+>>>>>>> Stashed changes
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

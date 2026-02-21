@@ -116,7 +116,84 @@ services:
         max-size: 5m
         max-file: 23
 
+<<<<<<< Updated upstream
   # Intelligent Tool Router
+=======
+  github:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-github" --expose-sse --port 8025 --host 0.0.0.0'
+    ports:
+      - "${GITHUB_PORT:-8025}:8025"
+
+  memory:
+    <<: *translate
+    environment:
+      MEMORY_FILE_PATH: /data/memory.jsonl
+    volumes:
+      - "${MEMORY_VOLUME:-./data/memory}:/data"
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-memory" --expose-sse --port 8027 --host 0.0.0.0'
+    ports:
+      - "${MEMORY_PORT:-8027}:8027"
+
+  git-mcp:
+    <<: *translate
+    volumes:
+      - "${GIT_REPO_VOLUME:-./workspace}:/repos"
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-git --repository /repos" --expose-sse --port 8028 --host 0.0.0.0'
+    ports:
+      - "${GIT_MCP_PORT:-8028}:8028"
+
+  fetch:
+    <<: *translate
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-fetch" --expose-sse --port 8029 --host 0.0.0.0'
+    ports:
+      - "${FETCH_PORT:-8029}:8029"
+
+  postgres:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @modelcontextprotocol/server-postgres ${POSTGRES_CONNECTION_STRING}" --expose-sse --port 8031 --host 0.0.0.0'
+    ports:
+      - "${POSTGRES_PORT:-8031}:8031"
+
+  mongodb:
+    <<: *translate
+    environment:
+      MONGODB_URI: ${MONGODB_CONNECTION_STRING}
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y mongodb-mcp-server ${MONGODB_CONNECTION_STRING}" --expose-sse --port 8032 --host 0.0.0.0'
+    ports:
+      - "${MONGODB_PORT:-8032}:8032"
+
+  uiforge:
+    <<: *translate
+    env_file: .env
+    command:
+      - sh
+      - -c
+      - 'python3 -m mcpgateway.translate --stdio "npx -y @uiforge/mcp-server" --expose-sse --port 8026 --host 0.0.0.0'
+    ports:
+      - "${UIFORGE_PORT:-8026}:8026"
+
+>>>>>>> Stashed changes
   tool-router:
     build:
       context: .
