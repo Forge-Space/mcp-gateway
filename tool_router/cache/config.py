@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import os
 import logging
-from typing import Optional
+import os
 from dataclasses import dataclass
 
 from .redis_cache import RedisConfig
-from .types import CacheConfig
+from .types import CacheConfig, DataClassification
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +16,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CacheBackendConfig:
     """Configuration for cache backend selection and settings."""
+
     backend_type: str = "memory"  # "memory", "redis", "hybrid"
-    redis_config: Optional[RedisConfig] = None
-    fallback_config: Optional[CacheConfig] = None
+    redis_config: RedisConfig | None = None
+    fallback_config: CacheConfig | None = None
 
     @classmethod
     def from_environment(cls) -> CacheBackendConfig:
@@ -83,8 +84,38 @@ def get_redis_url() -> str:
 
     if password:
         return f"redis://:{password}@{host}:{port}/{db}"
-    else:
-        return f"redis://{host}:{port}/{db}"
+    return f"redis://{host}:{port}/{db}"
+
+
+def load_config_from_env() -> CacheConfig:
+    """Load CacheConfig from environment variables."""
+    # Load retention days from environment
+    retention_days = {}
+    for classification in ["PUBLIC", "INTERNAL", "SENSITIVE", "CONFIDENTIAL"]:
+        env_key = f"CACHE_RETENTION_DAYS_{classification}"
+        days_str = os.getenv(env_key)
+        if days_str:
+            try:
+                retention_days[DataClassification(classification.lower())] = int(days_str)
+            except ValueError:
+                logger.warning(f"Invalid retention days for {classification}: {days_str}")
+
+    return CacheConfig(
+        max_size=int(os.getenv("CACHE_MAX_SIZE", "1000")),
+        ttl=int(os.getenv("CACHE_TTL", "3600")),
+        cleanup_interval=int(os.getenv("CACHE_CLEANUP_INTERVAL", "300")),
+        enable_metrics=os.getenv("CACHE_ENABLE_METRICS", "true").lower() == "true",
+        # Security settings
+        encryption_enabled=os.getenv("CACHE_ENCRYPTION_ENABLED", "true").lower() == "true",
+        audit_enabled=os.getenv("CACHE_AUDIT_ENABLED", "true").lower() == "true",
+        access_control_enabled=os.getenv("CACHE_ACCESS_CONTROL_ENABLED", "true").lower() == "true",
+        gdpr_compliance_enabled=os.getenv("CACHE_GDPR_COMPLIANCE_ENABLED", "true").lower() == "true",
+        retention_enabled=os.getenv("CACHE_RETENTION_ENABLED", "true").lower() == "true",
+        encryption_key=os.getenv("CACHE_ENCRYPTION_KEY"),
+        audit_max_entries=int(os.getenv("CACHE_AUDIT_MAX_ENTRIES", "10000")),
+        audit_retention_days=int(os.getenv("CACHE_AUDIT_RETENTION_DAYS", "90")),
+        retention_days=retention_days if retention_days else None,
+    )
 
 
 def validate_cache_config() -> bool:

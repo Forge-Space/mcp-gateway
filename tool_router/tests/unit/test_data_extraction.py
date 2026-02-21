@@ -8,18 +8,9 @@ Tests the pattern extraction functionality including:
 - Metadata extraction and processing
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
-
-from tool_router.training.data_extraction import (
-    PatternExtractor,
-    ExtractedPattern,
-    PatternCategory,
-    DataSource,
-    WebDocumentationExtractor,
-    GitHubRepositoryExtractor
-)
+from tool_router.training.data_extraction import DataSource, ExtractedPattern, PatternCategory, PatternExtractor
 
 
 class TestPatternExtractor:
@@ -31,7 +22,7 @@ class TestPatternExtractor:
 
     def test_initialization(self):
         """Test PatternExtractor initialization."""
-        assert hasattr(self.extractor, 'extractors')
+        assert hasattr(self.extractor, "extractors")
         assert DataSource.WEB_DOCUMENTATION in self.extractor.extractors
         assert DataSource.GITHUB_REPOSITORY in self.extractor.extractors
         assert len(self.extractor.extractors) == 2
@@ -40,7 +31,9 @@ class TestPatternExtractor:
         """Test extraction from web documentation."""
         url = "https://react.dev/docs/components"
 
-        with patch.object(self.extractor.extractors[DataSource.WEB_DOCUMENTATION], 'extract_patterns', return_value=[]) as mock_extract:
+        with patch.object(
+            self.extractor.extractors[DataSource.WEB_DOCUMENTATION], "extract_patterns", return_value=[]
+        ) as mock_extract:
             result = self.extractor.extract_from_url(url, DataSource.WEB_DOCUMENTATION)
 
             assert isinstance(result, list)
@@ -50,7 +43,9 @@ class TestPatternExtractor:
         """Test extraction from GitHub repository."""
         url = "https://github.com/facebook/react"
 
-        with patch.object(self.extractor.extractors[DataSource.GITHUB_REPOSITORY], 'extract_patterns', return_value=[]) as mock_extract:
+        with patch.object(
+            self.extractor.extractors[DataSource.GITHUB_REPOSITORY], "extract_patterns", return_value=[]
+        ) as mock_extract:
             result = self.extractor.extract_from_url(url, DataSource.GITHUB_REPOSITORY)
 
             assert isinstance(result, list)
@@ -60,10 +55,10 @@ class TestPatternExtractor:
         """Test extraction from multiple sources."""
         sources = [
             {"url": "https://example.com/doc1", "type": "web_documentation", "category": "react_patterns"},
-            {"url": "https://github.com/example/repo", "type": "github_repository", "category": "react_patterns"}
+            {"url": "https://github.com/example/repo", "type": "github_repository", "category": "react_patterns"},
         ]
 
-        with patch.object(self.extractor, 'extract_from_url') as mock_extract:
+        with patch.object(self.extractor, "extract_from_url") as mock_extract:
             # Mock successful extractions
             mock_extract.return_value = []
 
@@ -85,10 +80,10 @@ class TestPatternExtractor:
         """Test extraction from multiple sources with invalid data."""
         sources = [
             {"url": "https://example.com/doc1", "type": "web_documentation"},
-            {"url": "https://github.com/example/repo", "type": "github_repository"}
+            {"url": "https://github.com/example/repo", "type": "github_repository"},
         ]
 
-        with patch.object(self.extractor, 'extract_from_url') as mock_extract:
+        with patch.object(self.extractor, "extract_from_url") as mock_extract:
             # Mock successful extractions
             mock_extract.return_value = []
 
@@ -109,7 +104,7 @@ class TestExtractedPattern:
             description="A reusable button component",
             code_example="const Button: React.FC = () => <button>Click me</button>",
             source_url="https://example.com/button",
-            confidence_score=0.9
+            confidence_score=0.9,
         )
 
         assert pattern.category == PatternCategory.UI_COMPONENT
@@ -126,7 +121,7 @@ class TestExtractedPattern:
             title="React Hook Pattern",
             description="Custom hook for state management",
             code_example="const useCustomHook = () => { /* hook implementation */ }",
-            source_url="https://example.com/hook"
+            source_url="https://example.com/hook",
         )
 
         assert pattern.category == PatternCategory.REACT_PATTERN

@@ -6,8 +6,8 @@ import json
 import logging
 import os
 import re
-import time
 import threading
+import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -87,10 +87,7 @@ class CachedFeedbackStore:
     """
 
     def __init__(self, feedback_file: str | None = None, cache_ttl: int = 3600, cache_size: int = 1000) -> None:
-        self._file = Path(
-            feedback_file
-            or os.getenv(_FEEDBACK_FILE_ENV, _DEFAULT_FEEDBACK_FILE)
-        )
+        self._file = Path(feedback_file or os.getenv(_FEEDBACK_FILE_ENV, _DEFAULT_FEEDBACK_FILE))
         self._entries: list[FeedbackEntry] = []
         self._stats: dict[str, ToolStats] = {}
         self._patterns: dict[str, TaskPattern] = {}
@@ -172,7 +169,7 @@ class CachedFeedbackStore:
         entities = []
 
         # File paths
-        path_pattern = r'[/\\]?[\w\-./\\]+'
+        path_pattern = r"[/\\]?[\w\-./\\]+"
         paths = re.findall(path_pattern, task)
         entities.extend([p for p in paths if len(p) > 2])
 
@@ -299,9 +296,9 @@ class CachedFeedbackStore:
         # Check cache first
         with self._lock:
             if tool_name in self._boost_cache:
-                self._cache_hits['boost'] += 1
+                self._cache_hits["boost"] += 1
                 return self._boost_cache[tool_name]
-            self._cache_misses['boost'] += 1
+            self._cache_misses["boost"] += 1
 
         stats = self._stats.get(tool_name)
         if stats is None or stats.total < 3:
@@ -337,9 +334,9 @@ class CachedFeedbackStore:
         # Check cache first
         with self._lock:
             if cache_key in self._boost_cache:
-                self._cache_hits['task_type_boost'] += 1
+                self._cache_hits["task_type_boost"] += 1
                 return self._boost_cache[cache_key]
-            self._cache_misses['task_type_boost'] += 1
+            self._cache_misses["task_type_boost"] += 1
 
         pattern = self._patterns.get(task_type)
         if not pattern or tool_name not in pattern.preferred_tools:
@@ -362,16 +359,18 @@ class CachedFeedbackStore:
         # Check cache first
         with self._lock:
             if cache_key in self._boost_cache:
-                self._cache_hits['intent_boost'] += 1
+                self._cache_hits["intent_boost"] += 1
                 return self._boost_cache[cache_key]
-            self._cache_misses['intent_boost'] += 1
+            self._cache_misses["intent_boost"] += 1
 
         stats = self._stats.get(tool_name)
         if not stats or intent_category not in stats.intent_categories:
             boost = 1.0
         else:
             # Calculate success rate for this specific intent
-            intent_entries = [e for e in self._entries if e.selected_tool == tool_name and e.intent_category == intent_category]
+            intent_entries = [
+                e for e in self._entries if e.selected_tool == tool_name and e.intent_category == intent_category
+            ]
             if not intent_entries:
                 boost = 1.0
             else:
@@ -396,9 +395,9 @@ class CachedFeedbackStore:
 
         # Weighted combination
         comprehensive_boost = (
-            base_boost * 0.5 +  # Historical performance
-            task_type_boost * 0.3 +  # Task type performance
-            intent_boost * 0.2  # Intent performance
+            base_boost * 0.5  # Historical performance
+            + task_type_boost * 0.3  # Task type performance
+            + intent_boost * 0.2  # Intent performance
         )
 
         return comprehensive_boost
@@ -428,15 +427,8 @@ class CachedFeedbackStore:
             }
 
             # Sort tools by success rate
-            sorted_tools = sorted(
-                pattern.preferred_tools.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )
-            insights["recommended_tools"] = [
-                {"tool": tool, "success_rate": rate}
-                for tool, rate in sorted_tools[:3]
-            ]
+            sorted_tools = sorted(pattern.preferred_tools.items(), key=lambda x: x[1], reverse=True)
+            insights["recommended_tools"] = [{"tool": tool, "success_rate": rate} for tool, rate in sorted_tools[:3]]
 
         return insights
 
@@ -472,9 +464,9 @@ class CachedFeedbackStore:
         # Check cache first
         with self._lock:
             if tool_name in self._stats_cache:
-                self._cache_hits['stats'] += 1
+                self._cache_hits["stats"] += 1
                 return self._stats_cache[tool_name]
-            self._cache_misses['stats'] += 1
+            self._cache_misses["stats"] += 1
 
         stats = self._stats.get(tool_name)
 
@@ -557,9 +549,7 @@ class CachedFeedbackStore:
             self._file.parent.mkdir(parents=True, exist_ok=True)
             data = {
                 "entries": [asdict(e) for e in self._entries],
-                "stats": {
-                    name: asdict(s) for name, s in self._stats.items()
-                },
+                "stats": {name: asdict(s) for name, s in self._stats.items()},
             }
             self._file.write_text(json.dumps(data, indent=2))
         except Exception as exc:  # noqa: BLE001
@@ -571,13 +561,8 @@ class CachedFeedbackStore:
             return
         try:
             data = json.loads(self._file.read_text())
-            self._entries = [
-                FeedbackEntry(**e) for e in data.get("entries", [])
-            ]
-            self._stats = {
-                name: ToolStats(**s)
-                for name, s in data.get("stats", {}).items()
-            }
+            self._entries = [FeedbackEntry(**e) for e in data.get("entries", [])]
+            self._stats = {name: ToolStats(**s) for name, s in data.get("stats", {}).items()}
             logger.debug(
                 "Loaded %d feedback entries from %s",
                 len(self._entries),

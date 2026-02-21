@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Shield, 
-  Lock, 
-  Key, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  Shield,
+  Lock,
+  Key,
+  AlertTriangle,
+  CheckCircle,
   RefreshCw,
   Settings,
   Users,
@@ -196,7 +196,7 @@ export default function SecurityPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-24 bg-muted rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full ${
                           severity === 'critical' ? 'bg-red-500' :
                           severity === 'high' ? 'bg-orange-500' :

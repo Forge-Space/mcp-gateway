@@ -347,7 +347,13 @@ services:
       FORGE_WAKE_TIME_TARGET: 200 # < 200ms wake time
     command: ["python3", "-m", "mcpgateway.translate", "--connect-sse", "http://gateway:4444"]
     healthcheck:
-      test: ["CMD", "python3", "-c", "import mcpgateway.translate; import sys; sys.exit(0)"]
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import mcpgateway.translate; import sys; sys.exit(0)",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3

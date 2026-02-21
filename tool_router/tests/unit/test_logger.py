@@ -5,9 +5,7 @@ from __future__ import annotations
 import logging
 import sys
 from io import StringIO
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from tool_router.observability.logger import (
     ContextLoggerAdapter,
@@ -103,7 +101,8 @@ class TestStructuredFormatter:
         assert "timestamp=" in result
         # Check that it's in YYYY-MM-DD format
         import re
-        timestamp_pattern = r'timestamp=\d{4}-\d{2}-\d{2}'
+
+        timestamp_pattern = r"timestamp=\d{4}-\d{2}-\d{2}"
         assert re.search(timestamp_pattern, result) is not None
 
 

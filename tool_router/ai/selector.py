@@ -61,8 +61,7 @@ class OllamaSelector:
             return None
 
         tool_list = "\n".join(
-            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
-            for tool in tools
+            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}" for tool in tools
         )
         prompt = PromptTemplates.create_tool_selection_prompt(
             task=task,
@@ -111,8 +110,7 @@ class OllamaSelector:
             return None
 
         tool_list = "\n".join(
-            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
-            for tool in tools
+            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}" for tool in tools
         )
         prompt = PromptTemplates.create_multi_tool_selection_prompt(
             task=task,
@@ -205,9 +203,7 @@ class OllamaSelector:
         else:
             return result
 
-    def _parse_multi_response(
-        self, response: str, available_tools: list[dict[str, Any]]
-    ) -> dict[str, Any] | None:
+    def _parse_multi_response(self, response: str, available_tools: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Parse the multi-tool JSON response from Ollama."""
         try:
             start_idx = response.find("{")

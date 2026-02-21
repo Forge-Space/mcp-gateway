@@ -2,22 +2,24 @@ from __future__ import annotations
 
 import json
 import time
-import yaml
 from pathlib import Path
 
+import yaml
+
+from tool_router.ai.enhanced_selector import EnhancedAISelector
+from tool_router.ai.enhanced_selector import OllamaSelector as EnhancedOllamaSelector
 from tool_router.ai.feedback import FeedbackStore
-from tool_router.ai.selector import OllamaSelector
-from tool_router.ai.enhanced_selector import EnhancedAISelector, OllamaSelector as EnhancedOllamaSelector
 from tool_router.ai.prompt_architect import PromptArchitect
+from tool_router.ai.selector import OllamaSelector
 from tool_router.ai.ui_specialist import UISpecialist
-from tool_router.specialist_coordinator import SpecialistCoordinator, TaskCategory, TaskRequest, SpecialistType
 from tool_router.args.builder import build_arguments
 from tool_router.core.config import ToolRouterConfig
 from tool_router.gateway.client import call_tool, get_tools
 from tool_router.observability import get_logger, get_metrics
 from tool_router.observability.metrics import TimingContext
 from tool_router.scoring.matcher import select_top_matching_tools, select_top_matching_tools_hybrid
-from tool_router.security import SecurityMiddleware, SecurityContext
+from tool_router.security import SecurityContext, SecurityMiddleware
+from tool_router.specialist_coordinator import SpecialistCoordinator, SpecialistType, TaskCategory, TaskRequest
 
 
 try:
@@ -83,9 +85,9 @@ def initialize_ai(config: ToolRouterConfig) -> None:
                     "cpu_cores": 4,
                     "max_model_ram_gb": 8,
                     "network_speed_mbps": 1000,
-                    "hardware_tier": "n100"
+                    "hardware_tier": "n100",
                 },
-                cost_optimization=True
+                cost_optimization=True,
             )
 
             # Initialize specialist agents
@@ -94,9 +96,7 @@ def initialize_ai(config: ToolRouterConfig) -> None:
 
             # Initialize specialist coordinator
             _specialist_coordinator = SpecialistCoordinator(
-                enhanced_selector=_enhanced_ai_selector,
-                prompt_architect=prompt_architect,
-                ui_specialist=ui_specialist
+                enhanced_selector=_enhanced_ai_selector, prompt_architect=prompt_architect, ui_specialist=ui_specialist
             )
 
             logger.info(
@@ -133,7 +133,9 @@ def execute_task(task: str, context: str = "") -> str:
             metrics.increment_counter("execute_task.errors.get_tools")
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
-            logger.exception("Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error)
+            logger.exception(
+                "Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error
+            )
             metrics.increment_counter("execute_task.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
 
@@ -146,7 +148,10 @@ def execute_task(task: str, context: str = "") -> str:
             with TimingContext("execute_task.pick_best_tools"):
                 if _ai_selector and _config:
                     best_matching_tools = select_top_matching_tools_hybrid(
-                        tools, task, context, top_n=1,
+                        tools,
+                        task,
+                        context,
+                        top_n=1,
                         ai_selector=_ai_selector,
                         ai_weight=_config.ai.weight,
                         feedback_store=_feedback_store,
@@ -220,9 +225,7 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
         selected_names: list[str] = []
         if _ai_selector:
             try:
-                multi_result = _ai_selector.select_tools_multi(
-                    task, tools, context=context, max_tools=max_tools
-                )
+                multi_result = _ai_selector.select_tools_multi(task, tools, context=context, max_tools=max_tools)
                 if multi_result:
                     selected_names = multi_result.get("tools", [])
                     logger.info("AI selected tools for orchestration: %s", selected_names)
@@ -258,7 +261,9 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
                 logger.warning("Error building arguments for %s: %s", tool_name, build_error)
                 results.append(f"[{tool_name}] Error building arguments: {build_error}")
                 if _feedback_store:
-                    _feedback_store.record(task=task, selected_tool=tool_name, success=False, context=accumulated_context)
+                    _feedback_store.record(
+                        task=task, selected_tool=tool_name, success=False, context=accumulated_context
+                    )
                 continue
 
             step_result = call_tool(tool_name, tool_arguments)
@@ -310,7 +315,9 @@ def search_tools(query: str, limit: int = 10) -> str:
             metrics.increment_counter("search_tools.errors.get_tools")
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
-            logger.exception("Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error)
+            logger.exception(
+                "Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error
+            )
             metrics.increment_counter("search_tools.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
 
@@ -345,8 +352,13 @@ def search_tools(query: str, limit: int = 10) -> str:
 
 
 @mcp.tool()
-def execute_specialist_task(task: str, category: str = "tool_selection", context: str = "",
-                          user_preferences: str = "{}", cost_optimization: bool = True) -> str:
+def execute_specialist_task(
+    task: str,
+    category: str = "tool_selection",
+    context: str = "",
+    user_preferences: str = "{}",
+    cost_optimization: bool = True,
+) -> str:
     """Execute task using specialist agents with hardware-aware routing and cost optimization.
 
     Categories:
@@ -381,16 +393,12 @@ def execute_specialist_task(task: str, category: str = "tool_selection", context
         request_id=f"req_{int(time.time())}",
         endpoint="execute_specialist_task",
         authentication_method=None,
-        user_role="user"
+        user_role="user",
     )
 
     # Perform security checks
     security_result = _security_middleware.check_request_security(
-        context=security_context,
-        task=task,
-        category=category,
-        context_str=context,
-        user_preferences=user_preferences
+        context=security_context, task=task, category=category, context_str=context, user_preferences=user_preferences
     )
 
     if not security_result.allowed:
@@ -404,8 +412,11 @@ def execute_specialist_task(task: str, category: str = "tool_selection", context
     sanitized_preferences = security_result.sanitized_inputs.get("user_preferences", user_preferences)
 
     if security_result.risk_score > 0.5:
-        logger.warning("High risk request allowed: risk_score=%.2f, violations=%s",
-                       security_result.risk_score, len(security_result.violations))
+        logger.warning(
+            "High risk request allowed: risk_score=%.2f, violations=%s",
+            security_result.risk_score,
+            len(security_result.violations),
+        )
 
     try:
         # Parse category
@@ -429,7 +440,7 @@ def execute_specialist_task(task: str, category: str = "tool_selection", context
             context=sanitized_context,
             tools=None,  # Will be populated by coordinator
             user_preferences=prefs,
-            cost_optimization=cost_optimization
+            cost_optimization=cost_optimization,
         )
 
         # Process with specialist coordinator
@@ -459,7 +470,7 @@ def execute_specialist_task(task: str, category: str = "tool_selection", context
                 metadata = result.metadata
                 output_lines.append(f"   Task type: {metadata.get('task_type', 'Unknown')}")
                 output_lines.append(f"   Token reduction: {metadata.get('token_reduction', 0):.1f}%")
-                quality = metadata.get('quality_score', {})
+                quality = metadata.get("quality_score", {})
                 output_lines.append(f"   Quality score: {quality.get('overall_score', 0):.2f}")
             elif result.specialist_type == SpecialistType.UI_SPECIALIST:
                 metadata = result.metadata
@@ -500,7 +511,7 @@ def get_specialist_stats() -> str:
 
         # Specialist distribution
         output_lines.append("Specialist Distribution:")
-        dist = stats['specialist_distribution']
+        dist = stats["specialist_distribution"]
         output_lines.append(f"  Router Agent: {dist['router']} requests")
         output_lines.append(f"  Prompt Architect: {dist['prompt_architect']} requests")
         output_lines.append(f"  UI Specialist: {dist['ui_specialist']} requests")
@@ -523,8 +534,7 @@ def get_specialist_stats() -> str:
 
 
 @mcp.tool()
-def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str = "",
-                    feedback: str = "") -> str:
+def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str = "", feedback: str = "") -> str:
     """Optimize a prompt for token efficiency and effectiveness using the Prompt Architect.
 
     Cost preferences:
@@ -544,11 +554,8 @@ def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str
             task=prompt,
             category=TaskCategory.PROMPT_OPTIMIZATION,
             context=context,
-            user_preferences={
-                "cost_preference": cost_preference,
-                "feedback": feedback if feedback else None
-            },
-            cost_optimization=True
+            user_preferences={"cost_preference": cost_preference, "feedback": feedback if feedback else None},
+            cost_optimization=True,
         )
 
         # Process with specialist coordinator
@@ -596,12 +603,12 @@ def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str
         # Task analysis
         output_lines.append("Task Analysis:")
         output_lines.append(f"  Task type: {prompt_result.get('task_type', 'Unknown')}")
-        requirements = prompt_result.get('requirements', [])
+        requirements = prompt_result.get("requirements", [])
         if requirements:
             output_lines.append(f"  Requirements identified: {len(requirements)}")
             for req in requirements[:3]:  # Show first 3 requirements
-                req_type = req.get('type', 'Unknown')
-                priority = req.get('priority', 'Unknown')
+                req_type = req.get("type", "Unknown")
+                priority = req.get("priority", "Unknown")
                 output_lines.append(f"    - {req_type} (Priority: {priority})")
 
         output_lines.append("")

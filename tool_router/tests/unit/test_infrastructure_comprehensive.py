@@ -1,16 +1,14 @@
 """Comprehensive unit tests for infrastructure components."""
 
 import os
-import time
 import unittest
-from unittest.mock import Mock, patch, MagicMock
-from dataclasses import dataclass
+from unittest.mock import Mock, patch
 
 import pytest
 
+from tool_router.args.builder import COMMON_TASK_PARAMETER_NAMES, build_arguments
 from tool_router.core.config import GatewayConfig
 from tool_router.gateway.client import HTTPGatewayClient
-from tool_router.args.builder import build_arguments, COMMON_TASK_PARAMETER_NAMES
 
 
 class TestGatewayConfig:
@@ -19,11 +17,7 @@ class TestGatewayConfig:
     def test_gateway_config_creation(self):
         """Test GatewayConfig creation with all parameters."""
         config = GatewayConfig(
-            url="https://api.example.com",
-            jwt="test-jwt-token",
-            timeout_ms=5000,
-            max_retries=3,
-            retry_delay_ms=1000
+            url="https://api.example.com", jwt="test-jwt-token", timeout_ms=5000, max_retries=3, retry_delay_ms=1000
         )
 
         assert config.url == "https://api.example.com"
@@ -44,17 +38,20 @@ class TestGatewayConfig:
 
     def test_load_from_environment(self):
         """Test loading config from environment variables."""
-        with patch.dict(os.environ, {
-            'GATEWAY_URL': 'https://env-api.example.com',
-            'GATEWAY_JWT': 'env-jwt-token',
-            'GATEWAY_TIMEOUT_MS': '8000',
-            'GATEWAY_MAX_RETRIES': '5',
-            'GATEWAY_RETRY_DELAY_MS': '500'
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "GATEWAY_URL": "https://env-api.example.com",
+                "GATEWAY_JWT": "env-jwt-token",
+                "GATEWAY_TIMEOUT_MS": "8000",
+                "GATEWAY_MAX_RETRIES": "5",
+                "GATEWAY_RETRY_DELAY_MS": "500",
+            },
+        ):
             config = GatewayConfig.load_from_environment()
 
-            assert config.url == 'https://env-api.example.com'
-            assert config.jwt == 'env-jwt-token'
+            assert config.url == "https://env-api.example.com"
+            assert config.jwt == "env-jwt-token"
             assert config.timeout_ms == 8000
             assert config.max_retries == 5
             assert config.retry_delay_ms == 500
@@ -67,26 +64,28 @@ class TestGatewayConfig:
 
     def test_load_from_environment_missing_optional(self):
         """Test loading config when optional env vars are missing."""
-        with patch.dict(os.environ, {
-            'GATEWAY_URL': 'https://api.example.com',
-            'GATEWAY_JWT': 'test-token'
-        }, clear=True):
+        with patch.dict(
+            os.environ, {"GATEWAY_URL": "https://api.example.com", "GATEWAY_JWT": "test-token"}, clear=True
+        ):
             config = GatewayConfig.load_from_environment()
 
-            assert config.url == 'https://api.example.com'
-            assert config.jwt == 'test-token'
+            assert config.url == "https://api.example.com"
+            assert config.jwt == "test-token"
             assert config.timeout_ms == 10000  # Default
             assert config.max_retries == 3  # Default
             assert config.retry_delay_ms == 1000  # Default
 
     def test_load_from_environment_invalid_values(self):
         """Test loading config with invalid environment values."""
-        with patch.dict(os.environ, {
-            'GATEWAY_URL': 'https://api.example.com',
-            'GATEWAY_JWT': 'test-token',
-            'GATEWAY_TIMEOUT_MS': 'invalid',
-            'GATEWAY_MAX_RETRIES': 'not_a_number'
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "GATEWAY_URL": "https://api.example.com",
+                "GATEWAY_JWT": "test-token",
+                "GATEWAY_TIMEOUT_MS": "invalid",
+                "GATEWAY_MAX_RETRIES": "not_a_number",
+            },
+        ):
             with pytest.raises(ValueError, match="Invalid GATEWAY_TIMEOUT_MS"):
                 GatewayConfig.load_from_environment()
 
@@ -125,11 +124,7 @@ class TestHTTPGatewayClient:
     def setUp(self):
         """Set up test fixtures."""
         self.config = GatewayConfig(
-            url="https://api.example.com",
-            jwt="test-jwt-token",
-            timeout_ms=5000,
-            max_retries=3,
-            retry_delay_ms=1000
+            url="https://api.example.com", jwt="test-jwt-token", timeout_ms=5000, max_retries=3, retry_delay_ms=1000
         )
 
     def test_initialization(self):
@@ -155,7 +150,7 @@ class TestHTTPGatewayClient:
         """Test successful request making."""
         client = HTTPGatewayClient(self.config)
 
-        with patch('urllib.request.urlopen') as mock_urlopen:
+        with patch("urllib.request.urlopen") as mock_urlopen:
             mock_response = Mock()
             mock_response.read.return_value = b'{"result": "success"}'
             mock_urlopen.return_value.__enter__.return_value = mock_response
@@ -170,7 +165,7 @@ class TestHTTPGatewayClient:
         client = HTTPGatewayClient(self.config)
         test_data = {"key": "value"}
 
-        with patch('urllib.request.urlopen') as mock_urlopen:
+        with patch("urllib.request.urlopen") as mock_urlopen:
             mock_response = Mock()
             mock_response.read.return_value = b'{"id": 123}'
             mock_urlopen.return_value.__enter__.return_value = mock_response
@@ -184,11 +179,11 @@ class TestHTTPGatewayClient:
         """Test request making with 4xx HTTP error."""
         client = HTTPGatewayClient(self.config)
 
-        with patch('urllib.request.urlopen') as mock_urlopen:
+        with patch("urllib.request.urlopen") as mock_urlopen:
             mock_error = Mock()
             mock_error.code = 404
             mock_error.read.return_value = b"Not Found"
-            mock_urlopen.side_effect = Exception(f"Gateway HTTP error 404: Not Found")
+            mock_urlopen.side_effect = Exception("Gateway HTTP error 404: Not Found")
 
             with pytest.raises(ValueError, match="Gateway HTTP error 404: Not Found"):
                 client._make_request("https://api.example.com/test")
@@ -197,15 +192,13 @@ class TestHTTPGatewayClient:
         """Test request making with 5xx HTTP error and retry."""
         client = HTTPGatewayClient(self.config)
 
-        with patch('urllib.request.urlopen') as mock_urlopen, \
-             patch('time.sleep') as mock_sleep:
-
+        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
             # First call fails with 500, second succeeds
             mock_error = Mock()
             mock_error.code = 500
             mock_urlopen.side_effect = [
-                Exception(f"Gateway server error (HTTP 500)"),
-                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}'))))
+                Exception("Gateway server error (HTTP 500)"),
+                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
             ]
 
             result = client._make_request("https://api.example.com/test")
@@ -218,11 +211,9 @@ class TestHTTPGatewayClient:
         """Test request making when max retries exceeded."""
         client = HTTPGatewayClient(self.config)
 
-        with patch('urllib.request.urlopen') as mock_urlopen, \
-             patch('time.sleep') as mock_sleep:
-
+        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
             # All calls fail with 500
-            mock_urlopen.side_effect = Exception(f"Gateway server error (HTTP 500)")
+            mock_urlopen.side_effect = Exception("Gateway server error (HTTP 500)")
 
             with pytest.raises(ConnectionError, match="Failed after 3 attempts"):
                 client._make_request("https://api.example.com/test")
@@ -234,12 +225,10 @@ class TestHTTPGatewayClient:
         """Test request making with network error and retry."""
         client = HTTPGatewayClient(self.config)
 
-        with patch('urllib.request.urlopen') as mock_urlopen, \
-             patch('time.sleep') as mock_sleep:
-
+        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
             mock_urlopen.side_effect = [
                 Exception("Network error: Connection refused"),
-                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}'))))
+                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
             ]
 
             result = client._make_request("https://api.example.com/test")
@@ -252,12 +241,10 @@ class TestHTTPGatewayClient:
         """Test request making with timeout and retry."""
         client = HTTPGatewayClient(self.config)
 
-        with patch('urllib.request.urlopen') as mock_urlopen, \
-             patch('time.sleep') as mock_sleep:
-
+        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
             mock_urlopen.side_effect = [
                 TimeoutError("Request timeout after 5.0s"),
-                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}'))))
+                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
             ]
 
             result = client._make_request("https://api.example.com/test")
@@ -270,9 +257,9 @@ class TestHTTPGatewayClient:
         """Test request making with JSON decode error."""
         client = HTTPGatewayClient(self.config)
 
-        with patch('urllib.request.urlopen') as mock_urlopen:
+        with patch("urllib.request.urlopen") as mock_urlopen:
             mock_response = Mock()
-            mock_response.read.return_value = b'invalid json'
+            mock_response.read.return_value = b"invalid json"
             mock_urlopen.return_value.__enter__.return_value = mock_response
 
             with pytest.raises(ValueError, match="Invalid JSON response"):
@@ -282,10 +269,10 @@ class TestHTTPGatewayClient:
         """Test getting tools successfully with list response."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_tools = [
                 {"name": "tool1", "description": "Test tool 1"},
-                {"name": "tool2", "description": "Test tool 2"}
+                {"name": "tool2", "description": "Test tool 2"},
             ]
             mock_request.return_value = mock_tools
 
@@ -298,7 +285,7 @@ class TestHTTPGatewayClient:
         """Test getting tools successfully with dict response."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_response = {"tools": [{"name": "tool1", "description": "Test tool 1"}]}
             mock_request.return_value = mock_response
 
@@ -310,7 +297,7 @@ class TestHTTPGatewayClient:
         """Test getting tools with JSON decode error."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_request.side_effect = ValueError("Invalid JSON response")
 
             tools = client.get_tools()
@@ -321,7 +308,7 @@ class TestHTTPGatewayClient:
         """Test getting tools with connection error."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_request.side_effect = ConnectionError("Failed after 3 attempts")
 
             tools = client.get_tools()
@@ -332,7 +319,7 @@ class TestHTTPGatewayClient:
         """Test getting tools with ValueError."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_request.side_effect = ValueError("Gateway HTTP error 404: Not Found")
 
             with pytest.raises(ValueError, match="Failed to fetch tools: Gateway HTTP error 404: Not Found"):
@@ -344,14 +331,8 @@ class TestHTTPGatewayClient:
         tool_name = "test_tool"
         arguments = {"param1": "value1"}
 
-        with patch.object(client, '_make_request') as mock_request:
-            mock_response = {
-                "result": {
-                    "content": [
-                        {"text": "Tool executed successfully"}
-                    ]
-                }
-            }
+        with patch.object(client, "_make_request") as mock_request:
+            mock_response = {"result": {"content": [{"text": "Tool executed successfully"}]}}
             mock_request.return_value = mock_response
 
             result = client.call_tool(tool_name, arguments)
@@ -363,7 +344,7 @@ class TestHTTPGatewayClient:
         """Test calling tool successfully with no content."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_response = {"result": {}}
             mock_request.return_value = mock_response
 
@@ -375,7 +356,7 @@ class TestHTTPGatewayClient:
         """Test calling tool with error response."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_response = {"error": "Tool execution failed"}
             mock_request.return_value = mock_response
 
@@ -387,7 +368,7 @@ class TestHTTPGatewayClient:
         """Test calling tool with request error."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_request.side_effect = ValueError("Request failed")
 
             result = client.call_tool("test_tool", {})
@@ -398,7 +379,7 @@ class TestHTTPGatewayClient:
         """Test calling tool with connection error."""
         client = HTTPGatewayClient(self.config)
 
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             mock_request.side_effect = ConnectionError("Connection failed")
 
             result = client.call_tool("test_tool", {})
@@ -407,9 +388,10 @@ class TestHTTPGatewayClient:
 
     def test_backward_compatibility_get_tools(self):
         """Test backward compatibility get_tools function."""
-        with patch('tool_router.gateway.client.GatewayConfig.load_from_environment') as mock_load, \
-             patch('tool_router.gateway.client.HTTPGatewayClient') as mock_client_class:
-
+        with (
+            patch("tool_router.gateway.client.GatewayConfig.load_from_environment") as mock_load,
+            patch("tool_router.gateway.client.HTTPGatewayClient") as mock_client_class,
+        ):
             mock_config = GatewayConfig(url="https://test.com", jwt="token")
             mock_load.return_value = mock_config
 
@@ -418,6 +400,7 @@ class TestHTTPGatewayClient:
             mock_client_class.return_value = mock_client
 
             from tool_router.gateway.client import get_tools
+
             tools = get_tools()
 
             assert tools == [{"name": "tool1"}]
@@ -427,9 +410,10 @@ class TestHTTPGatewayClient:
 
     def test_backward_compatibility_call_tool(self):
         """Test backward compatibility call_tool function."""
-        with patch('tool_router.gateway.client.GatewayConfig.load_from_environment') as mock_load, \
-             patch('tool_router.gateway.client.HTTPGatewayClient') as mock_client_class:
-
+        with (
+            patch("tool_router.gateway.client.GatewayConfig.load_from_environment") as mock_load,
+            patch("tool_router.gateway.client.HTTPGatewayClient") as mock_client_class,
+        ):
             mock_config = GatewayConfig(url="https://test.com", jwt="token")
             mock_load.return_value = mock_config
 
@@ -438,6 +422,7 @@ class TestHTTPGatewayClient:
             mock_client_class.return_value = mock_client
 
             from tool_router.gateway.client import call_tool
+
             result = call_tool("test_tool", {"param": "value"})
 
             assert result == "Tool result"
@@ -453,11 +438,8 @@ class TestArgsBuilder:
         """Test building arguments with common parameter name."""
         tool = {
             "inputSchema": {
-                "properties": {
-                    "query": {"type": "string"},
-                    "limit": {"type": "integer"}
-                },
-                "required": ["query"]
+                "properties": {"query": {"type": "string"}, "limit": {"type": "integer"}},
+                "required": ["query"],
             }
         }
         task = "search for something"
@@ -470,11 +452,8 @@ class TestArgsBuilder:
         """Test building arguments with first required parameter."""
         tool = {
             "inputSchema": {
-                "properties": {
-                    "custom_param": {"type": "string"},
-                    "limit": {"type": "integer"}
-                },
-                "required": ["custom_param"]
+                "properties": {"custom_param": {"type": "string"}, "limit": {"type": "integer"}},
+                "required": ["custom_param"],
             }
         }
         task = "perform action"
@@ -487,11 +466,8 @@ class TestArgsBuilder:
         """Test building arguments when first required param is not string."""
         tool = {
             "inputSchema": {
-                "properties": {
-                    "count": {"type": "integer"},
-                    "name": {"type": "string"}
-                },
-                "required": ["count", "name"]
+                "properties": {"count": {"type": "integer"}, "name": {"type": "string"}},
+                "required": ["count", "name"],
             }
         }
         task = "test task"
@@ -503,14 +479,7 @@ class TestArgsBuilder:
 
     def test_build_arguments_fallback_to_task(self):
         """Test building arguments fallback to 'task' parameter."""
-        tool = {
-            "inputSchema": {
-                "properties": {
-                    "limit": {"type": "integer"}
-                },
-                "required": []
-            }
-        }
+        tool = {"inputSchema": {"properties": {"limit": {"type": "integer"}}, "required": []}}
         task = "fallback task"
 
         result = build_arguments(tool, task)
@@ -537,11 +506,7 @@ class TestArgsBuilder:
 
     def test_build_arguments_no_properties(self):
         """Test building arguments with schema but no properties."""
-        tool = {
-            "inputSchema": {
-                "required": ["param1"]
-            }
-        }
+        tool = {"inputSchema": {"required": ["param1"]}}
         task = "no properties task"
 
         result = build_arguments(tool, task)
@@ -550,14 +515,7 @@ class TestArgsBuilder:
 
     def test_build_arguments_input_schema_alternative(self):
         """Test building arguments with input_schema (alternative field name)."""
-        tool = {
-            "input_schema": {
-                "properties": {
-                    "prompt": {"type": "string"}
-                },
-                "required": ["prompt"]
-            }
-        }
+        tool = {"input_schema": {"properties": {"prompt": {"type": "string"}}, "required": ["prompt"]}}
         task = "test prompt"
 
         result = build_arguments(tool, task)
@@ -566,23 +524,14 @@ class TestArgsBuilder:
 
     def test_common_task_parameter_names(self):
         """Test common task parameter names list."""
-        expected_names = [
-            "query", "q", "search", "task", "prompt", "question",
-            "input", "text", "message", "command"
-        ]
+        expected_names = ["query", "q", "search", "task", "prompt", "question", "input", "text", "message", "command"]
 
-        assert COMMON_TASK_PARAMETER_NAMES == expected_names
+        assert expected_names == COMMON_TASK_PARAMETER_NAMES
 
     def test_build_arguments_priority_order(self):
         """Test that parameter names are tried in priority order."""
         tool = {
-            "inputSchema": {
-                "properties": {
-                    "command": {"type": "string"},
-                    "query": {"type": "string"}
-                },
-                "required": []
-            }
+            "inputSchema": {"properties": {"command": {"type": "string"}, "query": {"type": "string"}}, "required": []}
         }
         task = "test command"
 
@@ -598,7 +547,7 @@ class TestArgsBuilder:
                 "properties": {
                     "text_param": {}  # No type specified
                 },
-                "required": ["text_param"]
+                "required": ["text_param"],
             }
         }
         task = "type inference test"
@@ -615,11 +564,7 @@ class TestInfrastructureIntegration:
     def test_gateway_client_with_config_integration(self):
         """Test GatewayClient integration with Config."""
         config = GatewayConfig(
-            url="https://api.example.com",
-            jwt="test-token",
-            timeout_ms=3000,
-            max_retries=2,
-            retry_delay_ms=500
+            url="https://api.example.com", jwt="test-token", timeout_ms=3000, max_retries=2, retry_delay_ms=500
         )
         client = HTTPGatewayClient(config)
 
@@ -630,26 +575,17 @@ class TestInfrastructureIntegration:
 
     def test_gateway_client_complete_workflow(self):
         """Test GatewayClient complete workflow simulation."""
-        config = GatewayConfig(
-            url="https://api.example.com",
-            jwt="test-token",
-            timeout_ms=5000,
-            max_retries=3
-        )
+        config = GatewayConfig(url="https://api.example.com", jwt="test-token", timeout_ms=5000, max_retries=3)
         client = HTTPGatewayClient(config)
 
         # Simulate getting tools and calling a tool
-        with patch.object(client, '_make_request') as mock_request:
+        with patch.object(client, "_make_request") as mock_request:
             # Mock tools response
             mock_request.side_effect = [
                 [{"name": "test_tool", "description": "A test tool"}],  # get_tools
                 {  # call_tool
-                    "result": {
-                        "content": [
-                            {"text": "Tool executed successfully"}
-                        ]
-                    }
-                }
+                    "result": {"content": [{"text": "Tool executed successfully"}]}
+                },
             ]
 
             # Get tools
@@ -668,32 +604,22 @@ class TestInfrastructureIntegration:
         test_cases = [
             # Case 1: Common parameter name
             {
-                "tool": {
-                    "inputSchema": {
-                        "properties": {"query": {"type": "string"}},
-                        "required": ["query"]
-                    }
-                },
+                "tool": {"inputSchema": {"properties": {"query": {"type": "string"}}, "required": ["query"]}},
                 "task": "search query",
-                "expected": {"query": "search query"}
+                "expected": {"query": "search query"},
             },
             # Case 2: First required parameter
             {
-                "tool": {
-                    "inputSchema": {
-                        "properties": {"action": {"type": "string"}},
-                        "required": ["action"]
-                    }
-                },
+                "tool": {"inputSchema": {"properties": {"action": {"type": "string"}}, "required": ["action"]}},
                 "task": "perform action",
-                "expected": {"action": "perform action"}
+                "expected": {"action": "perform action"},
             },
             # Case 3: Fallback to task
             {
                 "tool": {"inputSchema": {"properties": {}}},
                 "task": "fallback task",
-                "expected": {"task": "fallback task"}
-            }
+                "expected": {"task": "fallback task"},
+            },
         ]
 
         for case in test_cases:

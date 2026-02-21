@@ -100,8 +100,8 @@ export default function FeatureToggles() {
     { value: 'uiforge-webapp', label: 'UIForge WebApp', color: 'bg-orange-100' }
   ]
 
-  const filteredFeatures = selectedCategory === 'all' 
-    ? features 
+  const filteredFeatures = selectedCategory === 'all'
+    ? features
     : features.filter(f => f.category === selectedCategory)
 
   const toggleFeature = async (featureName: string) => {
@@ -109,9 +109,9 @@ export default function FeatureToggles() {
     try {
       // Simulate API call to forge-features CLI
       await new Promise(resolve => setTimeout(resolve, 500))
-      
-      setFeatures(prev => prev.map(feature => 
-        feature.name === featureName 
+
+      setFeatures(prev => prev.map(feature =>
+        feature.name === featureName
           ? { ...feature, enabled: !feature.enabled }
           : feature
       ))

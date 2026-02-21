@@ -56,40 +56,52 @@ class DeploymentResult:
 
 class MultiCloudManager:
     """Multi-cloud management system"""
-    
+
     def __init__(self, config_file: str = "config/multi-cloud.yaml"):
-        self.config_file = Path(config_file)
+        # Validate and sanitize config file path to prevent path traversal
+        if config_file != "config/multi-cloud.yaml":
+            # Only allow relative paths within config directory
+            if ".." in config_file or config_file.startswith("/"):
+                raise ValueError("Invalid config file path: must be within config directory")
+
+        self.config_file = Path(config_file).resolve()
+        # Ensure the resolved path is within the current working directory
+        try:
+            self.config_file.relative_to(Path.cwd())
+        except ValueError:
+            raise ValueError("Config file path must be within current working directory")
+
         self.providers = {}
         self.services = {}
         self.deployments = {}
         self._load_configuration()
-        
+
     def _load_configuration(self):
         """Load multi-cloud configuration"""
         try:
             if self.config_file.exists():
                 with open(self.config_file, 'r') as f:
                     config = yaml.safe_load(f)
-                    
+
                 # Load providers
                 for provider_config in config.get('providers', []):
                     provider = CloudProvider(**provider_config)
                     self.providers[provider.name] = provider
-                
+
                 # Load services
                 for service_config in config.get('services', []):
                     service = ServiceConfig(**service_config)
                     self.services[service.name] = service
-                
+
                 logger.info(f"Loaded {len(self.providers)} providers and {len(self.services)} services")
             else:
                 logger.warning(f"Configuration file {self.config_file} not found")
                 self._create_default_configuration()
-                
+
         except Exception as e:
             logger.error(f"Failed to load configuration: {e}")
             self._create_default_configuration()
-    
+
     def _create_default_configuration(self):
         """Create default multi-cloud configuration"""
         default_config = {
@@ -180,59 +192,61 @@ class MultiCloudManager:
                 }
             ]
         }
-        
+
         # Create config directory if it doesn't exist
         self.config_file.parent.mkdir(exist_ok=True)
-        
+
         # Write default configuration
         try:
             import yaml
-            with open(self.config_file, 'w') as f:
+            config_file_path = str(self.config_file.resolve())
+            with open(config_file_path, 'w') as f:
                 yaml.dump(default_config, f, default_flow_style=False)
             logger.info(f"Created default configuration at {self.config_file}")
         except ImportError:
             # Fallback to JSON if yaml not available
-            with open(self.config_file, 'w') as f:
+            config_file_path = str(self.config_file.resolve())
+            with open(config_file_path, 'w') as f:
                 json.dump(default_config, f, indent=2)
             logger.info(f"Created default JSON configuration at {self.config_file}")
-    
+
     def deploy_service(self, service_name: str, providers: List[str] = None) -> List[DeploymentResult]:
         """Deploy service to specified cloud providers"""
         if service_name not in self.services:
             raise ValueError(f"Service {service_name} not found in configuration")
-        
+
         service = self.services[service_name]
         target_providers = providers or service.providers
-        
+
         # Filter enabled providers
         available_providers = [
-            p for p in target_providers 
+            p for p in target_providers
             if p in self.providers and self.providers[p].enabled
         ]
-        
+
         if not available_providers:
             raise ValueError("No enabled providers available for deployment")
-        
+
         results = []
-        
+
         for provider_name in available_providers:
             provider = self.providers[provider_name]
-            
+
             try:
                 logger.info(f"Deploying {service_name} to {provider_name} ({provider.type})")
                 start_time = time.time()
-                
+
                 result = self._deploy_to_provider(service, provider)
                 result.deployment_time = time.time() - start_time
-                
+
                 results.append(result)
-                
+
                 if result.success:
                     logger.info(f"Successfully deployed {service_name} to {provider_name}")
                     self.deployments[f"{service_name}:{provider_name}"] = result
                 else:
                     logger.error(f"Failed to deploy {service_name} to {provider_name}: {result.error_message}")
-                    
+
             except Exception as e:
                 logger.error(f"Error deploying {service_name} to {provider_name}: {e}")
                 results.append(DeploymentResult(
@@ -244,9 +258,9 @@ class MultiCloudManager:
                     deployment_time=0.0,
                     error_message=str(e)
                 ))
-        
+
         return results
-    
+
     def _deploy_to_provider(self, service: ServiceConfig, provider: CloudProvider) -> DeploymentResult:
         """Deploy service to specific cloud provider"""
         if provider.type == 'aws':
@@ -257,13 +271,13 @@ class MultiCloudManager:
             return self._deploy_to_gcp(service, provider)
         else:
             raise ValueError(f"Unsupported provider type: {provider.type}")
-    
+
     def _deploy_to_aws(self, service: ServiceConfig, provider: CloudProvider) -> DeploymentResult:
         """Deploy service to AWS"""
         try:
             # Check if AWS CLI is available
             subprocess.run(['aws', '--version'], capture_output=True, check=True)
-            
+
             # Create ECS task definition
             task_def = {
                 'family': service.name,
@@ -299,16 +313,16 @@ class MultiCloudManager:
                     }
                 ]
             }
-            
+
             # Register task definition
             result = subprocess.run([
                 'aws', 'ecs', 'register-task-definition',
                 '--cli-input-json', json.dumps(task_def),
                 '--region', provider.region
             ], capture_output=True, text=True, check=True)
-            
+
             task_def_arn = json.loads(result.stdout)['taskDefinition']['taskDefinitionArn']
-            
+
             # Create ECS service
             service_name = f"{service.name}-{provider.name}"
             service_result = subprocess.run([
@@ -327,25 +341,25 @@ class MultiCloudManager:
                 }),
                 '--region', provider.region
             ], capture_output=True, text=True, check=True)
-            
+
             service_arn = json.loads(service_result.stdout)['service']['serviceArn']
-            
+
             # Get load balancer endpoint
             lb_result = subprocess.run([
                 'aws', 'elbv2', 'describe-load-balancers',
                 '--names', [f'{service_name}-lb'],
                 '--region', provider.region
             ], capture_output=True, text=True)
-            
+
             if lb_result.returncode == 0:
                 lb_data = json.loads(lb_result.stdout)
                 endpoint = lb_data['LoadBalancers'][0]['DNSName']
             else:
                 endpoint = f"{service_name}.{provider.region}.elb.amazonaws.com"
-            
+
             # Estimate cost (simplified calculation)
             cost_estimate = self._estimate_aws_cost(service, provider)
-            
+
             return DeploymentResult(
                 success=True,
                 provider=provider.name,
@@ -354,7 +368,7 @@ class MultiCloudManager:
                 cost_estimate=cost_estimate,
                 deployment_time=0.0
             )
-            
+
         except subprocess.CalledProcessError as e:
             return DeploymentResult(
                 success=False,
@@ -375,20 +389,20 @@ class MultiCloudManager:
                 deployment_time=0.0,
                 error_message=f"AWS deployment error: {str(e)}"
             )
-    
+
     def _deploy_to_azure(self, service: ServiceConfig, provider: CloudProvider) -> DeploymentResult:
         """Deploy service to Azure"""
         try:
             # Check if Azure CLI is available
             subprocess.run(['az', '--version'], capture_output=True, check=True)
-            
+
             # Create resource group if it doesn't exist
             subprocess.run([
                 'az', 'group', 'create',
                 '--name', 'mcp-gateway-rg',
                 '--location', provider.region
             ], capture_output=True, check=True)
-            
+
             # Create container registry
             acr_name = f"mcpgateway{provider.name.lower()}"
             subprocess.run([
@@ -397,7 +411,7 @@ class MultiCloudManager:
                 '--resource-group', 'mcp-gateway-rg',
                 '--sku', 'Basic'
             ], capture_output=True, check=True)
-            
+
             # Build and push container image
             subprocess.run([
                 'az', 'acr', 'build',
@@ -405,7 +419,7 @@ class MultiCloudManager:
                 '--image', service.name,
                 '.'
             ], capture_output=True, check=True)
-            
+
             # Create container instance
             container_name = f"{service.name}-{provider.name}"
             instance_result = subprocess.run([
@@ -418,22 +432,22 @@ class MultiCloudManager:
                 '--ports', ','.join(map(str, service.ports)),
                 '--environment-variables', json.dumps(service.environment)
             ], capture_output=True, text=True, check=True)
-            
+
             instance_data = json.loads(instance_result.stdout)
-            
+
             # Get container IP
             ip_result = subprocess.run([
                 'az', 'container', 'show',
                 '--resource-group', 'mcp-gateway-rg',
                 '--name', container_name
             ], capture_output=True, text=True, check=True)
-            
+
             ip_data = json.loads(ip_result.stdout)
             endpoint = ip_data['ipAddress']['ip']
-            
+
             # Estimate cost
             cost_estimate = self._estimate_azure_cost(service, provider)
-            
+
             return DeploymentResult(
                 success=True,
                 provider=provider.name,
@@ -442,7 +456,7 @@ class MultiCloudManager:
                 cost_estimate=cost_estimate,
                 deployment_time=0.0
             )
-            
+
         except subprocess.CalledProcessError as e:
             return DeploymentResult(
                 success=False,
@@ -463,28 +477,28 @@ class MultiCloudManager:
                 deployment_time=0.0,
                 error_message=f"Azure deployment error: {str(e)}"
             )
-    
+
     def _deploy_to_gcp(self, service: ServiceConfig, provider: CloudProvider) -> DeploymentResult:
         """Deploy service to GCP"""
         try:
             # Check if gcloud is available
             subprocess.run(['gcloud', '--version'], capture_output=True, check=True)
-            
+
             # Set project
             subprocess.run([
                 'gcloud', 'config', 'set', 'project', provider.credentials.get('project_id', 'mcp-gateway')
             ], capture_output=True, check=True)
-            
+
             # Deploy to Cloud Run
             service_name = f"{service.name}-{provider.name}"
-            
+
             # Build and push image
             subprocess.run([
                 'gcloud', 'builds', 'submit',
                 '--tag', f"gcr.io/{provider.credentials.get('project_id', 'mcp-gateway')}/{service_name}",
                 '.'
             ], capture_output=True, check=True)
-            
+
             # Deploy to Cloud Run
             deploy_result = subprocess.run([
                 'gcloud', 'run', 'deploy', service_name,
@@ -497,19 +511,19 @@ class MultiCloudManager:
                 '--allow-unauthenticated',
                 '--set-env-vars', ','.join([f"{k}={v}" for k, v in service.environment.items()])
             ], capture_output=True, text=True, check=True)
-            
+
             # Get service URL
             service_result = subprocess.run([
                 'gcloud', 'run', 'services', 'describe', service_name,
                 '--region', provider.region,
                 '--format', 'value(status.url)'
             ], capture_output=True, text=True, check=True)
-            
+
             endpoint = service_result.stdout.strip()
-            
+
             # Estimate cost
             cost_estimate = self._estimate_gcp_cost(service, provider)
-            
+
             return DeploymentResult(
                 success=True,
                 provider=provider.name,
@@ -518,7 +532,7 @@ class MultiCloudManager:
                 cost_estimate=cost_estimate,
                 deployment_time=0.0
             )
-            
+
         except subprocess.CalledProcessError as e:
             return DeploymentResult(
                 success=False,
@@ -539,7 +553,7 @@ class MultiCloudManager:
                 deployment_time=0.0,
                 error_message=f"GCP deployment error: {str(e)}"
             )
-    
+
     def _estimate_aws_cost(self, service: ServiceConfig, provider: CloudProvider) -> float:
         """Estimate AWS cost (simplified)"""
         # Fargate pricing (simplified)
@@ -548,7 +562,7 @@ class MultiCloudManager:
         hourly_cost = (cpu_cost + memory_cost) * service.replicas
         monthly_cost = hourly_cost * 24 * 30
         return monthly_cost
-    
+
     def _estimate_azure_cost(self, service: ServiceConfig, provider: CloudProvider) -> float:
         """Estimate Azure cost (simplified)"""
         # Container Instances pricing (simplified)
@@ -557,7 +571,7 @@ class MultiCloudManager:
         hourly_cost = (cpu_cost + memory_cost) * service.replicas
         monthly_cost = hourly_cost * 24 * 30
         return monthly_cost
-    
+
     def _estimate_gcp_cost(self, service: ServiceConfig, provider: CloudProvider) -> float:
         """Estimate GCP cost (simplified)"""
         # Cloud Run pricing (simplified)
@@ -566,7 +580,7 @@ class MultiCloudManager:
         hourly_cost = (cpu_cost + memory_cost) * service.replicas
         monthly_cost = hourly_cost * 24 * 30
         return monthly_cost
-    
+
     def scale_service(self, service_name: str, replicas: int, provider: str = None) -> bool:
         """Scale service across cloud providers"""
         if provider:
@@ -578,12 +592,12 @@ class MultiCloudManager:
                 if self.providers[provider_name].enabled:
                     success &= self._scale_service_provider(service_name, replicas, provider_name)
             return success
-    
+
     def _scale_service_provider(self, service_name: str, replicas: int, provider_name: str) -> bool:
         """Scale service on specific provider"""
         try:
             provider = self.providers[provider_name]
-            
+
             if provider.type == 'aws':
                 # Scale ECS service
                 subprocess.run([
@@ -593,7 +607,7 @@ class MultiCloudManager:
                     '--desired-count', replicas,
                     '--region', provider.region
                 ], check=True)
-                
+
             elif provider.type == 'azure':
                 # Scale container instance
                 subprocess.run([
@@ -602,7 +616,7 @@ class MultiCloudManager:
                     '--name', f"{service_name}-{provider_name}",
                     '--cpu', str(replicas)
                 ], check=True)
-                
+
             elif provider.type == 'gcp':
                 # Scale Cloud Run service
                 subprocess.run([
@@ -610,14 +624,14 @@ class MultiCloudManager:
                     '--region', provider.region,
                     '--max-instances', str(replicas)
                 ], check=True)
-            
+
             logger.info(f"Scaled {service_name} to {replicas} replicas on {provider_name}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to scale {service_name} on {provider_name}: {e}")
             return False
-    
+
     def get_multi_cloud_status(self) -> Dict[str, Any]:
         """Get multi-cloud deployment status"""
         status = {
@@ -626,7 +640,7 @@ class MultiCloudManager:
             'deployments': {},
             'total_cost': 0.0
         }
-        
+
         # Provider status
         for name, provider in self.providers.items():
             status['providers'][name] = {
@@ -635,7 +649,7 @@ class MultiCloudManager:
                 'enabled': provider.enabled,
                 'services': provider.services
             }
-        
+
         # Service status
         for name, service in self.services.items():
             status['services'][name] = {
@@ -644,7 +658,7 @@ class MultiCloudManager:
                 'providers': service.providers,
                 'ports': service.ports
             }
-        
+
         # Deployment status
         for deployment_key, deployment in self.deployments.items():
             status['deployments'][deployment_key] = {
@@ -656,9 +670,9 @@ class MultiCloudManager:
                 'deployment_time': deployment.deployment_time
             }
             status['total_cost'] += deployment.cost_estimate
-        
+
         return status
-    
+
     def generate_cost_report(self, time_range: str = "30d") -> Dict[str, Any]:
         """Generate multi-cloud cost report"""
         report = {
@@ -668,7 +682,7 @@ class MultiCloudManager:
             'total_cost': 0.0,
             'optimization_recommendations': []
         }
-        
+
         # Calculate costs by provider
         provider_costs = {}
         for deployment_key, deployment in self.deployments.items():
@@ -677,21 +691,21 @@ class MultiCloudManager:
                 if provider not in provider_costs:
                     provider_costs[provider] = 0.0
                 provider_costs[provider] += deployment.cost_estimate
-        
+
         report['providers'] = provider_costs
         report['total_cost'] = sum(provider_costs.values())
-        
+
         # Generate optimization recommendations
         if report['total_cost'] > 1000:
             report['optimization_recommendations'].append(
                 "Consider using reserved instances for cost savings"
             )
-        
+
         if len(self.deployments) > 5:
             report['optimization_recommendations'].append(
                 "Consolidate services to reduce management overhead"
             )
-        
+
         return report
 
 def main():
@@ -703,27 +717,27 @@ def main():
     parser.add_argument('--status', action='store_true', help='Get multi-cloud status')
     parser.add_argument('--cost-report', action='store_true', help='Generate cost report')
     parser.add_argument('--config', default='config/multi-cloud.yaml', help='Configuration file path')
-    
+
     args = parser.parse_args()
-    
+
     manager = MultiCloudManager(args.config)
-    
+
     if args.deploy:
         providers = [args.provider] if args.provider else None
         results = manager.deploy_service(args.deploy, providers)
-        
+
         print(f"Deployment results for {args.deploy}:")
         for result in results:
             if result.success:
                 print(f"✅ {result.provider}: {result.endpoint} (${result.cost_estimate:.2f}/month)")
             else:
                 print(f"❌ {result.provider}: {result.error_message}")
-    
+
     elif args.scale:
         if ':' not in args.scale:
             print("Error: Scale format must be service_name:replicas")
             sys.exit(1)
-        
+
         service_name, replicas_str = args.scale.split(':')
         try:
             replicas = int(replicas_str)
@@ -735,15 +749,15 @@ def main():
         except ValueError:
             print("Error: Replicas must be a number")
             sys.exit(1)
-    
+
     elif args.status:
         status = manager.get_multi_cloud_status()
         print(json.dumps(status, indent=2))
-    
+
     elif args.cost_report:
         report = manager.generate_cost_report()
         print(json.dumps(report, indent=2))
-    
+
     else:
         # Default: show status
         status = manager.get_multi_cloud_status()
