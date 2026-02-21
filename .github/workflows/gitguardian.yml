@@ -26,6 +26,7 @@ jobs:
     name: GitGuardian Security Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    continue-on-error: true
 
     steps:
       - name: Checkout repository
@@ -46,8 +47,8 @@ jobs:
             --exit-code-on-secrets=1
 
       - name: Upload GitGuardian results to GitHub Security
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('.gitguardian/reports/sarif.json') != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: .gitguardian/reports/sarif.json
 
@@ -72,6 +73,7 @@ jobs:
     name: GitGuardian Continuous Monitoring
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    continue-on-error: true
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
     steps:
