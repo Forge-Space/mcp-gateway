@@ -24,6 +24,17 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
+# Import Sentry integration
+try:
+    from tool_router.sentry_integration import (
+        init_sentry,
+        monitor_service_lifecycle,
+        monitor_mcp_request
+    )
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+
 # Configure structured logging
 structlog.configure(
     processors=[
@@ -44,6 +55,10 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+
+# Initialize Sentry if available
+if SENTRY_AVAILABLE:
+    init_sentry()
 
 
 class ServiceState(Enum):

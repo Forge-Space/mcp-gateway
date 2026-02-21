@@ -9,8 +9,6 @@ Orchestrates the complete training process including:
 - Continuous learning mechanisms
 """
 
-from __future__ import annotations
-
 import json
 import logging
 from datetime import datetime

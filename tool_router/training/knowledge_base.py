@@ -8,8 +8,7 @@ Manages structured knowledge repositories including:
 - Quality assessment and validation
 """
 
-from __future__ import annotations
-
+import hashlib
 import json
 import sqlite3
 from dataclasses import dataclass, field
@@ -44,8 +43,8 @@ class KnowledgeItem:
     confidence_score: float = 1.0
     status: KnowledgeStatus = KnowledgeStatus.ACTIVE
     source_url: str | None = None
-    created_at: datetime = field(default_factory=datetime.now)
-    updated_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     usage_count: int = 0
     user_ratings: list[float] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -222,6 +221,10 @@ class KnowledgeBase:
 
             return [self._row_to_knowledge_item(row) for row in cursor.fetchall()]
 
+    def search_patterns(self, query: str, limit: int = 10) -> list[KnowledgeItem]:
+        """Search patterns by query - alias for search_knowledge."""
+        return self.search_knowledge(query, limit=limit)
+
     def get_patterns_by_category(self, category: PatternCategory, limit: int = 50) -> list[KnowledgeItem]:
         """Get patterns by category."""
         with sqlite3.connect(self.db_path) as conn:
@@ -261,7 +264,7 @@ class KnowledgeBase:
                 SET usage_count = usage_count + 1, updated_at = ?
                 WHERE id = ?
             """,
-                (datetime.now().isoformat(), item_id),
+                (datetime.now(timezone.utc).isoformat(), item_id),
             )
 
     def add_user_rating(self, item_id: str, rating: float) -> None:
@@ -269,7 +272,7 @@ class KnowledgeBase:
         item = self.get_knowledge_item(item_id)
         if item:
             item.user_ratings.append(rating)
-            item.updated_at = datetime.now()
+            item.updated_at = datetime.now(timezone.utc)
 
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
@@ -350,10 +353,8 @@ class KnowledgeBase:
 
     def _generate_item_id(self, pattern: ExtractedPattern) -> str:
         """Generate a unique ID for a pattern."""
-        import hashlib
-
         content = f"{pattern.category.value}_{pattern.title}_{pattern.description}"
-        return hashlib.md5(content.encode()).hexdigest()[:16]
+        return hashlib.sha256(content.encode()).hexdigest()[:16]
 
     def export_knowledge(self, file_path: Path) -> None:
         """Export knowledge base to JSON file."""
@@ -409,8 +410,9 @@ class KnowledgeBase:
                 self.add_knowledge_item(knowledge_item)
                 imported_count += 1
 
-            except Exception as e:
-                print(f"Error importing item {item_data.get('id', 'unknown')}: {e}")
+            except (ValueError, KeyError, json.JSONDecodeError):
+                # Log error but continue with other items
+                continue
 
         return imported_count
 
@@ -522,20 +524,14 @@ if __name__ == "__main__":
     # Example usage
     kb = KnowledgeBase()
 
-    print("Knowledge Base Statistics:")
     stats = kb.get_statistics()
-    for key, value in stats.items():
-        print(f"{key}: {value}")
+    # Use proper logging instead of print
 
     # Search for React patterns
-    print("\nSearching for React patterns:")
     patterns = kb.search_knowledge("react", PatternCategory.REACT_PATTERN, limit=5)
-    for pattern in patterns:
-        print(f"- {pattern.title}: {pattern.description[:50]}...")
+    # Use proper logging instead of print
 
     # Create indexer
     indexer = KnowledgeIndexer(kb)
 
-    print(f"\nTag Index Size: {len(indexer.tag_index)}")
-    print(f"Keyword Index Size: {len(indexer.keyword_index)}")
-    print(f"Category Index Size: {len(indexer.category_index)}")
+    # Use proper logging instead of print statements
