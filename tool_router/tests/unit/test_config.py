@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from tool_router.core.config import GatewayConfig, ToolRouterConfig
+from tool_router.core.config import AIConfig, GatewayConfig, ToolRouterConfig
 
 
 class TestGatewayConfig:
@@ -129,10 +129,12 @@ class TestToolRouterConfig:
             ToolRouterConfig.load_from_environment()
 
     def test_direct_instantiation(self) -> None:
-        """Test direct instantiation with GatewayConfig."""
+        """Test direct instantiation with GatewayConfig and AIConfig."""
         gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
-        config = ToolRouterConfig(gateway=gateway_config, max_tools_search=15, default_top_n=2)
+        ai_config = AIConfig()
+        config = ToolRouterConfig(gateway=gateway_config, ai=ai_config, max_tools_search=15, default_top_n=2)
 
         assert config.gateway == gateway_config
+        assert config.ai == ai_config
         assert config.max_tools_search == 15
         assert config.default_top_n == 2

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
@@ -36,9 +36,8 @@
       "@docs/*": ["./docs/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.js"],
+  "include": ["**/*.ts", "**/*.js", "node_modules/@forgespace/core/dist/src/index.d.ts"],
   "exclude": [
-    "node_modules/",
     "dist/",
     "build/",
     "coverage/",

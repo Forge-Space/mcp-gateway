@@ -1,0 +1,271 @@
+.PHONY: all clean start stop gateway-only register register-wait jwt list-prompts list-servers reset-db cleanup-duplicates generate-secrets lint lint-python lint-typescript lint-all shellcheck test test-coverage format format-python format-typescript deps-check deps-update config-backup config-restore config-install config-list config-cleanup pre-commit-install pre-commit-run pre-commit-update validate-config help help-topics help-examples setup ide-setup status setup-dev
+
+# Default target
+.DEFAULT_GOAL := help
+
+all: help ## Default target (shows help)
+
+clean: reset-db cleanup-duplicates ## Clean up database and duplicates
+
+help: ## Show contextual help with examples
+	python3 scripts/help.py
+
+help-topics: ## List available help topics
+	@echo "Available help topics:"
+	@python3 scripts/help.py | grep "Available topics:" -A 20 | tail -20
+
+help-examples: ## Show practical command examples
+	python3 scripts/help.py --examples
+
+# === Setup & Secrets ===
+generate-secrets: ## Generate JWT and encryption secrets for .env
+	@echo "# Add these to .env (min 32 chars; weak secrets cause 'Server disconnected' / mcp-gateway errors):"
+	@echo "JWT_SECRET_KEY=$(shell openssl rand -base64 32)"
+	@echo "AUTH_ENCRYPTION_SECRET=$(shell openssl rand -base64 32)"
+
+# === Gateway Management ===
+start: ## Start the gateway stack (Docker Compose)
+	./start.sh
+
+stop: ## Stop the gateway stack
+	./start.sh stop
+
+reset-db: ## Reset the database (WARNING: deletes all data)
+	./start.sh stop
+	rm -f ./data/mcp.db ./data/mcp.db-shm ./data/mcp.db-wal
+	@echo "DB removed. Run 'make start' then 'make register' to recreate gateways."
+
+gateway-only: ## Start only the gateway service
+	./start.sh gateway-only
+
+register: ## Register gateways and virtual servers
+	./scripts/gateway/register.sh
+
+register-wait: ## Register with 30s wait for gateway readiness
+	REGISTER_WAIT_SECONDS=30 ./scripts/gateway/register.sh
+
+jwt: ## Generate JWT token for API access
+	@bash -c 'set -a; [ -f .env ] && . ./.env; set +a; \
+	if python3 "$(CURDIR)/scripts/utils/create-jwt.py"; then \
+		exit 0; \
+	fi; \
+	echo "Local JWT generation failed, trying Docker fallback..."; \
+	if docker exec "$${MCPGATEWAY_CONTAINER:-forge-mcp-gateway}" python3 -m forge.utils.create_jwt_token --username "$$PLATFORM_ADMIN_EMAIL" --exp 10080 --secret "$$JWT_SECRET_KEY"; then \
+		exit 0; \
+	fi; \
+	echo "ERROR: JWT generation failed. Check:" >&2; \
+	echo "  - PLATFORM_ADMIN_EMAIL=$$PLATFORM_ADMIN_EMAIL" >&2; \
+	echo "  - JWT_SECRET_KEY is set (length: $${#JWT_SECRET_KEY})" >&2; \
+	echo "  - Container: $${MCPGATEWAY_CONTAINER:-forge-mcp-gateway}" >&2; \
+	exit 1'
+
+auth: ## Authentication commands (JWT generation and management)
+	@echo "Authentication Commands:"
+	@echo "  make jwt              # Generate JWT token"
+	@echo "  make auth-check       # Check JWT configuration"
+	@echo "  make auth-refresh     # Refresh JWT token"
+
+auth-check: ## Check JWT configuration
+	@echo "Checking JWT configuration..."
+	@if [ ! -f .env ]; then \
+		echo "❌ .env file not found. Run 'make setup' first."; \
+		exit 1; \
+	fi
+	@set -a; . ./.env; set +a; \
+	if [ -z "$$JWT_SECRET_KEY" ]; then \
+		echo "❌ JWT_SECRET_KEY not set in .env"; \
+		echo "   Run 'make generate-secrets' to create it."; \
+		exit 1; \
+	fi; \
+	if [ $${#JWT_SECRET_KEY} -lt 32 ]; then \
+		echo "❌ JWT_SECRET_KEY too short ($${#JWT_SECRET_KEY} chars, minimum 32)"; \
+		echo "   Run 'make generate-secrets' to create a proper secret."; \
+		exit 1; \
+	fi; \
+	if [ -z "$$PLATFORM_ADMIN_EMAIL" ]; then \
+		echo "❌ PLATFORM_ADMIN_EMAIL not set in .env"; \
+		echo "   Add it to .env: PLATFORM_ADMIN_EMAIL=your@email.com"; \
+		exit 1; \
+	fi; \
+	echo "✅ JWT configuration looks good"; \
+	echo "   JWT_SECRET_KEY: $${#JWT_SECRET_KEY} chars"; \
+	echo "   PLATFORM_ADMIN_EMAIL: $$PLATFORM_ADMIN_EMAIL"
+
+auth-refresh: ## Refresh JWT token with extended expiry
+	@echo "Refreshing JWT token..."
+	@bash -c 'set -a; [ -f .env ] && . ./.env; set +a; \
+	if python3 "$(CURDIR)/scripts/utils/create-jwt.py" --exp 20160; then \
+		echo "✅ JWT token refreshed (14 days expiry)"; \
+	else \
+		echo "❌ Failed to refresh JWT token"; \
+	fi'
+
+list-prompts: ## List available prompts
+	./scripts/gateway/list-prompts.sh
+
+list-servers: ## List virtual servers
+	./scripts/virtual-servers/list.sh
+
+validate-config: ## Validate MCP Gateway configuration fixes
+	@echo "🔍 Validating MCP Gateway Configuration..."
+	python3 scripts/validate-config
+
+register-enhanced: ## Register virtual servers with enabled/disabled status (enhanced format)
+	python3 ./scripts/virtual-server-manager.py register-enhanced
+
+cleanup-duplicates: ## Clean up duplicate virtual servers
+	./scripts/virtual-servers/cleanup-duplicates.sh
+
+# === Simplified Commands (Phase 3) ===
+setup: ## Interactive configuration wizard
+	python3 scripts/setup-wizard.py
+
+ide-setup: ## Unified IDE setup and management
+	@if [ -z "$(IDE)" ]; then \
+		echo "Usage: make ide-setup IDE=<cursor|windsurf|vscode|claude|all> [ACTION=<install|backup|restore|status>]"; \
+		echo "Actions: install (default), backup, restore, status"; \
+		echo "Examples:"; \
+		echo "  make ide-setup IDE=cursor                    # Install Cursor config"; \
+		echo "  make ide-setup IDE=all                       # Install all IDE configs"; \
+		echo "  make ide-setup IDE=windsurf ACTION=backup     # Backup Windsurf config"; \
+		echo "  make ide-setup IDE=vscode ACTION=status       # Check VS Code status"; \
+		exit 1; \
+	fi
+	python3 scripts/ide-setup.py setup $(IDE) --action $(or $(ACTION),install)
+
+status: ## Comprehensive system status check
+	@python3 scripts/status.py
+
+status-detailed: ## Detailed system status with JSON output
+	@python3 scripts/status.py --detailed
+
+status-json: ## System status in JSON format
+	@python3 scripts/status.py --json
+
+help-enhanced: ## Show enhanced help system
+	@python3 scripts/help.py
+
+help-topics: ## Show available help topics
+	@echo "Available Help Topics:"
+	@echo "  setup           - Initial setup and configuration"
+	@echo "  ide             - IDE configuration and management"
+	@echo "  services        - Service management and monitoring"
+	@echo "  gateway         - Gateway operations and API"
+	@echo "  docker          - Docker and container management"
+	@echo "  development     - Development tools and workflows"
+	@echo "  troubleshooting  - Common issues and solutions"
+	@echo "  examples        - Practical command examples"
+	@echo ""
+	@echo "Usage: make help TOPIC"
+	@echo "Example: make help ide"
+
+help-examples: ## Show practical command examples
+	@python3 scripts/help.py --examples
+
+setup-dev: ## Set up development environment
+	@echo "==> Setting up development environment..."
+	@if [ ! -f .env ]; then \
+		echo "Generating secrets..."; \
+		$(MAKE) generate-secrets >> .env; \
+	fi
+	@echo "Installing pre-commit hooks..."
+	$(MAKE) pre-commit-install
+	@echo "Setting up Node.js dependencies..."
+	@if [ -f package.json ]; then \
+		npm install; \
+	fi
+	@echo "Setting up Python dependencies..."
+	@if [ -f requirements.txt ]; then \
+		pip3 install -r requirements.txt; \
+	fi
+	@echo "Development environment setup complete!"
+
+# === IDE Configuration Management ===
+lint: lint-python lint-typescript shellcheck ## Run all linters (Python, TypeScript, Shell)
+
+lint-python: ## Lint Python code with Ruff
+	@echo "==> Linting Python code..."
+	ruff check tool_router/
+
+lint-typescript: ## Lint TypeScript code with ESLint
+	@echo "==> Linting TypeScript code..."
+	@command -v npm >/dev/null 2>&1 || { echo "ERROR: npm not found. Install Node.js first."; exit 1; }
+	npm run lint
+
+lint-all: lint ## Alias for 'lint' target
+
+shellcheck: ## Lint shell scripts with shellcheck
+	@echo "==> Linting shell scripts..."
+	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
+	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
+	if [ -n "$$SCRIPTS" ]; then \
+		shellcheck -s bash -S warning $$SCRIPTS; \
+	else \
+		echo "No shell scripts found to check."; \
+	fi
+
+# === Formatting ===
+format: format-python format-typescript ## Format all code (Python, TypeScript)
+
+format-python: ## Format Python code with Ruff
+	@echo "==> Formatting Python code..."
+	ruff format tool_router/
+
+format-typescript: ## Format TypeScript code with Prettier
+	@echo "==> Formatting TypeScript code..."
+	@command -v npm >/dev/null 2>&1 || { echo "ERROR: npm not found. Install Node.js first."; exit 1; }
+	npm run format
+
+# === Testing ===
+test: ## Run Python tests with pytest
+	@echo "==> Running Python tests..."
+	pytest tool_router/ -v
+
+test-coverage: ## Run tests with coverage report
+	@echo "==> Running tests with coverage..."
+	pytest tool_router/ -v --cov=tool_router --cov-report=term-missing --cov-report=html
+
+# === Dependencies ===
+deps-check: ## Check for outdated npm dependencies
+	@echo "==> Checking npm dependencies..."
+	@command -v npm >/dev/null 2>&1 || { echo "ERROR: npm not found. Install Node.js first."; exit 1; }
+	npm run deps:check
+
+deps-update: ## Update npm dependencies interactively
+	@echo "==> Updating npm dependencies..."
+	@command -v npm >/dev/null 2>&1 || { echo "ERROR: npm not found. Install Node.js first."; exit 1; }
+	npm run deps:update:interactive
+
+# === IDE Configuration Management ===
+config-backup: ## Backup IDE configurations
+	@echo "==> Backing up IDE configurations..."
+	python3 scripts/config-manager.py backup all
+
+config-restore: ## Restore IDE configurations
+	@if [ -z "$(IDE)" ]; then echo "Usage: make config-restore IDE=<cursor|windsurf|vscode|claude>"; exit 1; fi
+	@echo "==> Restoring $(IDE) configuration..."
+	python3 scripts/config-manager.py restore $(IDE)
+
+config-install: ## Install IDE configurations
+	@if [ -z "$(IDE)" ]; then echo "Usage: make config-install IDE=<cursor|windsurf|vscode|claude|all>"; exit 1; fi
+	@echo "==> Installing $(IDE) configuration..."
+	python3 scripts/config-manager.py install $(IDE)
+
+config-list: ## List available configuration backups
+	@echo "==> Listing configuration backups..."
+	python3 scripts/config-manager.py list
+
+config-cleanup: ## Clean up old configuration backups
+	@echo "==> Cleaning up old configuration backups..."
+	python3 scripts/config-manager.py cleanup --keep 5
+
+# === Pre-commit Hooks ===
+pre-commit-install: ## Install pre-commit hooks
+	pre-commit install
+	@echo "Pre-commit hooks installed. Run 'pre-commit run --all-files' to check the whole repo."
+
+pre-commit-run: ## Run pre-commit hooks on all files
+	pre-commit run --all-files
+
+pre-commit-update: ## Update pre-commit hook versions
+	pre-commit autoupdate

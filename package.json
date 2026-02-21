@@ -1,9 +1,11 @@
 {
-  "name": "@forgespace/mcp",
-  "version": "1.27.0",
-  "description": "Forgespace MCP Gateway - Connect to your Forgespace MCP Gateway instance via NPX",
+  "name": "@forge-mcp-gateway/client",
+  "version": "1.28.1",
+  "description": "Forge MCP Gateway client - Connect to your Forge MCP Gateway instance via NPX",
   "type": "module",
-  "bin": { "forgespace-mcp": "./build/index.js" },
+  "bin": {
+    "forge-mcp-gateway": "./build/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
@@ -11,9 +13,20 @@
     "dev": "tsc --watch",
     "lint": "eslint . --ext .js,.ts --fix",
     "lint:types": "tsc --noEmit",
+    "lint:eslint": "eslint 'src/**/*.ts'",
+    "lint:eslint:fix": "eslint 'src/**/*.ts' --fix",
+    "lint:prettier": "prettier --check \"src/**/*.{ts,json}\"",
     "format": "prettier --write .",
+    "deps:check": "npm-check-updates",
+    "deps:update": "npm-check-updates -u && npm install",
+    "deps:update:interactive": "npm-check-updates -i",
     "test": "bash patterns/cost/scripts/validate-development-workflow.sh",
     "prepare": "npm run build && husky install",
+    "precommit": "npm run lint",
+    "lint:check": "eslint . --ext .js,.ts",
+    "format:check": "prettier --check .",
+    "validate": "npm run lint:check && npm run format:check && npm run test",
+    "pre-commit": "npm run lint && npm run format && npm run test",
     "prepack": "npm run build",
     "publish": "npm publish --access public",
     "integrate": "node scripts/integrate.js",
@@ -21,35 +34,49 @@
     "integrate:uiforge-mcp": "node scripts/integrate.js --project=uiforge-mcp",
     "integrate:uiforge-webapp": "node scripts/integrate.js --project=uiforge-webapp"
   },
-  "files": ["build", "README.md", "LICENSE"],
-  "keywords": ["mcp", "model-context-protocol", "mcp-server", "forgespace", "ai", "llm"],
-  "author": "Forgespace Contributors",
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "forge-mcp-gateway",
+    "ai",
+    "llm"
+  ],
+  "author": "Forge MCP Gateway Contributors",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/Forge-Space/mcp-gateway.git" },
-  "bugs": { "url": "https://github.com/Forge-Space/mcp-gateway/issues" },
-  "homepage": "https://github.com/Forge-Space/mcp-gateway#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lucassantana/forge-mcp-gateway.git"
+  },
   "dependencies": {
+    "@forgespace/core": "1.1.4",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@forgespace/core": "^1.1.1",
+    "@types/fs-extra": "^11.0.1",
     "@types/node": "^20.5.0",
-    "@typescript-eslint/eslint-plugin": "^8.56.0",
-    "@typescript-eslint/parser": "^8.56.0",
+    "@types/semver": "^7.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
     "npm-check-updates": "^17.1.14",
     "prettier": "^3.0.0",
     "rimraf": "^6.0.0",
     "typescript": "^5.1.6",
-    "typescript-eslint": "^8.55.0",
-    "@types/fs-extra": "^11.0.1",
-    "@types/semver": "^7.5.0",
-    "husky": "^8.0.3",
-    "lint-staged": "^13.2.3"
+    "typescript-eslint": "^8.55.0"
   },
-  "engines": { "node": ">=22.0.0" }
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

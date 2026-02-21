@@ -1,4 +1,4 @@
-from tool_router.server import main
+from tool_router.core.server import main
 
 
 if __name__ == "__main__":

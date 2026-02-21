@@ -6,16 +6,17 @@ health monitoring, and configuration-driven deployment.
 """
 
 import asyncio
+import datetime
 import signal
 import sys
 import time
-import psutil
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-import datetime
+
+import psutil
 
 import docker
 import structlog
@@ -356,15 +357,12 @@ class ServiceManager:
     async def initialize(self):
         """Initialize the service manager."""
         try:
-            # Skip Docker client initialization for now to focus on basic functionality
-            logger.warning("Docker client initialization skipped - running in limited mode")
-            self.docker_client = None
-
-            logger.info("Service manager initialized successfully (limited mode)")
-
+            self.docker_client = docker.DockerClient(base_url="unix:///var/run/docker.sock")
+            self.docker_client.ping()
+            logger.info("Docker client initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize service manager: {e}")
-            raise
+            logger.warning(f"Docker client initialization failed - running in limited mode: {e}")
+            self.docker_client = None
 
         # Load configuration
         await self._load_configuration()
@@ -475,6 +473,8 @@ class ServiceManager:
                 container_config["volumes"] = service_config.volumes
 
             # Start container
+            if not self.docker_client:
+                raise RuntimeError("Docker client not available - cannot start container")
             container = self.docker_client.containers.run(**container_config)
 
             # Update status
@@ -520,6 +520,8 @@ class ServiceManager:
             current_status.status = "stopping"
 
             if current_status.container_id:
+                if not self.docker_client:
+                    raise RuntimeError("Docker client not available - cannot stop container")
                 container = self.docker_client.containers.get(current_status.container_id)
                 container.stop(timeout=10)
                 container.remove()

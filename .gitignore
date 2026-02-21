@@ -30,6 +30,7 @@ logs/
 stdin
 test.local.js
 *.temp.js
+PLAN.md
 
 # Build and artifacts
 dist/

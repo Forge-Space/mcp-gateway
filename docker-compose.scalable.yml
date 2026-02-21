@@ -5,7 +5,7 @@
 services:
   # Core Gateway Service (Never Sleeps)
   gateway:
-    image: ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
+    image: ghcr.io/ibm/mcp-gateway:latest
     container_name: forge-mcpgateway
     restart: unless-stopped
     ports:

@@ -224,7 +224,7 @@ class TestOllamaSelector:
         """Test response parsing with invalid JSON."""
         selector = OllamaSelector("http://localhost:11434", "llama3.2:3b", 2000)
 
-        response = '{invalid json}'
+        response = "{invalid json}"
 
         result = selector._parse_response(response)
 

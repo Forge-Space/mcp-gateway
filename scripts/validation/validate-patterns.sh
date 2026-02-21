@@ -44,10 +44,10 @@ fi
 
 # 4. Validate CI/CD uses shared workflows
 echo "🔄 Checking CI/CD shared workflow usage..."
-if grep -q "uses: ./.github/shared/workflows/base-ci.yml" .github/workflows/ci.yml; then
-    echo "✅ CI pipeline uses shared workflow"
+if grep -q "uses: ./.github/workflows/base-ci.yml" .github/workflows/ci.yml; then
+    echo "✅ CI pipeline uses base-ci workflow"
 else
-    echo "❌ CI pipeline should use shared workflow"
+    echo "❌ CI pipeline should use base-ci workflow"
     FAILED=1
 fi
 
@@ -100,7 +100,7 @@ else
     echo "⚠️  Snyk security scanning not found"
 fi
 
-if grep -ql "github/codeql-action" .github/workflows/ci.yml .github/shared/workflows/base-ci.yml 2>/dev/null; then
+if grep -ql "github/codeql-action" .github/workflows/codeql.yml .github/workflows/ci.yml .github/shared/workflows/base-ci.yml 2>/dev/null; then
     echo "✅ CodeQL security scanning configured"
 else
     echo "⚠️  CodeQL security scanning not found"

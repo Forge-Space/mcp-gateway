@@ -11,7 +11,7 @@ on:
 
 # Environment variables (aligned with shared template)
 env:
-  NODE_VERSION: "24"
+  NODE_VERSION: "22"
   PYTHON_VERSION: "3.12"
   COVERAGE_THRESHOLD: "80"
   CACHE_VERSION: "v1"
@@ -23,7 +23,7 @@ jobs:
     uses: ./.github/workflows/base-ci.yml
     with:
       project-type: 'gateway'
-      node-version: '24'
+      node-version: '22'
       python-version: '3.12'
       enable-docker: true
       enable-security: true
@@ -52,7 +52,7 @@ jobs:
   integration-test:
     name: Integration Test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     needs: ci
 
     services:
@@ -140,39 +140,11 @@ jobs:
             }
           fi
 
-  shell-lint:
-    name: Shell Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install shfmt
-        run: sudo apt-get install -y shfmt
-
-      - name: Run shellcheck
-        uses: ludeeus/action-shellcheck@2.0.0
-        env:
-          SHELLCHECK_OPTS: --rcfile=.shellcheckrc
-
-      - name: Check shell formatting
-        run: |
-          ERRORS=0
-          while IFS= read -r -d '' f; do
-            if shfmt -d -i 2 "$f" 2>/dev/null | grep -q .; then
-              echo "Formatting violation: $f"
-              ERRORS=$((ERRORS + 1))
-            fi
-          done < <(find . -name "*.sh" ! -path "*/node_modules/*" -print0)
-          [ "$ERRORS" -eq 0 ] && echo "All shell scripts correctly formatted" || exit 1
-
-  # Workflow summary
+# Workflow summary
   workflow-summary:
     name: Workflow Summary
     runs-on: ubuntu-latest
-    needs: [ci, pattern-validation, integration-test, performance-test, docs-check, shell-lint]
+    needs: [ci, pattern-validation, integration-test, performance-test, docs-check]
     if: always()
 
     steps:

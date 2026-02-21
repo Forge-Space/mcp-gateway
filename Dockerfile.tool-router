@@ -22,8 +22,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application and set proper permissions
 COPY tool_router /app/tool_router
 RUN chown -R app:app /app && \
-    chmod -R 755 /app && \
-    chmod +x /app/tool_router/__main__.py
+    chmod -R 755 /app
 
 USER app
 
@@ -32,9 +31,9 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Optimized health check with proper error handling
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD python3 -c "import tool_router; import sys; sys.exit(0)" || exit 1
+# Health check against HTTP endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD curl -sf http://localhost:8030/ || exit 1
 
-# Use optimized Python flags for performance
-CMD ["python3", "-u", "-m", "tool_router"]
+# Run as HTTP server for health checks
+CMD ["python3", "-u", "/app/tool_router/http_server.py"]

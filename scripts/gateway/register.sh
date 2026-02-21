@@ -291,7 +291,20 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
       line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
       [[ -z "$line" || "$line" =~ ^# ]] && continue
       server_name=$(echo "$line" | cut -d'|' -f1)
-      gateways_str=$(echo "$line" | cut -d'|' -f2- | tr -d ' ')
+      field2=$(echo "$line" | cut -d'|' -f2 | tr -d ' ')
+      field_count=$(echo "$line" | awk -F'|' '{print NF}')
+      if [[ "$field_count" -ge 4 ]]; then
+        # New format: name|enabled|gateways|description
+        enabled_flag=$(echo "$field2" | tr '[:upper:]' '[:lower:]')
+        if [[ "$enabled_flag" != "true" && "$enabled_flag" != "1" && "$enabled_flag" != "yes" ]]; then
+          log_info "Skipping disabled server: $server_name"
+          continue
+        fi
+        gateways_str=$(echo "$line" | cut -d'|' -f3 | tr -d ' ')
+      else
+        # Legacy format: name|gateways
+        gateways_str="$field2"
+      fi
       [[ -z "$server_name" || -z "$gateways_str" ]] && continue
       gates_json=$(echo "$gateways_str" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length > 0))' 2>/dev/null)
       [[ -z "$gates_json" || "$gates_json" == "null" ]] && continue

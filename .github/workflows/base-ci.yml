@@ -114,9 +114,13 @@ jobs:
     if: inputs.enable-security
     steps:
       - uses: actions/checkout@v4
-      - uses: snyk/actions/node@master
-        continue-on-error: true
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Install dependencies and run Snyk
+        run: |
+          npm install --ignore-scripts
+          npx snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
+        continue-on-error: true

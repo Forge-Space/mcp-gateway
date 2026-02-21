@@ -1,0 +1,7 @@
+# Development dependencies for CI/CD
+# Includes performance testing tools
+psutil>=5.9.0
+pytest-benchmark>=4.0.0
+pytest>=7.0.0
+pytest-cov>=4.0.0
+ruff>=0.1.0
