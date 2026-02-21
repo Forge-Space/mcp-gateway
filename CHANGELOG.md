@@ -2,7 +2,129 @@
 
 All notable changes to the MCP Gateway project will be documented in this file.
 
-<<<<<<< Updated upstream
+## [1.36.1] - 2026-02-21
+
+### 🚀 Performance Testing Infrastructure - Complete CI Resolution
+
+- **✅ Performance Test Dependencies**: Added comprehensive performance testing support
+  - **Core Dependencies**: Added `psutil>=5.9.0` and `pytest-benchmark>=4.0.0` to `pyproject.toml` dev dependencies
+  - **Requirements Files**: Created multiple requirements files for external CI compatibility:
+    - `requirements-performance.txt` - Primary performance testing dependencies
+    - `requirements-performance-testing.txt` - Comprehensive testing suite
+    - `requirements-load.txt` - Load testing with Locust
+    - `requirements-benchmark.txt` - Benchmarking tools
+  - **Test Structure**: Created `tests/performance/` directory with copied performance tests
+  - **CI Compatibility**: Fixed external "Enhanced CI Pipeline" workflow integration
+
+- **✅ Performance Test Validation**: All 6 performance tests now passing
+  - **Startup Memory Usage**: Verifies < 500MB memory usage at startup
+  - **Response Time Baseline**: Verifies < 100ms response time for operations
+  - **Concurrent Operations**: Validates efficient concurrent processing capabilities
+  - **CPU Usage Baseline**: Ensures reasonable CPU utilization during operations
+  - **Memory Growth**: Controls memory growth during intensive operations
+  - **File Handle Usage**: Prevents file handle leaks during operations
+
+- **✅ External CI Integration**: Fixed "Enhanced CI Pipeline" compatibility issues
+  - **Root Cause**: External workflow using invalid `pip install --if-present` option
+  - **Solution**: Created comprehensive requirements files to eliminate conditional installation
+  - **Impact**: Performance validation check now works with external CI workflows
+  - **Dependencies**: Added Locust for load testing, psutil for system monitoring, pytest-benchmark for performance measurement
+
+- **✅ Cross-Platform Compatibility**: Performance tests work across environments
+  - **macOS**: Verified local execution with Python 3.9/3.12
+  - **Linux**: CI environment compatibility with Ubuntu runners
+  - **Dependencies**: Platform-agnostic dependency management
+  - **Resource Monitoring**: System resource monitoring works across platforms
+
+**Performance Test Results**:
+- **6/6 tests passing**: All performance benchmarks meeting targets
+- **Memory Efficiency**: < 500MB startup memory usage validated
+- **Response Performance**: < 100ms operation response times confirmed
+- **Concurrency**: Efficient multi-threaded operation validated
+- **Resource Management**: No memory leaks or file handle issues detected
+
+**CI Integration Status**:
+- **External Workflows**: Compatible with "Enhanced CI Pipeline" from forge-patterns
+- **Requirements Coverage**: Multiple requirements files for different CI expectations
+- **Dependency Resolution**: All performance testing dependencies properly installed
+- **Test Execution**: Performance tests run successfully from expected CI paths
+
+**Technical Implementation**:
+```python
+# Added to pyproject.toml
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "pre-commit>=3.0.0",
+    "psutil>=5.9.0",        # NEW: System resource monitoring
+    "pytest-benchmark>=4.0.0", # NEW: Performance benchmarking
+]
+```
+
+**File Structure**:
+```
+tests/
+├── performance/
+│   ├── __init__.py
+│   └── test_benchmarks.py    # 6 comprehensive performance tests
+requirements-performance.txt              # Primary performance deps
+requirements-performance-testing.txt      # Comprehensive testing
+requirements-load.txt                     # Load testing with Locust
+requirements-benchmark.txt                # Benchmarking tools
+```
+
+### 🔒 Enhanced Snyk Security Scanning - Universal PR Coverage
+
+- **✅ Universal PR Triggering**: Snyk workflow now triggers on **every open pull request**
+  - **Before**: Limited to `[main, master, dev, release/*]` branches
+  - **After**: Triggers on ALL PRs regardless of branch using `[opened, synchronize, reopened, ready_for_review]` types
+  - **Impact**: Complete security coverage for all code changes
+
+- **✅ Enhanced Security Scanning**: Comprehensive multi-language vulnerability detection
+  - **Container Scanning**: Added Docker container vulnerability scanning with conditional triggers
+  - **IaC Scanning**: Infrastructure as Code scanning for Terraform/YAML files
+  - **Node.js Scanning**: Conditional Node.js dependency scanning based on file changes
+  - **Python Matrix**: Parallel execution across multiple Python versions
+  - **Code Analysis**: Enhanced code security analysis with fail-on-severity
+
+- **✅ Smart Conditional Scanning**: Optimized resource usage with intelligent triggers
+  - **Docker Files**: Only runs when Docker-related files are changed (`Dockerfile`, `docker-compose`, `.dockerignore`)
+  - **Node.js**: Only runs when package files are modified (`package.json`, `package-lock.json`)
+  - **IaC**: Only runs when infrastructure files are touched (`*.tf`, `*.yml`, `docker-compose`)
+  - **Commit Message Triggers**: Uses commit message tags like `[docker]`, `[node]`, `[iac]` for explicit scanning
+
+- **✅ Enhanced Error Handling**: Improved build reliability and security enforcement
+  - **Fail Build on Severity**: `--fail-on-severity=high` stops build on critical security issues
+  - **No Silent Failures**: Removed `continue-on-error: true` from critical security jobs
+  - **Better Timeouts**: Increased timeout values for comprehensive scans (10-15 minutes)
+  - **Parallel Execution**: Multiple security scans run simultaneously where possible
+
+- **✅ PR Integration & Reporting**: Comprehensive feedback and visibility
+  - **Automatic Comments**: Snyk results automatically added as structured PR comments
+  - **Status Summaries**: GitHub step summaries with detailed scan results and metrics
+  - **SARIF Upload**: All scan results uploaded to GitHub Code Scanning for visibility
+  - **PR Status Check**: Dedicated job to verify PR status and Snyk integration
+
+- **✅ Enhanced Permissions & Configuration**: Improved workflow capabilities
+  - **Pull-Requests Write**: Required for automatic PR commenting
+  - **Security Events Write**: Required for SARIF upload to GitHub Code Scanning
+  - **Environment Variables**: Added `SNYK_FAIL_ON_SEVERITY` for build failure control
+  - **Organization Settings**: Configured for `LucasSantana-Dev` organization with high severity threshold
+
+**Security Coverage Metrics**:
+- **100% PR Coverage**: Every pull request undergoes security scanning
+- **5 Scan Types**: Python dependencies, code analysis, container, Node.js, IaC
+- **Multi-Language Support**: Python, Node.js, TypeScript, Docker, Terraform, YAML
+- **Real-time Feedback**: Immediate security results in PR comments and GitHub UI
+
+**Documentation**:
+- Added comprehensive `docs/SNYK_WORKFLOW_ENHANCEMENT.md` with detailed implementation guide
+- Enhanced workflow comments with clear explanations of conditional logic
+- Provided troubleshooting guide and usage examples
+- Documented all configuration variables and permissions
+
 ## [1.35.1] - 2026-02-19
 
 ### 🧹 Documentation Cleanup & Code Quality Improvements
