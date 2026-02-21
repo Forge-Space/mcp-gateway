@@ -50,7 +50,7 @@ jobs:
           pip install pytest pytest-cov pytest-mock pytest-xdist
           pip install pytest-benchmark pytest-profiling
           pip install coverage[toml]
-          pip install -r requirements.txt --if-present
+          [ -f requirements.txt ] && pip install -r requirements.txt || true
 
       - name: Cache test dependencies
         uses: actions/cache@v4
@@ -236,7 +236,7 @@ jobs:
       - name: Install performance testing tools
         run: |
           pip install locust pytest-benchmark
-          pip install -r requirements.txt --if-present
+          [ -f requirements.txt ] && pip install -r requirements.txt || true
 
       - name: Run load tests
         run: |
@@ -363,7 +363,7 @@ jobs:
       - name: Install documentation tools
         run: |
           pip install sphinx sphinx-rtd-theme
-          pip install -r requirements.txt --if-present
+          [ -f requirements.txt ] && pip install -r requirements.txt || true
 
       - name: Generate API documentation
         run: |
