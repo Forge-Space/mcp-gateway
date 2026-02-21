@@ -50,7 +50,7 @@ print_status() {
 is_service_healthy() {
     local service=$1
     local health_url=$2
-    
+
     if curl -s --connect-timeout 5 --max-time 10 "$health_url" >/dev/null 2>&1; then
         return 0
     else
@@ -62,10 +62,10 @@ is_service_healthy() {
 restart_service() {
     local service=$1
     local container_name="forge-${service}-prod"
-    
+
     log "Attempting to restart service: $service"
     print_status "$YELLOW" "🔄 Restarting $service..."
-    
+
     # Check if container exists
     if ! docker ps --format "{{.Names}}" | grep -q "^${container_name}$"; then
         log "Container $container_name not found, attempting to start service..."
@@ -74,11 +74,11 @@ restart_service() {
         # Restart existing container
         docker-compose -f "$COMPOSE_FILE" restart "$service"
     fi
-    
+
     # Wait for service to be healthy
     local max_wait=60
     local wait_time=0
-    
+
     while [[ $wait_time -lt $max_wait ]]; do
         case $service in
             "gateway")
@@ -96,11 +96,11 @@ restart_service() {
                 fi
                 ;;
         esac
-        
+
         sleep 5
         wait_time=$((wait_time + 5))
     done
-    
+
     print_status "$RED" "❌ $service failed to become healthy after restart"
     log "Service $service restart failed - manual intervention required"
     return 1
@@ -110,16 +110,16 @@ restart_service() {
 scale_service() {
     local service=$1
     local replicas=$2
-    
+
     log "Scaling service $service to $replicas replicas"
     print_status "$YELLOW" "📊 Scaling $service to $replicas replicas..."
-    
+
     docker-compose -f "$COMPOSE_FILE" up -d --scale "$service=$replicas"
-    
+
     # Verify scaling
     local running_containers
     running_containers=$(docker-compose -f "$COMPOSE_FILE" ps -q "$service" | wc -l)
-    
+
     if [[ $running_containers -eq $replicas ]]; then
         print_status "$GREEN" "✅ $service successfully scaled to $replicas replicas"
         log "Service $service successfully scaled to $replicas replicas"
@@ -134,38 +134,38 @@ collect_logs() {
     local service=$1
     local lines=${2:-100}
     local log_file="/tmp/${service}-incident-logs-$(date +%Y%m%d_%H%M%S).log"
-    
+
     log "Collecting logs for service: $service"
     print_status "$BLUE" "📋 Collecting logs for $service..."
-    
+
     # Get recent logs
     docker-compose -f "$COMPOSE_FILE" logs --tail="$lines" "$service" > "$log_file" 2>/dev/null || true
-    
+
     # Get container logs if service is running
     local container_name="forge-${service}-prod"
     if docker ps --format "{{.Names}}" | grep -q "^${container_name}$"; then
         docker logs --tail="$lines" "$container_name" >> "$log_file" 2>/dev/null || true
     fi
-    
+
     # Get system logs
     echo "=== System Information ===" >> "$log_file"
     echo "Timestamp: $(date)" >> "$log_file"
     echo "Docker Version: $(docker --version)" >> "$log_file"
     echo "Docker Compose Version: $(docker-compose --version)" >> "$log_FILE"
     echo "" >> "$log_file"
-    
+
     echo "=== Container Status ===" >> "$log_file"
     docker-compose -f "$COMPOSE_FILE" ps "$service" >> "$log_file" 2>/dev/null || true
     echo "" >> "$log_file"
-    
+
     echo "=== Resource Usage ===" >> "$log_file"
     if docker ps --format "{{.Names}}" | grep -q "^${container_name}$"; then
         docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}" "$container_name" >> "$log_file" 2>/dev/null || true
     fi
-    
+
     print_status "$GREEN" "✅ Logs collected: $log_file"
     log "Logs collected for $service: $log_file"
-    
+
     echo "$log_file"
 }
 
@@ -175,16 +175,16 @@ send_notification() {
     local service=$2
     local message=$3
     local action_taken=$4
-    
+
     log "Sending notification: $severity - $service - $message - Action: $action_taken"
     print_status "$BLUE" "📢 Notification: $severity alert for $service"
-    
+
     # In a real implementation, this would send to:
     # - Slack webhook
     # - Email
     # - PagerDuty
     # - Monitoring system
-    
+
     echo "NOTIFICATION: [$severity] $service - $message - Action taken: $action_taken" | tee -a "$LOG_FILE"
 }
 
@@ -193,17 +193,17 @@ escalate_incident() {
     local service=$1
     local issue=$2
     local severity=$3
-    
+
     log "Escalating incident: $service - $issue - Severity: $severity"
     print_status "$RED" "🚨 Escalating incident for $service"
-    
+
     # Collect logs before escalation
     local log_file
     log_file=$(collect_logs "$service" 200)
-    
+
     # Create incident report
     local incident_file="/tmp/incident-${service}-$(date +%Y%m%d_%H%M%S).json"
-    
+
     cat > "$incident_file" << EOF
 {
   "timestamp": "$(date -Iseconds)",
@@ -224,20 +224,20 @@ escalate_incident() {
   "status": "escalated"
 }
 EOF
-    
+
     print_status "$RED" "📋 Incident escalated: $incident_file"
     send_notification "$severity" "$service" "$issue" "Incident escalated - manual intervention required"
-    
+
     echo "$incident_file"
 }
 
 # Handle service down incident
 handle_service_down() {
     local service=$1
-    
+
     log "Handling service down incident: $service"
     print_status "$YELLOW" "🔧 Handling service down: $service"
-    
+
     # Attempt restart
     if restart_service "$service"; then
         send_notification "INFO" "$service" "Service was down and successfully restarted" "Automated restart"
@@ -256,10 +256,10 @@ handle_high_resources() {
     local service=$1
     local resource_type=$2
     local usage=$3
-    
+
     log "Handling high $resource_type usage: $service (${usage}%)"
     print_status "$YELLOW" "📊 Handling high $resource_type usage: $service (${usage}%)"
-    
+
     case $resource_type in
         "cpu")
             # Check if we can scale up (only for stateless services)
@@ -292,10 +292,10 @@ handle_high_resources() {
 # Handle database issues
 handle_database_issues() {
     local issue=$1
-    
+
     log "Handling database issue: $issue"
     print_status "$YELLOW" "🗄️  Handling database issue: $issue"
-    
+
     case $issue in
         "connection_failed")
             # Try to restart database
@@ -321,9 +321,9 @@ analyze_incident() {
     local service=$1
     local incident_type=$2
     local details=$3
-    
+
     log "Analyzing incident: $service - $incident_type - $details"
-    
+
     case $incident_type in
         "$INCIDENT_SERVICE_DOWN")
             handle_service_down "$service"
@@ -351,43 +351,43 @@ analyze_incident() {
 # Monitor and auto-respond
 auto_monitor() {
     local interval=${1:-60}
-    
+
     log "Starting automated incident response with ${interval}s interval..."
-    
+
     while true; do
         log "Running incident response check..."
-        
+
         # Check service health
         local services=("gateway" "service-manager" "postgres" "redis" "web-admin")
-        
+
         for service in "${services[@]}"; do
             local container_name="forge-${service}-prod"
-            
+
             # Check if container is running
             if ! docker ps --format "{{.Names}}" | grep -q "^${container_name}$"; then
                 analyze_incident "$service" "$INCIDENT_SERVICE_DOWN" "Container not running"
                 continue
             fi
-            
+
             # Check resource usage
             local stats
             stats=$(docker stats --no-stream --format "{{.CPUPerc}}\t{{.MemPerc}}" "$container_name" 2>/dev/null || echo "")
-            
+
             if [[ -n "$stats" ]]; then
                 local cpu_percent=$(echo "$stats" | cut -f1 | sed 's/%//')
                 local mem_percent=$(echo "$stats" | cut -f2 | sed 's/%//')
-                
+
                 # Check CPU usage
                 if (( $(echo "$cpu_percent > 90" | bc -l 2>/dev/null || echo "0") )); then
                     analyze_incident "$service" "$INCIDENT_HIGH_CPU" "$cpu_percent"
                 fi
-                
+
                 # Check memory usage
                 if (( $(echo "$mem_percent > 90" | bc -l 2>/dev/null || echo "0") )); then
                     analyze_incident "$service" "$INCIDENT_HIGH_MEMORY" "$mem_percent"
                 fi
             fi
-            
+
             # Check service-specific health
             case $service in
                 "gateway")
@@ -402,15 +402,15 @@ auto_monitor() {
                     ;;
             esac
         done
-        
+
         # Check system resources
         local disk_usage
         disk_usage=$(df / | tail -1 | awk '{print $5}' | sed 's/%//' 2>/dev/null || echo "0")
-        
+
         if (( disk_usage > 90 )); then
             analyze_incident "system" "$INCIDENT_HIGH_DISK" "$disk_usage"
         fi
-        
+
         log "Incident response check completed. Next cycle in ${interval}s..."
         sleep "$interval"
     done
@@ -527,9 +527,9 @@ done
 main() {
     echo "🚨 MCP Gateway Automated Incident Response"
     echo "=========================================="
-    
+
     log "Starting incident response system"
-    
+
     if [[ "$RUN_ANALYZE" == "true" ]]; then
         analyze_incident "$SERVICE" "$INCIDENT_TYPE" "$DETAILS"
     elif [[ "$RUN_RESTART" == "true" ]]; then

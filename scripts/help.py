@@ -15,7 +15,7 @@ import argparse
 
 class HelpSystem:
     """Enhanced help system for MCP Gateway."""
-    
+
     def __init__(self):
         self.repo_root = Path(__file__).parent.parent
         self.makefile = self.repo_root / "Makefile"
@@ -23,51 +23,51 @@ class HelpSystem:
         self.topics = {}
         self.examples = {}
         self.load_makefile_commands()
-    
+
     def load_makefile_commands(self):
         """Load commands from Makefile."""
         if not self.makefile.exists():
             return
-        
+
         with open(self.makefile, 'r') as f:
             content = f.read()
-        
+
         # Parse Makefile targets
         lines = content.split('\n')
         current_target = None
         current_description = ""
-        
+
         for line in lines:
             line = line.rstrip()
-            
+
             # Skip comments and empty lines
             if line.startswith('#') or not line:
                 continue
-            
+
             # Check for target definition
             if ':' in line and not line.startswith('\t'):
                 parts = line.split(':', 1)
                 target = parts[0].strip()
-                
+
                 # Skip special targets
                 if target.startswith('.') or target == 'DEFAULT_GOAL':
                     continue
-                
+
                 # Save previous target
                 if current_target:
                     self.commands[current_target] = current_description.strip()
-                
+
                 current_target = target
                 current_description = parts[1].strip() if len(parts) > 1 else ""
-            
+
             # Check for description in same line
             elif current_target and '##' in line:
                 current_description = line.split('##', 1)[1].strip()
-        
+
         # Save last target
         if current_target:
             self.commands[current_target] = current_description.strip()
-    
+
     def show_help(self, topic: Optional[str] = None, examples: bool = False):
         """Show help information."""
         if examples:
@@ -76,7 +76,7 @@ class HelpSystem:
             self.show_topic_help(topic)
         else:
             self.show_main_help()
-    
+
     def show_main_help(self):
         """Show main help overview."""
         print("=" * 60)
@@ -119,7 +119,7 @@ class HelpSystem:
         print("  CHANGELOG.md           # Version history and changes")
         print("  docs/                  # Comprehensive documentation")
         print()
-    
+
     def show_command_categories(self):
         """Show commands organized by category."""
         categories = {
@@ -131,7 +131,7 @@ class HelpSystem:
             "🔒 Quality & Security": ["shellcheck", "pre-commit-install", "pre-commit-run"],
             "📖 Help & Documentation": ["help", "help-topics", "help-examples"]
         }
-        
+
         for category, commands in categories.items():
             print(f"  {category}:")
             for cmd in commands:
@@ -141,11 +141,11 @@ class HelpSystem:
                 else:
                     print(f"    make {cmd:<20} # Command not found")
             print()
-    
+
     def show_topic_help(self, topic: str):
         """Show detailed help for a specific topic."""
         topic = topic.lower()
-        
+
         if topic == "setup":
             self.show_setup_help()
         elif topic == "ide":
@@ -167,7 +167,7 @@ class HelpSystem:
             print("  setup, ide, services, gateway, docker, development, troubleshooting, examples")
             print()
             print("Use 'make help-topics' to see all available topics.")
-    
+
     def show_setup_help(self):
         """Show setup help."""
         print("=" * 60)
@@ -197,7 +197,7 @@ class HelpSystem:
         print("  ✅ Services configured in config/services.yml")
         print("  ✅ IDE connections configured (optional)")
         print()
-    
+
     def show_ide_help(self):
         """Show IDE configuration help."""
         print("=" * 60)
@@ -233,7 +233,7 @@ class HelpSystem:
         print("  Windsurf: ~/.windsurf/mcp.json")
         print("  Claude: ~/.config/claude/claude_desktop_config.json")
         print()
-    
+
     def show_services_help(self):
         """Show services management help."""
         print("=" * 60)
@@ -260,7 +260,7 @@ class HelpSystem:
         print("  config/scaling-policies.yml  # Auto-scaling policies")
         print("  config/sleep_settings.yml      # Sleep/wake settings")
         print()
-    
+
     def show_gateway_help(self):
         """Show gateway operations help."""
         print("=" * 60)
@@ -288,7 +288,7 @@ class HelpSystem:
         print("  AUTH_ENCRYPTION_SECRET # Encryption secret (32+ chars)")
         print("  PLATFORM_ADMIN_EMAIL   # Admin email for JWT")
         print()
-    
+
     def show_docker_help(self):
         """Show Docker help."""
         print("=" * 60)
@@ -318,7 +318,7 @@ class HelpSystem:
         print("  Sub-200ms wake times for sleeping services")
         print("  Resource limits configured for all services")
         print()
-    
+
     def show_development_help(self):
         """Show development help."""
         print("=" * 60)
@@ -354,7 +354,7 @@ class HelpSystem:
         print("  Coverage reports in HTML and XML")
         print("  Automatic coverage upload to Codecov")
         print()
-    
+
     def show_troubleshooting_help(self):
         """Show troubleshooting help."""
         print("=" * 60)
@@ -391,7 +391,7 @@ class HelpSystem:
         print("  3. Check service logs for errors")
         print("  4. Verify service health: curl localhost:8080/health")
         print()
-    
+
     def show_examples(self):
         """Show practical command examples."""
         print("=" * 60)
@@ -468,7 +468,7 @@ def main():
     parser.add_argument("topic", nargs="?", help="Help topic to display")
     parser.add_argument("--examples", action="store_true", help="Show practical examples")
     args = parser.parse_args()
-    
+
     help_system = HelpSystem()
     help_system.show_help(args.topic, args.examples)
 

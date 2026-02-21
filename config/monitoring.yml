@@ -225,7 +225,12 @@ dashboards:
     panels:
       - title: "Service States"
         type: "pie"
-        metrics: ["services_running_total", "services_sleeping_total", "services_stopped_total"]
+        metrics:
+          [
+            "services_running_total",
+            "services_sleeping_total",
+            "services_stopped_total",
+          ]
 
       - title: "Resource Usage"
         type: "graph"
@@ -237,7 +242,8 @@ dashboards:
 
       - title: "Service Health"
         type: "table"
-        metrics: ["up", "health_check_success_total", "health_check_failure_total"]
+        metrics:
+          ["up", "health_check_success_total", "health_check_failure_total"]
 
   performance_metrics:
     title: "Performance Metrics"

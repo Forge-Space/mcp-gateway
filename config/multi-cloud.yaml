@@ -240,18 +240,18 @@ load_balancing:
     health_check_interval: 30
     failover_threshold: 3
     dns_ttl: 60
-    
+
   strategies:
     - name: performance
       weight: 0.4
       providers: [aws, gcp]
       criteria: [latency, throughput]
-      
+
     - name: cost
       weight: 0.3
       providers: [digitalocean, gcp]
       criteria: [cost, efficiency]
-      
+
     - name: reliability
       weight: 0.3
       providers: [aws, azure, ibm]
@@ -264,7 +264,7 @@ monitoring:
     interval: 30
     retention: 30d
     aggregation: 1m
-    
+
   alerts:
     enabled: true
     channels: [email, slack, webhook]
@@ -273,7 +273,7 @@ monitoring:
       memory: 85
       latency: 1000
       error_rate: 5
-      
+
   dashboards:
     enabled: true
     refresh_interval: 30
@@ -286,13 +286,13 @@ cost_management:
     monthly_budget: 1000
     alert_threshold: 0.8
     currency: USD
-    
+
   optimization:
     auto_optimize: true
     spot_instance_ratio: 0.3
     reserved_instance_ratio: 0.2
     cleanup_unused_resources: true
-    
+
   reporting:
     frequency: daily
     format: json
@@ -305,12 +305,12 @@ security:
     at_rest: true
     in_transit: true
     key_management: cloud_provider
-    
+
   access_control:
     rbac: true
     mfa: true
     audit_logging: true
-    
+
   compliance:
     frameworks: [soc2, gdpr, hipaa, pci_dss]
     automated_checks: true
@@ -321,11 +321,11 @@ networking:
   vpc_peering:
     enabled: true
     auto_create: true
-    
+
   vpn:
     enabled: false
     type: site_to_site
-    
+
   cdn:
     enabled: true
     provider: cloudflare
@@ -337,12 +337,12 @@ data_management:
     enabled: true
     strategy: multi_region
     consistency: eventual
-    
+
   backup:
     enabled: true
     frequency: daily
     retention: 30d
-    
+
   disaster_recovery:
     enabled: true
     rpo: 1h

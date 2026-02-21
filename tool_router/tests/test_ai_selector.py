@@ -83,9 +83,7 @@ class TestOllamaSelector:
         """Test tool selection with HTTP error."""
         mock_client = Mock()
         mock_client_class.return_value.__enter__.return_value = mock_client
-        mock_client.post.side_effect = httpx.HTTPStatusError(
-            "404 Not Found", request=Mock(), response=Mock()
-        )
+        mock_client.post.side_effect = httpx.HTTPStatusError("404 Not Found", request=Mock(), response=Mock())
 
         selector = OllamaSelector("http://localhost:11434", "llama3.2:3b", 2000)
 
@@ -103,9 +101,7 @@ class TestOllamaSelector:
 
         mock_response = Mock()
         mock_response.raise_for_status.return_value = None
-        mock_response.json.return_value = {
-            "response": "invalid json response"
-        }
+        mock_response.json.return_value = {"response": "invalid json response"}
         mock_client.post.return_value = mock_response
 
         selector = OllamaSelector("http://localhost:11434", "llama3.2:3b", 2000)

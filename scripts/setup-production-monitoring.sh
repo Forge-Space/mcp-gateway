@@ -32,10 +32,10 @@ print_status() {
 # Setup Prometheus configuration
 setup_prometheus() {
     print_status "$BLUE" "📊 Setting up Prometheus monitoring..."
-    
+
     # Create Prometheus configuration directory
     mkdir -p config/prometheus
-    
+
     # Create comprehensive Prometheus configuration
     cat > config/prometheus/prometheus.yml << 'EOF'
 global:
@@ -62,7 +62,7 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_interval: 30s
     scrape_timeout: 10s
-    
+
   # Service Manager
   - job_name: 'forge-service-manager'
     static_configs:
@@ -70,7 +70,7 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_interval: 30s
     scrape_timeout: 10s
-    
+
   # Tool Router
   - job_name: 'forge-tool-router'
     static_configs:
@@ -78,31 +78,31 @@ scrape_configs:
     metrics_path: '/metrics'
     scrape_interval: 30s
     scrape_timeout: 10s
-    
+
   # PostgreSQL Database
   - job_name: 'postgres'
     static_configs:
       - targets: ['postgres:5432']
     scrape_interval: 30s
-    
+
   # Redis Cache
   - job_name: 'redis'
     static_configs:
       - targets: ['redis:6379']
     scrape_interval: 30s
-    
+
   # Node Exporter (System Metrics)
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['node-exporter:9100']
     scrape_interval: 30s
-    
+
   # Docker Container Metrics
   - job_name: 'docker'
     static_configs:
       - targets: ['docker-exporter:9323']
     scrape_interval: 30s
-    
+
   # Ollama AI Service
   - job_name: 'ollama'
     static_configs:
@@ -130,7 +130,7 @@ groups:
         annotations:
           summary: "Gateway CPU usage is above 80%"
           description: "Gateway CPU usage has been above 80% for more than 5 minutes."
-      
+
       # Gateway High Memory Usage
       - alert: GatewayHighMemoryUsage
         expr: (container_memory_usage_bytes{name="forge-mcpgateway-prod"} / container_spec_memory_limit_bytes{name="forge-mcpgateway-prod"}) * 100 > 85
@@ -141,7 +141,7 @@ groups:
         annotations:
           summary: "Gateway memory usage is above 85%"
           description: "Gateway memory usage has been above 85% for more than 5 minutes."
-      
+
       # Gateway Down
       - alert: GatewayDown
         expr: up{job="forge-gateway"} == 0
@@ -152,7 +152,7 @@ groups:
         annotations:
           summary: "Gateway service is down"
           description: "Gateway service has been down for more than 1 minute."
-      
+
       # Service Manager High CPU Usage
       - alert: ServiceManagerHighCPUUsage
         expr: rate(container_cpu_usage_seconds_total{name="forge-service-manager-prod"}[5m]) * 100 > 70
@@ -163,7 +163,7 @@ groups:
         annotations:
           summary: "Service Manager CPU usage is above 70%"
           description: "Service Manager CPU usage has been above 70% for more than 5 minutes."
-      
+
       # Database Connection Issues
       - alert: DatabaseConnectionIssues
         expr: up{job="postgres"} == 0
@@ -174,7 +174,7 @@ groups:
         annotations:
           summary: "PostgreSQL database is down"
           description: "PostgreSQL database has been down for more than 2 minutes."
-      
+
       # Redis Connection Issues
       - alert: RedisConnectionIssues
         expr: up{job="redis"} == 0
@@ -185,7 +185,7 @@ groups:
         annotations:
           summary: "Redis cache is down"
           description: "Redis cache has been down for more than 2 minutes."
-      
+
       # High Disk Usage
       - alert: HighDiskUsage
         expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
@@ -196,7 +196,7 @@ groups:
         annotations:
           summary: "Disk usage is above 85%"
           description: "Disk usage has been above 85% for more than 5 minutes."
-      
+
       # Container Restart Rate
       - alert: HighContainerRestartRate
         expr: rate(container_start_time_seconds[5m]) > 0.1
@@ -216,10 +216,10 @@ EOF
 # Setup Grafana configuration
 setup_grafana() {
     print_status "$BLUE" "📈 Setting up Grafana dashboards..."
-    
+
     # Create Grafana provisioning directories
     mkdir -p config/grafana/provisioning/{datasources,dashboards}
-    
+
     # Create Grafana datasource configuration
     cat > config/grafana/provisioning/datasources/prometheus.yml << 'EOF'
 apiVersion: 1
@@ -345,10 +345,10 @@ EOF
 # Setup Alertmanager
 setup_alertmanager() {
     print_status "$BLUE" "🚨 Setting up Alertmanager..."
-    
+
     # Create Alertmanager configuration
     mkdir -p config/alertmanager
-    
+
     cat > config/alertmanager/alertmanager.yml << 'EOF'
 global:
   smtp_smarthost: 'localhost:587'
@@ -412,10 +412,10 @@ EOF
 # Setup log aggregation
 setup_log_aggregation() {
     print_status "$BLUE" "📋 Setting up log aggregation..."
-    
+
     # Create Loki configuration (optional)
     mkdir -p config/loki
-    
+
     cat > config/loki/loki.yml << 'EOF'
 auth_enabled: false
 
@@ -483,7 +483,7 @@ EOF
 # Create monitoring startup script
 create_monitoring_script() {
     print_status "$BLUE" "🔧 Creating monitoring management script..."
-    
+
     cat > scripts/manage-monitoring.sh << 'EOF'
 #!/bin/bash
 
@@ -524,13 +524,13 @@ stop_monitoring() {
 # Check monitoring status
 check_monitoring() {
     print_status "$BLUE" "🔍 Checking monitoring status..."
-    
+
     services=("prometheus" "grafana")
-    
+
     for service in "${services[@]}"; do
         local status
         status=$(docker-compose -f "$COMPOSE_FILE" ps -q "$service" | xargs docker inspect --format='{{.State.Status}}' 2>/dev/null || echo "not_found")
-        
+
         if [[ "$status" == "running" ]]; then
             print_status "$GREEN" "✅ $service is running"
         else
@@ -598,15 +598,15 @@ EOF
 main() {
     print_status "$BLUE" "🔧 MCP Gateway Production Monitoring Setup"
     echo "=================================================="
-    
+
     log "Starting monitoring setup"
-    
+
     setup_prometheus
     setup_grafana
     setup_alertmanager
     setup_log_aggregation
     create_monitoring_script
-    
+
     print_status "$GREEN" "🎉 Production monitoring setup completed!"
     echo ""
     print_status "$BLUE" "📋 Next Steps:"
@@ -623,7 +623,7 @@ main() {
     echo "  • Stop monitoring: ./scripts/manage-monitoring.sh stop"
     echo "  • Check status: ./scripts/manage-monitoring.sh status"
     echo "  • Show URLs: ./scripts/manage-monitoring.sh urls"
-    
+
     log "Production monitoring setup completed successfully"
 }
 

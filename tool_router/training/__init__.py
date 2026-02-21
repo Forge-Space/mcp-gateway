@@ -10,17 +10,18 @@ Provides comprehensive training infrastructure including:
 
 from __future__ import annotations
 
-from .data_extraction import PatternExtractor, DataSource
+from .data_extraction import DataSource, PatternExtractor
+from .evaluation import EvaluationMetric, SpecialistEvaluator
 from .knowledge_base import KnowledgeBase, PatternCategory
 from .training_pipeline import TrainingPipeline
-from .evaluation import SpecialistEvaluator, EvaluationMetric
+
 
 __all__ = [
-    "PatternExtractor",
     "DataSource",
+    "EvaluationMetric",
     "KnowledgeBase",
     "PatternCategory",
-    "TrainingPipeline",
+    "PatternExtractor",
     "SpecialistEvaluator",
-    "EvaluationMetric",
+    "TrainingPipeline",
 ]

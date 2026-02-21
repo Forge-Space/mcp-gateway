@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from unittest.mock import MagicMock, patch
 
 from tool_router.scoring.matcher import calculate_tool_relevance_score, select_top_matching_tools
 
@@ -19,26 +18,26 @@ class TestToolSelectionWorkflow:
                 "name": "web_search",
                 "description": "Search the web for information",
                 "category": "search",
-                "capabilities": ["search", "web", "information"]
+                "capabilities": ["search", "web", "information"],
             },
             {
                 "name": "file_reader",
                 "description": "Read and parse files from the filesystem",
                 "category": "file",
-                "capabilities": ["read", "parse", "filesystem"]
+                "capabilities": ["read", "parse", "filesystem"],
             },
             {
                 "name": "code_analyzer",
                 "description": "Analyze code for patterns and issues",
                 "category": "development",
-                "capabilities": ["analyze", "code", "patterns"]
+                "capabilities": ["analyze", "code", "patterns"],
             },
             {
                 "name": "data_processor",
                 "description": "Process and transform data structures",
                 "category": "data",
-                "capabilities": ["process", "transform", "data"]
-            }
+                "capabilities": ["process", "transform", "data"],
+            },
         ]
 
     def test_end_to_end_tool_selection_for_search_task(self, sample_tools: list[dict]) -> None:
@@ -73,14 +72,10 @@ class TestToolSelectionWorkflow:
         context_files = "file system context"
 
         # Test with programming context
-        tools_programming = select_top_matching_tools(
-            sample_tools, task, context_programming, top_n=2
-        )
+        tools_programming = select_top_matching_tools(sample_tools, task, context_programming, top_n=2)
 
         # Test with file system context
-        tools_files = select_top_matching_tools(
-            sample_tools, task, context_files, top_n=2
-        )
+        tools_files = select_top_matching_tools(sample_tools, task, context_files, top_n=2)
 
         # Business logic: context should influence selection
         programming_names = [tool["name"] for tool in tools_programming]
@@ -136,7 +131,7 @@ class TestToolSelectionWorkflow:
         # Test with no matching tools
         unrelated_tools = [
             {"name": "database_connector", "description": "Connect to databases", "category": "database"},
-            {"name": "api_client", "description": "Make HTTP requests", "category": "network"}
+            {"name": "api_client", "description": "Make HTTP requests", "category": "network"},
         ]
 
         result = select_top_matching_tools(unrelated_tools, "cook food", "kitchen", top_n=2)
@@ -178,4 +173,4 @@ class TestToolSelectionWorkflow:
 
                 # This assumes tools have a relevance score property or can be compared
                 # In real implementation, this would check actual relevance scores
-                pass  # Placeholder for relevance score comparison
+                # Placeholder for relevance score comparison

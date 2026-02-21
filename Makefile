@@ -1,7 +1,7 @@
 # MCP Gateway - Simplified Makefile (Phase 3: Command Simplification)
 # Reduced from 50+ targets to 12 core targets for easier onboarding
 
-.PHONY: setup start stop register status ide-setup auth lint lint-strict test deps help clean quickstart
+.PHONY: setup start stop register status ide-setup auth lint lint-strict shellcheck test deps help clean quickstart
 
 # Default target
 .DEFAULT_GOAL := help
@@ -114,6 +114,12 @@ lint-strict: ## Run all linters without fallbacks (CI-friendly)
 	@echo "==> TypeScript..."
 	@if [ -f package.json ]; then npm run lint; fi
 	@echo "==> Shell scripts..."
+	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
+	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
+	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS; fi
+
+shellcheck: ## Run shellcheck on all shell scripts
+	@echo "🔍 Running shellcheck..."
 	@SCRIPTS=$$(find scripts/ -name '*.sh' 2>/dev/null); \
 	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
 	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS; fi
