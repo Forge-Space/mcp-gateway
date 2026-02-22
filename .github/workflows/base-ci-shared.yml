@@ -89,7 +89,7 @@ jobs:
 
       - name: Run Ruff linting
         run: |
-          ruff check apps/ src/ scripts/ --format=github
+          ruff check apps/ src/ scripts/ --output-format=github
 
       - name: Run Black formatting check
         run: |
@@ -97,7 +97,7 @@ jobs:
 
       - name: Run MyPy type checking
         run: |
-          mypy apps/tool-router/src/ --ignore-missing-imports || true
+          mypy tool_router/ --ignore-missing-imports || true
 
   lint-typescript:
     name: Lint TypeScript

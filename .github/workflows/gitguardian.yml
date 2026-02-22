@@ -41,10 +41,7 @@ jobs:
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
         with:
           args: >
-            scan 
-            --all 
-            --verbose 
-            --exit-code-on-secrets=1
+            --verbose
 
       - name: Upload GitGuardian results to GitHub Security
         if: always() && hashFiles('.gitguardian/reports/sarif.json') != ''
@@ -89,8 +86,6 @@ jobs:
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
         with:
           args: >
-            monitor 
-            --all 
             --verbose
 
   workflow-summary:

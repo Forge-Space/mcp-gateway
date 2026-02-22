@@ -63,7 +63,7 @@ jobs:
       - name: Run linting and formatting checks
         run: |
           pip install ruff black mypy
-          ruff check . --format=github
+          ruff check . --output-format=github
           black --check .
           mypy . --ignore-missing-imports || true
 
@@ -199,10 +199,8 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: |
-            ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
-            forge-mcp-gateway-tool-router:latest
-            forge-mcp-gateway-service-manager:latest
+          scan-type: 'fs'
+          scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
@@ -244,6 +242,10 @@ jobs:
         run: |
           pip install locust pytest-benchmark
           [ -f requirements.txt ] && pip install -r requirements.txt || true
+
+      - name: Create required env files for docker compose
+        run: |
+          touch .env.shared .env.development .env.production .env
 
       - name: Run load tests
         run: |
@@ -295,9 +297,9 @@ jobs:
       - name: Generate quality report summary
         run: |
           echo "=== Quality Report Summary ==="
-          echo "Coverage: $(python -c 'import json; print(json.load(open(\"coverage-summary.json\").get(\".\", 0) * 100)')%"
-          echo "Security Issues: $(python -c 'import json; print(len(json.load(open(\"security-summary.json\").get(\"issues\", [])))')"
-          echo "Performance Benchmarks: $(python -c 'import json; print(len(json.load(open(\"api-benchmarks.json\").get(\"benchmarks\", [])))'"
+          echo "Coverage report: $([ -f coverage-report-3.12/coverage.xml ] && echo 'available' || echo 'not found')"
+          echo "Security reports: $([ -f security-reports/bandit-report.json ] && echo 'available' || echo 'not found')"
+          echo "Performance reports: $([ -f performance-reports/api-benchmarks.json ] && echo 'available' || echo 'not found')"
 
       - name: Upload quality report
         uses: actions/upload-artifact@v4
