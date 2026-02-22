@@ -72,7 +72,7 @@ if [[ -f ".env.shared" ]]; then
     set -a
     source .env.shared
     set +a
-    
+
     validate "JWT_SECRET_KEY is configured" "check_env_var 'JWT_SECRET_KEY'"
     validate "AUTH_ENCRYPTION_SECRET is configured" "check_env_var 'AUTH_ENCRYPTION_SECRET'"
     validate "PLATFORM_ADMIN_EMAIL is configured" "check_env_var 'PLATFORM_ADMIN_EMAIL'"

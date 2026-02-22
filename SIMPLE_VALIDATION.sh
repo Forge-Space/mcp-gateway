@@ -104,7 +104,7 @@ echo ""
 echo "📱 Web Admin Application Validation:"
 if [ -d "apps/web-admin" ]; then
     echo "✅ apps/web-admin/ directory exists"
-    
+
     if [ -f "apps/web-admin/package.json" ]; then
         echo "✅ package.json exists"
         lines=$(wc -l < "apps/web-admin/package.json" 2>/dev/null || echo "0")
@@ -112,14 +112,14 @@ if [ -d "apps/web-admin" ]; then
     else
         echo "❌ package.json missing"
     fi
-    
+
     if [ -d "apps/web-admin/src" ]; then
         echo "✅ src/ directory exists"
         echo "   Contents: $(ls -la apps/web-admin/src/ | wc -l) items"
     else
         echo "❌ src/ directory missing"
     fi
-    
+
     if [ -f "apps/web-admin/next.config.js" ]; then
         echo "✅ next.config.js exists"
     else
@@ -134,14 +134,14 @@ echo ""
 echo "🐍 Virtual Environment Validation:"
 if [ -d ".venv" ]; then
     echo "✅ .venv directory exists"
-    
+
     if [ -d ".venv/bin" ]; then
         echo "✅ .venv/bin/ directory exists"
         echo "   Python executables: $(ls .venv/bin/python* 2>/dev/null || echo "0")"
     else
         echo "❌ .venv/bin/ directory missing"
     fi
-    
+
     if [ -f ".venv/pyvenv.cfg" ]; then
         echo "✅ pyvenv.cfg exists"
     else
@@ -157,7 +157,7 @@ echo "📜 Scripts Validation:"
 if [ -d "scripts" ]; then
     echo "✅ scripts/ directory exists"
     echo "   Contents: $(ls -la scripts/ | wc -l) items"
-    
+
     script_files=("scripts/diagnose_python_environment.sh" "scripts/test_environment.sh" "scripts/test_rag_with_docker.sh" "scripts/validate_project.sh")
     for file in "${script_files[@]}"; do
         if [ -f "$file" ]; then

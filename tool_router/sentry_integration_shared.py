@@ -110,7 +110,7 @@ def init_sentry(
 
         logger = structlog.get_logger()
         logger.info("Sentry initialized successfully", service_name=service_name, environment=environment)
-        
+
         return True
 
     except Exception as e:
@@ -236,7 +236,7 @@ def capture_supabase_error(
 ) -> None:
     """Capture Supabase-specific errors with rich context"""
     add_supabase_context(operation, table, query)
-    
+
     configure_scope(
         lambda scope: scope.set_tag("database.error", True)
         .set_context("supabase_error", {

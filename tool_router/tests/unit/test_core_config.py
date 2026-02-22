@@ -19,7 +19,7 @@ def test_gateway_config_dataclass() -> None:
         max_retries=2,
         retry_delay_ms=1000,
     )
-    
+
     assert config.url == "http://localhost:4444"
     assert config.jwt == "test-token"
     assert config.timeout_ms == 5000
@@ -30,7 +30,7 @@ def test_gateway_config_dataclass() -> None:
 def test_gateway_config_defaults() -> None:
     """Test GatewayConfig default values."""
     config = GatewayConfig(url="http://localhost:4444")
-    
+
     assert config.jwt is None
     assert config.timeout_ms == 120000
     assert config.max_retries == 3
@@ -46,10 +46,10 @@ def test_gateway_config_load_from_environment_success() -> None:
         "GATEWAY_MAX_RETRIES": "2",
         "GATEWAY_RETRY_DELAY_MS": "1000",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         config = GatewayConfig.load_from_environment()
-    
+
     assert config.url == "http://test:4444"
     assert config.jwt == "test-jwt"
     assert config.timeout_ms == 5000
@@ -62,7 +62,7 @@ def test_gateway_config_load_from_environment_missing_jwt() -> None:
     env_vars = {
         "GATEWAY_URL": "http://test:4444",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
             GatewayConfig.load_from_environment()
@@ -75,7 +75,7 @@ def test_gateway_config_load_from_environment_invalid_timeout() -> None:
         "GATEWAY_JWT": "test-jwt",
         "GATEWAY_TIMEOUT_MS": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
             GatewayConfig.load_from_environment()
@@ -88,7 +88,7 @@ def test_gateway_config_load_from_environment_invalid_max_retries() -> None:
         "GATEWAY_JWT": "test-jwt",
         "GATEWAY_MAX_RETRIES": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"):
             GatewayConfig.load_from_environment()
@@ -101,7 +101,7 @@ def test_gateway_config_load_from_environment_invalid_retry_delay() -> None:
         "GATEWAY_JWT": "test-jwt",
         "GATEWAY_RETRY_DELAY_MS": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"):
             GatewayConfig.load_from_environment()
@@ -112,10 +112,10 @@ def test_gateway_config_load_from_environment_defaults() -> None:
     env_vars = {
         "GATEWAY_JWT": "test-jwt",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         config = GatewayConfig.load_from_environment()
-    
+
     assert config.url == "http://gateway:4444"
     assert config.jwt == "test-jwt"
     assert config.timeout_ms == 120000
@@ -134,7 +134,7 @@ def test_ai_config_dataclass() -> None:
         weight=0.8,
         min_confidence=0.4,
     )
-    
+
     assert config.enabled is True
     assert config.provider == "custom"
     assert config.model == "custom-model"
@@ -147,7 +147,7 @@ def test_ai_config_dataclass() -> None:
 def test_ai_config_defaults() -> None:
     """Test AIConfig default values."""
     config = AIConfig()
-    
+
     assert config.enabled is False
     assert config.provider == "ollama"
     assert config.model == "llama3.2:3b"
@@ -168,10 +168,10 @@ def test_ai_config_load_from_environment_success() -> None:
         "ROUTER_AI_WEIGHT": "0.8",
         "ROUTER_AI_MIN_CONFIDENCE": "0.4",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         config = AIConfig.load_from_environment()
-    
+
     assert config.enabled is True
     assert config.provider == "custom"
     assert config.model == "custom-model"
@@ -186,10 +186,10 @@ def test_ai_config_load_from_environment_disabled() -> None:
     env_vars = {
         "ROUTER_AI_ENABLED": "false",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         config = AIConfig.load_from_environment()
-    
+
     assert config.enabled is False
 
 
@@ -198,7 +198,7 @@ def test_ai_config_load_from_environment_invalid_timeout() -> None:
     env_vars = {
         "ROUTER_AI_TIMEOUT_MS": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="ROUTER_AI_TIMEOUT_MS must be a valid integer"):
             AIConfig.load_from_environment()
@@ -209,7 +209,7 @@ def test_ai_config_load_from_environment_invalid_weight() -> None:
     env_vars = {
         "ROUTER_AI_WEIGHT": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="ROUTER_AI_WEIGHT must be a valid float"):
             AIConfig.load_from_environment()
@@ -220,7 +220,7 @@ def test_ai_config_load_from_environment_invalid_min_confidence() -> None:
     env_vars = {
         "ROUTER_AI_MIN_CONFIDENCE": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be a valid float"):
             AIConfig.load_from_environment()
@@ -230,7 +230,7 @@ def test_ai_config_load_from_environment_defaults() -> None:
     """Test AIConfig.load_from_environment uses defaults when env vars missing."""
     with patch.dict(os.environ, {}, clear=True):
         config = AIConfig.load_from_environment()
-    
+
     assert config.enabled is False
     assert config.provider == "ollama"
     assert config.model == "llama3.2:3b"
@@ -244,14 +244,14 @@ def test_tool_router_config_dataclass() -> None:
     """Test ToolRouterConfig dataclass structure."""
     gateway_config = GatewayConfig(url="http://test:4444", jwt="test")
     ai_config = AIConfig(enabled=True)
-    
+
     config = ToolRouterConfig(
         gateway=gateway_config,
         ai=ai_config,
         max_tools_search=20,
         default_top_n=5,
     )
-    
+
     assert config.gateway == gateway_config
     assert config.ai == ai_config
     assert config.max_tools_search == 20
@@ -262,9 +262,9 @@ def test_tool_router_config_defaults() -> None:
     """Test ToolRouterConfig default values."""
     gateway_config = GatewayConfig(url="http://test:4444", jwt="test")
     ai_config = AIConfig()
-    
+
     config = ToolRouterConfig(gateway=gateway_config, ai=ai_config)
-    
+
     assert config.max_tools_search == 10
     assert config.default_top_n == 1
 
@@ -278,10 +278,10 @@ def test_tool_router_config_load_from_environment_success() -> None:
         "MAX_TOOLS_SEARCH": "20",
         "DEFAULT_TOP_N": "5",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         config = ToolRouterConfig.load_from_environment()
-    
+
     assert config.gateway.url == "http://test:4444"
     assert config.gateway.jwt == "test-jwt"
     assert config.ai.enabled is True
@@ -295,7 +295,7 @@ def test_tool_router_config_load_from_environment_invalid_max_tools() -> None:
         "GATEWAY_JWT": "test-jwt",
         "MAX_TOOLS_SEARCH": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="MAX_TOOLS_SEARCH must be a valid integer"):
             ToolRouterConfig.load_from_environment()
@@ -307,7 +307,7 @@ def test_tool_router_config_load_from_environment_invalid_default_top_n() -> Non
         "GATEWAY_JWT": "test-jwt",
         "DEFAULT_TOP_N": "invalid",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValueError, match="DEFAULT_TOP_N must be a valid integer"):
             ToolRouterConfig.load_from_environment()
@@ -318,10 +318,10 @@ def test_tool_router_config_load_from_environment_defaults() -> None:
     env_vars = {
         "GATEWAY_JWT": "test-jwt",
     }
-    
+
     with patch.dict(os.environ, env_vars, clear=True):
         config = ToolRouterConfig.load_from_environment()
-    
+
     assert config.max_tools_search == 10
     assert config.default_top_n == 1
     assert config.gateway.url == "http://gateway:4444"

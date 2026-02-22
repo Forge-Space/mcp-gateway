@@ -120,12 +120,12 @@ class TestFeedbackStore:
 
 class TestFeedbackStoreTaskTypeBoost:
     """Test task type specific boost functionality."""
-    
+
     def test_get_task_type_boost_no_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_task_type_boost("unknown_tool", "file_operations")
         assert boost == 1.0  # Default boost when no pattern exists
-    
+
     def test_get_task_type_boost_with_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback to create a pattern
@@ -133,7 +133,7 @@ class TestFeedbackStoreTaskTypeBoost:
             store.record("read file", "file_tool", success=True)
         for i in range(5):
             store.record("read file", "file_tool", success=False)
-        
+
         boost = store.get_task_type_boost("file_tool", "file_operations")
         assert boost > 1.0  # Should be boosted due to good performance
         assert boost <= 1.3  # Should be within range
@@ -141,13 +141,13 @@ class TestFeedbackStoreTaskTypeBoost:
 
 class TestFeedbackStoreLearningInsights:
     """Test learning insights functionality."""
-    
+
     def test_get_learning_insights(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file.txt", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         insights = store.get_learning_insights("read file.txt")
         assert isinstance(insights, dict)
         assert "task_type" in insights
@@ -155,7 +155,7 @@ class TestFeedbackStoreLearningInsights:
         assert "entities" in insights
         assert "recommended_tools" in insights
         assert "success_probability" in insights
-    
+
     def test_get_learning_insights_empty(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         insights = store.get_learning_insights("unknown task")
@@ -167,17 +167,17 @@ class TestFeedbackStoreLearningInsights:
 
 class TestFeedbackStoreAdaptiveHints:
     """Test adaptive hints functionality."""
-    
+
     def test_get_adaptive_hints(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file.txt", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         hints = store.get_adaptive_hints("read file.txt")
         assert isinstance(hints, list)
         # Should contain some hints based on the learning data
-    
+
     def test_get_adaptive_hints_empty(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         hints = store.get_adaptive_hints("unknown task")
@@ -187,19 +187,19 @@ class TestFeedbackStoreAdaptiveHints:
 
 class TestFeedbackStoreEntityExtraction:
     """Test entity extraction functionality."""
-    
+
     def test_extract_entities_file_paths(self) -> None:
         entities = FeedbackStore._extract_entities("read the file /path/to/file.txt")
         assert "/path/to/file.txt" in entities
-    
+
     def test_extract_entities_urls(self) -> None:
         entities = FeedbackStore._extract_entities("fetch data from https://example.com/api")
         assert "https://example.com/api" in entities
-    
+
     def test_extract_entities_quoted_strings(self) -> None:
         entities = FeedbackStore._extract_entities('search for "test query" in database')
         assert "test query" in entities
-    
+
     def test_extract_entities_empty(self) -> None:
         entities = FeedbackStore._extract_entities("simple task without entities")
         assert entities == []
@@ -207,24 +207,24 @@ class TestFeedbackStoreEntityExtraction:
 
 class TestFeedbackStoreAdvancedMethods:
     """Test advanced feedback store methods."""
-    
+
     def test_confidence_score_calculation(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         store.record("test task", "tool", success=True, confidence=0.9)
         store.record("test task", "tool", success=False, confidence=0.3)
-        
+
         stats = store.get_stats("tool")
         assert stats is not None
         assert stats.avg_confidence == 0.6  # (0.9 + 0.3) / 2
         assert stats.confidence_score > 0.5  # Should be above neutral
-    
+
     def test_recent_success_rate_calculation(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Add 60 entries with varying success
         for i in range(60):
             success = i < 40  # First 40 succeed, last 20 fail
             store.record(f"task {i}", "tool", success=success)
-        
+
         stats = store.get_stats("tool")
         assert stats is not None
         assert stats.recent_success_rate == 0.33  # 20/60 (last 50 entries)
@@ -232,12 +232,12 @@ class TestFeedbackStoreAdvancedMethods:
 
 class TestFeedbackStoreTaskTypeBoost:
     """Test task type specific boost functionality."""
-    
+
     def test_get_task_type_boost_no_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_task_type_boost("unknown_tool", "file_operations")
         assert boost == 1.0  # Default boost when no pattern exists
-    
+
     def test_get_task_type_boost_with_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback to create a pattern
@@ -245,7 +245,7 @@ class TestFeedbackStoreTaskTypeBoost:
             store.record("read file", "file_tool", success=True)
         for i in range(5):
             store.record("read file", "file_tool", success=False)
-        
+
         boost = store.get_task_type_boost("file_tool", "file_operations")
         assert boost > 1.0  # Should be boosted due to good performance
         assert boost <= 1.3  # Should be within range
@@ -253,12 +253,12 @@ class TestFeedbackStoreTaskTypeBoost:
 
 class TestFeedbackStoreTaskTypeBoost:
     """Test task type specific boost functionality."""
-    
+
     def test_get_task_type_boost_no_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_task_type_boost("unknown_tool", "file_operations")
         assert boost == 1.0  # Default boost when no pattern exists
-    
+
     def test_get_task_type_boost_with_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback to create a pattern
@@ -266,20 +266,20 @@ class TestFeedbackStoreTaskTypeBoost:
             store.record("read file", "file_tool", success=True)
         for i in range(5):
             store.record("read file", "file_tool", success=False)
-        
+
         boost = store.get_task_type_boost("file_tool", "file_operations")
         assert boost > 1.0  # Should be boosted due to good performance
         assert boost <= 1.3  # Should be within range
-    
+
     def test_get_task_type_boost_range(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Test different success rates
         store.record("test task", "tool", success=True)
         boost_high = store.get_task_type_boost("tool", "search_operations")
-        
+
         store.record("test task", "tool2", success=False)
         boost_low = store.get_task_type_boost("tool2", "search_operations")
-        
+
         assert boost_low < boost_high
         assert 0.7 <= boost_low <= 1.3
         assert 0.7 <= boost_high <= 1.3
@@ -287,32 +287,32 @@ class TestFeedbackStoreTaskTypeBoost:
 
 class TestFeedbackStoreIntentBoost:
     """Test intent category specific boost functionality."""
-    
+
     def test_get_intent_boost_no_stats(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_intent_boost("unknown_tool", "create")
         assert boost == 1.0  # Default boost when no stats exist
-    
+
     def test_get_intent_boost_with_stats(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record feedback with intent
         store.record("create file", "tool", success=True, confidence=0.8)
         store.record("create directory", "tool", success=True, confidence=0.9)
         store.record("create file", "tool", success=False, confidence=0.7)
-        
+
         boost = store.get_intent_boost("tool", "create")
         assert boost > 0.8  # Should be boosted due to good performance
         assert boost <= 1.2  # Should be within range
-    
+
     def test_get_intent_boost_range(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Test different success rates
         store.record("create test", "tool1", success=True)
         boost_high = store.get_intent_boost("tool1", "create")
-        
+
         store.record("create test", "tool2", success=False)
         boost_low = store.get_intent_boost("tool2", "create")
-        
+
         assert boost_low < boost_high
         assert 0.8 <= boost_low <= 1.2
         assert 0.8 <= boost_high <= 1.2
@@ -320,17 +320,17 @@ class TestFeedbackStoreIntentBoost:
 
 class TestFeedbackStoreComprehensiveBoost:
     """Test comprehensive boost functionality."""
-    
+
     def test_get_comprehensive_boost(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         boost = store.get_comprehensive_boost("file_tool", "read file")
         assert isinstance(boost, float)
         assert boost > 0.0
-    
+
     def test_get_comprehensive_boost_no_data(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_comprehensive_boost("unknown_tool", "unknown task")
@@ -339,13 +339,13 @@ class TestFeedbackStoreComprehensiveBoost:
 
 class TestFeedbackStoreLearningInsights:
     """Test learning insights functionality."""
-    
+
     def test_get_learning_insights(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file.txt", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         insights = store.get_learning_insights("read file.txt")
         assert isinstance(insights, dict)
         assert "task_type" in insights
@@ -353,7 +353,7 @@ class TestFeedbackStoreLearningInsights:
         assert "entities" in insights
         assert "recommended_tools" in insights
         assert "success_probability" in insights
-    
+
     def test_get_learning_insights_empty(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         insights = store.get_learning_insights("unknown task")
@@ -365,17 +365,17 @@ class TestFeedbackStoreLearningInsights:
 
 class TestFeedbackStoreAdaptiveHints:
     """Test adaptive hints functionality."""
-    
+
     def test_get_adaptive_hints(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file.txt", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         hints = store.get_adaptive_hints("read file.txt")
         assert isinstance(hints, list)
         # Should contain some hints based on the learning data
-    
+
     def test_get_adaptive_hints_empty(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         hints = store.get_adaptive_hints("unknown task")
@@ -385,19 +385,19 @@ class TestFeedbackStoreAdaptiveHints:
 
 class TestFeedbackStoreEntityExtraction:
     """Test entity extraction functionality."""
-    
+
     def test_extract_entities_file_paths(self) -> None:
         entities = FeedbackStore._extract_entities("read the file /path/to/file.txt")
         assert "/path/to/file.txt" in entities
-    
+
     def test_extract_entities_urls(self) -> None:
         entities = FeedbackStore._extract_entities("fetch data from https://example.com/api")
         assert "https://example.com/api" in entities
-    
+
     def test_extract_entities_quoted_strings(self) -> None:
         entities = FeedbackStore._extract_entities('search for "test query" in database')
         assert "test query" in entities
-    
+
     def test_extract_entities_empty(self) -> None:
         entities = FeedbackStore._extract_entities("simple task without entities")
         assert entities == []
@@ -405,28 +405,28 @@ class TestFeedbackStoreEntityExtraction:
 
 class TestFeedbackStoreAdvancedMethods:
     """Test advanced feedback store methods."""
-    
+
     def test_confidence_score_calculation(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         store.record("test task", "tool", success=True, confidence=0.9)
         store.record("test task", "tool", success=False, confidence=0.3)
-        
+
         stats = store.get_stats("tool")
         assert stats is not None
         assert stats.avg_confidence == 0.6  # (0.9 + 0.3) / 2
         assert stats.confidence_score > 0.5  # Should be above neutral
-    
+
     def test_recent_success_rate_calculation(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Add 60 entries with varying success
         for i in range(60):
             success = i < 40  # First 40 succeed, last 20 fail
             store.record(f"task {i}", "tool", success=success)
-        
+
         stats = store.get_stats("tool")
         assert stats is not None
         assert stats.recent_success_rate == 0.33  # 20/60 (last 50 entries)
-    
+
     def test_task_pattern_learning(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record feedback for specific task type
@@ -434,7 +434,7 @@ class TestFeedbackStoreAdvancedMethods:
             store.record("read file", "file_tool", success=True)
         for i in range(3):
             store.record("read file", "other_tool", success=False)
-        
+
         # Check if pattern was learned
         assert "file_operations" in store._patterns
         pattern = store._patterns["file_operations"]
@@ -756,17 +756,17 @@ class TestFeedbackStoreBusinessLogic:
 
 class TestFeedbackStoreComprehensiveBoost:
     """Test comprehensive boost functionality."""
-    
+
     def test_get_comprehensive_boost(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         boost = store.get_comprehensive_boost("file_tool", "read file")
         assert isinstance(boost, float)
         assert boost > 0.0
-    
+
     def test_get_comprehensive_boost_no_data(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_comprehensive_boost("unknown_tool", "unknown task")
@@ -775,19 +775,19 @@ class TestFeedbackStoreComprehensiveBoost:
 
 class TestFeedbackStoreIntentBoost:
     """Test intent category specific boost functionality."""
-    
+
     def test_get_intent_boost_no_stats(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_intent_boost("unknown_tool", "create")
         assert boost == 1.0  # Default boost when no stats exist
-    
+
     def test_get_intent_boost_with_stats(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record feedback with intent
         store.record("create file", "tool", success=True, confidence=0.8)
         store.record("create directory", "tool", success=True, confidence=0.9)
         store.record("create file", "tool", success=False, confidence=0.7)
-        
+
         boost = store.get_intent_boost("tool", "create")
         assert boost > 0.8  # Should be boosted due to good performance
         assert boost <= 1.2  # Should be within range
@@ -795,13 +795,13 @@ class TestFeedbackStoreIntentBoost:
 
 class TestFeedbackStoreLearningInsights:
     """Test learning insights functionality."""
-    
+
     def test_get_learning_insights(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file.txt", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         insights = store.get_learning_insights("read file.txt")
         assert isinstance(insights, dict)
         assert "task_type" in insights
@@ -809,7 +809,7 @@ class TestFeedbackStoreLearningInsights:
         assert "entities" in insights
         assert "recommended_tools" in insights
         assert "success_probability" in insights
-    
+
     def test_get_learning_insights_empty(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         insights = store.get_learning_insights("unknown task")
@@ -821,17 +821,17 @@ class TestFeedbackStoreLearningInsights:
 
 class TestFeedbackStoreAdaptiveHints:
     """Test adaptive hints functionality."""
-    
+
     def test_get_adaptive_hints(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback
         store.record("read file.txt", "file_tool", success=True)
         store.record("create directory", "dir_tool", success=False)
-        
+
         hints = store.get_adaptive_hints("read file.txt")
         assert isinstance(hints, list)
         # Should contain some hints based on the learning data
-    
+
     def test_get_adaptive_hints_empty(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         hints = store.get_adaptive_hints("unknown task")
@@ -841,19 +841,19 @@ class TestFeedbackStoreAdaptiveHints:
 
 class TestFeedbackStoreEntityExtraction:
     """Test entity extraction functionality."""
-    
+
     def test_extract_entities_file_paths(self) -> None:
         entities = FeedbackStore._extract_entities("read the file /path/to/file.txt")
         assert "/path/to/file.txt" in entities
-    
+
     def test_extract_entities_urls(self) -> None:
         entities = FeedbackStore._extract_entities("fetch data from https://example.com/api")
         assert "https://example.com/api" in entities
-    
+
     def test_extract_entities_quoted_strings(self) -> None:
         entities = FeedbackStore._extract_entities('search for "test query" in database')
         assert "test query" in entities
-    
+
     def test_extract_entities_empty(self) -> None:
         entities = FeedbackStore._extract_entities("simple task without entities")
         assert entities == []
@@ -861,12 +861,12 @@ class TestFeedbackStoreEntityExtraction:
 
 class TestFeedbackStoreTaskTypeBoost:
     """Test task type specific boost functionality."""
-    
+
     def test_get_task_type_boost_no_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         boost = store.get_task_type_boost("unknown_tool", "file_operations")
         assert boost == 1.0  # Default boost when no pattern exists
-    
+
     def test_get_task_type_boost_with_pattern(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record some feedback to create a pattern
@@ -874,7 +874,7 @@ class TestFeedbackStoreTaskTypeBoost:
             store.record("read file", "file_tool", success=True)
         for i in range(5):
             store.record("read file", "file_tool", success=False)
-        
+
         boost = store.get_task_type_boost("file_tool", "file_operations")
         assert boost > 1.0  # Should be boosted due to good performance
         assert boost <= 1.3  # Should be within range
@@ -882,7 +882,7 @@ class TestFeedbackStoreTaskTypeBoost:
 
 class TestFeedbackStoreTaskPatternLearning:
     """Test task pattern learning functionality."""
-    
+
     def test_task_pattern_learning(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
         # Record feedback for specific task type
@@ -890,7 +890,7 @@ class TestFeedbackStoreTaskPatternLearning:
             store.record("read file", "file_tool", success=True)
         for i in range(3):
             store.record("read file", "other_tool", success=False)
-        
+
         # Check if pattern was learned
         assert "file_operations" in store._patterns
         pattern = store._patterns["file_operations"]

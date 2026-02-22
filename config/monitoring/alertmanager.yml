@@ -89,7 +89,7 @@ receivers:
         subject: '[CRITICAL] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
         body: |
           CRITICAL ALERT TRIGGERED
-          
+
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -97,10 +97,10 @@ receivers:
           Service: {{ .Labels.service }}
           Instance: {{ .Labels.instance }}
           Time: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-          
+
           Runbook: {{ .Annotations.runbook_url }}
           {{ end }}
-          
+
           Immediate action required!
     # Slack integration (if configured)
     slack_configs:
@@ -123,7 +123,7 @@ receivers:
         subject: '[HIGH] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
         body: |
           High severity alert triggered
-          
+
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -140,7 +140,7 @@ receivers:
         subject: '[WARNING] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
         body: |
           Warning alert triggered
-          
+
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -157,7 +157,7 @@ receivers:
         subject: '[Gateway] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
         body: |
           Gateway service alert
-          
+
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -173,7 +173,7 @@ receivers:
         subject: '[Service Manager] Forge MCP Gateway - {{ .GroupLabels.alertname }}'
         body: |
           Service manager alert
-          
+
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}

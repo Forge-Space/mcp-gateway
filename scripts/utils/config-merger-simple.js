@@ -2,7 +2,7 @@
 
 /**
  * Simple Configuration Merger Utility
- * 
+ *
  * A simplified version that handles the ESLint/Prettier integration
  * without complex module loading issues.
  */
@@ -35,10 +35,10 @@ class SimpleConfigMerger {
    */
   updatePrettierConfig() {
     console.log('🎨 Updating Prettier configuration...');
-    
+
     const configPath = './.prettierrc.json';
     const backupPath = this.backupConfig(configPath);
-    
+
     if (!backupPath) {
       return false;
     }
@@ -46,7 +46,7 @@ class SimpleConfigMerger {
     try {
       // Read current config
       const currentConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      
+
       // Create merged configuration with pattern reference
       const mergedConfig = {
         // Base patterns settings
@@ -56,11 +56,11 @@ class SimpleConfigMerger {
         tabWidth: 2,
         useTabs: false,
         endOfLine: 'lf',
-        
+
         // Preserve project-specific settings
         trailingComma: currentConfig.trailingComma || "none",
         arrowParens: currentConfig.arrowParens || "avoid",
-        
+
         // Merge overrides
         overrides: [
           {
@@ -85,7 +85,7 @@ class SimpleConfigMerger {
             }
           }
         ],
-        
+
         // Add pattern metadata
         _patternInfo: {
           baseConfig: 'forge-patterns/patterns/code-quality/prettier/base.config.json',
@@ -111,10 +111,10 @@ class SimpleConfigMerger {
    */
   updateEslintConfig() {
     console.log('🔧 Updating ESLint configuration...');
-    
+
     const configPath = './eslint.config.js';
     const backupPath = this.backupConfig(configPath);
-    
+
     if (!backupPath) {
       return false;
     }
@@ -122,7 +122,7 @@ class SimpleConfigMerger {
     try {
       // Read current config
       const currentContent = fs.readFileSync(configPath, 'utf8');
-      
+
       // Add pattern integration comment at the top
       const patternComment = `// ESLint Configuration for forge-mcp-gateway
 // Integrated with forge-patterns base configuration
@@ -158,14 +158,14 @@ class SimpleConfigMerger {
    */
   createIntegrationDocs() {
     console.log('📝 Creating pattern integration documentation...');
-    
+
     const docsPath = './docs/uiforge-patterns-integration-summary.md';
-    
+
     try {
       const content = `# UIForge Patterns Integration Summary
 
-**Date**: ${new Date().toISOString()}  
-**Project**: forge-mcp-gateway  
+**Date**: ${new Date().toISOString()}
+**Project**: forge-mcp-gateway
 **Integration Strategy**: Hybrid - Preserve Superior Configurations
 
 ## 🎯 Integration Results
@@ -272,7 +272,7 @@ The UIForge patterns integration for forge-mcp-gateway has been **successfully c
    */
   run(options = {}) {
     console.log('🚀 Starting UIForge Patterns Integration...\n');
-    
+
     const results = {
       prettier: { success: false, backup: null },
       eslint: { success: false, backup: null },
@@ -300,10 +300,10 @@ The UIForge patterns integration for forge-mcp-gateway has been **successfully c
     console.log(`Prettier: ${results.prettier.success ? '✅ Success' : '❌ Failed'}`);
     console.log(`ESLint: ${results.eslint.success ? '✅ Success' : '❌ Failed'}`);
     console.log(`Documentation: ${results.docs.success ? '✅ Success' : '❌ Failed'}`);
-    
+
     const overallSuccess = results.prettier.success && results.eslint.success && results.docs.success;
     console.log(`\nOverall: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILED'}`);
-    
+
     if (overallSuccess) {
       console.log('\n🎉 UIForge Patterns Integration Complete!');
       console.log('📋 Next: Run tests and validate configurations work correctly');
@@ -317,7 +317,7 @@ The UIForge patterns integration for forge-mcp-gateway has been **successfully c
 function main() {
   const args = process.argv.slice(2);
   const options = {};
-  
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '--skip-prettier') {
@@ -343,10 +343,10 @@ Examples:
       process.exit(0);
     }
   }
-  
+
   const merger = new SimpleConfigMerger();
   const results = merger.run(options);
-  
+
   process.exit(results.prettier.success && results.eslint.success && results.docs.success ? 0 : 1);
 }
 

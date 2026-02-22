@@ -66,10 +66,10 @@ async def liveness_check():
 def main() -> None:
     """Run the HTTP server."""
     import uvicorn
-    
+
     logging.basicConfig(level=logging.INFO)
     logger.info("Starting Tool Router HTTP server on port 8030")
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",

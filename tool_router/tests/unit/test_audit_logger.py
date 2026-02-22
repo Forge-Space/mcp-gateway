@@ -24,7 +24,7 @@ class TestSecurityAuditLogger:
         """Test SecurityAuditLogger initialization with log file."""
         log_file = tmp_path / "security_audit.log"
         logger = SecurityAuditLogger(log_file=str(log_file), enable_console=True)
-        
+
         assert logger.log_file == str(log_file)
         assert logger.enable_console is True
         assert logger.logger is not None
@@ -34,7 +34,7 @@ class TestSecurityAuditLogger:
     def test_initialization_console_only(self) -> None:
         """Test SecurityAuditLogger initialization with console only."""
         logger = SecurityAuditLogger(log_file=None, enable_console=True)
-        
+
         assert logger.log_file is None
         assert logger.enable_console is True
         assert len(logger.logger.handlers) == 1
@@ -44,7 +44,7 @@ class TestSecurityAuditLogger:
         """Test SecurityAuditLogger initialization with file only."""
         log_file = tmp_path / "security_audit.log"
         logger = SecurityAuditLogger(log_file=str(log_file), enable_console=False)
-        
+
         assert logger.log_file == str(log_file)
         assert logger.enable_console is False
         assert len(logger.logger.handlers) == 1
@@ -54,7 +54,7 @@ class TestSecurityAuditLogger:
         """Test SecurityAuditLogger initialization with both console and file."""
         log_file = tmp_path / "security_audit.log"
         logger = SecurityAuditLogger(log_file=str(log_file), enable_console=True)
-        
+
         assert len(logger.logger.handlers) == 2
         handler_types = [type(h) for h in logger.logger.handlers]
         assert logging.StreamHandler in handler_types
@@ -63,7 +63,7 @@ class TestSecurityAuditLogger:
     def test_log_security_event_low_severity(self) -> None:
         """Test logging a low severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         event = SecurityEvent(
             event_id="test-123",
             timestamp=datetime.now(timezone.utc),
@@ -80,11 +80,11 @@ class TestSecurityAuditLogger:
             blocked=False,
             metadata={"key": "value"}
         )
-        
+
         with patch.object(logger.logger, 'info') as mock_info:
             logger.log_security_event(event)
             mock_info.assert_called_once()
-            
+
             # Verify the logged message contains expected data
             call_args = mock_info.call_args[0][0]
             assert "SECURITY_EVENT:" in call_args
@@ -96,7 +96,7 @@ class TestSecurityAuditLogger:
     def test_log_security_event_medium_severity(self) -> None:
         """Test logging a medium severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         event = SecurityEvent(
             event_id="test-456",
             timestamp=datetime.now(timezone.utc),
@@ -113,7 +113,7 @@ class TestSecurityAuditLogger:
             blocked=True,
             metadata={}
         )
-        
+
         with patch.object(logger.logger, 'warning') as mock_warning:
             logger.log_security_event(event)
             mock_warning.assert_called_once()
@@ -121,7 +121,7 @@ class TestSecurityAuditLogger:
     def test_log_security_event_high_severity(self) -> None:
         """Test logging a high severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         event = SecurityEvent(
             event_id="test-789",
             timestamp=datetime.now(timezone.utc),
@@ -138,7 +138,7 @@ class TestSecurityAuditLogger:
             blocked=True,
             metadata={}
         )
-        
+
         with patch.object(logger.logger, 'error') as mock_error:
             logger.log_security_event(event)
             mock_error.assert_called_once()
@@ -146,7 +146,7 @@ class TestSecurityAuditLogger:
     def test_log_security_event_critical_severity(self) -> None:
         """Test logging a critical severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         event = SecurityEvent(
             event_id="test-critical",
             timestamp=datetime.now(timezone.utc),
@@ -163,7 +163,7 @@ class TestSecurityAuditLogger:
             blocked=True,
             metadata={}
         )
-        
+
         with patch.object(logger.logger, 'error') as mock_error:
             logger.log_security_event(event)
             mock_error.assert_called_once()
@@ -171,7 +171,7 @@ class TestSecurityAuditLogger:
     def test_log_request_received(self) -> None:
         """Test request received logging."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_request_received(
                 user_id="user123",
@@ -182,10 +182,10 @@ class TestSecurityAuditLogger:
                 endpoint="/api/tools",
                 details={"tool": "read_file"}
             )
-            
+
             assert event_id is not None
             mock_log.assert_called_once()
-            
+
             # Verify the event structure
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.REQUEST_RECEIVED
@@ -198,7 +198,7 @@ class TestSecurityAuditLogger:
     def test_log_request_blocked_high_risk(self) -> None:
         """Test request blocked logging with high risk."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_request_blocked(
                 user_id="user456",
@@ -211,7 +211,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.8,
                 details={"limit": 100, "current": 150}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.REQUEST_BLOCKED
@@ -222,7 +222,7 @@ class TestSecurityAuditLogger:
     def test_log_request_blocked_medium_risk(self) -> None:
         """Test request blocked logging with medium risk."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_request_blocked(
                 user_id="user789",
@@ -235,7 +235,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.6,
                 details={"pattern": "rapid_requests"}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.REQUEST_BLOCKED
@@ -244,7 +244,7 @@ class TestSecurityAuditLogger:
     def test_log_rate_limit_exceeded(self) -> None:
         """Test rate limit exceeded logging."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_rate_limit_exceeded(
                 user_id="user-rate",
@@ -257,7 +257,7 @@ class TestSecurityAuditLogger:
                 limit=100,
                 details={"window": "60s"}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.RATE_LIMIT_EXCEEDED
@@ -271,7 +271,7 @@ class TestSecurityAuditLogger:
     def test_log_prompt_injection_detected_critical(self) -> None:
         """Test prompt injection detection with critical severity."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_prompt_injection_detected(
                 user_id="user-inject",
@@ -283,7 +283,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.9,
                 details={"prompt_length": 1000}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.PROMPT_INJECTION_DETECTED
@@ -293,7 +293,7 @@ class TestSecurityAuditLogger:
     def test_log_prompt_injection_detected_high(self) -> None:
         """Test prompt injection detection with high severity."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_prompt_injection_detected(
                 user_id="user-inject2",
@@ -305,7 +305,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.7,
                 details={"prompt_length": 500}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.PROMPT_INJECTION_DETECTED
@@ -314,7 +314,7 @@ class TestSecurityAuditLogger:
     def test_log_authentication_failed(self) -> None:
         """Test authentication failure logging."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_authentication_failed(
                 user_id="user-auth",
@@ -326,7 +326,7 @@ class TestSecurityAuditLogger:
                 reason="Invalid credentials",
                 details={"attempts": 3}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.AUTHENTICATION_FAILED
@@ -338,7 +338,7 @@ class TestSecurityAuditLogger:
     def test_log_authorization_failed(self) -> None:
         """Test authorization failure logging."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_authorization_failed(
                 user_id="user-authz",
@@ -350,7 +350,7 @@ class TestSecurityAuditLogger:
                 user_permissions=["user:read", "user:write"],
                 details={"resource": "user_data"}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.AUTHORIZATION_FAILED
@@ -361,7 +361,7 @@ class TestSecurityAuditLogger:
     def test_log_validation_failed_high_risk(self) -> None:
         """Test validation failure logging with high risk."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_validation_failed(
                 user_id="user-val",
@@ -374,7 +374,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.8,
                 details={"field": "tool_name"}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.VALIDATION_FAILED
@@ -383,7 +383,7 @@ class TestSecurityAuditLogger:
     def test_log_validation_failed_medium_risk(self) -> None:
         """Test validation failure logging with medium risk."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_validation_failed(
                 user_id="user-val2",
@@ -396,7 +396,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.5,
                 details={"field": "extra_data"}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.VALIDATION_FAILED
@@ -405,7 +405,7 @@ class TestSecurityAuditLogger:
     def test_log_penalty_applied(self) -> None:
         """Test penalty application logging."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_penalty_applied(
                 user_id="user-penalty",
@@ -418,7 +418,7 @@ class TestSecurityAuditLogger:
                 reason="Too many requests",
                 details={"previous_violations": 5}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.PENALTY_APPLIED
@@ -429,7 +429,7 @@ class TestSecurityAuditLogger:
     def test_log_suspicious_activity_high_risk(self) -> None:
         """Test suspicious activity logging with high risk."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_suspicious_activity(
                 user_id="user-suspicious",
@@ -441,7 +441,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.8,
                 details={"request_count": 50, "time_window": "60s"}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.SUSPICIOUS_ACTIVITY
@@ -451,7 +451,7 @@ class TestSecurityAuditLogger:
     def test_log_suspicious_activity_medium_risk(self) -> None:
         """Test suspicious activity logging with medium risk."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event') as mock_log:
             event_id = logger.log_suspicious_activity(
                 user_id="user-suspicious2",
@@ -463,7 +463,7 @@ class TestSecurityAuditLogger:
                 risk_score=0.6,
                 details={"time": "03:00:00", "timezone": "UTC"}
             )
-            
+
             mock_log.assert_called_once()
             event = mock_log.call_args[0][0]
             assert event.event_type == SecurityEventType.SUSPICIOUS_ACTIVITY
@@ -473,9 +473,9 @@ class TestSecurityAuditLogger:
     def test_get_security_summary(self) -> None:
         """Test security summary generation."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         summary = logger.get_security_summary(hours=24)
-        
+
         assert isinstance(summary, dict)
         assert summary["period_hours"] == 24
         assert summary["total_events"] == 0  # Placeholder implementation
@@ -489,50 +489,50 @@ class TestSecurityAuditLogger:
     def test_get_security_summary_custom_hours(self) -> None:
         """Test security summary with custom hours."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         summary = logger.get_security_summary(hours=48)
-        
+
         assert summary["period_hours"] == 48
 
     def test_create_request_hash_consistency(self) -> None:
         """Test request hash creation produces consistent results."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         request_data = {
             "method": "POST",
             "path": "/api/tools",
             "user_id": "user123",
             "body": "test data"
         }
-        
+
         hash1 = logger.create_request_hash(request_data)
         hash2 = logger.create_request_hash(request_data)
-        
+
         assert hash1 == hash2
         assert len(hash1) == 16  # First 16 chars of SHA256
 
     def test_create_request_hash_uniqueness(self) -> None:
         """Test request hash creates different hashes for different data."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         request_data1 = {"method": "POST", "path": "/api/tools", "user_id": "user123"}
         request_data2 = {"method": "POST", "path": "/api/tools", "user_id": "user456"}
-        
+
         hash1 = logger.create_request_hash(request_data1)
         hash2 = logger.create_request_hash(request_data2)
-        
+
         assert hash1 != hash2
 
     def test_create_request_hash_order_independence(self) -> None:
         """Test request hash is independent of key order."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         request_data1 = {"a": "1", "b": "2", "c": "3"}
         request_data2 = {"c": "3", "a": "1", "b": "2"}
-        
+
         hash1 = logger.create_request_hash(request_data1)
         hash2 = logger.create_request_hash(request_data2)
-        
+
         assert hash1 == hash2
 
     def test_security_event_dataclass(self) -> None:
@@ -554,7 +554,7 @@ class TestSecurityAuditLogger:
             blocked=False,
             metadata={"meta": "data"}
         )
-        
+
         assert event.event_id == "test-event"
         assert event.timestamp == timestamp
         assert event.event_type == SecurityEventType.REQUEST_RECEIVED
@@ -583,7 +583,7 @@ class TestSecurityAuditLogger:
         assert SecurityEventType.PENALTY_APPLIED.value == "penalty_applied"
         assert SecurityEventType.SUSPICIOUS_ACTIVITY.value == "suspicious_activity"
         assert SecurityEventType.SECURITY_POLICY_VIOLATION.value == "security_policy_violation"
-        
+
         # Test SecuritySeverity
         assert SecuritySeverity.LOW.value == "low"
         assert SecuritySeverity.MEDIUM.value == "medium"
@@ -593,7 +593,7 @@ class TestSecurityAuditLogger:
     def test_logger_handler_configuration(self) -> None:
         """Test logger handler configuration."""
         logger = SecurityAuditLogger(enable_console=True)
-        
+
         # Verify formatter is applied
         for handler in logger.logger.handlers:
             assert isinstance(handler.formatter, logging.Formatter)
@@ -605,7 +605,7 @@ class TestSecurityAuditLogger:
     def test_event_id_generation(self) -> None:
         """Test that event IDs are unique UUIDs."""
         logger = SecurityAuditLogger(enable_console=False)
-        
+
         with patch.object(logger, 'log_security_event'):
             event_id1 = logger.log_request_received(
                 user_id="user1",
@@ -616,7 +616,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/test",
                 details={}
             )
-            
+
             event_id2 = logger.log_request_received(
                 user_id="user2",
                 session_id="session2",
@@ -626,7 +626,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/test",
                 details={}
             )
-            
+
             assert event_id1 != event_id2
             assert len(event_id1) > 0
             assert len(event_id2) > 0

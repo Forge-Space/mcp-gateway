@@ -12,7 +12,7 @@ from tool_router.scoring.matcher import (
 
 class TestTokenExtraction:
     """Test token extraction functionality."""
-    
+
     def test_extract_normalized_tokens_basic(self) -> None:
         """Test basic token extraction."""
         tokens = _extract_normalized_tokens("search the web for information")
@@ -21,7 +21,7 @@ class TestTokenExtraction:
         assert "information" in tokens
         assert "the" not in tokens  # Should be filtered out
         assert "for" not in tokens  # Should be filtered out
-    
+
     def test_extract_normalized_tokens_with_punctuation(self) -> None:
         """Test token extraction with punctuation."""
         tokens = _extract_normalized_tokens("read file.txt, then write to output.json!")
@@ -29,18 +29,18 @@ class TestTokenExtraction:
         assert "file.txt" in tokens
         assert "write" in tokens
         assert "output.json" in tokens
-    
+
     def test_extract_normalized_tokens_empty(self) -> None:
         """Test token extraction with empty string."""
         tokens = _extract_normalized_tokens("")
         assert tokens == set()
-    
+
     def test_extract_normalized_tokens_case_insensitive(self) -> None:
         """Test token extraction is case insensitive."""
         tokens1 = _extract_normalized_tokens("Search the Web")
         tokens2 = _extract_normalized_tokens("search the web")
         assert tokens1 == tokens2
-    
+
     def test_extract_normalized_tokens_with_numbers(self) -> None:
         """Test token extraction with numbers."""
         tokens = _extract_normalized_tokens("create 5 files and 10 directories")
@@ -53,38 +53,38 @@ class TestTokenExtraction:
 
 class TestSynonymEnrichment:
     """Test synonym enrichment functionality."""
-    
+
     def test_enrich_tokens_with_synonyms_basic(self) -> None:
         """Test basic synonym enrichment."""
         original_tokens = {"search", "find"}
         enriched = _enrich_tokens_with_synonyms(original_tokens)
-        
+
         assert "search" in enriched
         assert "find" in enriched
         # Should include synonyms
         assert "look" in enriched
         assert "locate" in enriched
-    
+
     def test_enrich_tokens_with_synonyms_file_operations(self) -> None:
         """Test synonym enrichment for file operations."""
         original_tokens = {"read", "file"}
         enriched = _enrich_tokens_with_synonyms(original_tokens)
-        
+
         assert "read" in enriched
         assert "file" in enriched
         assert "open" in enriched
         assert "load" in enriched
-    
+
     def test_enrich_tokens_with_synonyms_empty(self) -> None:
         """Test synonym enrichment with empty tokens."""
         enriched = _enrich_tokens_with_synonyms(set())
         assert enriched == set()
-    
+
     def test_enrich_tokens_with_synonyms_no_matches(self) -> None:
         """Test synonym enrichment with no matching synonyms."""
         original_tokens = {"xyz", "abc123"}
         enriched = _enrich_tokens_with_synonyms(original_tokens)
-        
+
         assert "xyz" in enriched
         assert "abc123" in enriched
         assert len(enriched) == 2  # No additional synonyms
@@ -92,33 +92,33 @@ class TestSynonymEnrichment:
 
 class TestSubstringMatching:
     """Test substring matching functionality."""
-    
+
     def test_calculate_substring_match_score_exact(self) -> None:
         """Test exact substring match."""
         tokens = {"search", "web"}
         text = "search the web"
         score = _calculate_substring_match_score(tokens, text)
         assert score > 0
-    
+
     def test_calculate_substring_match_score_partial(self) -> None:
         """Test partial substring match."""
         tokens = {"search", "web"}
         text = "web searching tool"
         score = _calculate_substring_match_score(tokens, text)
         assert score > 0
-    
+
     def test_calculate_substring_match_score_no_match(self) -> None:
         """Test no substring match."""
         tokens = {"search", "web"}
         text = "database query tool"
         score = _calculate_substring_match_score(tokens, text)
         assert score == 0
-    
+
     def test_calculate_substring_match_score_empty_tokens(self) -> None:
         """Test substring match with empty tokens."""
         score = _calculate_substring_match_score(set(), "any text")
         assert score == 0
-    
+
     def test_calculate_substring_match_score_empty_text(self) -> None:
         """Test substring match with empty text."""
         tokens = {"search", "web"}
@@ -128,7 +128,7 @@ class TestSubstringMatching:
 
 class TestToolRelevanceScoring:
     """Test tool relevance scoring functionality."""
-    
+
     def test_calculate_tool_relevance_score_perfect_match(self) -> None:
         """Test perfect tool relevance match."""
         tool = {
@@ -138,7 +138,7 @@ class TestToolRelevanceScoring:
         }
         score = calculate_tool_relevance_score("search web", "", tool)
         assert score > 0
-    
+
     def test_calculate_tool_relevance_score_partial_match(self) -> None:
         """Test partial tool relevance match."""
         tool = {
@@ -148,7 +148,7 @@ class TestToolRelevanceScoring:
         }
         score = calculate_tool_relevance_score("read file", "", tool)
         assert score > 0
-    
+
     def test_calculate_tool_relevance_score_no_match(self) -> None:
         """Test no tool relevance match."""
         tool = {
@@ -158,7 +158,7 @@ class TestToolRelevanceScoring:
         }
         score = calculate_tool_relevance_score("create image", "", tool)
         assert score == 0
-    
+
     def test_calculate_tool_relevance_score_with_context(self) -> None:
         """Test tool relevance with context."""
         tool = {
@@ -168,13 +168,13 @@ class TestToolRelevanceScoring:
         }
         score = calculate_tool_relevance_score("search", "web information", tool)
         assert score > 0
-    
+
     def test_calculate_tool_relevance_score_empty_tool(self) -> None:
         """Test tool relevance with empty tool."""
         tool = {}
         score = calculate_tool_relevance_score("search web", "", tool)
         assert score == 0
-    
+
     def test_calculate_tool_relevance_score_empty_task(self) -> None:
         """Test tool relevance with empty task."""
         tool = {
@@ -188,7 +188,7 @@ class TestToolRelevanceScoring:
 
 class TestToolSelection:
     """Test tool selection functionality."""
-    
+
     @pytest.fixture
     def sample_tools(self) -> list[dict]:
         """Sample tools for testing."""
@@ -209,52 +209,52 @@ class TestToolSelection:
                 "gatewaySlug": "db_tools"
             }
         ]
-    
+
     def test_select_top_matching_tools_basic(self, sample_tools) -> None:
         """Test basic tool selection."""
         result = select_top_matching_tools(sample_tools, "search web", "", top_n=2)
         assert len(result) == 2
         assert result[0]["name"] == "web_search"
         assert result[1]["name"] in ["file_reader", "database_query"]
-    
+
     def test_select_top_matching_tools_empty_tools(self) -> None:
         """Test tool selection with empty tools list."""
         result = select_top_matching_tools([], "search web", "", top_n=2)
         assert result == []
-    
+
     def test_select_top_matching_tools_top_n_zero(self, sample_tools) -> None:
         """Test tool selection with top_n=0."""
         result = select_top_matching_tools(sample_tools, "search web", "", top_n=0)
         assert result == []
-    
+
     def test_select_top_matching_tools_top_n_greater_than_available(self, sample_tools) -> None:
         """Test tool selection with top_n greater than available tools."""
         result = select_top_matching_tools(sample_tools, "search web", "", top_n=10)
         assert len(result) == 3  # All tools should be returned
-    
+
     def test_select_top_matching_tools_scoring_order(self, sample_tools) -> None:
         """Test that tools are returned in order of relevance score."""
         result = select_top_matching_tools(sample_tools, "search web", "", top_n=3)
-        
+
         # First should be web_search (perfect match)
         assert result[0]["name"] == "web_search"
-        
+
         # Scores should be in descending order
         scores = [calculate_tool_relevance_score("search web", "", tool) for tool in result]
         assert scores == sorted(scores, reverse=True)
-    
+
     def test_select_top_matching_tools_with_context(self, sample_tools) -> None:
         """Test tool selection with context."""
         result = select_top_matching_tools(sample_tools, "search", "web information", top_n=2)
         assert len(result) == 2
         assert result[0]["name"] == "web_search"
-    
+
     def test_select_top_matching_tools_complex_query(self, sample_tools) -> None:
         """Test tool selection with complex query."""
         result = select_top_matching_tools(sample_tools, "find information online", "", top_n=1)
         assert len(result) == 1
         assert result[0]["name"] == "web_search"
-    
+
     def test_select_top_matching_tools_tie_breaking(self, sample_tools) -> None:
         """Test tool selection when scores are tied."""
         # Add a tool with identical score
@@ -263,7 +263,7 @@ class TestToolSelection:
             "description": "Search the internet for data",
             "gatewaySlug": "search_tools"
         })
-        
+
         result = select_top_matching_tools(sample_tools, "search web", "", top_n=2)
         assert len(result) == 2
         # Both web_search and internet_search should be top contenders

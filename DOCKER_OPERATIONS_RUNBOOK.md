@@ -119,10 +119,10 @@ tail -n 20 /tmp/mcp-gateway-monitoring/alerts.log
    ```bash
    # Increase memory limit
    # Edit docker-compose.yml and increase memory limit
-   
+
    # Clear Docker cache
    docker system prune -f
-   
+
    # Restart service
    docker-compose restart <service-name>
    ```

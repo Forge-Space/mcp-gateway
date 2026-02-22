@@ -1196,7 +1196,7 @@ class TestComponentGeneratorAdditional:
 
 class TestComponentGeneratorAdvanced:
     """Test advanced ComponentGenerator functionality."""
-    
+
     def test_generate_component_all_types(self) -> None:
         """Test component generation for all component types."""
         generator = ComponentGenerator()
@@ -1206,7 +1206,7 @@ class TestComponentGeneratorAdvanced:
             design_system=DesignSystem.MATERIAL_DESIGN,
             accessibility_level=AccessibilityLevel.AA
         )
-        
+
         # Test each component type
         for component_type in ComponentType:
             if component_type in generator.templates:
@@ -1218,7 +1218,7 @@ class TestComponentGeneratorAdvanced:
                     accessibility_features=[],
                     responsive_breakpoints=[]
                 )
-                
+
                 result = generator.generate_component(requirement, spec)
                 assert isinstance(result, dict)
                 assert "component_code" in result
@@ -1227,7 +1227,7 @@ class TestComponentGeneratorAdvanced:
 
 class TestComponentGeneratorAdvanced:
     """Test advanced ComponentGenerator functionality."""
-    
+
     def test_generate_component_all_types(self) -> None:
         """Test component generation for all component types."""
         generator = ComponentGenerator()
@@ -1237,7 +1237,7 @@ class TestComponentGeneratorAdvanced:
             design_system=DesignSystem.MATERIAL_DESIGN,
             accessibility_level=AccessibilityLevel.AA
         )
-        
+
         # Test each component type
         for component_type in ComponentType:
             if component_type in generator.templates:
@@ -1249,12 +1249,12 @@ class TestComponentGeneratorAdvanced:
                     accessibility_features=[],
                     responsive_breakpoints=[]
                 )
-                
+
                 result = generator.generate_component(requirement, spec)
                 assert isinstance(result, dict)
                 assert "component_code" in result
                 assert "token_estimate" in result
-    
+
     def test_generate_component_vue_framework(self) -> None:
         """Test component generation for Vue framework."""
         generator = ComponentGenerator()
@@ -1272,7 +1272,7 @@ class TestComponentGeneratorAdvanced:
             accessibility_features=[],
             responsive_breakpoints=[]
         )
-        
+
         result = generator.generate_component(requirement, spec)
         assert isinstance(result, dict)
         assert "component_code" in result

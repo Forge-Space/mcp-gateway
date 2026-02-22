@@ -34,13 +34,13 @@ print_info() {
 # Check prerequisites
 check_prerequisites() {
     print_info "Checking prerequisites..."
-    
+
     # Check if we're in the right directory
     if [ ! -f "package.json" ]; then
         print_error "package.json not found. Please run this script from the project root."
         exit 1
     fi
-    
+
     # Check if this is the core package
     PACKAGE_NAME=$(jq -r '.name' package.json 2>/dev/null || echo "unknown")
     if [[ "$PACKAGE_NAME" != "@forge-mcp-gateway/client" ]]; then
@@ -51,28 +51,28 @@ check_prerequisites() {
             exit 1
         fi
     fi
-    
+
     # Check if GitHub CLI is installed
     if ! command -v gh &> /dev/null; then
         print_error "GitHub CLI (gh) is not installed"
         echo "Install it with: brew install gh or npm install -g @github/cli/cli"
         exit 1
     fi
-    
+
     # Check if jq is installed
     if ! command -v jq &> /dev/null; then
         print_error "jq is not installed"
         echo "Install it with: brew install jq or sudo apt-get install jq"
         exit 1
     fi
-    
+
     print_status "Prerequisites check passed"
 }
 
 # Setup NPM token
 setup_npm_token() {
     print_info "Setting up NPM token..."
-    
+
     if [ -z "$NPM_TOKEN" ]; then
         echo "NPM_TOKEN environment variable not set."
         echo "You can:"
@@ -86,14 +86,14 @@ setup_npm_token() {
         echo "For automated publishing, option 1 (repository secret) is recommended."
         read -p "Press Enter to continue or Ctrl+C to exit..."
     fi
-    
+
     print_status "NPM token setup complete"
 }
 
 # Create release branch
 create_release_branch() {
     print_info "Setting up release branch..."
-    
+
     # Check if release/core branch exists
     if git branch --list | grep -q "release/core"; then
         print_status "release/core branch already exists"
@@ -108,77 +108,77 @@ create_release_branch() {
 # Setup GitHub workflows
 setup_workflows() {
     print_info "Setting up GitHub workflows..."
-    
+
     # Check if workflows exist
     if [ ! -f ".github/workflows/npm-release-core.yml" ]; then
         print_error "npm-release-core.yml workflow not found"
         exit 1
     fi
-    
+
     if [ ! -f ".github/workflows/branch-protection-core.yml" ]; then
         print_error "branch-protection-core.yml workflow not found"
         exit 1
     fi
-    
+
     print_status "GitHub workflows are in place"
 }
 
 # Configure package.json for publishing
 configure_package_json() {
     print_info "Configuring package.json for publishing..."
-    
+
     # Check if publish script exists
     if ! jq -e '.scripts.publish' package.json > /dev/null; then
         print_warning "No publish script found in package.json"
         print_info "Adding publish script..."
-        
+
         # Add publish script
         jq '.scripts.publish = "npm publish --access public"' package.json > package.json.tmp && \
         mv package.json.tmp package.json
-        
+
         print_status "Added publish script to package.json"
     else
         print_status "Publish script already exists"
     fi
-    
+
     # Check if prepack script exists
     if ! jq -e '.scripts.prepack' package.json > /dev/null; then
         print_warning "No prepack script found in package.json"
         print_info "Adding prepack script..."
-        
+
         # Add prepack script
         jq '.scripts.prepack = "npm run build"' package.json > package.json.tmp && \
         mv package.json.tmp package.json
-        
+
         print_status "Added prepack script to package.json"
     else
         print_status "Prepack script already exists"
     fi
-    
+
     # Validate package.json fields
     print_info "Validating package.json fields..."
-    
+
     REQUIRED_FIELDS=("name" "version" "description" "main" "keywords" "author" "license" "repository")
     MISSING_FIELDS=()
-    
+
     for field in "${REQUIRED_FIELDS[@]}"; do
         if ! jq -e ".$field" package.json > /dev/null; then
             MISSING_FIELDS+=("$field")
         fi
     done
-    
+
     if [ ${#MISSING_FIELDS[@]} -gt 0 ]; then
         print_error "Missing required fields in package.json: ${MISSING_FIELDS[*]}"
         exit 1
     fi
-    
+
     print_status "package.json validation passed"
 }
 
 # Create .npmignore
 create_npmignore() {
     print_info "Creating .npmignore..."
-    
+
     if [ ! -f ".npmignore" ]; then
         cat > .npmignore << 'EOF'
 # Dependencies
@@ -259,7 +259,7 @@ setup_secrets_guide() {
 # Test the setup
 test_setup() {
     print_info "Testing the setup..."
-    
+
     # Test build
     echo "Testing build..."
     if npm run build; then
@@ -268,7 +268,7 @@ test_setup() {
         print_error "Build test failed"
         exit 1
     fi
-    
+
     # Test dry run publish
     echo "Testing dry run publish..."
     if npm pack --dry-run; then
@@ -277,7 +277,7 @@ test_setup() {
         print_error "Dry run publish test failed"
         exit 1
     fi
-    
+
     print_status "All tests passed! 🎉"
 }
 
@@ -286,7 +286,7 @@ main() {
     echo "📦 Core Package NPM Deployment Setup"
     echo "=================================="
     echo ""
-    
+
     check_prerequisites
     setup_npm_token
     create_release_branch
@@ -294,7 +294,7 @@ main() {
     configure_package_json
     create_npmignore
     setup_secrets_guide
-    
+
     echo ""
     print_status "Setup complete! 🎉"
     echo ""

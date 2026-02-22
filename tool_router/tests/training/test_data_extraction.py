@@ -31,7 +31,7 @@ class TestDataSource:
             "industry_standard",
             "community_knowledge"
         }
-        
+
         actual_sources = {source.value for source in DataSource}
         assert actual_sources == expected_sources
 
@@ -51,7 +51,7 @@ class TestPatternCategory:
             "performance",
             "security"
         }
-        
+
         actual_categories = {category.value for category in PatternCategory}
         assert actual_categories == expected_categories
 
@@ -66,7 +66,7 @@ class TestExtractedPattern:
             title="Test Pattern",
             description="Test description"
         )
-        
+
         assert pattern.category == PatternCategory.UI_COMPONENT
         assert pattern.title == "Test Pattern"
         assert pattern.description == "Test description"
@@ -90,7 +90,7 @@ class TestExtractedPattern:
             tags=["react", "hooks", "state"],
             metadata={"complexity": "medium", "usage": "common"}
         )
-        
+
         assert pattern.category == PatternCategory.REACT_PATTERN
         assert pattern.title == "React Hook Pattern"
         assert pattern.code_example == "const [state, setState] = useState(null)"
@@ -107,11 +107,11 @@ class TestExtractedPattern:
             title="ARIA Pattern",
             description="Accessible rich internet applications"
         )
-        
+
         # Should initialize empty lists and dicts
         assert pattern.tags == []
         assert pattern.metadata == {}
-        
+
         # Should not override provided values
         pattern_with_values = ExtractedPattern(
             category=PatternCategory.ACCESSIBILITY,
@@ -120,7 +120,7 @@ class TestExtractedPattern:
             tags=["accessibility", "aria"],
             metadata={"wcag": "AA"}
         )
-        
+
         assert pattern_with_values.tags == ["accessibility", "aria"]
         assert pattern_with_values.metadata == {"wcag": "AA"}
 
@@ -160,7 +160,7 @@ class TestWebDocumentationExtractor:
 
         assert len(patterns) > 0
         mock_get.assert_called_once_with("https://example.com/react-hooks", timeout=30)
-        
+
         # Check that React patterns were extracted
         react_patterns = [p for p in patterns if p.category == PatternCategory.REACT_PATTERN]
         assert len(react_patterns) > 0
@@ -192,12 +192,12 @@ class TestWebDocumentationExtractor:
         useContext(MyContext);
         const memoized = useMemo(() => expensiveCalc(a, b), [a, b]);
         """
-        
+
         patterns = self.extractor._extract_react_patterns(text, "https://example.com")
-        
+
         # Should extract multiple React patterns
         assert len(patterns) >= 3
-        
+
         # Verify pattern structure
         for pattern in patterns:
             assert pattern.category == PatternCategory.REACT_PATTERN
@@ -214,12 +214,12 @@ class TestWebDocumentationExtractor:
           <header className="header">Header</header>
         </div>
         """
-        
+
         patterns = self.extractor._extract_ui_patterns(text, "https://example.com")
-        
+
         # Should extract UI patterns
         assert len(patterns) > 0
-        
+
         for pattern in patterns:
             assert pattern.category == PatternCategory.UI_COMPONENT
             assert pattern.source_url == "https://example.com"
@@ -232,12 +232,12 @@ class TestWebDocumentationExtractor:
         <img alt="Description of image" src="image.jpg">
         <div role="navigation" aria-label="Main menu">
         """
-        
+
         patterns = self.extractor._extract_accessibility_patterns(text, "https://example.com")
-        
+
         # Should extract accessibility patterns
         assert len(patterns) > 0
-        
+
         for pattern in patterns:
             assert pattern.category == PatternCategory.ACCESSIBILITY
             assert pattern.source_url == "https://example.com"
@@ -245,11 +245,11 @@ class TestWebDocumentationExtractor:
     def test_extract_patterns_no_matches(self):
         """Test extraction when no patterns are found."""
         text = "Just plain text with no code patterns or specific terminology."
-        
+
         react_patterns = self.extractor._extract_react_patterns(text, "https://example.com")
         ui_patterns = self.extractor._extract_ui_patterns(text, "https://example.com")
         a11y_patterns = self.extractor._extract_accessibility_patterns(text, "https://example.com")
-        
+
         assert react_patterns == []
         assert ui_patterns == []
         assert a11y_patterns == []
@@ -296,9 +296,9 @@ class TestGitHubRepositoryExtractor:
             "stargazers_count": 100,
             "forks_count": 25
         }
-        
+
         info = self.extractor._parse_repository_info(repo_data)
-        
+
         assert info["name"] == "react-components"
         assert info["description"] == "Reusable React components"
         assert info["language"] == "JavaScript"
@@ -308,7 +308,7 @@ class TestGitHubRepositoryExtractor:
     def test_parse_repository_info_empty(self):
         """Test parsing empty repository information."""
         info = self.extractor._parse_repository_info({})
-        
+
         assert info == {}
 
     def test_extract_code_patterns_from_files(self):
@@ -318,12 +318,12 @@ class TestGitHubRepositoryExtractor:
             "hooks/useAuth.js": "const [user, setUser] = useState(null);",
             "utils/helpers.js": "export const helper = () => {}"
         }
-        
+
         patterns = self.extractor._extract_code_patterns_from_files(files)
-        
+
         # Should extract patterns from relevant files
         assert len(patterns) > 0
-        
+
         # Check that React patterns were found
         react_patterns = [p for p in patterns if p.category == PatternCategory.REACT_PATTERN]
         assert len(react_patterns) > 0
@@ -353,9 +353,9 @@ class TestPatternExtractor:
                 )
             ]
             mock_extract.return_value = mock_patterns
-            
+
             patterns = self.extractor.extract_from_web_documentation("https://example.com")
-            
+
             assert len(patterns) == 1
             assert patterns[0].category == PatternCategory.REACT_PATTERN
             assert patterns[0].title == "useState Hook"
@@ -372,9 +372,9 @@ class TestPatternExtractor:
                 )
             ]
             mock_extract.return_value = mock_patterns
-            
+
             patterns = self.extractor.extract_from_github_repository("owner/repo")
-            
+
             assert len(patterns) == 1
             assert patterns[0].category == PatternCategory.UI_COMPONENT
             assert patterns[0].title == "Button Component"
@@ -383,7 +383,7 @@ class TestPatternExtractor:
         """Test extracting patterns from multiple sources."""
         with patch.object(self.extractor.web_extractor, 'extract_patterns') as mock_web, \
              patch.object(self.extractor.github_extractor, 'extract_patterns') as mock_github:
-            
+
             mock_web.return_value = [
                 ExtractedPattern(
                     category=PatternCategory.REACT_PATTERN,
@@ -394,18 +394,18 @@ class TestPatternExtractor:
             mock_github.return_value = [
                 ExtractedPattern(
                     category=PatternCategory.UI_COMPONENT,
-                    title="GitHub Pattern", 
+                    title="GitHub Pattern",
                     description="From GitHub"
                 )
             ]
-            
+
             sources = [
                 {"type": "web", "url": "https://example.com"},
                 {"type": "github", "repo": "owner/repo"}
             ]
-            
+
             patterns = self.extractor.extract_from_multiple_sources(sources)
-            
+
             assert len(patterns) == 2
             categories = {p.category for p in patterns}
             assert PatternCategory.REACT_PATTERN in categories
@@ -430,10 +430,10 @@ class TestPatternExtractor:
                 description="Accessibility pattern"
             )
         ]
-        
+
         react_patterns = self.extractor.filter_patterns_by_category(patterns, PatternCategory.REACT_PATTERN)
         ui_patterns = self.extractor.filter_patterns_by_category(patterns, PatternCategory.UI_COMPONENT)
-        
+
         assert len(react_patterns) == 1
         assert len(ui_patterns) == 1
         assert react_patterns[0].category == PatternCategory.REACT_PATTERN
@@ -461,10 +461,10 @@ class TestPatternExtractor:
                 confidence_score=0.6
             )
         ]
-        
+
         high_confidence = self.extractor.filter_patterns_by_confidence(patterns, 0.7)
         medium_confidence = self.extractor.filter_patterns_by_confidence(patterns, 0.5)
-        
+
         assert len(high_confidence) == 1
         assert len(medium_confidence) == 2
         assert high_confidence[0].confidence_score == 0.9
@@ -491,9 +491,9 @@ class TestPatternExtractor:
                 code_example="<button>Click</button>"
             )
         ]
-        
+
         deduplicated = self.extractor.deduplicate_patterns(patterns)
-        
+
         # Should remove one duplicate
         assert len(deduplicated) == 2
         titles = {p.title for p in deduplicated}
@@ -508,10 +508,10 @@ class TestDataExtractionIntegration:
     def test_end_to_end_extraction(self):
         """Test end-to-end pattern extraction workflow."""
         extractor = PatternExtractor()
-        
+
         with patch.object(extractor.web_extractor, 'extract_patterns') as mock_web, \
              patch.object(extractor.github_extractor, 'extract_patterns') as mock_github:
-            
+
             mock_web.return_value = [
                 ExtractedPattern(
                     category=PatternCategory.REACT_PATTERN,
@@ -526,20 +526,20 @@ class TestDataExtractionIntegration:
                     description="From GitHub repository"
                 )
             ]
-            
+
             sources = [
                 {"type": "web", "url": "https://react.dev/docs"},
                 {"type": "github", "repo": "facebook/react"}
             ]
-            
+
             patterns = extractor.extract_from_multiple_sources(sources)
-            
+
             # Verify extraction
             assert len(patterns) == 2
             categories = {p.category for p in patterns}
             assert PatternCategory.REACT_PATTERN in categories
             assert PatternCategory.UI_COMPONENT in categories
-            
+
             # Verify all patterns have required fields
             for pattern in patterns:
                 assert pattern.title
@@ -549,10 +549,10 @@ class TestDataExtractionIntegration:
     def test_extraction_error_handling(self):
         """Test extraction error handling."""
         extractor = PatternExtractor()
-        
+
         with patch.object(extractor.web_extractor, 'extract_patterns') as mock_web:
             mock_web.side_effect = Exception("Network error")
-            
+
             # Should handle errors gracefully
             patterns = extractor.extract_from_web_documentation("https://example.com")
             assert patterns == []
@@ -560,17 +560,17 @@ class TestDataExtractionIntegration:
     def test_batch_extraction(self):
         """Test batch extraction from multiple sources."""
         extractor = PatternExtractor()
-        
+
         sources = [
             {"type": "web", "url": "https://example1.com"},
             {"type": "web", "url": "https://example2.com"},
             {"type": "github", "repo": "owner/repo1"},
             {"type": "github", "repo": "owner/repo2"}
         ]
-        
+
         with patch.object(extractor, 'extract_from_web_documentation') as mock_web, \
              patch.object(extractor, 'extract_from_github_repository') as mock_github:
-            
+
             mock_web.return_value = [ExtractedPattern(
                 category=PatternCategory.REACT_PATTERN,
                 title=f"Pattern from {url}",
@@ -581,7 +581,7 @@ class TestDataExtractionIntegration:
                 title=f"Pattern from {repo}",
                 description="GitHub pattern"
             )]
-            
+
             all_patterns = []
             for source in sources:
                 if source["type"] == "web":
@@ -589,7 +589,7 @@ class TestDataExtractionIntegration:
                 elif source["type"] == "github":
                     patterns = extractor.extract_from_github_repository(source["repo"])
                 all_patterns.extend(patterns)
-            
+
             # Should extract from all sources
             assert len(all_patterns) == 4
             web_patterns = [p for p in all_patterns if "Pattern from https://" in p.title]

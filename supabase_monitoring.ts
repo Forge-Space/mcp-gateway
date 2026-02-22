@@ -121,7 +121,7 @@ export class SupabaseMonitor {
    */
   getPerformanceMetrics(): PerformanceMetrics {
     const stats = Array.from(this.queryStats.values());
-    
+
     if (stats.length === 0) {
       return {
         totalQueries: 0,
@@ -234,12 +234,12 @@ export class SupabaseMonitor {
    */
   private updateQueryStats(queryKey: string, duration: number, success: boolean): void {
     const existing = this.queryStats.get(queryKey);
-    
+
     if (existing) {
       existing.totalQueries++;
       existing.totalLatency += duration;
       existing.averageLatency = existing.totalLatency / existing.totalQueries;
-      
+
       if (!success) {
         existing.errorCount++;
       }
@@ -498,7 +498,7 @@ export function createMonitoredSupabaseClient(
 ): SupabaseClient {
   const monitorConfig = { url, key, ...config };
   const monitor = new SupabaseMonitor(monitorConfig);
-  
+
   // Store in global if not already set
   if (!globalMonitor) {
     globalMonitor = monitor;
