@@ -114,10 +114,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: |
-      contains(github.event.head_commit.message, '[docker]') ||
-      contains(github.event.head_commit.message, '[container]') ||
-      contains(github.event.head_commit.message, '[Dockerfile]') ||
-      contains(github.event.head_commit.message, '[compose]') ||
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push' ||
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch'
 
@@ -213,9 +211,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: |
-      contains(github.event.head_commit.message, '[iac]') ||
-      contains(github.event.head_commit.message, '[terraform]') ||
-      contains(github.event.head_commit.message, '[infrastructure]') ||
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push' ||
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch'
 

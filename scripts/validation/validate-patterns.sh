@@ -53,7 +53,7 @@ fi
 
 # 5. Validate GitHub Actions versions
 echo "⚙️  Checking GitHub Actions versions..."
-REQUIRED_ACTIONS=("actions/checkout@v6" "actions/setup-node@v6" "actions/setup-python@v5")
+REQUIRED_ACTIONS=("actions/checkout@v4" "actions/setup-node@v4" "actions/setup-python@v5")
 for action in "${REQUIRED_ACTIONS[@]}"; do
     if grep -ql "$action" .github/workflows/ci.yml .github/shared/workflows/base-ci.yml 2>/dev/null; then
         echo "✅ Found required action: $action"

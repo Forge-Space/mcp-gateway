@@ -35,7 +35,7 @@ jobs:
       - name: Run Renovate
         uses: renovatebot/github-action@v40.2.5
         with:
-          configurationFile: .github/renovate.json5
+          configurationFile: .github/renovate.yml
           token: ${{ secrets.RENOVATE_TOKEN }}
         env:
           LOG_LEVEL: info
@@ -60,7 +60,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high --policy-path=.snyk
+          args: --severity-threshold=high
 
       - name: ${{ matrix.ecosystem }} Security Scan
         if: matrix.ecosystem == 'javascript'
@@ -68,7 +68,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high --policy-path=.snyk
+          args: --severity-threshold=high
 
   # License Compliance Check
   license-check:
@@ -125,7 +125,7 @@ jobs:
 
       - name: Check outdated Node.js packages
         run: |
-          npm outdated || true > outdated-node.txt
+          npm outdated > outdated-node.txt 2>&1 || true
           cat outdated-node.txt
 
       - name: Upload outdated reports
