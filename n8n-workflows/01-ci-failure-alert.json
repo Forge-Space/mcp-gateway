@@ -14,11 +14,30 @@
     },
     {
       "parameters": {
+        "httpMethod": "POST",
+        "path": "ci-success",
+        "responseMode": "onReceived",
+        "responseCode": 200
+      },
+      "name": "Success Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 560]
+    },
+    {
+      "parameters": {
         "functionCode": "const crypto = require('crypto');\nconst signature = $input.item.json.headers['x-hub-signature-256'];\nconst payload = JSON.stringify($input.item.json.body);\nconst secret = $env.WEBHOOK_SECRET_CI_FAILURE;\n\nif (!signature || !payload || !secret) {\n  throw new Error('Missing signature, payload, or secret');\n}\n\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');\nconst valid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));\n\nif (!valid) {\n  throw new Error('Invalid webhook signature');\n}\n\nreturn $input.item;"
       },
       "name": "Verify Signature",
       "type": "n8n-nodes-base.function",
       "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require('crypto');\nconst signature = $input.item.json.headers['x-hub-signature-256'];\nconst payload = JSON.stringify($input.item.json.body);\nconst secret = $env.WEBHOOK_SECRET_CI_FAILURE;\n\nif (!signature || !payload || !secret) {\n  throw new Error('Missing signature, payload, or secret');\n}\n\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');\nconst valid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));\n\nif (!valid) {\n  throw new Error('Invalid webhook signature');\n}\n\nreturn $input.item;"
+      },
+      "name": "Verify Signature (Success)",
+      "type": "n8n-nodes-base.function",
+      "position": [460, 560]
     },
     {
       "parameters": {
@@ -41,6 +60,14 @@
     },
     {
       "parameters": {
+        "functionCode": "const staticData = $getWorkflowStaticData('global');\nconst repo = $json.body.repository.full_name;\nconst workflow = $json.body.workflow_run.name;\nconst key = `${repo}:${workflow}`;\n\nstaticData[key] = (staticData[key] || 0) + 1;\nconst count = staticData[key];\n\nreturn [{\n  json: {\n    ...$json,\n    failureCount: count,\n    severity: count >= 3 ? 'persistent' : 'flaky'\n  }\n}];"
+      },
+      "name": "Track & Classify",
+      "type": "n8n-nodes-base.function",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
         "url": "=https://api.github.com/repos/{{$json.body.repository.full_name}}/actions/runs/{{$json.body.workflow_run.id}}/jobs",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -55,23 +82,79 @@
       },
       "name": "Fetch Job Logs",
       "type": "n8n-nodes-base.httpRequest",
-      "position": [900, 300]
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.severity}}",
+              "value2": "persistent"
+            }
+          ]
+        }
+      },
+      "name": "Route by Severity",
+      "type": "n8n-nodes-base.if",
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "user": "={{$json.body.workflow_run.head_commit.author.email}}",
+        "text": "=:rotating_light: *Persistent CI Failure* ({{$json.failureCount}} consecutive)\n*Repo:* `{{$json.body.repository.name}}`\n*Workflow:* {{$json.body.workflow_run.name}}\n*Branch:* `{{$json.body.workflow_run.head_branch}}`\n*Commit:* {{$json.body.workflow_run.head_commit.message}}\n*Run:* {{$json.body.workflow_run.html_url}}\n\nThis workflow has failed {{$json.failureCount}} times in a row. Please investigate.",
+        "otherOptions": {}
+      },
+      "name": "DM Author",
+      "type": "n8n-nodes-base.slack",
+      "position": [1560, 200]
     },
     {
       "parameters": {
         "channel": "={{$env.SLACK_CHANNEL_QUALITY}}",
-        "text": "=:x: *CI Failure* in `{{$json.body.repository.name}}`\n*Workflow:* {{$json.body.workflow_run.name}}\n*Branch:* `{{$json.body.workflow_run.head_branch}}`\n*Author:* {{$json.body.workflow_run.head_commit.author.name}}\n*Commit:* {{$json.body.workflow_run.head_commit.message}}\n*Run:* {{$json.body.workflow_run.html_url}}"
+        "text": "=:x: *CI Failure* in `{{$json.body.repository.name}}` (attempt #{{$json.failureCount}})\n*Workflow:* {{$json.body.workflow_run.name}}\n*Branch:* `{{$json.body.workflow_run.head_branch}}`\n*Author:* {{$json.body.workflow_run.head_commit.author.name}}\n*Commit:* {{$json.body.workflow_run.head_commit.message}}\n*Run:* {{$json.body.workflow_run.html_url}}"
       },
       "name": "Slack Notify",
       "type": "n8n-nodes-base.slack",
-      "position": [1120, 300]
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "const staticData = $getWorkflowStaticData('global');\nconst repo = $json.body.repository.full_name;\nconst workflow = $json.body.workflow_run.name;\nconst key = `${repo}:${workflow}`;\n\ndelete staticData[key];\n\nreturn [{ json: { reset: true, key } }];"
+      },
+      "name": "Reset Counter",
+      "type": "n8n-nodes-base.function",
+      "position": [680, 560]
     }
   ],
   "connections": {
-    "GitHub Webhook": { "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]] },
-    "Verify Signature": { "main": [[{ "node": "Filter Failures", "type": "main", "index": 0 }]] },
-    "Filter Failures": { "main": [[{ "node": "Fetch Job Logs", "type": "main", "index": 0 }]] },
-    "Fetch Job Logs": { "main": [[{ "node": "Slack Notify", "type": "main", "index": 0 }]] }
+    "GitHub Webhook": {
+      "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]]
+    },
+    "Success Webhook": {
+      "main": [[{ "node": "Verify Signature (Success)", "type": "main", "index": 0 }]]
+    },
+    "Verify Signature": {
+      "main": [[{ "node": "Filter Failures", "type": "main", "index": 0 }]]
+    },
+    "Verify Signature (Success)": {
+      "main": [[{ "node": "Reset Counter", "type": "main", "index": 0 }]]
+    },
+    "Filter Failures": {
+      "main": [[{ "node": "Track & Classify", "type": "main", "index": 0 }]]
+    },
+    "Track & Classify": {
+      "main": [[{ "node": "Fetch Job Logs", "type": "main", "index": 0 }]]
+    },
+    "Fetch Job Logs": {
+      "main": [[{ "node": "Route by Severity", "type": "main", "index": 0 }]]
+    },
+    "Route by Severity": {
+      "main": [
+        [{ "node": "DM Author", "type": "main", "index": 0 }],
+        [{ "node": "Slack Notify", "type": "main", "index": 0 }]
+      ]
+    }
   },
   "settings": {
     "executionOrder": "v1"
