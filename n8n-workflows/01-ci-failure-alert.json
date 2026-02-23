@@ -1,0 +1,84 @@
+{
+  "name": "CI Failure Alert with Context",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ci-failure",
+        "responseMode": "onReceived",
+        "responseCode": 200
+      },
+      "name": "GitHub Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require('crypto');\nconst signature = $input.item.json.headers['x-hub-signature-256'];\nconst payload = JSON.stringify($input.item.json.body);\nconst secret = $env.WEBHOOK_SECRET_CI_FAILURE;\n\nif (!signature || !payload || !secret) {\n  throw new Error('Missing signature, payload, or secret');\n}\n\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');\nconst valid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));\n\nif (!valid) {\n  throw new Error('Invalid webhook signature');\n}\n\nreturn $input.item;"
+      },
+      "name": "Verify Signature",
+      "type": "n8n-nodes-base.function",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.body.action}}",
+              "value2": "completed"
+            },
+            {
+              "value1": "={{$json.body.workflow_run.conclusion}}",
+              "value2": "failure"
+            }
+          ]
+        }
+      },
+      "name": "Filter Failures",
+      "type": "n8n-nodes-base.if",
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$json.body.repository.full_name}}/actions/runs/{{$json.body.workflow_run.id}}/jobs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.GITHUB_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Fetch Job Logs",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{$env.SLACK_CHANNEL_QUALITY}}",
+        "text": "=:x: *CI Failure* in `{{$json.body.repository.name}}`\n*Workflow:* {{$json.body.workflow_run.name}}\n*Branch:* `{{$json.body.workflow_run.head_branch}}`\n*Author:* {{$json.body.workflow_run.head_commit.author.name}}\n*Commit:* {{$json.body.workflow_run.head_commit.message}}\n*Run:* {{$json.body.workflow_run.html_url}}"
+      },
+      "name": "Slack Notify",
+      "type": "n8n-nodes-base.slack",
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "GitHub Webhook": { "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]] },
+    "Verify Signature": { "main": [[{ "node": "Filter Failures", "type": "main", "index": 0 }]] },
+    "Filter Failures": { "main": [[{ "node": "Fetch Job Logs", "type": "main", "index": 0 }]] },
+    "Fetch Job Logs": { "main": [[{ "node": "Slack Notify", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "phase-1" },
+    { "name": "ci" },
+    { "name": "alerts" }
+  ]
+}

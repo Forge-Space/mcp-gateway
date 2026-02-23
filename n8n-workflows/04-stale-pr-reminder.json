@@ -1,0 +1,89 @@
+{
+  "name": "Stale PR Reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 10 * * 1-5" }]
+        }
+      },
+      "name": "Daily 10 AM Weekdays",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const repos = ['forge-patterns', 'mcp-gateway', 'uiforge-mcp', 'uiforge-webapp'];\nconst items = repos.map(repo => ({ json: { repo } }));\nreturn items;"
+      },
+      "name": "List Repos",
+      "type": "n8n-nodes-base.function",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$env.GITHUB_ORG}}/{{$json.repo}}/pulls?state=open&sort=updated&direction=asc&per_page=50",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.GITHUB_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Fetch Open PRs",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const now = new Date();\nconst prs = $input.all();\nconst stale = [];\n\nfor (const pr of prs) {\n  const updated = new Date(pr.json.updated_at);\n  const daysStale = Math.floor((now - updated) / (1000 * 60 * 60 * 24));\n\n  let severity;\n  if (daysStale >= 30) severity = 'close-candidate';\n  else if (daysStale >= 15) severity = 'escalate';\n  else if (daysStale >= 7) severity = 'gentle';\n  else continue;\n\n  stale.push({\n    json: {\n      title: pr.json.title,\n      url: pr.json.html_url,\n      author: pr.json.user.login,\n      daysStale,\n      severity,\n      repo: pr.json.base.repo.name\n    }\n  });\n}\n\nreturn stale.length > 0 ? stale : [{ json: { empty: true } }];"
+      },
+      "name": "Classify Staleness",
+      "type": "n8n-nodes-base.function",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.empty}}",
+              "value2": true,
+              "operation": "notEqual"
+            }
+          ]
+        }
+      },
+      "name": "Has Stale PRs?",
+      "type": "n8n-nodes-base.if",
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{$env.SLACK_CHANNEL_QUALITY}}",
+        "text": "=:hourglass: *Stale PR:* {{$json.title}}\n*Repo:* `{{$json.repo}}` | *Author:* @{{$json.author}} | *Stale:* {{$json.daysStale}} days\n*Status:* {{$json.severity}}\n{{$json.url}}"
+      },
+      "name": "Slack Reminder",
+      "type": "n8n-nodes-base.slack",
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Daily 10 AM Weekdays": { "main": [[{ "node": "List Repos", "type": "main", "index": 0 }]] },
+    "List Repos": { "main": [[{ "node": "Fetch Open PRs", "type": "main", "index": 0 }]] },
+    "Fetch Open PRs": { "main": [[{ "node": "Classify Staleness", "type": "main", "index": 0 }]] },
+    "Classify Staleness": { "main": [[{ "node": "Has Stale PRs?", "type": "main", "index": 0 }]] },
+    "Has Stale PRs?": { "main": [[{ "node": "Slack Reminder", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "phase-2" },
+    { "name": "prs" },
+    { "name": "scheduled" }
+  ]
+}

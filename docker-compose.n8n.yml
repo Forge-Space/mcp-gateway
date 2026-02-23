@@ -1,0 +1,31 @@
+services:
+  n8n:
+    image: n8nio/n8n:1.76.1
+    container_name: forge-n8n
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"
+    env_file: .env.n8n
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-logs:/data/logs
+    networks:
+      - forge_n8n
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+          pids: 50
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  n8n_data:
+
+networks:
+  forge_n8n:
+    driver: bridge

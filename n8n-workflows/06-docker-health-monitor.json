@@ -1,0 +1,82 @@
+{
+  "name": "Docker Health Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 5 }]
+        }
+      },
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Target containers in the mcp-gateway stack\nconst containers = [\n  'mcp-gateway',\n  'service-manager',\n  'tool-router',\n  'ollama'\n];\n\nreturn containers.map(name => ({ json: { container: name } }));"
+      },
+      "name": "List Containers",
+      "type": "n8n-nodes-base.function",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:2375/containers/{{$json.container}}/json",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Check Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [680, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "const result = $input.item.json;\nconst container = $input.item.json.container;\n\nif (result.error || !result.State) {\n  return { json: { container, status: 'down', healthy: false } };\n}\n\nconst state = result.State;\nreturn {\n  json: {\n    container,\n    status: state.Status,\n    healthy: state.Health ? state.Health.Status === 'healthy' : state.Running,\n    cpuPercent: 0,\n    memoryMB: 0\n  }\n};"
+      },
+      "name": "Parse Status",
+      "type": "n8n-nodes-base.function",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.healthy}}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "name": "Is Unhealthy?",
+      "type": "n8n-nodes-base.if",
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{$env.SLACK_CHANNEL_OPS}}",
+        "text": "=:rotating_light: *Container Down:* `{{$json.container}}`\n*Status:* {{$json.status}}\n*Action Required:* Check `docker ps` and container logs."
+      },
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "position": [1340, 200]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": { "main": [[{ "node": "List Containers", "type": "main", "index": 0 }]] },
+    "List Containers": { "main": [[{ "node": "Check Container", "type": "main", "index": 0 }]] },
+    "Check Container": { "main": [[{ "node": "Parse Status", "type": "main", "index": 0 }]] },
+    "Parse Status": { "main": [[{ "node": "Is Unhealthy?", "type": "main", "index": 0 }]] },
+    "Is Unhealthy?": { "main": [[{ "node": "Slack Alert", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "phase-3" },
+    { "name": "monitoring" },
+    { "name": "docker" }
+  ]
+}

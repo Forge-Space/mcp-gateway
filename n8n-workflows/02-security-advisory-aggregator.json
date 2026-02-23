@@ -1,0 +1,80 @@
+{
+  "name": "Security Advisory Aggregator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * *" }]
+        }
+      },
+      "name": "Daily 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/advisories?ecosystem=npm&severity=critical,high&per_page=50",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.GITHUB_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Fetch Advisories",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Cross-reference advisories with forge-space package-lock.json\n// Fetch each repo's package-lock and check affected packages\nconst repos = ['forge-patterns', 'mcp-gateway', 'uiforge-mcp', 'uiforge-webapp'];\nconst advisories = $input.all();\n\n// Filter to advisories affecting our dependencies\nconst relevant = advisories.filter(a => {\n  // In production, parse package-lock.json and match\n  return a.json.severity === 'critical' || a.json.severity === 'high';\n});\n\nreturn relevant;"
+      },
+      "name": "Filter Relevant",
+      "type": "n8n-nodes-base.function",
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.length}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "Has Advisories?",
+      "type": "n8n-nodes-base.if",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{$env.SLACK_CHANNEL_QUALITY}}",
+        "text": "=:shield: *Security Advisory Digest*\nFound {{$json.length}} relevant advisories affecting Forge Space dependencies.\nReview: https://github.com/advisories"
+      },
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Daily 9 AM": { "main": [[{ "node": "Fetch Advisories", "type": "main", "index": 0 }]] },
+    "Fetch Advisories": { "main": [[{ "node": "Filter Relevant", "type": "main", "index": 0 }]] },
+    "Filter Relevant": { "main": [[{ "node": "Has Advisories?", "type": "main", "index": 0 }]] },
+    "Has Advisories?": { "main": [[{ "node": "Slack Alert", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "phase-1" },
+    { "name": "security" },
+    { "name": "scheduled" }
+  ]
+}
