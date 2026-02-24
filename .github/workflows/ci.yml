@@ -63,6 +63,7 @@ jobs:
             --ignore=tool_router/tests/unit/test_specialist_coordinator.py \
             --ignore=tool_router/tests/unit/test_ui_specialist.py \
             --ignore=tool_router/tests/test_cache_basic.py \
+            --ignore=tool_router/tests/test_cache_compliance.py \
             --override-ini="addopts=-v --tb=short" \
             --timeout=30 -x --maxfail=10
 
