@@ -41,9 +41,7 @@ class HTTPGatewayClient:
             "Content-Type": "application/json",
         }
 
-    def _make_request(
-        self, url: str, method: str = "GET", data: bytes | None = None
-    ) -> dict[str, Any]:
+    def _make_request(self, url: str, method: str = "GET", data: bytes | None = None) -> dict[str, Any]:
         """Make HTTP request with retry logic for transient failures."""
         req = urllib.request.Request(url, headers=self._headers(), method=method)
         if data:
@@ -82,9 +80,7 @@ class HTTPGatewayClient:
                 msg = "Invalid JSON response"
                 raise ValueError(msg)
 
-        msg = (
-            f"Failed after {self.config.max_retries} attempts. Last error: {last_error}"
-        )
+        msg = f"Failed after {self.config.max_retries} attempts. Last error: {last_error}"
         raise ConnectionError(msg)
 
     def get_tools(self) -> list[dict[str, Any]]:
@@ -142,9 +138,7 @@ class HTTPGatewayClient:
         }
 
         try:
-            json_rpc_response = self._make_request(
-                url, method="POST", data=json.dumps(body).encode()
-            )
+            json_rpc_response = self._make_request(url, method="POST", data=json.dumps(body).encode())
         except (ValueError, ConnectionError) as error:
             return f"Failed to call tool: {error}"
 
@@ -156,11 +150,7 @@ class HTTPGatewayClient:
             for content_item in content
             if isinstance(content_item, dict) and "text" in content_item
         ]
-        return (
-            "\n".join(texts)
-            if texts
-            else json.dumps(json_rpc_response.get("result", {}))
-        )
+        return "\n".join(texts) if texts else json.dumps(json_rpc_response.get("result", {}))
 
 
 # Backward compatibility: module-level functions that use environment config

@@ -63,9 +63,7 @@ class TestGatewayConfig:
     def test_load_from_environment_missing_required(self):
         """Test loading config when required env vars are missing."""
         with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(
-                ValueError, match="GATEWAY_URL environment variable is required"
-            ):
+            with pytest.raises(ValueError, match="GATEWAY_URL environment variable is required"):
                 GatewayConfig.load_from_environment()
 
     def test_load_from_environment_missing_optional(self):
@@ -182,9 +180,7 @@ class TestHTTPGatewayClient:
             mock_response.read.return_value = b'{"id": 123}'
             mock_urlopen.return_value.__enter__.return_value = mock_response
 
-            result = client._make_request(
-                "https://api.example.com/test", method="POST", data=b'{"key": "value"}'
-            )
+            result = client._make_request("https://api.example.com/test", method="POST", data=b'{"key": "value"}')
 
             assert result == {"id": 123}
             mock_urlopen.assert_called_once()
@@ -215,13 +211,7 @@ class TestHTTPGatewayClient:
             mock_error.code = 500
             mock_urlopen.side_effect = [
                 Exception("Gateway server error (HTTP 500)"),
-                Mock(
-                    __enter__=Mock(
-                        return_value=Mock(
-                            read=Mock(return_value=b'{"result": "success"}')
-                        )
-                    )
-                ),
+                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
             ]
 
             result = client._make_request("https://api.example.com/test")
@@ -257,13 +247,7 @@ class TestHTTPGatewayClient:
         ):
             mock_urlopen.side_effect = [
                 Exception("Network error: Connection refused"),
-                Mock(
-                    __enter__=Mock(
-                        return_value=Mock(
-                            read=Mock(return_value=b'{"result": "success"}')
-                        )
-                    )
-                ),
+                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
             ]
 
             result = client._make_request("https://api.example.com/test")
@@ -282,13 +266,7 @@ class TestHTTPGatewayClient:
         ):
             mock_urlopen.side_effect = [
                 TimeoutError("Request timeout after 5.0s"),
-                Mock(
-                    __enter__=Mock(
-                        return_value=Mock(
-                            read=Mock(return_value=b'{"result": "success"}')
-                        )
-                    )
-                ),
+                Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
             ]
 
             result = client._make_request("https://api.example.com/test")
@@ -379,9 +357,7 @@ class TestHTTPGatewayClient:
         arguments = {"param1": "value1"}
 
         with patch.object(client, "_make_request") as mock_request:
-            mock_response = {
-                "result": {"content": [{"text": "Tool executed successfully"}]}
-            }
+            mock_response = {"result": {"content": [{"text": "Tool executed successfully"}]}}
             mock_request.return_value = mock_response
 
             result = client.call_tool(tool_name, arguments)
@@ -438,9 +414,7 @@ class TestHTTPGatewayClient:
     def test_backward_compatibility_get_tools(self):
         """Test backward compatibility get_tools function."""
         with (
-            patch(
-                "tool_router.gateway.client.GatewayConfig.load_from_environment"
-            ) as mock_load,
+            patch("tool_router.gateway.client.GatewayConfig.load_from_environment") as mock_load,
             patch("tool_router.gateway.client.HTTPGatewayClient") as mock_client_class,
         ):
             mock_config = GatewayConfig(url="https://test.com", jwt="token")
@@ -462,9 +436,7 @@ class TestHTTPGatewayClient:
     def test_backward_compatibility_call_tool(self):
         """Test backward compatibility call_tool function."""
         with (
-            patch(
-                "tool_router.gateway.client.GatewayConfig.load_from_environment"
-            ) as mock_load,
+            patch("tool_router.gateway.client.GatewayConfig.load_from_environment") as mock_load,
             patch("tool_router.gateway.client.HTTPGatewayClient") as mock_client_class,
         ):
             mock_config = GatewayConfig(url="https://test.com", jwt="token")
@@ -481,9 +453,7 @@ class TestHTTPGatewayClient:
             assert result == "Tool result"
             mock_load.assert_called_once()
             mock_client_class.assert_called_once_with(mock_config)
-            mock_client.call_tool.assert_called_once_with(
-                "test_tool", {"param": "value"}
-            )
+            mock_client.call_tool.assert_called_once_with("test_tool", {"param": "value"})
 
 
 class TestArgsBuilder:

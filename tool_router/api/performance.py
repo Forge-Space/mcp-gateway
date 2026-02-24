@@ -80,11 +80,7 @@ async def health_check() -> HealthResponse:
     }
 
     # Determine overall health status
-    all_healthy = all(
-        check["status"] == "healthy"
-        for check in checks.values()
-        if isinstance(check, dict)
-    )
+    all_healthy = all(check["status"] == "healthy" for check in checks.values() if isinstance(check, dict))
     status = "healthy" if all_healthy else "degraded"
 
     return HealthResponse(status=status, timestamp=current_time, checks=checks)
@@ -123,14 +119,10 @@ async def get_system_metrics() -> SystemMetricsResponse:
             cache_hit_rate=cache_metrics_data.get("global", {}).get("hit_rate", 0.0),
             total_hits=cache_metrics_data.get("global", {}).get("hits", 0),
             total_misses=cache_metrics_data.get("global", {}).get("misses", 0),
-            total_requests=cache_metrics_data.get("global", {}).get(
-                "total_requests", 0
-            ),
+            total_requests=cache_metrics_data.get("global", {}).get("total_requests", 0),
             cache_sizes=cache_metrics_data.get("global", {}).get("cache_sizes", {}),
             hits_by_type=cache_metrics_data.get("global", {}).get("hits_by_type", {}),
-            misses_by_type=cache_metrics_data.get("global", {}).get(
-                "misses_by_type", {}
-            ),
+            misses_by_type=cache_metrics_data.get("global", {}).get("misses_by_type", {}),
         )
 
         # Get feedback store metrics (mock for now)
@@ -171,11 +163,7 @@ async def reset_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
     try:
         reset_cache_metrics(cache_name)
 
-        message = (
-            f"Reset metrics for cache: {cache_name}"
-            if cache_name
-            else "Reset all cache metrics"
-        )
+        message = f"Reset metrics for cache: {cache_name}" if cache_name else "Reset all cache metrics"
         logger.info(message)
 
         return {
@@ -222,9 +210,7 @@ async def get_cache_info() -> dict[str, Any]:
         return cache_manager.get_cache_info()
     except Exception as e:
         logger.error(f"Failed to get cache info: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to retrieve cache information"
-        )
+        raise HTTPException(status_code=500, detail="Failed to retrieve cache information")
 
 
 @router.post("/query-cache/invalidate")
@@ -291,9 +277,7 @@ async def get_performance_summary() -> dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get performance summary: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to retrieve performance summary"
-        )
+        raise HTTPException(status_code=500, detail="Failed to retrieve performance summary")
 
 
 def _generate_performance_recommendations(
@@ -304,29 +288,19 @@ def _generate_performance_recommendations(
 
     # Cache hit rate recommendations
     if cache_hit_rate < 0.5:
-        recommendations.append(
-            "Consider increasing cache TTL or size to improve hit rate"
-        )
+        recommendations.append("Consider increasing cache TTL or size to improve hit rate")
     elif cache_hit_rate > 0.9:
-        recommendations.append(
-            "Cache hit rate is excellent - consider reducing cache size to save memory"
-        )
+        recommendations.append("Cache hit rate is excellent - consider reducing cache size to save memory")
 
     # Query cache recommendations
     if query_cache_hit_rate < 0.3:
-        recommendations.append(
-            "Query cache hit rate is low - review query patterns and caching strategy"
-        )
+        recommendations.append("Query cache hit rate is low - review query patterns and caching strategy")
 
     # Uptime-based recommendations
     if uptime < 300:  # Less than 5 minutes
-        recommendations.append(
-            "System recently started - metrics may not be representative yet"
-        )
+        recommendations.append("System recently started - metrics may not be representative yet")
 
     if not recommendations:
-        recommendations.append(
-            "Performance metrics look good - no immediate recommendations"
-        )
+        recommendations.append("Performance metrics look good - no immediate recommendations")
 
     return recommendations

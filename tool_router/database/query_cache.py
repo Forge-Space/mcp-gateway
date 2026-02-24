@@ -44,9 +44,7 @@ class DatabaseQueryCache:
         else:
             logger.info("Database query cache disabled")
 
-    def _generate_cache_key(
-        self, query: str, params: tuple | None = None, table: str | None = None
-    ) -> str:
+    def _generate_cache_key(self, query: str, params: tuple | None = None, table: str | None = None) -> str:
         """Generate a cache key for a database query."""
         # Create a deterministic key from query and parameters
         key_data = {
@@ -61,9 +59,7 @@ class DatabaseQueryCache:
 
         return f"{self.config.cache_key_prefix}:{key_hash}"
 
-    def get(
-        self, query: str, params: tuple | None = None, table: str | None = None
-    ) -> Any | None:
+    def get(self, query: str, params: tuple | None = None, table: str | None = None) -> Any | None:
         """Get cached query result."""
         if not self.config.enabled or not self.config.cache_reads or not self._cache:
             return None
@@ -104,9 +100,7 @@ class DatabaseQueryCache:
         except Exception as e:
             logger.warning(f"Failed to cache query result: {e}")
 
-    def invalidate(
-        self, query: str, params: tuple | None = None, table: str | None = None
-    ) -> None:
+    def invalidate(self, query: str, params: tuple | None = None, table: str | None = None) -> None:
         """Invalidate a specific cached query."""
         if not self.config.enabled or not self._cache:
             return
@@ -133,9 +127,7 @@ class DatabaseQueryCache:
             self._cache.pop(key, None)
 
         if keys_to_remove:
-            logger.info(
-                f"Invalidated {len(keys_to_remove)} cache entries for table: {table}"
-            )
+            logger.info(f"Invalidated {len(keys_to_remove)} cache entries for table: {table}")
 
     def invalidate_all(self) -> None:
         """Invalidate all cached queries."""

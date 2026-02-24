@@ -253,9 +253,7 @@ class TestKnowledgeBaseTool:
             mock_get.return_value = mock_item
             mock_update.return_value = True
 
-            result = tool.update_pattern(
-                item_id="item123", title="Updated Title", confidence=0.95
-            )
+            result = tool.update_pattern(item_id="item123", title="Updated Title", confidence=0.95)
 
         # Business logic: successful update should return confirmation
         assert result["item_id"] == "item123"
@@ -264,9 +262,7 @@ class TestKnowledgeBaseTool:
         assert result["message"] == "Pattern updated successfully"
 
         # Verify correct update data passed
-        mock_update.assert_called_once_with(
-            "item123", {"title": "Updated Title", "confidence": 0.95}
-        )
+        mock_update.assert_called_once_with("item123", {"title": "Updated Title", "confidence": 0.95})
 
     def test_update_pattern_not_found(self) -> None:
         """Test pattern update for non-existent pattern."""
@@ -410,9 +406,7 @@ class TestKnowledgeBaseTool:
 
         categories = result["categories"]
         for category in PatternCategory:
-            category_data = next(
-                cat for cat in categories if cat["value"] == category.value
-            )
+            category_data = next(cat for cat in categories if cat["value"] == category.value)
             assert category_data["name"] == category.value.replace("_", " ").title()
 
         assert result["message"] == "Categories retrieved successfully"
@@ -527,9 +521,7 @@ class TestKnowledgeBaseHandler:
             result = knowledge_base_handler(args)
 
         # Business logic: handler should call search with query
-        mock_search.assert_called_once_with(
-            query="react hooks", category=None, limit=10, min_confidence=None
-        )
+        mock_search.assert_called_once_with(query="react hooks", category=None, limit=10, min_confidence=None)
 
     def test_handler_search_patterns_missing_query(self) -> None:
         """Test handler with missing query for search_patterns."""

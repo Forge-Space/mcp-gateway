@@ -144,9 +144,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
                 category = PatternCategory.ARCHITECTURE
 
             # Search for relevant patterns
-            patterns = self.knowledge_base.search_knowledge(
-                request.task, category, limit=5
-            )
+            patterns = self.knowledge_base.search_knowledge(request.task, category, limit=5)
 
             return patterns
 
@@ -196,9 +194,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
 
         return recommendations
 
-    def _get_specialist_type_for_category(
-        self, category: TaskCategory
-    ) -> SpecialistType | None:
+    def _get_specialist_type_for_category(self, category: TaskCategory) -> SpecialistType | None:
         """Get specialist type for a task category."""
         mapping = {
             TaskCategory.TOOL_SELECTION: SpecialistType.ROUTER,
@@ -208,9 +204,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
         }
         return mapping.get(category)
 
-    def _update_training_metrics(
-        self, results: list[SpecialistResult], start_time: float
-    ) -> None:
+    def _update_training_metrics(self, results: list[SpecialistResult], start_time: float) -> None:
         """Update training metrics based on results."""
         try:
             processing_time = (time.time() - start_time) * 1000  # Convert to ms
@@ -222,9 +216,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
                     metrics = self._training_metrics[specialist_type]
 
                     # Update response time (moving average)
-                    metrics.response_time = (
-                        metrics.response_time + processing_time
-                    ) / 2
+                    metrics.response_time = (metrics.response_time + processing_time) / 2
 
                     # Update timestamp
                     metrics.last_updated = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -246,18 +238,14 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
         except Exception as e:
             logger.error(f"Error updating training metrics: {e}")
 
-    def _collect_learning_feedback(
-        self, request: TaskRequest, results: list[SpecialistResult]
-    ) -> None:
+    def _collect_learning_feedback(self, request: TaskRequest, results: list[SpecialistResult]) -> None:
         """Collect feedback for continuous learning."""
         try:
             feedback = {
                 "request_category": request.category.value,
                 "request_task": request.task[:100],  # Truncate for privacy
                 "results_count": len(results),
-                "average_confidence": (
-                    sum(r.confidence for r in results) / len(results) if results else 0
-                ),
+                "average_confidence": (sum(r.confidence for r in results) / len(results) if results else 0),
                 "timestamp": time.time(),
             }
 
@@ -307,9 +295,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
 
                 evaluation_results[specialist_name] = {
                     "metrics": {r.metric.value: r.value for r in results},
-                    "average_score": (
-                        sum(r.value for r in results) / len(results) if results else 0
-                    ),
+                    "average_score": (sum(r.value for r in results) / len(results) if results else 0),
                 }
 
             return evaluation_results
@@ -342,24 +328,20 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
 
             # Performance trends
             if self._performance_history:
-                recent_performance = self._performance_history[
-                    -100:
-                ]  # Last 100 requests
+                recent_performance = self._performance_history[-100:]  # Last 100 requests
 
                 for specialist_type in SpecialistType:
                     specialist_performances = [
-                        p
-                        for p in recent_performance
-                        if p["specialist_type"] == specialist_type.value
+                        p for p in recent_performance if p["specialist_type"] == specialist_type.value
                     ]
 
                     if specialist_performances:
-                        avg_confidence = sum(
-                            p["confidence"] for p in specialist_performances
-                        ) / len(specialist_performances)
-                        avg_time = sum(
-                            p["processing_time"] for p in specialist_performances
-                        ) / len(specialist_performances)
+                        avg_confidence = sum(p["confidence"] for p in specialist_performances) / len(
+                            specialist_performances
+                        )
+                        avg_time = sum(p["processing_time"] for p in specialist_performances) / len(
+                            specialist_performances
+                        )
 
                         insights["performance_trends"][specialist_type.value] = {
                             "average_confidence": avg_confidence,
@@ -376,9 +358,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
                     category = feedback["request_category"]
                     if category not in category_performance:
                         category_performance[category] = []
-                    category_performance[category].append(
-                        feedback["average_confidence"]
-                    )
+                    category_performance[category].append(feedback["average_confidence"])
 
                 insights["learning_summary"] = {
                     "total_requests_processed": total_requests,
@@ -408,27 +388,19 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
             # Analyze specialist performance
             for specialist_type, metrics in insights["specialist_metrics"].items():
                 if metrics["accuracy"] < 0.7:
-                    recommendations.append(
-                        f"Improve {specialist_type} accuracy through additional training"
-                    )
+                    recommendations.append(f"Improve {specialist_type} accuracy through additional training")
 
                 if metrics["response_time"] > 200:
-                    recommendations.append(
-                        f"Optimize {specialist_type} for better response time"
-                    )
+                    recommendations.append(f"Optimize {specialist_type} for better response time")
 
                 if metrics["patterns_used"] < 10:
-                    recommendations.append(
-                        f"Add more training patterns for {specialist_type}"
-                    )
+                    recommendations.append(f"Add more training patterns for {specialist_type}")
 
             # Analyze trends
             trends = insights.get("performance_trends", {})
             for specialist_type, trend in trends.items():
                 if trend["average_confidence"] < 0.8:
-                    recommendations.append(
-                        f"Review and improve {specialist_type} confidence scoring"
-                    )
+                    recommendations.append(f"Review and improve {specialist_type} confidence scoring")
 
             # General recommendations
             if not recommendations:
@@ -445,9 +417,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
         try:
             # Get latest patterns for specialist
             if specialist_type == SpecialistType.UI_SPECIALIST:
-                patterns = self.knowledge_base.get_patterns_by_category(
-                    PatternCategory.UI_COMPONENT, limit=50
-                )
+                patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.UI_COMPONENT, limit=50)
 
                 # Update UI specialist with new patterns
                 # This would involve updating the specialist's internal knowledge
@@ -455,13 +425,9 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
                 return True
 
             if specialist_type == SpecialistType.PROMPT_ARCHITECT:
-                patterns = self.knowledge_base.get_patterns_by_category(
-                    PatternCategory.PROMPT_ENGINEERING, limit=50
-                )
+                patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.PROMPT_ENGINEERING, limit=50)
 
-                logger.info(
-                    f"Updated Prompt Architect with {len(patterns)} new patterns"
-                )
+                logger.info(f"Updated Prompt Architect with {len(patterns)} new patterns")
                 return True
 
             return False

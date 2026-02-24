@@ -22,9 +22,7 @@ from tool_router.training.knowledge_base import KnowledgeBase
 class QueryAnalysis:
     """Results of query analysis"""
 
-    intent: (
-        str  # explicit_fact, implicit_fact, interpretable_rationale, hidden_rationale
-    )
+    intent: str  # explicit_fact, implicit_fact, interpretable_rationale, hidden_rationale
     entities: list[str]
     keywords: list[str]
     agent_type: str
@@ -108,17 +106,11 @@ class RAGManagerTool:
 
         # UI Specialist patterns
         if agent_type == "ui_specialist":
-            if any(
-                word in query_lower for word in ["create", "generate", "build", "make"]
-            ):
+            if any(word in query_lower for word in ["create", "generate", "build", "make"]):
                 return "implicit_fact"  # Component creation requires reasoning
-            if any(
-                word in query_lower for word in ["how to", "why", "what is", "explain"]
-            ):
+            if any(word in query_lower for word in ["how to", "why", "what is", "explain"]):
                 return "interpretable_rationale"
-            if any(
-                word in query_lower for word in ["fix", "debug", "error", "problem"]
-            ):
+            if any(word in query_lower for word in ["fix", "debug", "error", "problem"]):
                 return "hidden_rationale"
             return "explicit_fact"
 
@@ -126,9 +118,7 @@ class RAGManagerTool:
         if agent_type == "prompt_architect":
             if any(word in query_lower for word in ["optimize", "improve", "enhance"]):
                 return "interpretable_rationale"
-            if any(
-                word in query_lower for word in ["template", "pattern", "structure"]
-            ):
+            if any(word in query_lower for word in ["template", "pattern", "structure"]):
                 return "implicit_fact"
             if any(word in query_lower for word in ["technique", "method", "approach"]):
                 return "hidden_rationale"
@@ -138,9 +128,7 @@ class RAGManagerTool:
         if agent_type == "router_specialist":
             if any(word in query_lower for word in ["route", "assign", "delegate"]):
                 return "interpretable_rationale"
-            if any(
-                word in query_lower for word in ["performance", "optimize", "speed"]
-            ):
+            if any(word in query_lower for word in ["performance", "optimize", "speed"]):
                 return "hidden_rationale"
             if any(word in query_lower for word in ["specialist", "agent", "service"]):
                 return "implicit_fact"
@@ -208,9 +196,7 @@ class RAGManagerTool:
             return "moderate"
         return "complex"
 
-    def _calculate_confidence(
-        self, query: str, intent: str, entities: list[str]
-    ) -> float:
+    def _calculate_confidence(self, query: str, intent: str, entities: list[str]) -> float:
         """Calculate confidence score for query analysis"""
         confidence = 0.5  # Base confidence
 
@@ -233,9 +219,7 @@ class RAGManagerTool:
 
         return min(confidence, 1.0)
 
-    async def _retrieve_knowledge_multi_strategy(
-        self, context: RetrievalContext
-    ) -> list[RetrievalResult]:
+    async def _retrieve_knowledge_multi_strategy(self, context: RetrievalContext) -> list[RetrievalResult]:
         """Retrieve knowledge using multiple strategies"""
         results = []
 
@@ -262,15 +246,11 @@ class RAGManagerTool:
 
         return ranked_results[: context.max_results]
 
-    async def _retrieve_by_category(
-        self, context: RetrievalContext
-    ) -> list[RetrievalResult]:
+    async def _retrieve_by_category(self, context: RetrievalContext) -> list[RetrievalResult]:
         """Retrieve knowledge by category"""
         try:
             # Determine relevant categories based on agent type and query
-            categories = self._get_relevant_categories(
-                context.agent_type, context.query
-            )
+            categories = self._get_relevant_categories(context.agent_type, context.query)
 
             results = []
             for category in categories:
@@ -280,11 +260,7 @@ class RAGManagerTool:
                         item_id=item.id,
                         title=item.title,
                         content=item.content,
-                        category=(
-                            item.category.value
-                            if hasattr(item.category, "value")
-                            else str(item.category)
-                        ),
+                        category=(item.category.value if hasattr(item.category, "value") else str(item.category)),
                         confidence=item.confidence_score,
                         effectiveness=item.effectiveness_score,
                         relevance_score=0.8,  # Base relevance for category match
@@ -304,15 +280,11 @@ class RAGManagerTool:
             traceback.print_exc()
             return []
 
-    async def _retrieve_fulltext(
-        self, context: RetrievalContext
-    ) -> list[RetrievalResult]:
+    async def _retrieve_fulltext(self, context: RetrievalContext) -> list[RetrievalResult]:
         """Retrieve knowledge using full-text search"""
         try:
             # Use existing knowledge base search
-            items = self.knowledge_base.search_patterns(
-                context.query, limit=context.max_results
-            )
+            items = self.knowledge_base.search_patterns(context.query, limit=context.max_results)
 
             results = []
             for item in items:
@@ -320,11 +292,7 @@ class RAGManagerTool:
                     item_id=item.id,
                     title=item.title,
                     content=item.content,
-                    category=(
-                        item.category.value
-                        if hasattr(item.category, "value")
-                        else str(item.category)
-                    ),
+                    category=(item.category.value if hasattr(item.category, "value") else str(item.category)),
                     confidence=item.confidence_score,
                     effectiveness=getattr(item, "effectiveness_score", 0.7),
                     relevance_score=0.7,  # Base relevance for FTS
@@ -340,9 +308,7 @@ class RAGManagerTool:
         except Exception:
             return []
 
-    async def _retrieve_by_agent(
-        self, context: RetrievalContext
-    ) -> list[RetrievalResult]:
+    async def _retrieve_by_agent(self, context: RetrievalContext) -> list[RetrievalResult]:
         """Retrieve agent-specific knowledge"""
         try:
             # Get items marked as agent-specific
@@ -372,17 +338,11 @@ class RAGManagerTool:
                     content=row[4],  # content
                     category=row[1],  # category
                     confidence=row[7],  # confidence_score
-                    effectiveness=(
-                        row[22] if len(row) > 22 else 0.8
-                    ),  # effectiveness_score
+                    effectiveness=(row[22] if len(row) > 22 else 0.8),  # effectiveness_score
                     relevance_score=0.9,  # High relevance for agent-specific
                     source_type=row[20] if len(row) > 20 else "manual",  # source_type
-                    freshness_score=(
-                        row[21] if len(row) > 21 else 1.0
-                    ),  # freshness_score
-                    agent_specific=(
-                        bool(row[18]) if len(row) > 18 else False
-                    ),  # agent_specific
+                    freshness_score=(row[21] if len(row) > 21 else 1.0),  # freshness_score
+                    agent_specific=(bool(row[18]) if len(row) > 18 else False),  # agent_specific
                     agent_types=agent_types,
                     agent_type=context.agent_type,
                 )
@@ -392,9 +352,7 @@ class RAGManagerTool:
         except Exception:
             return []
 
-    async def _retrieve_vector(
-        self, _context: RetrievalContext
-    ) -> list[RetrievalResult]:
+    async def _retrieve_vector(self, _context: RetrievalContext) -> list[RetrievalResult]:
         """Retrieve knowledge using vector search"""
         try:
             # This would integrate with a vector database
@@ -421,9 +379,7 @@ class RAGManagerTool:
 
         return categories
 
-    def _deduplicate_results(
-        self, results: list[RetrievalResult]
-    ) -> list[RetrievalResult]:
+    def _deduplicate_results(self, results: list[RetrievalResult]) -> list[RetrievalResult]:
         """Remove duplicate results based on item_id"""
         seen_ids = set()
         unique_results = []
@@ -435,9 +391,7 @@ class RAGManagerTool:
 
         return unique_results
 
-    def _rank_results(
-        self, results: list[RetrievalResult], context: RetrievalContext
-    ) -> list[RetrievalResult]:
+    def _rank_results(self, results: list[RetrievalResult], context: RetrievalContext) -> list[RetrievalResult]:
         """Rank retrieval results based on relevance and context"""
         # Calculate final ranking score
         for result in results:
@@ -467,9 +421,7 @@ class RAGManagerTool:
         # Sort by relevance score (descending)
         return sorted(results, key=lambda x: x.relevance_score, reverse=True)
 
-    async def _inject_context(
-        self, ranked_results: list[RetrievalResult], context: RetrievalContext
-    ) -> dict[str, Any]:
+    async def _inject_context(self, ranked_results: list[RetrievalResult], context: RetrievalContext) -> dict[str, Any]:
         """Inject retrieved knowledge into context for generation"""
         # Select results that fit within context length limit
         selected_results = []
@@ -559,9 +511,7 @@ class RAGManagerTool:
                 (
                     agent_type,
                     self._generate_query_pattern(query),
-                    context_data.get("metadata", {}).get(
-                        "retrieval_strategy", "hybrid"
-                    ),
+                    context_data.get("metadata", {}).get("retrieval_strategy", "hybrid"),
                     json.dumps(performance_data),
                     latency,
                     1.0 if performance_data.get("success", True) else 0.0,
@@ -709,9 +659,7 @@ class RAGManagerTool:
             },
         }
 
-    async def _handle_retrieve_knowledge(
-        self, arguments: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_retrieve_knowledge(self, arguments: dict[str, Any]) -> dict[str, Any]:
         """Handle knowledge retrieval"""
         query = arguments.get("query")
         agent_type = arguments.get("agent_type", "ui_specialist")
@@ -881,9 +829,7 @@ class RAGManagerTool:
             },
         }
 
-    async def _handle_get_cache_stats(
-        self, _arguments: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_get_cache_stats(self, _arguments: dict[str, Any]) -> dict[str, Any]:
         """Handle cache statistics"""
         try:
             cursor = self.conn.cursor()
@@ -933,9 +879,7 @@ class RAGManagerTool:
                 "details": "Cache statistics retrieval failed",
             }
 
-    async def _handle_optimize_performance(
-        self, arguments: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_optimize_performance(self, arguments: dict[str, Any]) -> dict[str, Any]:
         """Handle performance optimization"""
         agent_type = arguments.get("agent_type", "ui_specialist")
         performance_target = arguments.get("performance_target", "latency")

@@ -172,9 +172,7 @@ def get_metrics() -> MetricsCollector:
 class TimingContext:
     """Context manager for timing operations."""
 
-    def __init__(
-        self, metric_name: str, metrics: MetricsCollector | None = None
-    ) -> None:
+    def __init__(self, metric_name: str, metrics: MetricsCollector | None = None) -> None:
         """Initialize timing context.
 
         Args:

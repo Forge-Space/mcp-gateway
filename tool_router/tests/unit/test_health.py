@@ -137,9 +137,7 @@ class TestHealthCheck:
 
     def test_initialization_without_config(self) -> None:
         """Test HealthCheck initialization without config (loads from env)."""
-        with patch(
-            "tool_router.observability.health.GatewayConfig.load_from_environment"
-        ) as mock_load:
+        with patch("tool_router.observability.health.GatewayConfig.load_from_environment") as mock_load:
             mock_config = MagicMock()
             mock_config.url = "http://env.com"
             mock_config.jwt = "env-token"
@@ -151,9 +149,7 @@ class TestHealthCheck:
 
     def test_initialization_config_load_failure(self) -> None:
         """Test HealthCheck initialization when config loading fails."""
-        with patch(
-            "tool_router.observability.health.GatewayConfig.load_from_environment"
-        ) as mock_load:
+        with patch("tool_router.observability.health.GatewayConfig.load_from_environment") as mock_load:
             mock_load.side_effect = ValueError("No config found")
 
             health_check = HealthCheck()
@@ -167,9 +163,7 @@ class TestHealthCheck:
         config = GatewayConfig(url="http://test.com", jwt="test-token")
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client = MagicMock()
             mock_client_class.return_value = mock_client
             mock_client.get_tools.return_value = [{"name": "tool1"}, {"name": "tool2"}]
@@ -190,9 +184,7 @@ class TestHealthCheck:
         config = GatewayConfig(url="http://test.com", jwt="test-token")
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client = MagicMock()
             mock_client_class.return_value = mock_client
             mock_client.get_tools.return_value = []
@@ -211,9 +203,7 @@ class TestHealthCheck:
         config = GatewayConfig(url="http://test.com", jwt="test-token")
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client_class.side_effect = ValueError("Invalid token")
 
             result = health_check.check_gateway_connection()
@@ -230,9 +220,7 @@ class TestHealthCheck:
         config = GatewayConfig(url="http://test.com", jwt="test-token")
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client_class.side_effect = OSError("Connection refused")
 
             result = health_check.check_gateway_connection()
@@ -249,27 +237,21 @@ class TestHealthCheck:
         config = GatewayConfig(url="http://test.com", jwt="test-token")
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client_class.side_effect = RuntimeError("Service unavailable")
 
             result = health_check.check_gateway_connection()
 
             assert result.name == "gateway"
             assert result.status == HealthStatus.UNHEALTHY
-            assert (
-                "Unexpected error: RuntimeError: Service unavailable" in result.message
-            )
+            assert "Unexpected error: RuntimeError: Service unavailable" in result.message
             assert result.latency_ms is not None
 
     def test_check_configuration_valid(self) -> None:
         """Test configuration check with valid config."""
         from tool_router.core.config import GatewayConfig
 
-        config = GatewayConfig(
-            url="http://test.com", jwt="test-token", timeout_ms=5000, max_retries=3
-        )
+        config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=5000, max_retries=3)
         health_check = HealthCheck(config)
 
         result = health_check.check_configuration()
@@ -330,9 +312,7 @@ class TestHealthCheck:
         """Test configuration check with timeout too high."""
         from tool_router.core.config import GatewayConfig
 
-        config = GatewayConfig(
-            url="http://test.com", jwt="test-token", timeout_ms=500000
-        )
+        config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=500000)
         health_check = HealthCheck(config)
 
         result = health_check.check_configuration()
@@ -349,9 +329,7 @@ class TestHealthCheck:
         """Test configuration check with timeout in valid range."""
         from tool_router.core.config import GatewayConfig
 
-        config = GatewayConfig(
-            url="http://test.com", jwt="test-token", timeout_ms=10000
-        )
+        config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=10000)
         health_check = HealthCheck(config)
 
         result = health_check.check_configuration()
@@ -383,9 +361,7 @@ class TestHealthCheck:
         config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=5000)
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client = MagicMock()
             mock_client_class.return_value = mock_client
             mock_client.get_tools.return_value = [{"name": "tool1"}]
@@ -400,14 +376,10 @@ class TestHealthCheck:
         """Test check_all with one component degraded."""
         from tool_router.core.config import GatewayConfig
 
-        config = GatewayConfig(
-            url="http://test.com", jwt="test-token", timeout_ms=500
-        )  # Too low
+        config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=500)  # Too low
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client = MagicMock()
             mock_client_class.return_value = mock_client
             mock_client.get_tools.return_value = [{"name": "tool1"}]
@@ -436,9 +408,7 @@ class TestHealthCheck:
         config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=5000)
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client = MagicMock()
             mock_client_class.return_value = mock_client
             mock_client.get_tools.return_value = [{"name": "tool1"}]
@@ -450,14 +420,10 @@ class TestHealthCheck:
         """Test check_readiness returns True for degraded service."""
         from tool_router.core.config import GatewayConfig
 
-        config = GatewayConfig(
-            url="http://test.com", jwt="test-token", timeout_ms=500
-        )  # Too low
+        config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=500)  # Too low
         health_check = HealthCheck(config)
 
-        with patch(
-            "tool_router.observability.health.HTTPGatewayClient"
-        ) as mock_client_class:
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_class:
             mock_client = MagicMock()
             mock_client_class.return_value = mock_client
             mock_client.get_tools.return_value = [{"name": "tool1"}]
@@ -489,9 +455,7 @@ class TestHealthCheck:
         """Test check_liveness returns True for degraded config."""
         from tool_router.core.config import GatewayConfig
 
-        config = GatewayConfig(
-            url="http://test.com", jwt="test-token", timeout_ms=500
-        )  # Too low
+        config = GatewayConfig(url="http://test.com", jwt="test-token", timeout_ms=500)  # Too low
         health_check = HealthCheck(config)
 
         result = health_check.check_liveness()

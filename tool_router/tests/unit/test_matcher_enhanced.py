@@ -168,9 +168,7 @@ class TestEnhancedSelection:
         assert isinstance(result, list)
         mock_feedback_store.get_adaptive_hints.assert_called_once_with("search the web")
         mock_feedback_store.similar_task_tools.assert_called_once_with("search the web")
-        mock_feedback_store.get_learning_insights.assert_called_once_with(
-            "search the web"
-        )
+        mock_feedback_store.get_learning_insights.assert_called_once_with("search the web")
 
     def test_select_top_matching_tools_enhanced_with_ai(self, sample_tools):
         """Test enhanced selection with AI."""
@@ -233,9 +231,7 @@ class TestEnhancedSelection:
         assert result == []
 
     @patch("tool_router.scoring.matcher.logger")
-    def test_select_top_matching_tools_enhanced_ai_exception(
-        self, mock_logger, sample_tools
-    ):
+    def test_select_top_matching_tools_enhanced_ai_exception(self, mock_logger, sample_tools):
         """Test enhanced selection when AI raises exception."""
         mock_ai_selector = Mock()
         mock_ai_selector.select_tool.side_effect = Exception("AI service unavailable")

@@ -121,9 +121,7 @@ async def get_dashboard_status():
 
 
 @router.post("/start")
-async def start_collection(
-    background_tasks: BackgroundTasks, interval: int = Query(default=30, ge=5, le=300)
-):
+async def start_collection(background_tasks: BackgroundTasks, interval: int = Query(default=30, ge=5, le=300)):
     """Start dashboard metrics collection."""
     try:
         dashboard = get_cache_performance_dashboard()
@@ -140,9 +138,7 @@ async def start_collection(
         return {"message": "Dashboard collection started", "interval": interval}
     except Exception as e:
         logger.error(f"Error starting dashboard collection: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to start dashboard collection"
-        )
+        raise HTTPException(status_code=500, detail="Failed to start dashboard collection")
 
 
 @router.post("/stop")
@@ -159,9 +155,7 @@ async def stop_collection():
         return {"message": "Dashboard collection stopped"}
     except Exception as e:
         logger.error(f"Error stopping dashboard collection: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to stop dashboard collection"
-        )
+        raise HTTPException(status_code=500, detail="Failed to stop dashboard collection")
 
 
 @router.get("/snapshot", response_model=DashboardSnapshotResponse)
@@ -399,15 +393,9 @@ async def get_cache_health():
         health_status = dashboard.get_cache_health_status()
 
         return {
-            "timestamp": (
-                dashboard.get_current_snapshot().timestamp
-                if dashboard.get_current_snapshot()
-                else None
-            ),
+            "timestamp": (dashboard.get_current_snapshot().timestamp if dashboard.get_current_snapshot() else None),
             "cache_health": health_status,
-            "healthy_count": sum(
-                1 for status in health_status.values() if status == "healthy"
-            ),
+            "healthy_count": sum(1 for status in health_status.values() if status == "healthy"),
             "total_count": len(health_status),
         }
     except Exception as e:
@@ -462,9 +450,7 @@ async def get_cache_metrics(cache_name: str):
             raise HTTPException(status_code=404, detail="No snapshot data available")
 
         if cache_name not in snapshot.metrics:
-            raise HTTPException(
-                status_code=404, detail=f"Cache '{cache_name}' not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Cache '{cache_name}' not found")
 
         metrics = snapshot.metrics[cache_name]
 

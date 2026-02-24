@@ -76,9 +76,7 @@ class TestHTTPGatewayClientErrorPaths:
         client = HTTPGatewayClient(config)
 
         error_response = b'{"error": "Unauthorized"}'
-        http_error = urllib.error.HTTPError(
-            "http://test:4444/tools", 401, "Unauthorized", {}, None
-        )
+        http_error = urllib.error.HTTPError("http://test:4444/tools", 401, "Unauthorized", {}, None)
         http_error.read = lambda: error_response
 
         with patch("urllib.request.urlopen") as mock_urlopen:
@@ -159,9 +157,7 @@ class TestHTTPGatewayClientErrorPaths:
         client = HTTPGatewayClient(config)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = urllib.error.HTTPError(
-                "http://test:4444/rpc", 502, "Bad Gateway", {}, None
-            )
+            mock_urlopen.side_effect = urllib.error.HTTPError("http://test:4444/rpc", 502, "Bad Gateway", {}, None)
 
             result = client.call_tool("test_tool", {"arg": "value"})
 
@@ -198,13 +194,9 @@ class TestHTTPGatewayClientErrorPaths:
 
         # First attempt: 503, second: timeout, third: 500
         errors = [
-            urllib.error.HTTPError(
-                "http://test:4444/tools", 503, "Service Unavailable", {}, None
-            ),
+            urllib.error.HTTPError("http://test:4444/tools", 503, "Service Unavailable", {}, None),
             TimeoutError("Timeout"),
-            urllib.error.HTTPError(
-                "http://test:4444/tools", 500, "Internal Server Error", {}, None
-            ),
+            urllib.error.HTTPError("http://test:4444/tools", 500, "Internal Server Error", {}, None),
         ]
 
         with patch("urllib.request.urlopen") as mock_urlopen:
@@ -232,9 +224,7 @@ class TestHTTPGatewayClientErrorPaths:
 
         # Business logic: Fail twice with different error types, then succeed
         errors = [
-            urllib.error.HTTPError(
-                "http://test:4444/tools", 503, "Service Unavailable", {}, None
-            ),
+            urllib.error.HTTPError("http://test:4444/tools", 503, "Service Unavailable", {}, None),
             urllib.error.URLError("Connection refused"),
             mock_success,
         ]

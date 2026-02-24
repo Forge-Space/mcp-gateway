@@ -56,11 +56,7 @@ async def health_check() -> HealthResponse:
             timestamp=db_health["timestamp"],
             details={
                 "database_status": db_health["status"],
-                "connection": (
-                    "connected"
-                    if db_health["database"] == "connected"
-                    else "disconnected"
-                ),
+                "connection": ("connected" if db_health["database"] == "connected" else "disconnected"),
             },
         )
 
@@ -93,9 +89,7 @@ async def database_health() -> DatabaseHealthResponse:
 
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
-        raise HTTPException(
-            status_code=503, detail=f"Database health check failed: {e!s}"
-        )
+        raise HTTPException(status_code=503, detail=f"Database health check failed: {e!s}")
 
 
 @router.get("/readiness")
@@ -152,6 +146,4 @@ async def close_connections() -> dict[str, str]:
         return {"status": "connections_closed"}
     except Exception as e:
         logger.error(f"Failed to close connections: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to close connections: {e!s}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to close connections: {e!s}")

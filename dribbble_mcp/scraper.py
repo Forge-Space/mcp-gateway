@@ -149,9 +149,7 @@ class DribbbleScraper:
 
     def _extract_shot_from_list_item(self, item: Any) -> dict[str, Any] | None:
         try:
-            link = item.select_one("a.shot-thumbnail-link") or item.select_one(
-                "a[href*='/shots/']"
-            )
+            link = item.select_one("a.shot-thumbnail-link") or item.select_one("a[href*='/shots/']")
             if not link:
                 return None
 
@@ -159,28 +157,15 @@ class DribbbleScraper:
             if not shot_url or "/shots/" not in shot_url:
                 return None
 
-            title_el = item.select_one(".shot-title") or item.select_one(
-                "[class*='title']"
-            )
-            title = (
-                title_el.get_text(strip=True)
-                if title_el
-                else link.get("title", "Untitled")
-            )
+            title_el = item.select_one(".shot-title") or item.select_one("[class*='title']")
+            title = title_el.get_text(strip=True) if title_el else link.get("title", "Untitled")
 
             img = item.select_one("img")
             image_url = ""
             if img:
-                image_url = (
-                    img.get("data-src")
-                    or img.get("src")
-                    or img.get("data-srcset", "").split(" ")[0]
-                    or ""
-                )
+                image_url = img.get("data-src") or img.get("src") or img.get("data-srcset", "").split(" ")[0] or ""
 
-            designer_el = item.select_one(".display-name") or item.select_one(
-                "[class*='designer']"
-            )
+            designer_el = item.select_one(".display-name") or item.select_one("[class*='designer']")
             designer = designer_el.get_text(strip=True) if designer_el else ""
 
             designer_link = item.select_one("a[href*='/']")
@@ -190,9 +175,7 @@ class DribbbleScraper:
                 if "/shots/" not in href:
                     designer_url = urljoin(DRIBBBLE_BASE, href)
 
-            likes_el = item.select_one(".js-shot-likes-count") or item.select_one(
-                "[class*='likes']"
-            )
+            likes_el = item.select_one(".js-shot-likes-count") or item.select_one("[class*='likes']")
             likes_text = likes_el.get_text(strip=True) if likes_el else "0"
             likes = _parse_count(likes_text)
 
@@ -252,9 +235,7 @@ class DribbbleScraper:
         if " on Dribbble" in title:
             title = title.replace(" on Dribbble", "").strip()
 
-        desc_el = soup.select_one(".shot-desc") or soup.select_one(
-            "[class*='description']"
-        )
+        desc_el = soup.select_one(".shot-desc") or soup.select_one("[class*='description']")
         description = desc_el.get_text(strip=True) if desc_el else ""
 
         image_urls: list[str] = []
@@ -263,9 +244,7 @@ class DribbbleScraper:
             if src and src not in image_urls:
                 image_urls.append(src)
 
-        designer_el = soup.select_one(".shot-user-name a") or soup.select_one(
-            "[class*='player-name'] a"
-        )
+        designer_el = soup.select_one(".shot-user-name a") or soup.select_one("[class*='player-name'] a")
         designer = designer_el.get_text(strip=True) if designer_el else ""
         designer_url = ""
         if designer_el and designer_el.get("href"):
@@ -277,14 +256,10 @@ class DribbbleScraper:
             if tag_text and tag_text not in tags:
                 tags.append(tag_text)
 
-        likes_el = soup.select_one(".js-shot-likes-count") or soup.select_one(
-            "[class*='likes-count']"
-        )
+        likes_el = soup.select_one(".js-shot-likes-count") or soup.select_one("[class*='likes-count']")
         likes = _parse_count(likes_el.get_text(strip=True) if likes_el else "0")
 
-        views_el = soup.select_one(".js-shot-views-count") or soup.select_one(
-            "[class*='views-count']"
-        )
+        views_el = soup.select_one(".js-shot-views-count") or soup.select_one("[class*='views-count']")
         views = _parse_count(views_el.get_text(strip=True) if views_el else "0")
 
         colors: list[str] = []

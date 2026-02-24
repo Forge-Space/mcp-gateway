@@ -26,9 +26,7 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
         assert coordinator is not None
         assert hasattr(coordinator, "process_task")
         assert coordinator.enhanced_selector == enhanced_selector
@@ -52,9 +50,7 @@ class TestSpecialistCoordinator:
             "task_complexity": "medium",
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         request = TaskRequest(
             task="Find information about web development",
@@ -89,9 +85,7 @@ class TestSpecialistCoordinator:
             "quality_score": {"overall_score": 0.92},
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         request = TaskRequest(
             task="Find information about web development",
@@ -125,9 +119,7 @@ class TestSpecialistCoordinator:
             "industry_standards_compliant": True,
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         request = TaskRequest(
             task="Create a user registration form",
@@ -164,9 +156,7 @@ class TestSpecialistCoordinator:
             "estimated_cost": {"total_cost": 0.08},
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         request = TaskRequest(
             task="Generate a React form component",
@@ -203,9 +193,7 @@ class TestSpecialistCoordinator:
             "confidence": 0.87,
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         request = TaskRequest(
             task="Create a dashboard with charts and navigation",
@@ -232,13 +220,9 @@ class TestSpecialistCoordinator:
             "confidence": 0.75,
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
-        request = TaskRequest(
-            task="Analyze the data trends", category=TaskCategory.ANALYSIS
-        )
+        request = TaskRequest(task="Analyze the data trends", category=TaskCategory.ANALYSIS)
 
         results = coordinator.process_task(request)
 
@@ -252,13 +236,9 @@ class TestSpecialistCoordinator:
         ui_specialist = MagicMock()
 
         # Make the selector raise an exception
-        enhanced_selector.select_tool_with_cost_optimization.side_effect = Exception(
-            "Network error"
-        )
+        enhanced_selector.select_tool_with_cost_optimization.side_effect = Exception("Network error")
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         request = TaskRequest(task="Test task", category=TaskCategory.TOOL_SELECTION)
 
@@ -273,9 +253,7 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test table component
         requirements = coordinator._parse_ui_requirements("Create a data table", {})
@@ -299,9 +277,7 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test Vue framework
         requirements = coordinator._parse_ui_requirements("Create a Vue component", {})
@@ -321,9 +297,7 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test Material Design
         requirements = coordinator._parse_ui_requirements("Use material design", {})
@@ -334,9 +308,7 @@ class TestSpecialistCoordinator:
         assert requirements["design_system"] == DesignSystem.BOOTSTRAP
 
         # Test Ant Design
-        requirements = coordinator._parse_ui_requirements(
-            "Use ant design components", {}
-        )
+        requirements = coordinator._parse_ui_requirements("Use ant design components", {})
         assert requirements["design_system"] == DesignSystem.ANT_DESIGN
 
     def test_parse_ui_requirements_accessibility_levels(self) -> None:
@@ -345,20 +317,14 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test AAA level
-        requirements = coordinator._parse_ui_requirements(
-            "Create aaa compliant component", {}
-        )
+        requirements = coordinator._parse_ui_requirements("Create aaa compliant component", {})
         assert requirements["accessibility_level"] == AccessibilityLevel.AAA
 
         # Test minimal level
-        requirements = coordinator._parse_ui_requirements(
-            "Build basic minimal component", {}
-        )
+        requirements = coordinator._parse_ui_requirements("Build basic minimal component", {})
         assert requirements["accessibility_level"] == AccessibilityLevel.MINIMAL
 
         # Test default AA level
@@ -371,14 +337,10 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test name extraction
-        requirements = coordinator._parse_ui_requirements(
-            "Create a UserForm component", {}
-        )
+        requirements = coordinator._parse_ui_requirements("Create a UserForm component", {})
         assert requirements["component_name"] == "UserForm"
 
         requirements = coordinator._parse_ui_requirements("Build a Login modal", {})
@@ -401,9 +363,7 @@ class TestSpecialistCoordinator:
             "estimated_cost": {"total_cost": 0.05},
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Process some tasks to generate stats
         request = TaskRequest(task="test", category=TaskCategory.TOOL_SELECTION)
@@ -424,9 +384,7 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Add something to cache by processing a task
         request = TaskRequest(task="test", category=TaskCategory.TOOL_SELECTION)
@@ -467,9 +425,7 @@ class TestSpecialistCoordinator:
             "bootstrap",
         ]
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         capabilities = coordinator.get_specialist_capabilities()
 
@@ -498,14 +454,10 @@ class TestSpecialistCoordinator:
             "confidence": 0.8,
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test with cost optimization enabled
-        request = TaskRequest(
-            task="test", category=TaskCategory.TOOL_SELECTION, cost_optimization=True
-        )
+        request = TaskRequest(task="test", category=TaskCategory.TOOL_SELECTION, cost_optimization=True)
 
         coordinator.process_task(request)
 
@@ -523,9 +475,7 @@ class TestSpecialistCoordinator:
             "confidence": 0.8,
         }
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         user_prefs = {
             "cost_preference": "economy",
@@ -552,9 +502,7 @@ class TestSpecialistCoordinator:
         prompt_architect = MagicMock()
         ui_specialist = MagicMock()
 
-        coordinator = SpecialistCoordinator(
-            enhanced_selector, prompt_architect, ui_specialist
-        )
+        coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test empty task
         request = TaskRequest(task="", category=TaskCategory.TOOL_SELECTION)

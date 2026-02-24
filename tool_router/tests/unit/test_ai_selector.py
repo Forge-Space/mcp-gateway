@@ -85,9 +85,7 @@ def test_select_tool_with_low_confidence() -> None:
     )
 
     tools = [{"name": "search", "description": "Search the web"}]
-    mock_response = (
-        '{"tool_name": "search", "confidence": 0.5, "reasoning": "Low confidence"}'
-    )
+    mock_response = '{"tool_name": "search", "confidence": 0.5, "reasoning": "Low confidence"}'
 
     with patch.object(selector, "_call_ollama", return_value=mock_response):
         result = selector.select_tool("search the web", tools)
@@ -136,14 +134,10 @@ def test_select_tool_with_context_and_similar_tools() -> None:
     tools = [{"name": "search", "description": "Search the web"}]
     context = "Looking for recent news"
     similar_tools = ["web_search"]
-    mock_response = (
-        '{"tool_name": "search", "confidence": 0.9, "reasoning": "Good match"}'
-    )
+    mock_response = '{"tool_name": "search", "confidence": 0.9, "reasoning": "Good match"}'
 
     with patch.object(selector, "_call_ollama", return_value=mock_response):
-        result = selector.select_tool(
-            "search the web", tools, context=context, similar_tools=similar_tools
-        )
+        result = selector.select_tool("search the web", tools, context=context, similar_tools=similar_tools)
 
     assert result is not None
     assert result["tool_name"] == "search"
@@ -172,9 +166,7 @@ def test_select_tools_multi_with_valid_response() -> None:
         {"name": "search", "description": "Search the web"},
         {"name": "fetch", "description": "Get URL"},
     ]
-    mock_response = (
-        '{"tools": ["search", "fetch"], "confidence": 0.8, "reasoning": "Both needed"}'
-    )
+    mock_response = '{"tools": ["search", "fetch"], "confidence": 0.8, "reasoning": "Both needed"}'
 
     with patch.object(selector, "_call_ollama", return_value=mock_response):
         result = selector.select_tools_multi("search and fetch", tools)
@@ -193,9 +185,7 @@ def test_select_tools_multi_with_invalid_tool_names() -> None:
     )
 
     tools = [{"name": "search", "description": "Search the web"}]
-    mock_response = (
-        '{"tools": ["invalid_tool"], "confidence": 0.8, "reasoning": "Invalid"}'
-    )
+    mock_response = '{"tools": ["invalid_tool"], "confidence": 0.8, "reasoning": "Invalid"}'
 
     with patch.object(selector, "_call_ollama", return_value=mock_response):
         result = selector.select_tools_multi("search", tools)
@@ -212,9 +202,7 @@ def test_select_tools_multi_with_low_confidence() -> None:
     )
 
     tools = [{"name": "search", "description": "Search the web"}]
-    mock_response = (
-        '{"tools": ["search"], "confidence": 0.5, "reasoning": "Low confidence"}'
-    )
+    mock_response = '{"tools": ["search"], "confidence": 0.5, "reasoning": "Low confidence"}'
 
     with patch.object(selector, "_call_ollama", return_value=mock_response):
         result = selector.select_tools_multi("search", tools)

@@ -137,36 +137,26 @@ class UIStandardsCompliance:
             ],
         }
 
-    def validate_component(
-        self, component_spec: ComponentSpec, requirement: UIRequirement
-    ) -> dict[str, Any]:
+    def validate_component(self, component_spec: ComponentSpec, requirement: UIRequirement) -> dict[str, Any]:
         """Validate component against standards."""
         compliance_score = 0.0
         issues = []
         recommendations = []
 
         # Check accessibility compliance
-        accessibility_score = self._check_accessibility_compliance(
-            component_spec, requirement.accessibility_level
-        )
+        accessibility_score = self._check_accessibility_compliance(component_spec, requirement.accessibility_level)
         compliance_score += accessibility_score * 0.4
 
         # Check framework best practices
-        framework_score = self._check_framework_compliance(
-            component_spec, requirement.framework
-        )
+        framework_score = self._check_framework_compliance(component_spec, requirement.framework)
         compliance_score += framework_score * 0.3
 
         # Check responsive design
-        responsive_score = self._check_responsive_compliance(
-            component_spec, requirement.responsive
-        )
+        responsive_score = self._check_responsive_compliance(component_spec, requirement.responsive)
         compliance_score += responsive_score * 0.2
 
         # Check design system consistency
-        design_score = self._check_design_system_compliance(
-            component_spec, requirement.design_system
-        )
+        design_score = self._check_design_system_compliance(component_spec, requirement.design_system)
         compliance_score += design_score * 0.1
 
         return {
@@ -179,9 +169,7 @@ class UIStandardsCompliance:
             "recommendations": recommendations,
         }
 
-    def _check_accessibility_compliance(
-        self, component_spec: ComponentSpec, level: AccessibilityLevel
-    ) -> float:
+    def _check_accessibility_compliance(self, component_spec: ComponentSpec, level: AccessibilityLevel) -> float:
         """Check accessibility compliance."""
         required_features = self.wcag_guidelines.get(level, [])
         present_features = component_spec.accessibility_features
@@ -189,14 +177,10 @@ class UIStandardsCompliance:
         if not required_features:
             return 1.0
 
-        compliance_count = sum(
-            1 for feature in required_features if feature in present_features
-        )
+        compliance_count = sum(1 for feature in required_features if feature in present_features)
         return compliance_count / len(required_features)
 
-    def _check_framework_compliance(
-        self, component_spec: ComponentSpec, framework: UIFramework
-    ) -> float:
+    def _check_framework_compliance(self, component_spec: ComponentSpec, framework: UIFramework) -> float:
         """Check framework best practices compliance."""
         practices = self.framework_best_practices.get(framework, [])
 
@@ -210,9 +194,7 @@ class UIStandardsCompliance:
 
         return 0.8  # Default score
 
-    def _check_responsive_compliance(
-        self, component_spec: ComponentSpec, required: bool
-    ) -> float:
+    def _check_responsive_compliance(self, component_spec: ComponentSpec, required: bool) -> float:
         """Check responsive design compliance."""
         if not required:
             return 1.0
@@ -222,9 +204,7 @@ class UIStandardsCompliance:
             return 1.0
         return 0.6  # Partial credit for basic responsive design
 
-    def _check_design_system_compliance(
-        self, component_spec: ComponentSpec, design_system: DesignSystem
-    ) -> float:
+    def _check_design_system_compliance(self, component_spec: ComponentSpec, design_system: DesignSystem) -> float:
         """Check design system compliance."""
         # Simplified check based on styling consistency
         if design_system == DesignSystem.TAILWIND_UI:
@@ -257,9 +237,7 @@ class ComponentGenerator:
             ComponentType.SETTINGS: self._generate_settings_template,
         }
 
-    def generate_component(
-        self, requirement: UIRequirement, component_spec: ComponentSpec
-    ) -> dict[str, Any]:
+    def generate_component(self, requirement: UIRequirement, component_spec: ComponentSpec) -> dict[str, Any]:
         """Generate a UI component based on requirements."""
         generator_func = self.templates.get(component_spec.type)
 
@@ -270,24 +248,16 @@ class ComponentGenerator:
         component_code = generator_func(requirement, component_spec)
 
         # Add framework-specific enhancements
-        enhanced_code = self._apply_framework_enhancements(
-            component_code, requirement.framework
-        )
+        enhanced_code = self._apply_framework_enhancements(component_code, requirement.framework)
 
         # Add accessibility features
-        accessible_code = self._apply_accessibility_features(
-            enhanced_code, requirement.accessibility_level
-        )
+        accessible_code = self._apply_accessibility_features(enhanced_code, requirement.accessibility_level)
 
         # Add responsive design
-        responsive_code = self._apply_responsive_design(
-            accessible_code, requirement.responsive
-        )
+        responsive_code = self._apply_responsive_design(accessible_code, requirement.responsive)
 
         # Add styling
-        styled_code = self._apply_styling(
-            responsive_code, requirement.design_system, requirement.dark_mode
-        )
+        styled_code = self._apply_styling(responsive_code, requirement.design_system, requirement.dark_mode)
 
         return {
             "component_code": styled_code,
@@ -297,9 +267,7 @@ class ComponentGenerator:
             "token_estimate": self._estimate_component_tokens(styled_code),
         }
 
-    def _generate_form_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_form_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate form component template."""
         if requirement.framework == UIFramework.REACT:
             return f"""
@@ -340,9 +308,7 @@ export default {spec.name}Form;
 """
         return f"<!-- Form component for {spec.name} -->"
 
-    def _generate_table_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_table_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate table component template."""
         return f"""
 <!-- Table component for {spec.name} -->
@@ -360,9 +326,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_chart_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_chart_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate chart component template."""
         return f"""
 <!-- Chart component for {spec.name} -->
@@ -371,9 +335,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_modal_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_modal_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate modal component template."""
         return f"""
 <!-- Modal component for {spec.name} -->
@@ -385,9 +347,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_navigation_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_navigation_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate navigation component template."""
         return f"""
 <!-- Navigation component for {spec.name} -->
@@ -398,9 +358,7 @@ export default {spec.name}Form;
 </nav>
 """
 
-    def _generate_card_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_card_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate card component template."""
         return f"""
 <!-- Card component for {spec.name} -->
@@ -414,9 +372,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_button_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_button_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate button component template."""
         return f"""
 <!-- Button component for {spec.name} -->
@@ -425,9 +381,7 @@ export default {spec.name}Form;
 </button>
 """
 
-    def _generate_input_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_input_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate input component template."""
         return f"""
 <!-- Input component for {spec.name} -->
@@ -439,9 +393,7 @@ export default {spec.name}Form;
 />
 """
 
-    def _generate_layout_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_layout_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate layout component template."""
         return f"""
 <!-- Layout component for {spec.name} -->
@@ -458,9 +410,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_dashboard_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_dashboard_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate dashboard component template."""
         return f"""
 <!-- Dashboard component for {spec.name} -->
@@ -471,9 +421,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_landing_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_landing_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate landing page template."""
         return f"""
 <!-- Landing page for {spec.name} -->
@@ -490,9 +438,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_auth_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_auth_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate authentication component template."""
         return f"""
 <!-- Authentication component for {spec.name} -->
@@ -504,9 +450,7 @@ export default {spec.name}Form;
 </div>
 """
 
-    def _generate_settings_template(
-        self, requirement: UIRequirement, spec: ComponentSpec
-    ) -> str:
+    def _generate_settings_template(self, requirement: UIRequirement, spec: ComponentSpec) -> str:
         """Generate settings component template."""
         return f"""
 <!-- Settings component for {spec.name} -->
@@ -527,9 +471,7 @@ export default {spec.name}Form;
             return code.replace("<!--", "<!--").replace("-->", "-->")
         return code
 
-    def _apply_accessibility_features(
-        self, code: str, level: AccessibilityLevel
-    ) -> str:
+    def _apply_accessibility_features(self, code: str, level: AccessibilityLevel) -> str:
         """Apply accessibility features based on level."""
         # Add ARIA labels, semantic HTML, etc.
         if level == AccessibilityLevel.AA:
@@ -552,9 +494,7 @@ export default {spec.name}Form;
 
         return code
 
-    def _apply_styling(
-        self, code: str, design_system: DesignSystem, dark_mode: bool
-    ) -> str:
+    def _apply_styling(self, code: str, design_system: DesignSystem, dark_mode: bool) -> str:
         """Apply styling based on design system."""
         # Add design system classes and styling
         if design_system == DesignSystem.TAILWIND_UI:
@@ -629,23 +569,15 @@ class UISpecialist:
             type=component_type,
             props=user_preferences.get("props", {}),
             styling=user_preferences.get("styling", {}),
-            accessibility_features=self._get_required_accessibility_features(
-                accessibility_level
-            ),
-            responsive_breakpoints=(
-                ["sm", "md", "lg", "xl"] if requirement.responsive else []
-            ),
+            accessibility_features=self._get_required_accessibility_features(accessibility_level),
+            responsive_breakpoints=(["sm", "md", "lg", "xl"] if requirement.responsive else []),
         )
 
         # Validate requirements
-        validation_result = self.compliance_checker.validate_component(
-            component_spec, requirement
-        )
+        validation_result = self.compliance_checker.validate_component(component_spec, requirement)
 
         # Generate component
-        generation_result = self.component_generator.generate_component(
-            requirement, component_spec
-        )
+        generation_result = self.component_generator.generate_component(requirement, component_spec)
 
         # Apply cost optimization if requested
         if cost_optimization:
@@ -658,16 +590,13 @@ class UISpecialist:
             "requirement": requirement,
             "spec": component_spec,
             "optimization_applied": cost_optimization,
-            "industry_standards_compliant": validation_result["compliance_score"]
-            >= 0.8,
+            "industry_standards_compliant": validation_result["compliance_score"] >= 0.8,
             "accessibility_compliant": validation_result["accessibility_score"] >= 0.8,
             "responsive_ready": requirement.responsive,
             "design_system_compliant": validation_result["design_score"] >= 0.8,
         }
 
-    def _get_required_accessibility_features(
-        self, level: AccessibilityLevel
-    ) -> list[str]:
+    def _get_required_accessibility_features(self, level: AccessibilityLevel) -> list[str]:
         """Get required accessibility features for level."""
         if level == AccessibilityLevel.AA:
             return [
@@ -711,11 +640,7 @@ class UISpecialist:
         # Update token estimate
         original_tokens = generation_result["token_estimate"]
         optimized_tokens = len(optimized_code.split()) * 1.3
-        token_reduction = (
-            ((original_tokens - optimized_tokens) / original_tokens) * 100
-            if original_tokens > 0
-            else 0
-        )
+        token_reduction = ((original_tokens - optimized_tokens) / original_tokens) * 100 if original_tokens > 0 else 0
 
         generation_result["component_code"] = optimized_code
         generation_result["token_estimate"] = optimized_tokens

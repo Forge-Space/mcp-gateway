@@ -30,9 +30,7 @@ class CacheManager:
         self._global_metrics = CacheMetrics()
         self._global_metrics.last_reset_time = time.time()
 
-    def create_ttl_cache(
-        self, name: str, config: CacheConfig | None = None
-    ) -> TTLCache:
+    def create_ttl_cache(self, name: str, config: CacheConfig | None = None) -> TTLCache:
         """Create a TTL cache with optional configuration."""
         config = config or CacheConfig()
         cache = TTLCache(maxsize=config.max_size, ttl=config.ttl)
@@ -43,14 +41,10 @@ class CacheManager:
                 self._metrics[name] = CacheMetrics()
                 self._metrics[name].last_reset_time = time.time()
 
-        logger.info(
-            f"Created TTL cache '{name}' with max_size={config.max_size}, ttl={config.ttl}s"
-        )
+        logger.info(f"Created TTL cache '{name}' with max_size={config.max_size}, ttl={config.ttl}s")
         return cache
 
-    def create_lru_cache(
-        self, name: str, config: CacheConfig | None = None
-    ) -> LRUCache:
+    def create_lru_cache(self, name: str, config: CacheConfig | None = None) -> LRUCache:
         """Create an LRU cache with optional configuration."""
         config = config or CacheConfig()
         cache = LRUCache(maxsize=config.max_size)
@@ -75,9 +69,7 @@ class CacheManager:
         redis_config = redis_config or RedisConfig()
         fallback_config = fallback_config or CacheConfig()
 
-        cache = create_redis_cache(
-            config=redis_config, fallback_config=fallback_config, **kwargs
-        )
+        cache = create_redis_cache(config=redis_config, fallback_config=fallback_config, **kwargs)
 
         with self._lock:
             self._caches[name] = cache
@@ -135,9 +127,7 @@ class CacheManager:
     def _update_global_hit_rate(self) -> None:
         """Update global hit rate."""
         if self._global_metrics.total_requests > 0:
-            self._global_metrics.hit_rate = (
-                self._global_metrics.hits / self._global_metrics.total_requests
-            )
+            self._global_metrics.hit_rate = self._global_metrics.hits / self._global_metrics.total_requests
 
     def get_metrics(self, cache_name: str | None = None) -> dict[str, Any]:
         """Get cache metrics, optionally for a specific cache."""

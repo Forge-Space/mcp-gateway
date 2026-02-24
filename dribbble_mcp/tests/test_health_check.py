@@ -24,9 +24,7 @@ class TestHealthCheck:
             # Should exit with 0 first (successful HTTP check), then 1 (function continues)
             assert mock_exit.call_args_list[0] == call(0)
             # Verify urlopen was called with correct URL
-            mock_urlopen.assert_called_once_with(
-                "http://localhost:8035/health", timeout=5
-            )
+            mock_urlopen.assert_called_once_with("http://localhost:8035/health", timeout=5)
 
     @patch("urllib.request.urlopen")
     def test_main_http_health_check_failure(self, mock_urlopen):

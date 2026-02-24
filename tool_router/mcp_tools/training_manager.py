@@ -85,9 +85,7 @@ class TrainingManagerTool:
 
             self.active_runs[run_id] = run
 
-            logger.info(
-                f"Starting training run {run_id} with {len(training_sources)} sources"
-            )
+            logger.info(f"Starting training run {run_id} with {len(training_sources)} sources")
 
             # Start training in background (simplified for demo)
             try:
@@ -234,12 +232,8 @@ class TrainingManagerTool:
             durations = []
             for run in completed_runs:
                 if run.completed_at and run.started_at:
-                    start = time.mktime(
-                        time.strptime(run.started_at, "%Y-%m-%d %H:%M:%S")
-                    )
-                    end = time.mktime(
-                        time.strptime(run.completed_at, "%Y-%m-%d %H:%M:%S")
-                    )
+                    start = time.mktime(time.strptime(run.started_at, "%Y-%m-%d %H:%M:%S"))
+                    end = time.mktime(time.strptime(run.completed_at, "%Y-%m-%d %H:%M:%S"))
                     durations.append(end - start)
 
             avg_duration = sum(durations) / len(durations) if durations else 0
@@ -376,9 +370,7 @@ def training_manager_handler(args: dict[str, Any]) -> dict[str, Any]:
         action = args.get("action")
 
         if action == "start_training":
-            return manager.start_training_run(
-                sources=args.get("sources"), config=args.get("config")
-            )
+            return manager.start_training_run(sources=args.get("sources"), config=args.get("config"))
 
         if action == "get_status":
             run_id = args.get("run_id")

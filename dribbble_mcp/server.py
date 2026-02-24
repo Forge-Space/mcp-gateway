@@ -83,9 +83,7 @@ def search_dribbble(
         logger.exception("search_dribbble failed")
         return json.dumps({"error": f"Search failed: {exc}"})
 
-    return json.dumps(
-        {"query": query, "count": len(shots), "shots": shots}, ensure_ascii=False
-    )
+    return json.dumps({"query": query, "count": len(shots), "shots": shots}, ensure_ascii=False)
 
 
 @mcp.tool()

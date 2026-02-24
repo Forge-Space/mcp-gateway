@@ -177,9 +177,7 @@ class GDPRComplianceHandler:
 
         return request_id
 
-    def get_data_subject_requests(
-        self, subject_id: str | None = None
-    ) -> list[DataSubjectRequest]:
+    def get_data_subject_requests(self, subject_id: str | None = None) -> list[DataSubjectRequest]:
         """Get data subject requests, optionally filtered by subject."""
         with self._lock:
             requests = list(self._data_subject_requests.values())
@@ -258,11 +256,7 @@ class ComplianceReporter:
 
         assessment = ComplianceAssessment(
             standard=ComplianceStandard.GDPR,
-            status=(
-                ComplianceStatus.COMPLIANT
-                if score >= 80
-                else ComplianceStatus.NON_COMPLIANT
-            ),
+            status=(ComplianceStatus.COMPLIANT if score >= 80 else ComplianceStatus.NON_COMPLIANT),
             score=score,
             findings=findings,
             recommendations=recommendations,
@@ -276,9 +270,7 @@ class ComplianceReporter:
 
         return assessment
 
-    def generate_compliance_report(
-        self, standards: list[ComplianceStandard]
-    ) -> ComplianceReport:
+    def generate_compliance_report(self, standards: list[ComplianceStandard]) -> ComplianceReport:
         """Generate comprehensive compliance report."""
         report_id = secrets.token_hex(16)
         period_end = datetime.utcnow()
@@ -319,9 +311,7 @@ class ComplianceReporter:
 
         return report
 
-    def get_assessment_history(
-        self, standard: ComplianceStandard
-    ) -> list[ComplianceAssessment]:
+    def get_assessment_history(self, standard: ComplianceStandard) -> list[ComplianceAssessment]:
         """Get assessment history for a standard."""
         with self._lock:
             if standard in self._assessments:
@@ -371,9 +361,7 @@ class ComplianceManager:
     def check_consent(self, subject_id: str, data_type: str, purpose: str) -> bool:
         """Check if valid consent exists."""
         try:
-            has_consent = self._gdpr_handler.check_consent(
-                subject_id, data_type, purpose
-            )
+            has_consent = self._gdpr_handler.check_consent(subject_id, data_type, purpose)
 
             # Update metrics
             with self._lock:
@@ -420,9 +408,7 @@ class ComplianceManager:
             if standard == ComplianceStandard.GDPR:
                 assessment = self._reporter.assess_gdpr_compliance()
             else:
-                raise ComplianceError(
-                    f"Compliance assessment for {standard.value} not implemented"
-                )
+                raise ComplianceError(f"Compliance assessment for {standard.value} not implemented")
 
             # Update metrics
             with self._lock:
@@ -433,9 +419,7 @@ class ComplianceManager:
         except Exception as e:
             raise ComplianceError(f"Failed to assess compliance: {e!s}")
 
-    def generate_compliance_report(
-        self, standards: list[ComplianceStandard] | None
-    ) -> ComplianceReport:
+    def generate_compliance_report(self, standards: list[ComplianceStandard] | None) -> ComplianceReport:
         """Generate compliance report."""
         try:
             if standards is None:
@@ -457,9 +441,7 @@ class ComplianceManager:
         with self._lock:
             return SecurityMetrics(**asdict(self._metrics))
 
-    def get_data_subject_requests(
-        self, subject_id: str | None = None
-    ) -> list[DataSubjectRequest]:
+    def get_data_subject_requests(self, subject_id: str | None = None) -> list[DataSubjectRequest]:
         """Get data subject requests."""
         return self._gdpr_handler.get_data_subject_requests(subject_id)
 

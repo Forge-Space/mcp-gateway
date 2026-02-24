@@ -75,18 +75,12 @@ class ScreenshotCapture:
     def _do_capture(self, pw: Any, shot_url: str, full_page: bool) -> str:
         browser = pw.chromium.launch(headless=True)
         try:
-            context = browser.new_context(
-                viewport=_DEFAULT_VIEWPORT, user_agent=_USER_AGENT
-            )
+            context = browser.new_context(viewport=_DEFAULT_VIEWPORT, user_agent=_USER_AGENT)
             page = context.new_page()
             page.goto(shot_url, timeout=self._timeout, wait_until="domcontentloaded")
             page.wait_for_timeout(1500)
 
-            png_bytes = (
-                page.screenshot(full_page=True, type="png")
-                if full_page
-                else self._capture_element(page)
-            )
+            png_bytes = page.screenshot(full_page=True, type="png") if full_page else self._capture_element(page)
             return base64.b64encode(png_bytes).decode("utf-8")
         finally:
             browser.close()
@@ -103,9 +97,7 @@ class ScreenshotCapture:
         return page.screenshot(type="png")
 
 
-async def capture_shot_async(
-    shot_url: str, timeout_ms: int = 10_000, full_page: bool = False
-) -> str:
+async def capture_shot_async(shot_url: str, timeout_ms: int = 10_000, full_page: bool = False) -> str:
     """Async version of screenshot capture using Playwright async API.
 
     Args:
@@ -127,9 +119,7 @@ async def capture_shot_async(
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
         try:
-            context = await browser.new_context(
-                viewport=_DEFAULT_VIEWPORT, user_agent=_USER_AGENT
-            )
+            context = await browser.new_context(viewport=_DEFAULT_VIEWPORT, user_agent=_USER_AGENT)
             page = await context.new_page()
             await page.goto(shot_url, timeout=timeout_ms, wait_until="domcontentloaded")
             await page.wait_for_timeout(1500)

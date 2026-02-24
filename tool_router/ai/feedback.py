@@ -65,9 +65,7 @@ class TaskPattern:
     """Learned patterns for task types."""
 
     task_type: str
-    preferred_tools: dict[str, float] = field(
-        default_factory=dict
-    )  # Tool -> success rate
+    preferred_tools: dict[str, float] = field(default_factory=dict)  # Tool -> success rate
     common_entities: list[str] = field(default_factory=list)
     avg_confidence: float = 0.0
     total_occurrences: int = 0
@@ -82,9 +80,7 @@ class FeedbackStore:
     """
 
     def __init__(self, feedback_file: str | None = None) -> None:
-        self._file = Path(
-            feedback_file or os.getenv(_FEEDBACK_FILE_ENV, _DEFAULT_FEEDBACK_FILE)
-        )
+        self._file = Path(feedback_file or os.getenv(_FEEDBACK_FILE_ENV, _DEFAULT_FEEDBACK_FILE))
         self._entries: list[FeedbackEntry] = []
         self._stats: dict[str, ToolStats] = {}
         self._patterns: dict[str, TaskPattern] = {}
@@ -96,43 +92,27 @@ class FeedbackStore:
         task_lower = task.lower()
 
         # File operations
-        if any(
-            word in task_lower
-            for word in ["file", "read", "write", "create", "delete", "open"]
-        ):
+        if any(word in task_lower for word in ["file", "read", "write", "create", "delete", "open"]):
             return "file_operations"
 
         # Search operations
-        if any(
-            word in task_lower
-            for word in ["search", "find", "lookup", "query", "search"]
-        ):
+        if any(word in task_lower for word in ["search", "find", "lookup", "query", "search"]):
             return "search_operations"
 
         # Code operations
-        if any(
-            word in task_lower
-            for word in ["code", "edit", "modify", "refactor", "syntax"]
-        ):
+        if any(word in task_lower for word in ["code", "edit", "modify", "refactor", "syntax"]):
             return "code_operations"
 
         # Database operations
-        if any(
-            word in task_lower for word in ["database", "db", "sql", "query", "table"]
-        ):
+        if any(word in task_lower for word in ["database", "db", "sql", "query", "table"]):
             return "database_operations"
 
         # Network operations
-        if any(
-            word in task_lower for word in ["http", "api", "request", "fetch", "web"]
-        ):
+        if any(word in task_lower for word in ["http", "api", "request", "fetch", "web"]):
             return "network_operations"
 
         # System operations
-        if any(
-            word in task_lower
-            for word in ["system", "process", "command", "terminal", "shell"]
-        ):
+        if any(word in task_lower for word in ["system", "process", "command", "terminal", "shell"]):
             return "system_operations"
 
         return "general_operations"
@@ -143,37 +123,23 @@ class FeedbackStore:
         task_lower = task.lower()
 
         # Create intent
-        if any(
-            word in task_lower
-            for word in ["create", "make", "add", "new", "generate", "build"]
-        ):
+        if any(word in task_lower for word in ["create", "make", "add", "new", "generate", "build"]):
             return "create"
 
         # Read intent
-        if any(
-            word in task_lower
-            for word in ["read", "get", "fetch", "retrieve", "show", "display", "list"]
-        ):
+        if any(word in task_lower for word in ["read", "get", "fetch", "retrieve", "show", "display", "list"]):
             return "read"
 
         # Update intent
-        if any(
-            word in task_lower
-            for word in ["update", "modify", "change", "edit", "alter", "adjust"]
-        ):
+        if any(word in task_lower for word in ["update", "modify", "change", "edit", "alter", "adjust"]):
             return "update"
 
         # Delete intent
-        if any(
-            word in task_lower
-            for word in ["delete", "remove", "destroy", "clear", "clean"]
-        ):
+        if any(word in task_lower for word in ["delete", "remove", "destroy", "clear", "clean"]):
             return "delete"
 
         # Search intent
-        if any(
-            word in task_lower for word in ["search", "find", "lookup", "query", "seek"]
-        ):
+        if any(word in task_lower for word in ["search", "find", "lookup", "query", "seek"]):
             return "search"
 
         return "unknown"
@@ -241,13 +207,9 @@ class FeedbackStore:
             stats.failure_count += 1
 
         # Update confidence tracking
-        total_entries = len(
-            [e for e in self._entries if e.selected_tool == selected_tool]
-        )
+        total_entries = len([e for e in self._entries if e.selected_tool == selected_tool])
         if total_entries > 0:
-            confidences = [
-                e.confidence for e in self._entries if e.selected_tool == selected_tool
-            ]
+            confidences = [e.confidence for e in self._entries if e.selected_tool == selected_tool]
             stats.avg_confidence = sum(confidences) / len(confidences)
 
         # Update task type tracking
@@ -261,9 +223,7 @@ class FeedbackStore:
         stats.intent_categories[intent_category] += 1
 
         # Update recent success rate (last 50 entries)
-        recent_entries = [
-            e for e in self._entries[-50:] if e.selected_tool == selected_tool
-        ]
+        recent_entries = [e for e in self._entries[-50:] if e.selected_tool == selected_tool]
         if recent_entries:
             recent_successes = sum(1 for e in recent_entries if e.success)
             stats.recent_success_rate = recent_successes / len(recent_entries)
@@ -279,15 +239,9 @@ class FeedbackStore:
             pattern.preferred_tools[selected_tool] = 0.0
 
         # Calculate success rate for this tool in this task type
-        task_type_entries = [
-            e
-            for e in self._entries
-            if e.task_type == task_type and e.selected_tool == selected_tool
-        ]
+        task_type_entries = [e for e in self._entries if e.task_type == task_type and e.selected_tool == selected_tool]
         if task_type_entries:
-            success_rate = sum(1 for e in task_type_entries if e.success) / len(
-                task_type_entries
-            )
+            success_rate = sum(1 for e in task_type_entries if e.success) / len(task_type_entries)
             pattern.preferred_tools[selected_tool] = success_rate
 
         # Update pattern entities
@@ -296,13 +250,9 @@ class FeedbackStore:
                 pattern.common_entities.append(entity)
 
         # Calculate average confidence for this task type
-        task_type_confidences = [
-            e.confidence for e in self._entries if e.task_type == task_type
-        ]
+        task_type_confidences = [e.confidence for e in self._entries if e.task_type == task_type]
         if task_type_confidences:
-            pattern.avg_confidence = sum(task_type_confidences) / len(
-                task_type_confidences
-            )
+            pattern.avg_confidence = sum(task_type_confidences) / len(task_type_confidences)
 
         # Trim to avoid unbounded growth
         if len(self._entries) > _MAX_ENTRIES:
@@ -359,9 +309,7 @@ class FeedbackStore:
 
         # Calculate success rate for this specific intent
         intent_entries = [
-            e
-            for e in self._entries
-            if e.selected_tool == tool_name and e.intent_category == intent_category
+            e for e in self._entries if e.selected_tool == tool_name and e.intent_category == intent_category
         ]
         if not intent_entries:
             return 1.0
@@ -413,12 +361,8 @@ class FeedbackStore:
             }
 
             # Sort tools by success rate
-            sorted_tools = sorted(
-                pattern.preferred_tools.items(), key=lambda x: x[1], reverse=True
-            )
-            insights["recommended_tools"] = [
-                {"tool": tool, "success_rate": rate} for tool, rate in sorted_tools[:3]
-            ]
+            sorted_tools = sorted(pattern.preferred_tools.items(), key=lambda x: x[1], reverse=True)
+            insights["recommended_tools"] = [{"tool": tool, "success_rate": rate} for tool, rate in sorted_tools[:3]]
 
         return insights
 
@@ -435,9 +379,7 @@ class FeedbackStore:
             if pattern["avg_confidence"] > 0.8:
                 hints.append(f"High confidence patterns found for {task_type} tasks")
             elif pattern["avg_confidence"] < 0.5:
-                hints.append(
-                    f"Low confidence for {task_type} tasks, consider manual selection"
-                )
+                hints.append(f"Low confidence for {task_type} tasks, consider manual selection")
 
         # Entity-based hints
         if insights["entities"]:
@@ -447,9 +389,7 @@ class FeedbackStore:
         if insights["recommended_tools"]:
             top_tool = insights["recommended_tools"][0]
             if top_tool["success_rate"] > 0.8:
-                hints.append(
-                    f"Consider {top_tool['tool']} with {top_tool['success_rate']:.1%} success rate"
-                )
+                hints.append(f"Consider {top_tool['tool']} with {top_tool['success_rate']:.1%} success rate")
 
         return hints
 
@@ -510,9 +450,7 @@ class FeedbackStore:
         try:
             data = json.loads(self._file.read_text())
             self._entries = [FeedbackEntry(**e) for e in data.get("entries", [])]
-            self._stats = {
-                name: ToolStats(**s) for name, s in data.get("stats", {}).items()
-            }
+            self._stats = {name: ToolStats(**s) for name, s in data.get("stats", {}).items()}
             logger.debug(
                 "Loaded %d feedback entries from %s",
                 len(self._entries),

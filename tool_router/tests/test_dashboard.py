@@ -325,9 +325,7 @@ class TestCachePerformanceDashboard:
     def test_get_current_snapshot(self):
         """Test getting current snapshot."""
         # Mock collection
-        snapshot = CachePerformanceSnapshot(
-            timestamp=time.time(), metrics={}, alerts=[], summary={}
-        )
+        snapshot = CachePerformanceSnapshot(timestamp=time.time(), metrics={}, alerts=[], summary={})
         self.dashboard._snapshots.append(snapshot)
 
         # Get current snapshot
@@ -354,9 +352,7 @@ class TestCachePerformanceDashboard:
     def test_export_metrics_json(self):
         """Test exporting metrics as JSON."""
         # Mock snapshot
-        snapshot = CachePerformanceSnapshot(
-            timestamp=time.time(), metrics={}, alerts=[], summary={"test": "data"}
-        )
+        snapshot = CachePerformanceSnapshot(timestamp=time.time(), metrics={}, alerts=[], summary={"test": "data"})
         self.dashboard._snapshots.append(snapshot)
 
         # Export as JSON

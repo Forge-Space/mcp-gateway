@@ -83,11 +83,7 @@ class TestEndToEndWorkflows:
             {
                 "jsonrpc": "2.0",
                 "id": 1,
-                "result": {
-                    "content": [
-                        {"type": "text", "text": "Found 10 Python tutorial results"}
-                    ]
-                },
+                "result": {"content": [{"type": "text", "text": "Found 10 Python tutorial results"}]},
             }
         ).encode()
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)

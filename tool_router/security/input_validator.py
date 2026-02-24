@@ -81,9 +81,7 @@ class InputValidator:
             r"(?i)(private|confidential|sensitive).*(information|data)",
         ]
 
-        self.compiled_patterns = [
-            re.compile(pattern, re.IGNORECASE) for pattern in self.suspicious_patterns
-        ]
+        self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.suspicious_patterns]
 
     def _init_html_sanitizer(self) -> None:
         """Initialize HTML sanitizer configuration."""
@@ -98,9 +96,7 @@ class InputValidator:
             strip=True,
         )
 
-    def validate_prompt(
-        self, prompt: str, context: str = ""
-    ) -> SecurityValidationResult:
+    def validate_prompt(self, prompt: str, context: str = "") -> SecurityValidationResult:
         """Validate and sanitize a prompt."""
         violations = []
         risk_score = 0.0

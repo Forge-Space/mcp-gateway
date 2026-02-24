@@ -72,11 +72,7 @@ class KnowledgeItem:
         rating_score = self.average_rating / 5.0  # Normalize to 0-1
         usage_score = min(self.usage_count / 100.0, 1.0)  # Cap at 100 uses
 
-        return (
-            rating_score * rating_weight
-            + usage_score * usage_weight
-            + self.confidence_score * confidence_weight
-        )
+        return rating_score * rating_weight + usage_score * usage_weight + self.confidence_score * confidence_weight
 
 
 class KnowledgeBase:
@@ -229,9 +225,7 @@ class KnowledgeBase:
         """Search patterns by query - alias for search_knowledge."""
         return self.search_knowledge(query, limit=limit)
 
-    def get_patterns_by_category(
-        self, category: PatternCategory, limit: int = 50
-    ) -> list[KnowledgeItem]:
+    def get_patterns_by_category(self, category: PatternCategory, limit: int = 50) -> list[KnowledgeItem]:
         """Get patterns by category."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
@@ -332,10 +326,7 @@ class KnowledgeBase:
                 ORDER BY usage_count DESC
                 LIMIT 5
             """)
-            most_used = [
-                {"id": row[0], "title": row[1], "usage_count": row[2]}
-                for row in cursor.fetchall()
-            ]
+            most_used = [{"id": row[0], "title": row[1], "usage_count": row[2]} for row in cursor.fetchall()]
 
             return {
                 "total_items": total_items,
@@ -374,9 +365,7 @@ class KnowledgeBase:
         items = []
 
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute(
-                "SELECT * FROM knowledge_items WHERE status = 'active'"
-            )
+            cursor = conn.execute("SELECT * FROM knowledge_items WHERE status = 'active'")
             for row in cursor.fetchall():
                 item = self._row_to_knowledge_item(row)
                 items.append(

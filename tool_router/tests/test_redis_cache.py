@@ -160,9 +160,7 @@ class TestCacheIntegration:
             fallback_config=CacheConfig(max_size=10, ttl=60),
         )
 
-        cache = RedisCache(
-            config=config.redis_config, fallback_config=config.fallback_config
-        )
+        cache = RedisCache(config=config.redis_config, fallback_config=config.fallback_config)
 
         # Test basic operations work with fallback only
         cache.set("test_key", "test_value")
@@ -190,9 +188,7 @@ class TestCacheIntegration:
             fallback_config=CacheConfig(max_size=10, ttl=60),
         )
 
-        cache = RedisCache(
-            config=config.redis_config, fallback_config=config.fallback_config
-        )
+        cache = RedisCache(config=config.redis_config, fallback_config=config.fallback_config)
 
         # Test operations
         cache.set("test_key", "test_value", ttl=300)

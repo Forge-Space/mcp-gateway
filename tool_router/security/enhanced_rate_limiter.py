@@ -73,15 +73,9 @@ class EnhancedRateLimiter:
         self._lock = threading.RLock()
 
         # Enhanced caches with configurable TTL and size
-        self._result_cache = TTLCache(
-            maxsize=self.config.cache_size, ttl=self.config.cache_ttl
-        )
-        self._usage_cache = TTLCache(
-            maxsize=self.config.cache_size, ttl=self.config.cache_ttl
-        )
-        self._penalty_cache = TTLCache(
-            maxsize=self.config.cache_size, ttl=self.config.cache_ttl
-        )
+        self._result_cache = TTLCache(maxsize=self.config.cache_size, ttl=self.config.cache_ttl)
+        self._usage_cache = TTLCache(maxsize=self.config.cache_size, ttl=self.config.cache_ttl)
+        self._penalty_cache = TTLCache(maxsize=self.config.cache_size, ttl=self.config.cache_ttl)
 
         # Cache metrics
         self._cache_hits = defaultdict(int)
@@ -94,22 +88,16 @@ class EnhancedRateLimiter:
                 self.redis_client.ping()
                 logger.info("Connected to Redis for rate limiting")
             except Exception as e:
-                logger.warning(
-                    f"Failed to connect to Redis: {e}. Using in-memory storage."
-                )
+                logger.warning(f"Failed to connect to Redis: {e}. Using in-memory storage.")
                 self.use_redis = False
 
-    def check_rate_limit(
-        self, identifier: str, config: RateLimitConfig | None = None
-    ) -> RateLimitResult:
+    def check_rate_limit(self, identifier: str, config: RateLimitConfig | None = None) -> RateLimitResult:
         """Check if request is allowed under rate limits with caching."""
         config = config or self.config
         current_time = int(time.time())
 
         # Create cache key
-        cache_key = (
-            f"rate_limit:{identifier}:{current_time // 60}"  # Minute-level cache
-        )
+        cache_key = f"rate_limit:{identifier}:{current_time // 60}"  # Minute-level cache
 
         # Check cache first
         with self._lock:
@@ -146,32 +134,23 @@ class EnhancedRateLimiter:
 
         most_restrictive = None
         for limit_type, max_requests, window_seconds in limits:
-            result = self._check_window_limit(
-                identifier, limit_type, max_requests, window_seconds, current_time
-            )
+            result = self._check_window_limit(identifier, limit_type, max_requests, window_seconds, current_time)
 
             if not result.allowed:
                 most_restrictive = result
                 break
 
-            if (
-                most_restrictive is None
-                or result.remaining < most_restrictive.remaining
-            ):
+            if most_restrictive is None or result.remaining < most_restrictive.remaining:
                 most_restrictive = result
 
         # Check burst capacity
-        burst_result = self._check_burst_limit(
-            identifier, config.burst_capacity, current_time
-        )
+        burst_result = self._check_burst_limit(identifier, config.burst_capacity, current_time)
         if not burst_result.allowed:
             most_restrictive = burst_result
 
         # Apply adaptive scaling if enabled
         if config.adaptive_scaling and most_restrictive and most_restrictive.allowed:
-            most_restrictive = self._apply_adaptive_scaling(
-                identifier, most_restrictive, config
-            )
+            most_restrictive = self._apply_adaptive_scaling(identifier, most_restrictive, config)
 
         # Record the request if allowed
         if most_restrictive and most_restrictive.allowed:
@@ -296,9 +275,7 @@ class EnhancedRateLimiter:
                 },
             )
 
-    def _check_burst_limit(
-        self, identifier: str, burst_capacity: int, current_time: int
-    ) -> RateLimitResult:
+    def _check_burst_limit(self, identifier: str, burst_capacity: int, current_time: int) -> RateLimitResult:
         """Check burst capacity limit."""
         burst_window = 10  # 10-second burst window
         window_start = current_time - burst_window
@@ -358,9 +335,7 @@ class EnhancedRateLimiter:
     ) -> RateLimitResult:
         """Apply adaptive scaling based on usage patterns."""
         # Simple adaptive scaling: reduce remaining requests if usage is high
-        if (
-            result.remaining < config.requests_per_minute * 0.2
-        ):  # Less than 20% remaining
+        if result.remaining < config.requests_per_minute * 0.2:  # Less than 20% remaining
             # Apply penalty multiplier
             adjusted_remaining = int(result.remaining * config.penalty_multiplier)
             result.remaining = max(0, adjusted_remaining)
@@ -444,9 +419,7 @@ class EnhancedRateLimiter:
         current_time = int(time.time())
 
         # Check cache first
-        cache_key = (
-            f"usage_stats:{identifier}:{current_time // 60}"  # Minute-level cache
-        )
+        cache_key = f"usage_stats:{identifier}:{current_time // 60}"  # Minute-level cache
         with self._lock:
             if cache_key in self._usage_cache:
                 self._cache_hits["usage_stats"] += 1
@@ -481,17 +454,10 @@ class EnhancedRateLimiter:
                     }
             else:
                 with self._lock:
-                    if (
-                        identifier in self._memory_storage
-                        and limit_type.value in self._memory_storage[identifier]
-                    ):
+                    if identifier in self._memory_storage and limit_type.value in self._memory_storage[identifier]:
                         requests = self._memory_storage[identifier][limit_type.value]
                         # Count requests in current window
-                        count = sum(
-                            1
-                            for req_time in requests
-                            if window_start <= req_time < window_end
-                        )
+                        count = sum(1 for req_time in requests if window_start <= req_time < window_end)
                         stats[limit_type.value] = {
                             "count": count,
                             "window_start": window_start,
@@ -536,9 +502,7 @@ class EnhancedRateLimiter:
             "hits_by_type": dict(self._cache_hits),
             "misses_by_type": dict(self._cache_misses),
             "redis_enabled": self.use_redis,
-            "redis_connected": (
-                self.redis_client is not None if self.use_redis else False
-            ),
+            "redis_connected": (self.redis_client is not None if self.use_redis else False),
         }
 
     def clear_caches(self) -> None:
@@ -576,11 +540,7 @@ class EnhancedRateLimiter:
                         del self._memory_storage[identifier]
 
         # Clean up expired penalties
-        expired_penalties = [
-            ident
-            for ident, end_time in self._penalties.items()
-            if current_time >= end_time
-        ]
+        expired_penalties = [ident for ident, end_time in self._penalties.items() if current_time >= end_time]
         for ident in expired_penalties:
             del self._penalties[ident]
             # Also remove from cache

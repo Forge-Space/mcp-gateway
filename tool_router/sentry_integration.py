@@ -118,9 +118,7 @@ def get_version() -> str:
         return "unknown"
 
 
-def before_send_filter(
-    event: dict[str, Any], hint: dict[str, Any]
-) -> dict[str, Any] | None:
+def before_send_filter(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
     """
     Filter events before sending to Sentry
     Remove sensitive data and filter out expected errors
@@ -153,9 +151,7 @@ def before_send_filter(
     return event
 
 
-def before_send_transaction_filter(
-    event: dict[str, Any], hint: dict[str, Any]
-) -> dict[str, Any] | None:
+def before_send_transaction_filter(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
     """
     Filter transactions before sending to Sentry
     Remove high-volume, low-value transactions
@@ -255,9 +251,7 @@ def sanitize_query(query: str) -> str:
     import re
 
     # Remove email addresses
-    query = re.sub(
-        r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]", query
-    )
+    query = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]", query)
 
     # Remove API keys and tokens
     query = re.sub(r"[A-Za-z0-9]{20,}", "[REDACTED]", query)
@@ -293,9 +287,7 @@ def create_supabase_span(operation: str, table: str = None) -> Any:
 
 
 # MCP Gateway specific monitoring functions
-def monitor_mcp_request(
-    tool_name: str, server_name: str, execution_time: float
-) -> None:
+def monitor_mcp_request(tool_name: str, server_name: str, execution_time: float) -> None:
     """
     Monitor MCP tool execution with performance metrics
 

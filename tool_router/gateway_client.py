@@ -19,9 +19,7 @@ def _headers(jwt: str) -> dict[str, str]:
     }
 
 
-def _make_request(
-    url: str, jwt: str, method: str = "GET", data: bytes | None = None
-) -> dict[str, Any]:
+def _make_request(url: str, jwt: str, method: str = "GET", data: bytes | None = None) -> dict[str, Any]:
     """Make HTTP request with retry logic for transient failures."""
     req = urllib.request.Request(url, headers=_headers(jwt), method=method)
     if data:
