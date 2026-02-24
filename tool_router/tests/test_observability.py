@@ -204,7 +204,7 @@ class TestStructuredLogger:
 
             mock_measure.assert_called_once()
             mock_log.assert_called_once()
-            args, kwargs = mock_log.call_args
+            _args, kwargs = mock_log.call_args
             assert kwargs["extra"]["execution_time_ms"] == 150.5
 
     def test_structured_log_formatting(self) -> None:

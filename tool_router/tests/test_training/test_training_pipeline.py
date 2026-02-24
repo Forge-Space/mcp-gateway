@@ -201,7 +201,7 @@ class TestTrainingPipeline:
             full_data = [{"input": f"test_{i}", "output": f"output_{i}"} for i in range(100)]
             mock_load.return_value = full_data
 
-            train_data, val_data = mock_split.return_value = (
+            _train_data, _val_data = mock_split.return_value = (
                 full_data[:80],
                 full_data[80:],
             )
