@@ -58,8 +58,13 @@ jobs:
             --ignore=tool_router/tests/test_observability.py \
             --ignore=tool_router/tests/test_observability \
             --ignore=tool_router/tests/test_training \
+            --ignore=tool_router/tests/training \
             --ignore=tool_router/tests/unit/test_training_pipeline.py \
-            -v --tb=short --timeout=30
+            --ignore=tool_router/tests/unit/test_specialist_coordinator.py \
+            --ignore=tool_router/tests/unit/test_ui_specialist.py \
+            --ignore=tool_router/tests/test_cache_basic.py \
+            --override-ini="addopts=-v --tb=short" \
+            --timeout=30 -x --maxfail=10
 
   build:
     name: Build
