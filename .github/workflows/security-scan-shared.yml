@@ -162,7 +162,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pip-audit
-          pip install -r requirements.txt --if-present
+          pip install -e . 2>/dev/null || true
           pip-audit --format=json --output=audit-results.json || true
         continue-on-error: true
 
