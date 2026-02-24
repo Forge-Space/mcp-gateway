@@ -8,7 +8,18 @@ virtual_servers:
   # cursor-default: core dev + search + browser (aim for under 60 tools; verify with make register)
   cursor-default:
     enabled: true
-    gateways: ["sequential-thinking", "filesystem", "tavily", "playwright", "desktop-commander", "chrome-devtools", "uiforge", "memory", "fetch"]
+    gateways:
+      [
+        "sequential-thinking",
+        "filesystem",
+        "tavily",
+        "playwright",
+        "desktop-commander",
+        "chrome-devtools",
+        "uiforge",
+        "memory",
+        "fetch",
+      ]
     description: "Core development tools for Cursor IDE"
 
   # cursor-search: search and docs only
@@ -20,7 +31,14 @@ virtual_servers:
   # cursor-browser: browser automation
   cursor-browser:
     enabled: true
-    gateways: ["playwright", "puppeteer", "browser-tools", "chrome-devtools", "desktop-commander"]
+    gateways:
+      [
+        "playwright",
+        "puppeteer",
+        "browser-tools",
+        "chrome-devtools",
+        "desktop-commander",
+      ]
     description: "Browser automation tools"
 
   # cursor-git: git operations (local + GitHub)
@@ -44,7 +62,8 @@ virtual_servers:
   # fullstack: database + memory + git + fetch for complete dev workflows (client-agnostic)
   fullstack:
     enabled: true
-    gateways: ["postgres", "mongodb", "prisma-remote", "memory", "git-mcp", "fetch"]
+    gateways:
+      ["postgres", "mongodb", "prisma-remote", "memory", "git-mcp", "fetch"]
     description: "Complete full-stack development toolkit"
 
   # ============================================================================
@@ -57,7 +76,17 @@ virtual_servers:
   # Node.js/TypeScript Development
   nodejs-typescript:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "Node.js and TypeScript development stack"
 
   nodejs-typescript-minimal:
@@ -68,7 +97,19 @@ virtual_servers:
   # React/Next.js Development
   react-nextjs:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "chrome-devtools", "playwright", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "chrome-devtools",
+        "playwright",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "React and Next.js development stack"
 
   react-nextjs-minimal:
@@ -79,7 +120,17 @@ virtual_servers:
   # Mobile Development (React Native/Flutter)
   mobile-dev:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "Mobile app development stack"
 
   mobile-dev-minimal:
@@ -90,7 +141,16 @@ virtual_servers:
   # Database Development (PostgreSQL/MongoDB)
   database-dev:
     enabled: true
-    gateways: ["tool-router", "postgres", "mongodb", "prisma-remote", "memory", "filesystem", "git-mcp"]
+    gateways:
+      [
+        "tool-router",
+        "postgres",
+        "mongodb",
+        "prisma-remote",
+        "memory",
+        "filesystem",
+        "git-mcp",
+      ]
     description: "Database development tools"
 
   database-dev-minimal:
@@ -101,7 +161,17 @@ virtual_servers:
   # Java/Spring Boot Development
   java-spring:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "Java and Spring Boot development"
 
   java-spring-minimal:
@@ -112,7 +182,17 @@ virtual_servers:
   # Python Development
   python-dev:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "Python development stack"
 
   python-dev-minimal:
@@ -123,7 +203,16 @@ virtual_servers:
   # AWS Cloud Development
   aws-cloud:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+      ]
     description: "AWS cloud development tools"
 
   aws-cloud-minimal:
@@ -134,7 +223,17 @@ virtual_servers:
   # Testing & QA
   testing-qa:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "playwright", "chrome-devtools", "snyk", "memory", "git-mcp"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "playwright",
+        "chrome-devtools",
+        "snyk",
+        "memory",
+        "git-mcp",
+      ]
     description: "Testing and quality assurance"
 
   testing-qa-minimal:
@@ -145,7 +244,16 @@ virtual_servers:
   # Code Quality & Security
   code-quality:
     enabled: true
-    gateways: ["tool-router", "github", "snyk", "filesystem", "memory", "git-mcp", "tavily"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "snyk",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "tavily",
+      ]
     description: "Code quality and security tools"
 
   code-quality-minimal:
@@ -156,18 +264,43 @@ virtual_servers:
   # Full-Stack Universal (comprehensive)
   fullstack-universal:
     enabled: true
-    gateways: ["tool-router", "github", "postgres", "mongodb", "prisma-remote", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "postgres",
+        "mongodb",
+        "prisma-remote",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "Universal full-stack development"
 
   fullstack-universal-minimal:
     enabled: true
-    gateways: ["tool-router", "github", "postgres", "mongodb", "filesystem", "git-mcp"]
+    gateways:
+      ["tool-router", "github", "postgres", "mongodb", "filesystem", "git-mcp"]
     description: "Minimal full-stack setup"
 
   # Monorepo Universal (optimized for monorepos)
   monorepo-universal:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7", "playwright"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+        "playwright",
+      ]
     description: "Monorepo development tools"
 
   monorepo-universal-minimal:
@@ -178,7 +311,16 @@ virtual_servers:
   # DevOps & CI/CD
   devops-cicd:
     enabled: true
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+      ]
     description: "DevOps and CI/CD tools"
 
   devops-cicd-minimal:
@@ -193,23 +335,63 @@ virtual_servers:
   # AI Development Stack (experimental)
   ai-development:
     enabled: false
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7", "sequential-thinking"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+        "sequential-thinking",
+      ]
     description: "AI and ML development tools"
 
   # Blockchain/Web3 Development (experimental)
   blockchain-dev:
     enabled: false
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+      ]
     description: "Blockchain and Web3 development"
 
   # Game Development (experimental)
   game-dev:
     enabled: false
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "Game development tools"
 
   # Data Science Stack (experimental)
   data-science:
     enabled: false
-    gateways: ["tool-router", "github", "filesystem", "memory", "git-mcp", "snyk", "tavily", "Context7"]
+    gateways:
+      [
+        "tool-router",
+        "github",
+        "filesystem",
+        "memory",
+        "git-mcp",
+        "snyk",
+        "tavily",
+        "Context7",
+      ]
     description: "Data science and analytics tools"

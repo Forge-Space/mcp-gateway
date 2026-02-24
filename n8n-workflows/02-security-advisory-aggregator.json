@@ -64,10 +64,18 @@
     }
   ],
   "connections": {
-    "Daily 9 AM": { "main": [[{ "node": "Fetch Advisories", "type": "main", "index": 0 }]] },
-    "Fetch Advisories": { "main": [[{ "node": "Filter Relevant", "type": "main", "index": 0 }]] },
-    "Filter Relevant": { "main": [[{ "node": "Has Advisories?", "type": "main", "index": 0 }]] },
-    "Has Advisories?": { "main": [[{ "node": "Slack Alert", "type": "main", "index": 0 }]] }
+    "Daily 9 AM": {
+      "main": [[{ "node": "Fetch Advisories", "type": "main", "index": 0 }]]
+    },
+    "Fetch Advisories": {
+      "main": [[{ "node": "Filter Relevant", "type": "main", "index": 0 }]]
+    },
+    "Filter Relevant": {
+      "main": [[{ "node": "Has Advisories?", "type": "main", "index": 0 }]]
+    },
+    "Has Advisories?": {
+      "main": [[{ "node": "Slack Alert", "type": "main", "index": 0 }]]
+    }
   },
   "settings": {
     "executionOrder": "v1"

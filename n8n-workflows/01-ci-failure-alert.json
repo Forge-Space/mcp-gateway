@@ -132,7 +132,9 @@
       "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]]
     },
     "Success Webhook": {
-      "main": [[{ "node": "Verify Signature (Success)", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Verify Signature (Success)", "type": "main", "index": 0 }]
+      ]
     },
     "Verify Signature": {
       "main": [[{ "node": "Filter Failures", "type": "main", "index": 0 }]]
@@ -159,9 +161,5 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": [
-    { "name": "phase-1" },
-    { "name": "ci" },
-    { "name": "alerts" }
-  ]
+  "tags": [{ "name": "phase-1" }, { "name": "ci" }, { "name": "alerts" }]
 }

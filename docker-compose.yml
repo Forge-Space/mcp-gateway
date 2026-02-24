@@ -271,7 +271,14 @@ services:
       FORGE_MIN_SLEEP_TIME: 60
       FORGE_MEMORY_RESERVATION: 64MB
       FORGE_WAKE_TIME_TARGET: 200 # < 200ms wake time
-    command: ["python3", "-m", "mcpgateway.translate", "--connect-sse", "http://gateway:4444"]
+    command:
+      [
+        "python3",
+        "-m",
+        "mcpgateway.translate",
+        "--connect-sse",
+        "http://gateway:4444",
+      ]
     healthcheck:
       test:
         [

@@ -80,11 +80,23 @@
     }
   ],
   "connections": {
-    "GitHub Webhook": { "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]] },
-    "Verify Signature": { "main": [[{ "node": "Filter Published", "type": "main", "index": 0 }]] },
-    "Filter Published": { "main": [[{ "node": "Map Downstream", "type": "main", "index": 0 }]] },
-    "Map Downstream": { "main": [[{ "node": "Create Tracking Issue", "type": "main", "index": 0 }]] },
-    "Create Tracking Issue": { "main": [[{ "node": "Slack Notify", "type": "main", "index": 0 }]] }
+    "GitHub Webhook": {
+      "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]]
+    },
+    "Verify Signature": {
+      "main": [[{ "node": "Filter Published", "type": "main", "index": 0 }]]
+    },
+    "Filter Published": {
+      "main": [[{ "node": "Map Downstream", "type": "main", "index": 0 }]]
+    },
+    "Map Downstream": {
+      "main": [
+        [{ "node": "Create Tracking Issue", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Tracking Issue": {
+      "main": [[{ "node": "Slack Notify", "type": "main", "index": 0 }]]
+    }
   },
   "settings": {
     "executionOrder": "v1"

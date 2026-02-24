@@ -56,10 +56,18 @@
     }
   ],
   "connections": {
-    "Monday 9 AM": { "main": [[{ "node": "List Repos", "type": "main", "index": 0 }]] },
-    "List Repos": { "main": [[{ "node": "Fetch PRs", "type": "main", "index": 0 }]] },
-    "Fetch PRs": { "main": [[{ "node": "Compute Metrics", "type": "main", "index": 0 }]] },
-    "Compute Metrics": { "main": [[{ "node": "Slack Report", "type": "main", "index": 0 }]] }
+    "Monday 9 AM": {
+      "main": [[{ "node": "List Repos", "type": "main", "index": 0 }]]
+    },
+    "List Repos": {
+      "main": [[{ "node": "Fetch PRs", "type": "main", "index": 0 }]]
+    },
+    "Fetch PRs": {
+      "main": [[{ "node": "Compute Metrics", "type": "main", "index": 0 }]]
+    },
+    "Compute Metrics": {
+      "main": [[{ "node": "Slack Report", "type": "main", "index": 0 }]]
+    }
   },
   "settings": {
     "executionOrder": "v1"

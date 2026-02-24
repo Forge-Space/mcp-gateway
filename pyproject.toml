@@ -10,7 +10,6 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "mcp",
-    "mcp-contextforge-gateway",
     "beautifulsoup4",
     "cachetools>=5.0.0",
     "httpx",

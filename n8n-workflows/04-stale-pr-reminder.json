@@ -4,7 +4,9 @@
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "cronExpression", "expression": "0 10 * * 1-5" }]
+          "interval": [
+            { "field": "cronExpression", "expression": "0 10 * * 1-5" }
+          ]
         }
       },
       "name": "Daily 10 AM Weekdays",
@@ -72,18 +74,24 @@
     }
   ],
   "connections": {
-    "Daily 10 AM Weekdays": { "main": [[{ "node": "List Repos", "type": "main", "index": 0 }]] },
-    "List Repos": { "main": [[{ "node": "Fetch Open PRs", "type": "main", "index": 0 }]] },
-    "Fetch Open PRs": { "main": [[{ "node": "Classify Staleness", "type": "main", "index": 0 }]] },
-    "Classify Staleness": { "main": [[{ "node": "Has Stale PRs?", "type": "main", "index": 0 }]] },
-    "Has Stale PRs?": { "main": [[{ "node": "Slack Reminder", "type": "main", "index": 0 }]] }
+    "Daily 10 AM Weekdays": {
+      "main": [[{ "node": "List Repos", "type": "main", "index": 0 }]]
+    },
+    "List Repos": {
+      "main": [[{ "node": "Fetch Open PRs", "type": "main", "index": 0 }]]
+    },
+    "Fetch Open PRs": {
+      "main": [[{ "node": "Classify Staleness", "type": "main", "index": 0 }]]
+    },
+    "Classify Staleness": {
+      "main": [[{ "node": "Has Stale PRs?", "type": "main", "index": 0 }]]
+    },
+    "Has Stale PRs?": {
+      "main": [[{ "node": "Slack Reminder", "type": "main", "index": 0 }]]
+    }
   },
   "settings": {
     "executionOrder": "v1"
   },
-  "tags": [
-    { "name": "phase-2" },
-    { "name": "prs" },
-    { "name": "scheduled" }
-  ]
+  "tags": [{ "name": "phase-2" }, { "name": "prs" }, { "name": "scheduled" }]
 }

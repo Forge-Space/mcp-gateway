@@ -65,11 +65,21 @@
     }
   ],
   "connections": {
-    "Every 5 Minutes": { "main": [[{ "node": "List Containers", "type": "main", "index": 0 }]] },
-    "List Containers": { "main": [[{ "node": "Check Container", "type": "main", "index": 0 }]] },
-    "Check Container": { "main": [[{ "node": "Parse Status", "type": "main", "index": 0 }]] },
-    "Parse Status": { "main": [[{ "node": "Is Unhealthy?", "type": "main", "index": 0 }]] },
-    "Is Unhealthy?": { "main": [[{ "node": "Slack Alert", "type": "main", "index": 0 }]] }
+    "Every 5 Minutes": {
+      "main": [[{ "node": "List Containers", "type": "main", "index": 0 }]]
+    },
+    "List Containers": {
+      "main": [[{ "node": "Check Container", "type": "main", "index": 0 }]]
+    },
+    "Check Container": {
+      "main": [[{ "node": "Parse Status", "type": "main", "index": 0 }]]
+    },
+    "Parse Status": {
+      "main": [[{ "node": "Is Unhealthy?", "type": "main", "index": 0 }]]
+    },
+    "Is Unhealthy?": {
+      "main": [[{ "node": "Slack Alert", "type": "main", "index": 0 }]]
+    }
   },
   "settings": {
     "executionOrder": "v1"
