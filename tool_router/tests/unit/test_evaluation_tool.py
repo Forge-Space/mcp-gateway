@@ -52,7 +52,9 @@ class TestEvaluationTool:
         with patch.object(tool.evaluator, "evaluate_specialist") as mock_evaluate:
             mock_evaluate.return_value = [mock_result1, mock_result2]
 
-            result = tool.run_evaluation(specialist_name="ui_specialist", benchmark_suite=None)
+            result = tool.run_evaluation(
+                specialist_name="ui_specialist", benchmark_suite=None
+            )
 
         # Business logic: successful evaluation should return results
         assert "results" in result
@@ -95,10 +97,14 @@ class TestEvaluationTool:
         with patch.object(tool.evaluator, "evaluate_specialist") as mock_evaluate:
             mock_evaluate.return_value = [mock_result]
 
-            result = tool.run_evaluation(specialist_name="ui_specialist", benchmark_suite=mock_suite)
+            result = tool.run_evaluation(
+                specialist_name="ui_specialist", benchmark_suite=mock_suite
+            )
 
         # Business logic: should use provided benchmark suite
-        mock_evaluate.assert_called_once_with(specialist_type="ui_specialist", benchmark_suite=mock_suite)
+        mock_evaluate.assert_called_once_with(
+            specialist_type="ui_specialist", benchmark_suite=mock_suite
+        )
         assert result["summary"]["average_score"] == 0.9
 
     def test_run_evaluation_evaluation_error(self) -> None:
@@ -140,7 +146,9 @@ class TestEvaluationTool:
         with patch.object(tool.evaluator, "get_evaluation_results") as mock_get:
             mock_get.return_value = [mock_result1, mock_result2]
 
-            result = tool.get_evaluation_history(specialist_name="ui_specialist", limit=10)
+            result = tool.get_evaluation_history(
+                specialist_name="ui_specialist", limit=10
+            )
 
         assert len(result["results"]) == 2
         assert result["results"][0]["metric"] == "accuracy"
@@ -289,7 +297,9 @@ class TestEvaluationTool:
         mock_result3.details = {"test": "data"}
 
         with patch.object(tool.evaluator, "evaluation_history") as mock_history:
-            mock_history.__iter__ = MagicMock(return_value=iter([mock_result1, mock_result2, mock_result3]))
+            mock_history.__iter__ = MagicMock(
+                return_value=iter([mock_result1, mock_result2, mock_result3])
+            )
             mock_history.__len__ = MagicMock(return_value=3)
 
             result = tool.get_evaluation_summary()
@@ -365,7 +375,9 @@ class TestEvaluationHandler:
             result = evaluation_handler(args)
 
         # Business logic: handler should call appropriate method
-        mock_run.assert_called_once_with(specialist_name="ui_specialist", benchmark_suite=None, test_cases=None)
+        mock_run.assert_called_once_with(
+            specialist_name="ui_specialist", benchmark_suite=None, test_cases=None
+        )
         assert result["message"] == "Evaluation completed"
 
     def test_handler_run_evaluation_missing_specialist(self) -> None:

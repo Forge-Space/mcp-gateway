@@ -174,7 +174,9 @@ class TestDependencyInvalidationManager:
 
     def test_add_dependency(self):
         """Test adding cache dependency."""
-        self.dependency_manager.add_dependency("cache:key1", {"cache:key2", "cache:key3"})
+        self.dependency_manager.add_dependency(
+            "cache:key1", {"cache:key2", "cache:key3"}
+        )
 
         dep = self.dependency_manager.get_dependencies("cache:key1")
         assert dep is not None
@@ -195,7 +197,9 @@ class TestDependencyInvalidationManager:
         self.mock_cache.delete.return_value = True
 
         # Invalidate dependents of key2
-        count = self.dependency_manager.invalidate_dependents("cache:key2", "Test reason")
+        count = self.dependency_manager.invalidate_dependents(
+            "cache:key2", "Test reason"
+        )
 
         assert count == 2
         assert self.mock_cache.delete.call_count == 2
@@ -228,7 +232,9 @@ class TestAdvancedInvalidationManager:
         count = self.manager.invalidate_by_tags(["tag1", "tag2"], "Test reason")
 
         assert count == 5
-        self.manager.tag_manager.invalidate_multiple_tags.assert_called_once_with(["tag1", "tag2"], "Test reason")
+        self.manager.tag_manager.invalidate_multiple_tags.assert_called_once_with(
+            ["tag1", "tag2"], "Test reason"
+        )
 
     def test_invalidate_by_event(self):
         """Test invalidating by event through advanced manager."""
@@ -250,14 +256,18 @@ class TestAdvancedInvalidationManager:
         count = self.manager.invalidate_by_dependency("cache:key2", "Test reason")
 
         assert count == 2
-        self.manager.dependency_manager.invalidate_dependents.assert_called_once_with("cache:key2", "Test reason")
+        self.manager.dependency_manager.invalidate_dependents.assert_called_once_with(
+            "cache:key2", "Test reason"
+        )
 
     def test_create_tagged_cache(self):
         """Test creating tagged cache entries."""
         # Mock cache set
         self.mock_cache.set.return_value = True
 
-        result = self.manager.create_tagged_cache("test_cache", "key1", "value1", {"tag1", "tag2"}, 3600)
+        result = self.manager.create_tagged_cache(
+            "test_cache", "key1", "value1", {"tag1", "tag2"}, 3600
+        )
 
         assert result is True
         self.mock_cache.set.assert_called_once_with("test_cache:key1", "value1", 3600)
@@ -269,7 +279,9 @@ class TestAdvancedInvalidationManager:
         """Test adding cache dependency."""
         self.manager.add_dependency("cache:key1", {"cache:key2"})
 
-        self.manager.dependency_manager.add_dependency.assert_called_once_with("cache:key1", {"cache:key2"})
+        self.manager.dependency_manager.add_dependency.assert_called_once_with(
+            "cache:key1", {"cache:key2"}
+        )
 
     def test_get_invalidation_summary(self):
         """Test getting invalidation summary."""
@@ -321,7 +333,9 @@ class TestConvenienceFunctions:
         count = invalidate_by_event("event", {"key1"})
 
         assert count == 3
-        mock_manager.invalidate_by_event.assert_called_once_with("event", {"key1"}, None, None, None)
+        mock_manager.invalidate_by_event.assert_called_once_with(
+            "event", {"key1"}, None, None, None
+        )
 
     @patch("tool_router.cache.invalidation.get_advanced_invalidation_manager")
     def test_invalidate_by_dependency_convenience(self, mock_get_manager):
@@ -349,11 +363,15 @@ class TestIntegrationScenarios:
         manager = AdvancedInvalidationManager(mock_cache_manager)
 
         # Create tagged cache entries
-        manager.create_tagged_cache("cache1", "key1", "value1", {"user_data", "session"})
+        manager.create_tagged_cache(
+            "cache1", "key1", "value1", {"user_data", "session"}
+        )
         manager.create_tagged_cache("cache2", "key2", "value2", {"user_data"})
 
         # Invalidate by event with tags
-        count = manager.invalidate_by_event("user_update", {"cache1:key1"}, {"user_data"})
+        count = manager.invalidate_by_event(
+            "user_update", {"cache1:key1"}, {"user_data"}
+        )
 
         assert count == 1
         assert mock_cache.delete.call_count == 2  # Once for event, once for tag

@@ -12,7 +12,6 @@ from typing import Any
 from ..training.evaluation import EvaluationMetric, SpecialistEvaluator
 from ..training.knowledge_base import KnowledgeBase
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -81,7 +80,9 @@ class EvaluationTool:
             average_score = total_score / len(results) if results else 0
             pass_rate = (passed_count / test_count * 100) if test_count > 0 else 0
 
-            logger.info(f"Completed evaluation for {specialist_name}: {len(results)} metrics")
+            logger.info(
+                f"Completed evaluation for {specialist_name}: {len(results)} metrics"
+            )
 
             return {
                 "specialist_name": specialist_name,
@@ -100,7 +101,9 @@ class EvaluationTool:
             logger.error(f"Error running evaluation: {e}")
             return {"error": str(e), "message": "Failed to run evaluation"}
 
-    def get_evaluation_history(self, specialist_name: str | None = None, limit: int = 50) -> dict[str, Any]:
+    def get_evaluation_history(
+        self, specialist_name: str | None = None, limit: int = 50
+    ) -> dict[str, Any]:
         """Get evaluation history.
 
         Args:
@@ -126,7 +129,9 @@ class EvaluationTool:
                 # Get all results
                 results = []
                 for spec_name in self.evaluator.benchmark_suites.keys():
-                    spec_results = self.evaluator.get_evaluation_results(spec_name, limit)
+                    spec_results = self.evaluator.get_evaluation_results(
+                        spec_name, limit
+                    )
                     results.extend(spec_results)
 
                 # Sort by timestamp and limit
@@ -231,7 +236,9 @@ class EvaluationTool:
         }
         return descriptions.get(metric, "No description available")
 
-    def compare_specialists(self, specialist_names: list[str], metric: str | None = None) -> dict[str, Any]:
+    def compare_specialists(
+        self, specialist_names: list[str], metric: str | None = None
+    ) -> dict[str, Any]:
         """Compare multiple specialists.
 
         Args:
@@ -454,7 +461,9 @@ def evaluation_handler(args: dict[str, Any]) -> dict[str, Any]:
             )
 
         if action == "get_history":
-            return tool.get_evaluation_history(specialist_name=args.get("specialist_name"), limit=args.get("limit", 50))
+            return tool.get_evaluation_history(
+                specialist_name=args.get("specialist_name"), limit=args.get("limit", 50)
+            )
 
         if action == "get_specialists":
             return tool.get_available_specialists()
@@ -470,7 +479,9 @@ def evaluation_handler(args: dict[str, Any]) -> dict[str, Any]:
                     "message": "Field 'specialist_names' is required for compare_specialists action",
                 }
 
-            return tool.compare_specialists(specialist_names=specialist_names, metric=args.get("metric"))
+            return tool.compare_specialists(
+                specialist_names=specialist_names, metric=args.get("metric")
+            )
 
         if action == "get_summary":
             return tool.get_evaluation_summary()

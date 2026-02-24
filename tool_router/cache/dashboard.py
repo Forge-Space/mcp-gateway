@@ -13,7 +13,6 @@ from .cache_manager import CacheManager
 from .redis_cache import RedisCache
 from .types import CacheMetrics
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -61,7 +60,9 @@ class CacheAlert:
     """Cache performance alert."""
 
     alert_id: str
-    alert_type: str  # "high_miss_rate", "low_hit_rate", "memory_usage", "connection_error"
+    alert_type: (
+        str  # "high_miss_rate", "low_hit_rate", "memory_usage", "connection_error"
+    )
     severity: str  # "info", "warning", "error", "critical"
     message: str
     cache_name: str
@@ -138,13 +139,27 @@ class CachePerformanceCollector:
                     logger.warning(f"Failed to get Redis info: {e}")
 
             # Calculate average timing
-            avg_get_time = sum(self._get_times) / max(len(self._get_times), 1) if self._get_times else 0.0
-            avg_set_time = sum(self._set_times) / max(len(self._set_times), 1) if self._set_times else 0.0
-            avg_delete_time = sum(self._delete_times) / max(len(self._delete_times), 1) if self._delete_times else 0.0
+            avg_get_time = (
+                sum(self._get_times) / max(len(self._get_times), 1)
+                if self._get_times
+                else 0.0
+            )
+            avg_set_time = (
+                sum(self._set_times) / max(len(self._set_times), 1)
+                if self._set_times
+                else 0.0
+            )
+            avg_delete_time = (
+                sum(self._delete_times) / max(len(self._delete_times), 1)
+                if self._delete_times
+                else 0.0
+            )
 
             # Health status
             health_status = "healthy"
-            if (backend_type == "redis" and not redis_connected) or (hit_rate < 50 and metrics.total_requests > 100):
+            if (backend_type == "redis" and not redis_connected) or (
+                hit_rate < 50 and metrics.total_requests > 100
+            ):
                 health_status = "degraded"
             elif hit_rate < 20 and metrics.total_requests > 100:
                 health_status = "unhealthy"
@@ -242,7 +257,10 @@ class CacheAlertManager:
                 usage_percent = (metrics.current_size / metrics.max_size) * 100
                 if usage_percent > self._alert_rules["memory_usage"]["threshold"]:
                     alert_id = f"memory_usage_{metrics.cache_name}"
-                    if alert_id not in self._alerts or not self._alerts[alert_id].resolved:
+                    if (
+                        alert_id not in self._alerts
+                        or not self._alerts[alert_id].resolved
+                    ):
                         alert = CacheAlert(
                             alert_id=alert_id,
                             alert_type="memory_usage",
@@ -255,7 +273,10 @@ class CacheAlertManager:
                         self._alerts[alert_id] = alert
 
             # Check Redis connection
-            if metrics.backend_type in ["redis", "hybrid"] and not metrics.redis_connected:
+            if (
+                metrics.backend_type in ["redis", "hybrid"]
+                and not metrics.redis_connected
+            ):
                 alert_id = f"connection_error_{metrics.cache_name}"
                 if alert_id not in self._alerts or not self._alerts[alert_id].resolved:
                     alert = CacheAlert(
@@ -290,13 +311,21 @@ class CacheAlertManager:
 
                 if alert.alert_type == "high_miss_rate":
                     miss_rate = (metrics.misses / max(metrics.total_requests, 1)) * 100
-                    should_resolve = miss_rate <= self._alert_rules["high_miss_rate"]["threshold"]
+                    should_resolve = (
+                        miss_rate <= self._alert_rules["high_miss_rate"]["threshold"]
+                    )
                 elif alert.alert_type == "low_hit_rate":
-                    should_resolve = metrics.hit_rate >= self._alert_rules["low_hit_rate"]["threshold"]
+                    should_resolve = (
+                        metrics.hit_rate
+                        >= self._alert_rules["low_hit_rate"]["threshold"]
+                    )
                 elif alert.alert_type == "memory_usage":
                     if metrics.max_size > 0:
                         usage_percent = (metrics.current_size / metrics.max_size) * 100
-                        should_resolve = usage_percent <= self._alert_rules["memory_usage"]["threshold"]
+                        should_resolve = (
+                            usage_percent
+                            <= self._alert_rules["memory_usage"]["threshold"]
+                        )
                 elif alert.alert_type == "connection_error":
                     should_resolve = metrics.redis_connected
                 elif alert.alert_type == "unhealthy":
@@ -363,7 +392,9 @@ class CachePerformanceDashboard:
         self._collection_thread = threading.Thread(target=collect_loop, daemon=True)
         self._collection_thread.start()
 
-        logger.info(f"Started cache performance dashboard collection (interval: {interval}s)")
+        logger.info(
+            f"Started cache performance dashboard collection (interval: {interval}s)"
+        )
         return self._collection_thread
 
     def stop_collection(self) -> None:
@@ -483,7 +514,9 @@ class CachePerformanceDashboard:
 
         return status
 
-    def _calculate_summary(self, metrics: dict[str, CachePerformanceMetrics]) -> dict[str, Any]:
+    def _calculate_summary(
+        self, metrics: dict[str, CachePerformanceMetrics]
+    ) -> dict[str, Any]:
         """Calculate summary statistics."""
         if not metrics:
             return {}
@@ -523,7 +556,9 @@ class CachePerformanceDashboard:
             return json.dumps(snapshot.__dict__, indent=2, default=str)
         if format == "csv":
             # Simple CSV export
-            lines = ["timestamp,cache_name,backend_type,hits,misses,hit_rate,size,health_status"]
+            lines = [
+                "timestamp,cache_name,backend_type,hits,misses,hit_rate,size,health_status"
+            ]
             for cache_name, metrics in snapshot.metrics.items():
                 lines.append(
                     f"{metrics.timestamp},{cache_name},{metrics.backend_type},{metrics.hits},{metrics.misses},{metrics.hit_rate},{metrics.current_size},{metrics.health_status}"

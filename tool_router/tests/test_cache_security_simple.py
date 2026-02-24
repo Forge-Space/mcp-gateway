@@ -16,7 +16,9 @@ class TestCacheSecurityBasic:
 
     def test_cache_config_creation(self):
         """Test cache configuration creation."""
-        config = CacheConfig(max_size=100, ttl=3600, cleanup_interval=300, enable_metrics=True)
+        config = CacheConfig(
+            max_size=100, ttl=3600, cleanup_interval=300, enable_metrics=True
+        )
         assert config.max_size == 100
         assert config.ttl == 3600
         assert config.cleanup_interval == 300
@@ -42,7 +44,9 @@ class TestCacheSecurityBasic:
 
     def test_cache_backend_config_creation(self):
         """Test cache backend configuration creation."""
-        config = CacheBackendConfig(backend_type="memory", redis_config=None, fallback_config=CacheConfig())
+        config = CacheBackendConfig(
+            backend_type="memory", redis_config=None, fallback_config=CacheConfig()
+        )
         assert config.backend_type == "memory"
         assert config.redis_config is None
         assert config.fallback_config is not None

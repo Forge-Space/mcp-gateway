@@ -27,7 +27,9 @@ def test_cache_security_files_exist():
 
     for file_name in security_files:
         file_path = os.path.join(cache_dir, file_name)
-        assert os.path.exists(file_path), f"Cache security file {file_name} does not exist"
+        assert os.path.exists(
+            file_path
+        ), f"Cache security file {file_name} does not exist"
 
     print("✓ All cache security files exist")
 
@@ -51,7 +53,9 @@ def test_cache_security_file_structure():
     ]
 
     for class_name in expected_classes:
-        assert f"class {class_name}" in content, f"Class {class_name} not found in security.py"
+        assert (
+            f"class {class_name}" in content
+        ), f"Class {class_name} not found in security.py"
 
     print("✓ Cache security.py has expected classes")
 
@@ -72,7 +76,9 @@ def test_compliance_file_structure():
     ]
 
     for class_name in expected_classes:
-        assert f"class {class_name}" in content, f"Class {class_name} not found in compliance.py"
+        assert (
+            f"class {class_name}" in content
+        ), f"Class {class_name} not found in compliance.py"
 
     print("✓ Cache compliance.py has expected classes")
 
@@ -94,7 +100,9 @@ def test_retention_file_structure():
     ]
 
     for class_name in expected_classes:
-        assert f"class {class_name}" in content, f"Class {class_name} not found in retention.py"
+        assert (
+            f"class {class_name}" in content
+        ), f"Class {class_name} not found in retention.py"
 
     print("✓ Cache retention.py has expected classes")
 
@@ -117,7 +125,9 @@ def test_api_file_structure():
     ]
 
     for class_name in expected_classes:
-        assert f"class {class_name}" in content, f"Class {class_name} not found in api.py"
+        assert (
+            f"class {class_name}" in content
+        ), f"Class {class_name} not found in api.py"
 
     # Check for FastAPI app
     assert "FastAPI" in content, "FastAPI not found in api.py"
@@ -135,21 +145,29 @@ def test_cache_security_imports():
         import importlib.util
 
         # Check if modules can be loaded
-        security_spec = importlib.util.spec_from_file_location("security", os.path.join(cache_dir, "security.py"))
+        security_spec = importlib.util.spec_from_file_location(
+            "security", os.path.join(cache_dir, "security.py")
+        )
         security_module = importlib.util.module_from_spec(security_spec)
 
         # The import might fail due to missing dependencies, but we can check the spec
         assert security_spec is not None
 
-        compliance_spec = importlib.util.spec_from_file_location("compliance", os.path.join(cache_dir, "compliance.py"))
+        compliance_spec = importlib.util.spec_from_file_location(
+            "compliance", os.path.join(cache_dir, "compliance.py")
+        )
         compliance_module = importlib.util.module_from_spec(compliance_spec)
         assert compliance_spec is not None
 
-        retention_spec = importlib.util.spec_from_file_location("retention", os.path.join(cache_dir, "retention.py"))
+        retention_spec = importlib.util.spec_from_file_location(
+            "retention", os.path.join(cache_dir, "retention.py")
+        )
         retention_module = importlib.util.module_from_spec(retention_spec)
         assert retention_spec is not None
 
-        api_spec = importlib.util.spec_from_file_location("api", os.path.join(cache_dir, "api.py"))
+        api_spec = importlib.util.spec_from_file_location(
+            "api", os.path.join(cache_dir, "api.py")
+        )
         api_module = importlib.util.module_from_spec(api_spec)
         assert api_spec is not None
 
@@ -212,9 +230,15 @@ def test_cache_security_completeness():
             file_sizes[file_name] = lines
 
     # Check that files have substantial content
-    assert file_sizes["security.py"] > 300, "security.py should have substantial implementation"
-    assert file_sizes["compliance.py"] > 200, "compliance.py should have substantial implementation"
-    assert file_sizes["retention.py"] > 200, "retention.py should have substantial implementation"
+    assert (
+        file_sizes["security.py"] > 300
+    ), "security.py should have substantial implementation"
+    assert (
+        file_sizes["compliance.py"] > 200
+    ), "compliance.py should have substantial implementation"
+    assert (
+        file_sizes["retention.py"] > 200
+    ), "retention.py should have substantial implementation"
     assert file_sizes["api.py"] > 200, "api.py should have substantial implementation"
 
     print("✓ Cache security files have substantial content:")

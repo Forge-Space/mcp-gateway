@@ -11,7 +11,6 @@ from dribbble_mcp.image_analysis import ImageAnalyzer
 from dribbble_mcp.scraper import DribbbleScraper
 from dribbble_mcp.screenshot import ScreenshotCapture
 
-
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError as exc:
@@ -84,7 +83,9 @@ def search_dribbble(
         logger.exception("search_dribbble failed")
         return json.dumps({"error": f"Search failed: {exc}"})
 
-    return json.dumps({"query": query, "count": len(shots), "shots": shots}, ensure_ascii=False)
+    return json.dumps(
+        {"query": query, "count": len(shots), "shots": shots}, ensure_ascii=False
+    )
 
 
 @mcp.tool()

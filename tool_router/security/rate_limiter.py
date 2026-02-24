@@ -69,7 +69,9 @@ class RateLimiter:
                 print(f"Failed to connect to Redis: {e}. Using in-memory storage.")
                 self.use_redis = False
 
-    def check_rate_limit(self, identifier: str, config: RateLimitConfig) -> RateLimitResult:
+    def check_rate_limit(
+        self, identifier: str, config: RateLimitConfig
+    ) -> RateLimitResult:
         """Check if request is allowed under rate limits."""
         current_time = int(time.time())
 
@@ -94,23 +96,32 @@ class RateLimiter:
 
         most_restrictive = None
         for limit_type, max_requests, window_seconds in limits:
-            result = self._check_window_limit(identifier, limit_type, max_requests, window_seconds, current_time)
+            result = self._check_window_limit(
+                identifier, limit_type, max_requests, window_seconds, current_time
+            )
 
             if not result.allowed:
                 most_restrictive = result
                 break
 
-            if most_restrictive is None or result.remaining < most_restrictive.remaining:
+            if (
+                most_restrictive is None
+                or result.remaining < most_restrictive.remaining
+            ):
                 most_restrictive = result
 
         # Check burst capacity
-        burst_result = self._check_burst_limit(identifier, config.burst_capacity, current_time)
+        burst_result = self._check_burst_limit(
+            identifier, config.burst_capacity, current_time
+        )
         if not burst_result.allowed:
             most_restrictive = burst_result
 
         # Apply adaptive scaling if enabled
         if config.adaptive_scaling and most_restrictive and most_restrictive.allowed:
-            most_restrictive = self._apply_adaptive_scaling(identifier, most_restrictive, config)
+            most_restrictive = self._apply_adaptive_scaling(
+                identifier, most_restrictive, config
+            )
 
         # Record the request if allowed
         if most_restrictive and most_restrictive.allowed:
@@ -230,7 +241,9 @@ class RateLimiter:
                 },
             )
 
-    def _check_burst_limit(self, identifier: str, burst_capacity: int, current_time: int) -> RateLimitResult:
+    def _check_burst_limit(
+        self, identifier: str, burst_capacity: int, current_time: int
+    ) -> RateLimitResult:
         """Check burst capacity limit."""
         burst_window = 10  # 10-second burst window
         window_start = current_time - burst_window
@@ -290,7 +303,9 @@ class RateLimiter:
     ) -> RateLimitResult:
         """Apply adaptive scaling based on usage patterns."""
         # Simple adaptive scaling: reduce remaining requests if usage is high
-        if result.remaining < config.requests_per_minute * 0.2:  # Less than 20% remaining
+        if (
+            result.remaining < config.requests_per_minute * 0.2
+        ):  # Less than 20% remaining
             # Apply penalty multiplier
             adjusted_remaining = int(result.remaining * config.penalty_multiplier)
             result.remaining = max(0, adjusted_remaining)
@@ -382,10 +397,17 @@ class RateLimiter:
                     }
             else:
                 with self._lock:
-                    if identifier in self._memory_storage and limit_type.value in self._memory_storage[identifier]:
+                    if (
+                        identifier in self._memory_storage
+                        and limit_type.value in self._memory_storage[identifier]
+                    ):
                         requests = self._memory_storage[identifier][limit_type.value]
                         # Count requests in current window
-                        count = sum(1 for req_time in requests if window_start <= req_time < window_end)
+                        count = sum(
+                            1
+                            for req_time in requests
+                            if window_start <= req_time < window_end
+                        )
                         stats[limit_type.value] = {
                             "count": count,
                             "window_start": window_start,
@@ -430,6 +452,10 @@ class RateLimiter:
                         del self._memory_storage[identifier]
 
         # Clean up expired penalties
-        expired_penalties = [ident for ident, end_time in self._penalties.items() if current_time >= end_time]
+        expired_penalties = [
+            ident
+            for ident, end_time in self._penalties.items()
+            if current_time >= end_time
+        ]
         for ident in expired_penalties:
             del self._penalties[ident]

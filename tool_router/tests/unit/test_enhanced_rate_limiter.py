@@ -246,7 +246,9 @@ class TestEnhancedRateLimiter:
 
     def test_adaptive_scaling(self):
         """Test adaptive scaling when enabled."""
-        config = RateLimitConfig(requests_per_minute=10, adaptive_scaling=True, penalty_multiplier=2.0)
+        config = RateLimitConfig(
+            requests_per_minute=10, adaptive_scaling=True, penalty_multiplier=2.0
+        )
         limiter = EnhancedRateLimiter(config=config)
 
         identifier = "test_user"

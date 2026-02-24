@@ -22,13 +22,19 @@ class TestSecurityEventType:
         assert SecurityEventType.REQUEST_RECEIVED.value == "request_received"
         assert SecurityEventType.REQUEST_BLOCKED.value == "request_blocked"
         assert SecurityEventType.RATE_LIMIT_EXCEEDED.value == "rate_limit_exceeded"
-        assert SecurityEventType.PROMPT_INJECTION_DETECTED.value == "prompt_injection_detected"
+        assert (
+            SecurityEventType.PROMPT_INJECTION_DETECTED.value
+            == "prompt_injection_detected"
+        )
         assert SecurityEventType.AUTHENTICATION_FAILED.value == "authentication_failed"
         assert SecurityEventType.AUTHORIZATION_FAILED.value == "authorization_failed"
         assert SecurityEventType.VALIDATION_FAILED.value == "validation_failed"
         assert SecurityEventType.PENALTY_APPLIED.value == "penalty_applied"
         assert SecurityEventType.SUSPICIOUS_ACTIVITY.value == "suspicious_activity"
-        assert SecurityEventType.SECURITY_POLICY_VIOLATION.value == "security_policy_violation"
+        assert (
+            SecurityEventType.SECURITY_POLICY_VIOLATION.value
+            == "security_policy_violation"
+        )
 
     def test_security_event_type_count(self):
         """Test number of security event types."""

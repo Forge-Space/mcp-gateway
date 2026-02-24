@@ -54,7 +54,9 @@ class TestRequirement:
 
     def test_requirement_creation_minimal(self) -> None:
         """Test Requirement creation with minimal fields."""
-        req = Requirement(type=RequirementType.PERFORMANCE, description="Performance requirement")
+        req = Requirement(
+            type=RequirementType.PERFORMANCE, description="Performance requirement"
+        )
 
         assert req.type == RequirementType.PERFORMANCE
         assert req.description == "Performance requirement"
@@ -170,7 +172,9 @@ class TestTaskAnalyzer:
 
         requirements = analyzer.extract_requirements(prompt, task_type)
 
-        security_reqs = [req for req in requirements if req.type == RequirementType.SECURITY]
+        security_reqs = [
+            req for req in requirements if req.type == RequirementType.SECURITY
+        ]
         assert len(security_reqs) > 0
         assert security_reqs[0].description == "Security considerations required"
 
@@ -183,7 +187,9 @@ class TestTaskAnalyzer:
 
         requirements = analyzer.extract_requirements(prompt, task_type)
 
-        perf_reqs = [req for req in requirements if req.type == RequirementType.PERFORMANCE]
+        perf_reqs = [
+            req for req in requirements if req.type == RequirementType.PERFORMANCE
+        ]
         assert len(perf_reqs) > 0
         assert perf_reqs[0].description == "Performance optimization required"
 
@@ -440,10 +446,16 @@ class TestPromptArchitect:
         prompt = "Create a comprehensive system"
 
         # Efficient preference should minimize tokens
-        result_efficient = architect.optimize_prompt(prompt, user_cost_preference="efficient")
-        result_quality = architect.optimize_prompt(prompt, user_cost_preference="quality")
+        result_efficient = architect.optimize_prompt(
+            prompt, user_cost_preference="efficient"
+        )
+        result_quality = architect.optimize_prompt(
+            prompt, user_cost_preference="quality"
+        )
 
-        assert len(result_efficient["optimized_prompt"]) <= len(result_quality["optimized_prompt"])
+        assert len(result_efficient["optimized_prompt"]) <= len(
+            result_quality["optimized_prompt"]
+        )
 
     def test_optimize_prompt_invalid_preference(self) -> None:
         """Test prompt optimization with invalid cost preference."""
@@ -494,7 +506,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Create a function"
-        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.CODE_GENERATION)
+        optimized = architect._apply_task_specific_optimizations(
+            prompt, TaskType.CODE_GENERATION
+        )
 
         assert "code" in optimized.lower() or "function" in optimized.lower()
 
@@ -503,7 +517,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Fix the bug"
-        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.CODE_DEBUGGING)
+        optimized = architect._apply_task_specific_optimizations(
+            prompt, TaskType.CODE_DEBUGGING
+        )
 
         assert "debug" in optimized.lower() or "error" in optimized.lower()
 
@@ -512,7 +528,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Document the API"
-        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.DOCUMENTATION)
+        optimized = architect._apply_task_specific_optimizations(
+            prompt, TaskType.DOCUMENTATION
+        )
 
         assert "document" in optimized.lower() or "docs" in optimized.lower()
 
@@ -521,7 +539,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Do something"
-        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.UNKNOWN)
+        optimized = architect._apply_task_specific_optimizations(
+            prompt, TaskType.UNKNOWN
+        )
 
         # Should return unchanged
         assert optimized == prompt
@@ -530,9 +550,13 @@ class TestPromptArchitect:
         """Test prompt quality validation."""
         architect = PromptArchitect()
 
-        prompt = "Create a well-structured function with proper error handling and examples"
+        prompt = (
+            "Create a well-structured function with proper error handling and examples"
+        )
 
-        quality_score = architect._validate_prompt_quality(prompt, TaskType.CODE_GENERATION)
+        quality_score = architect._validate_prompt_quality(
+            prompt, TaskType.CODE_GENERATION
+        )
 
         assert isinstance(quality_score, QualityScore)
         assert 0.0 <= quality_score.overall_score <= 1.0
@@ -565,7 +589,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Create a function with proper error handling"
-        quality_score = architect._calculate_completeness(prompt, TaskType.CODE_GENERATION)
+        quality_score = architect._calculate_completeness(
+            prompt, TaskType.CODE_GENERATION
+        )
 
         assert quality_score >= 0.7  # Has error handling mentioned
 
@@ -574,7 +600,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Explain the concept"
-        quality_score = architect._calculate_completeness(prompt, TaskType.CODE_GENERATION)
+        quality_score = architect._calculate_completeness(
+            prompt, TaskType.CODE_GENERATION
+        )
 
         assert quality_score <= 0.5  # No code keywords
 
@@ -582,9 +610,7 @@ class TestPromptArchitect:
         """Test specificity calculation with high score."""
         architect = PromptArchitect()
 
-        prompt = (
-            "Create UserAuthentication class with validateCredentials method that accepts string and returns boolean"
-        )
+        prompt = "Create UserAuthentication class with validateCredentials method that accepts string and returns boolean"
         quality_score = architect._calculate_specificity(prompt)
 
         assert quality_score >= 0.7  # Has specific details

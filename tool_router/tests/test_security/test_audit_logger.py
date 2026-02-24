@@ -123,7 +123,9 @@ class TestSecurityAuditLogger:
 
         logger.logger = Mock()
 
-        logger.log_authentication_failed(user_id="user123", reason="Invalid password", ip_address="192.168.1.1")
+        logger.log_authentication_failed(
+            user_id="user123", reason="Invalid password", ip_address="192.168.1.1"
+        )
 
         logger.logger.warning.assert_called_once()
         call_args = logger.logger.warning.call_args[0]
@@ -226,8 +228,12 @@ class TestSecurityAuditLogger:
         logger = SecurityAuditLogger(log_file_path=str(log_file))
 
         # Test hash creation
-        hash1 = logger.create_request_hash(method="POST", path="/api/tools", user_id="user123", body="test data")
-        hash2 = logger.create_request_hash(method="POST", path="/api/tools", user_id="user123", body="test data")
+        hash1 = logger.create_request_hash(
+            method="POST", path="/api/tools", user_id="user123", body="test data"
+        )
+        hash2 = logger.create_request_hash(
+            method="POST", path="/api/tools", user_id="user123", body="test data"
+        )
 
         assert hash1 == hash2  # Same input should produce same hash
         assert len(hash1) == 32  # SHA256 produces 32 char hex string

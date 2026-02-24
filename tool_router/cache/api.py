@@ -99,7 +99,9 @@ class ConsentRequest(BaseModel):
     subject_id: str = Field(..., description="Data subject ID")
     data_types: list[str] = Field(..., description="Data types for consent")
     purposes: list[str] = Field(..., description="Purposes for data processing")
-    legal_basis: str = Field(default="consent", description="Legal basis for processing")
+    legal_basis: str = Field(
+        default="consent", description="Legal basis for processing"
+    )
 
 
 class ConsentResponse(BaseModel):
@@ -124,7 +126,9 @@ class RetentionPolicyRequest(BaseModel):
 
     name: str = Field(..., description="Policy name")
     description: str = Field(..., description="Policy description")
-    data_classification: DataClassification = Field(..., description="Data classification")
+    data_classification: DataClassification = Field(
+        ..., description="Data classification"
+    )
     retention_days: int = Field(..., description="Retention period in days")
     action: str = Field(..., description="Retention action")
 
@@ -145,7 +149,9 @@ class SecurityConfigRequest(BaseModel):
 
     encryption_enabled: bool = Field(default=True, description="Enable encryption")
     audit_enabled: bool = Field(default=True, description="Enable audit logging")
-    retention_days: dict[str, int] = Field(default_factory=dict, description="Retention periods")
+    retention_days: dict[str, int] = Field(
+        default_factory=dict, description="Retention periods"
+    )
 
 
 # Security dependency
@@ -188,7 +194,9 @@ class CacheSecurityAPI:
         self.compliance_manager = ComplianceManager(self.config)
         self.retention_manager = RetentionPolicyManager(self.config)
         self.lifecycle_manager = LifecycleManager(self.config)
-        self.retention_scheduler = RetentionScheduler(self.retention_manager, self.config)
+        self.retention_scheduler = RetentionScheduler(
+            self.retention_manager, self.config
+        )
         self.retention_auditor = RetentionAuditor(self.retention_manager, self.config)
 
         # Setup middleware
@@ -241,14 +249,20 @@ class CacheSecurityAPI:
                     "timestamp": datetime.utcnow().isoformat(),
                 }
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to get metrics: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to get metrics: {e!s}"
+                )
 
         # Encryption endpoints
         @self.app.post("/security/encrypt", response_model=EncryptionResponse)
-        async def encrypt_data(request: EncryptionRequest, user_id: str = Depends(get_current_user)):
+        async def encrypt_data(
+            request: EncryptionRequest, user_id: str = Depends(get_current_user)
+        ):
             """Encrypt data."""
             try:
-                result = self.security_manager.encrypt_data(request.data, request.classification)
+                result = self.security_manager.encrypt_data(
+                    request.data, request.classification
+                )
 
                 return EncryptionResponse(
                     encrypted_data=result.encrypted_data,
@@ -261,12 +275,18 @@ class CacheSecurityAPI:
                 raise HTTPException(status_code=500, detail=f"Encryption failed: {e!s}")
 
         @self.app.post("/security/decrypt", response_model=DecryptionResponse)
-        async def decrypt_data(request: DecryptionRequest, user_id: str = Depends(get_current_user)):
+        async def decrypt_data(
+            request: DecryptionRequest, user_id: str = Depends(get_current_user)
+        ):
             """Decrypt data."""
             try:
-                result = self.security_manager.decrypt_data(request.encrypted_data, request.encryption_id)
+                result = self.security_manager.decrypt_data(
+                    request.encrypted_data, request.encryption_id
+                )
 
-                return DecryptionResponse(decrypted_data=result.decrypted_data, timestamp=result.timestamp)
+                return DecryptionResponse(
+                    decrypted_data=result.decrypted_data, timestamp=result.timestamp
+                )
             except EncryptionError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
@@ -274,7 +294,9 @@ class CacheSecurityAPI:
 
         # Access control endpoints
         @self.app.post("/security/access-check", response_model=AccessControlResponse)
-        async def check_access(request: AccessControlRequest, user_id: str = Depends(get_current_user)):
+        async def check_access(
+            request: AccessControlRequest, user_id: str = Depends(get_current_user)
+        ):
             """Check access permissions."""
             try:
                 result = self.security_manager.check_access(
@@ -292,11 +314,15 @@ class CacheSecurityAPI:
             except AccessControlError as e:
                 raise HTTPException(status_code=403, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Access check failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Access check failed: {e!s}"
+                )
 
         # Compliance endpoints
         @self.app.post("/compliance/consent", response_model=ConsentResponse)
-        async def record_consent(request: ConsentRequest, user_id: str = Depends(get_current_user)):
+        async def record_consent(
+            request: ConsentRequest, user_id: str = Depends(get_current_user)
+        ):
             """Record consent for data processing."""
             try:
                 consent_data = {
@@ -305,19 +331,29 @@ class CacheSecurityAPI:
                     "legal_basis": request.legal_basis,
                 }
 
-                consent_id = self.compliance_manager.record_consent(request.subject_id, consent_data)
+                consent_id = self.compliance_manager.record_consent(
+                    request.subject_id, consent_data
+                )
 
-                return ConsentResponse(consent_id=consent_id, granted=True, timestamp=datetime.utcnow())
+                return ConsentResponse(
+                    consent_id=consent_id, granted=True, timestamp=datetime.utcnow()
+                )
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Consent recording failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Consent recording failed: {e!s}"
+                )
 
         @self.app.get("/compliance/consent/{subject_id}")
-        async def check_consent(subject_id: str, data_type: str = Query(...), purpose: str = Query(...)):
+        async def check_consent(
+            subject_id: str, data_type: str = Query(...), purpose: str = Query(...)
+        ):
             """Check consent for data processing."""
             try:
-                has_consent = self.compliance_manager.check_consent(subject_id, data_type, purpose)
+                has_consent = self.compliance_manager.check_consent(
+                    subject_id, data_type, purpose
+                )
 
                 return {
                     "subject_id": subject_id,
@@ -329,7 +365,9 @@ class CacheSecurityAPI:
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Consent check failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Consent check failed: {e!s}"
+                )
 
         @self.app.post("/compliance/data-subject-request")
         async def create_data_subject_request(
@@ -338,7 +376,9 @@ class CacheSecurityAPI:
             """Create a data subject request."""
             try:
                 request_data = asdict(request)
-                request_id = self.compliance_manager.create_data_subject_request(request_data)
+                request_id = self.compliance_manager.create_data_subject_request(
+                    request_data
+                )
 
                 return {
                     "request_id": request_id,
@@ -348,7 +388,9 @@ class CacheSecurityAPI:
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Request creation failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Request creation failed: {e!s}"
+                )
 
         @self.app.get("/compliance/data-subject-requests")
         async def get_data_subject_requests(subject_id: str | None = Query(None)):
@@ -362,13 +404,19 @@ class CacheSecurityAPI:
                     "timestamp": datetime.utcnow(),
                 }
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to get requests: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to get requests: {e!s}"
+                )
 
         @self.app.post("/compliance/right-to-be-forgotten/{subject_id}")
-        async def process_right_to_be_forgotten(subject_id: str, user_id: str = Depends(get_current_user)):
+        async def process_right_to_be_forgotten(
+            subject_id: str, user_id: str = Depends(get_current_user)
+        ):
             """Process GDPR right to be forgotten."""
             try:
-                result = self.compliance_manager.process_right_to_be_forgotten(subject_id)
+                result = self.compliance_manager.process_right_to_be_forgotten(
+                    subject_id
+                )
 
                 return {
                     "subject_id": subject_id,
@@ -378,22 +426,32 @@ class CacheSecurityAPI:
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Right to be forgotten failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Right to be forgotten failed: {e!s}"
+                )
 
         @self.app.get("/compliance/assessment/{standard}")
-        async def assess_compliance(standard: str, user_id: str = Depends(get_current_user)):
+        async def assess_compliance(
+            standard: str, user_id: str = Depends(get_current_user)
+        ):
             """Assess compliance for a standard."""
             try:
                 compliance_standard = ComplianceStandard(standard)
-                assessment = self.compliance_manager.assess_compliance(compliance_standard)
+                assessment = self.compliance_manager.assess_compliance(
+                    compliance_standard
+                )
 
                 return asdict(assessment)
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid compliance standard: {standard}")
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid compliance standard: {standard}"
+                )
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Compliance assessment failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Compliance assessment failed: {e!s}"
+                )
 
         @self.app.get("/compliance/report")
         async def generate_compliance_report(standards: list[str] | None = Query(None)):
@@ -404,15 +462,21 @@ class CacheSecurityAPI:
                 else:
                     compliance_standards = [ComplianceStandard.GDPR]
 
-                report = self.compliance_manager.generate_compliance_report(compliance_standards)
+                report = self.compliance_manager.generate_compliance_report(
+                    compliance_standards
+                )
 
                 return asdict(report)
             except ValueError as e:
-                raise HTTPException(status_code=400, detail=f"Invalid compliance standard: {e!s}")
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid compliance standard: {e!s}"
+                )
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Report generation failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Report generation failed: {e!s}"
+                )
 
         # Retention endpoints
         @self.app.get("/retention/rules")
@@ -436,10 +500,14 @@ class CacheSecurityAPI:
                     detail=f"Invalid data classification: {classification}",
                 )
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to get retention rules: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to get retention rules: {e!s}"
+                )
 
         @self.app.post("/retention/rules")
-        async def create_retention_rule(request: RetentionPolicyRequest, user_id: str = Depends(get_current_user)):
+        async def create_retention_rule(
+            request: RetentionPolicyRequest, user_id: str = Depends(get_current_user)
+        ):
             """Create a new retention rule."""
             try:
                 from .retention import RetentionAction, RetentionRule, RetentionTrigger
@@ -462,7 +530,9 @@ class CacheSecurityAPI:
                     "timestamp": datetime.utcnow(),
                 }
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to create retention rule: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to create retention rule: {e!s}"
+                )
 
         @self.app.get("/retention/audit")
         async def audit_retention_compliance(user_id: str = Depends(get_current_user)):
@@ -472,7 +542,9 @@ class CacheSecurityAPI:
 
                 return audit_results
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Retention audit failed: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Retention audit failed: {e!s}"
+                )
 
         @self.app.post("/retention/cleanup")
         async def trigger_retention_cleanup(
@@ -484,7 +556,9 @@ class CacheSecurityAPI:
 
                 return {"status": "cleanup_triggered", "timestamp": datetime.utcnow()}
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to trigger cleanup: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to trigger cleanup: {e!s}"
+                )
 
         # Configuration endpoints
         @self.app.get("/config")
@@ -493,10 +567,14 @@ class CacheSecurityAPI:
             try:
                 return asdict(self.config)
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to get configuration: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to get configuration: {e!s}"
+                )
 
         @self.app.put("/config")
-        async def update_configuration(request: SecurityConfigRequest, user_id: str = Depends(get_current_user)):
+        async def update_configuration(
+            request: SecurityConfigRequest, user_id: str = Depends(get_current_user)
+        ):
             """Update security configuration."""
             try:
                 # Update configuration
@@ -510,7 +588,9 @@ class CacheSecurityAPI:
 
                 return {"status": "updated", "timestamp": datetime.utcnow()}
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to update configuration: {e!s}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to update configuration: {e!s}"
+                )
 
     def get_app(self) -> FastAPI:
         """Get the FastAPI application."""

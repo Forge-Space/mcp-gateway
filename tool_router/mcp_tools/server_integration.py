@@ -21,7 +21,6 @@ from .training_manager import (
     training_manager_handler,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -249,7 +248,9 @@ def register_tools_with_mcp_server(mcp_server) -> None:
             # For now, we'll just log the registration
             logger.info(f"Registering tool: {tool_def['name']}")
 
-        logger.info(f"Registered {len(tool_definitions)} training tools with MCP server")
+        logger.info(
+            f"Registered {len(tool_definitions)} training tools with MCP server"
+        )
 
     except Exception as e:
         logger.error(f"Failed to register tools with MCP server: {e}")

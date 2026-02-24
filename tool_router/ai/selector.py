@@ -10,7 +10,6 @@ import httpx
 
 from tool_router.ai.prompts import PromptTemplates
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -43,7 +42,8 @@ class OllamaSelector:
             return None
 
         tool_list = "\n".join(
-            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}" for tool in tools
+            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
+            for tool in tools
         )
         prompt = PromptTemplates.create_tool_selection_prompt(
             task=task,
@@ -82,7 +82,8 @@ class OllamaSelector:
             return None
 
         tool_list = "\n".join(
-            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}" for tool in tools
+            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
+            for tool in tools
         )
         prompt = PromptTemplates.create_multi_tool_selection_prompt(
             task=task,
@@ -111,7 +112,9 @@ class OllamaSelector:
 
     def _create_prompt(self, task: str, tool_list: str) -> str:
         """Create the prompt for Ollama (kept for backward compatibility)."""
-        return PromptTemplates.create_tool_selection_prompt(task=task, tool_list=tool_list)
+        return PromptTemplates.create_tool_selection_prompt(
+            task=task, tool_list=tool_list
+        )
 
     def _call_ollama(self, prompt: str) -> str | None:
         """Call the Ollama API."""
@@ -153,7 +156,9 @@ class OllamaSelector:
 
             result = json.loads(response[start_idx:end_idx])
 
-            if not all(key in result for key in ["tool_name", "confidence", "reasoning"]):
+            if not all(
+                key in result for key in ["tool_name", "confidence", "reasoning"]
+            ):
                 logger.warning("Missing required fields in AI response")
                 return None
 
@@ -171,7 +176,9 @@ class OllamaSelector:
         else:
             return result
 
-    def _parse_multi_response(self, response: str, available_tools: list[dict[str, Any]]) -> dict[str, Any] | None:
+    def _parse_multi_response(
+        self, response: str, available_tools: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
         """Parse the multi-tool JSON response from Ollama."""
         try:
             start_idx = response.find("{")
@@ -192,7 +199,9 @@ class OllamaSelector:
 
             confidence = result["confidence"]
             if not isinstance(confidence, int | float) or not 0 <= confidence <= 1:
-                logger.warning("Invalid confidence value in multi-tool response: %s", confidence)
+                logger.warning(
+                    "Invalid confidence value in multi-tool response: %s", confidence
+                )
                 return None
 
             valid_names = {t.get("name", "") for t in available_tools}

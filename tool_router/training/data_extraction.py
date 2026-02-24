@@ -110,7 +110,9 @@ class WebDocumentationExtractor(DataExtractor):
             print(f"Error extracting from {url}: {e}")
             return []
 
-    def _extract_react_patterns(self, text: str, source_url: str) -> list[ExtractedPattern]:
+    def _extract_react_patterns(
+        self, text: str, source_url: str
+    ) -> list[ExtractedPattern]:
         """Extract React-specific patterns."""
         patterns = []
 
@@ -189,7 +191,9 @@ class WebDocumentationExtractor(DataExtractor):
 
         return patterns
 
-    def _extract_ui_patterns(self, text: str, source_url: str) -> list[ExtractedPattern]:
+    def _extract_ui_patterns(
+        self, text: str, source_url: str
+    ) -> list[ExtractedPattern]:
         """Extract UI design patterns."""
         patterns = []
 
@@ -217,7 +221,9 @@ class WebDocumentationExtractor(DataExtractor):
 
         return patterns
 
-    def _extract_accessibility_patterns(self, text: str, source_url: str) -> list[ExtractedPattern]:
+    def _extract_accessibility_patterns(
+        self, text: str, source_url: str
+    ) -> list[ExtractedPattern]:
         """Extract accessibility patterns."""
         patterns = []
 
@@ -319,7 +325,9 @@ class PatternExtractor:
             DataSource.GITHUB_REPOSITORY: GitHubRepositoryExtractor(),
         }
 
-    def extract_from_url(self, url: str, source_type: DataSource) -> list[ExtractedPattern]:
+    def extract_from_url(
+        self, url: str, source_type: DataSource
+    ) -> list[ExtractedPattern]:
         """Extract patterns from a URL."""
         extractor = self.extractors.get(source_type)
         if not extractor:
@@ -328,7 +336,9 @@ class PatternExtractor:
 
         return extractor.extract_patterns(url)
 
-    def extract_from_multiple_sources(self, sources: list[dict[str, Any]]) -> list[ExtractedPattern]:
+    def extract_from_multiple_sources(
+        self, sources: list[dict[str, Any]]
+    ) -> list[ExtractedPattern]:
         """Extract patterns from multiple sources."""
         all_patterns = []
 
@@ -342,7 +352,9 @@ class PatternExtractor:
 
         return all_patterns
 
-    def categorize_patterns(self, patterns: list[ExtractedPattern]) -> dict[PatternCategory, list[ExtractedPattern]]:
+    def categorize_patterns(
+        self, patterns: list[ExtractedPattern]
+    ) -> dict[PatternCategory, list[ExtractedPattern]]:
         """Categorize patterns by type."""
         categorized = {}
 
@@ -360,7 +372,9 @@ class PatternExtractor:
         """Filter patterns by confidence score."""
         return [p for p in patterns if p.confidence_score >= min_confidence]
 
-    def get_top_patterns(self, patterns: list[ExtractedPattern], limit: int = 10) -> list[ExtractedPattern]:
+    def get_top_patterns(
+        self, patterns: list[ExtractedPattern], limit: int = 10
+    ) -> list[ExtractedPattern]:
         """Get top patterns by confidence score."""
         return sorted(patterns, key=lambda p: p.confidence_score, reverse=True)[:limit]
 

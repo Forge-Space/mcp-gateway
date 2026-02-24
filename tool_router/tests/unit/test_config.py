@@ -87,7 +87,9 @@ class TestGatewayConfig:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "invalid")
 
-        with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_invalid_max_retries(self, monkeypatch) -> None:
@@ -95,7 +97,9 @@ class TestGatewayConfig:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_MAX_RETRIES", "invalid")
 
-        with pytest.raises(ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_invalid_retry_delay_ms(self, monkeypatch) -> None:
@@ -103,7 +107,9 @@ class TestGatewayConfig:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_RETRY_DELAY_MS", "invalid")
 
-        with pytest.raises(ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
 
@@ -196,7 +202,9 @@ class TestAIConfig:
         """Test that invalid timeout_ms raises ValueError."""
         monkeypatch.setenv("ROUTER_AI_TIMEOUT_MS", "invalid")
 
-        with pytest.raises(ValueError, match="ROUTER_AI_TIMEOUT_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="ROUTER_AI_TIMEOUT_MS must be a valid integer"
+        ):
             AIConfig.load_from_environment()
 
     def test_invalid_weight(self, monkeypatch) -> None:
@@ -210,7 +218,9 @@ class TestAIConfig:
         """Test that invalid min_confidence raises ValueError."""
         monkeypatch.setenv("ROUTER_AI_MIN_CONFIDENCE", "invalid")
 
-        with pytest.raises(ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be a valid float"):
+        with pytest.raises(
+            ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be a valid float"
+        ):
             AIConfig.load_from_environment()
 
 
@@ -275,7 +285,9 @@ class TestToolRouterConfig:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("MAX_TOOLS_SEARCH", "invalid")
 
-        with pytest.raises(ValueError, match="MAX_TOOLS_SEARCH must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="MAX_TOOLS_SEARCH must be a valid integer"
+        ):
             ToolRouterConfig.load_from_environment()
 
     def test_invalid_default_top_n(self, monkeypatch) -> None:
@@ -290,7 +302,9 @@ class TestToolRouterConfig:
         """Test direct instantiation with GatewayConfig and AIConfig."""
         gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
         ai_config = AIConfig()
-        config = ToolRouterConfig(gateway=gateway_config, ai=ai_config, max_tools_search=15, default_top_n=2)
+        config = ToolRouterConfig(
+            gateway=gateway_config, ai=ai_config, max_tools_search=15, default_top_n=2
+        )
 
         assert config.gateway == gateway_config
         assert config.ai == ai_config
@@ -313,7 +327,9 @@ class TestGatewayConfigAdvanced:
         """Test that missing JWT raises ValueError."""
         monkeypatch.delenv("GATEWAY_JWT", raising=False)
 
-        with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_JWT environment variable is required"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_invalid_timeout_ms_error(self, monkeypatch) -> None:
@@ -321,7 +337,9 @@ class TestGatewayConfigAdvanced:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "invalid")
 
-        with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
 
@@ -348,14 +366,18 @@ class TestGatewayConfigAdvanced:
         """Test that missing JWT raises ValueError."""
         monkeypatch.delenv("GATEWAY_JWT", raising=False)
 
-        with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_JWT environment variable is required"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_empty_jwt_error(self, monkeypatch) -> None:
         """Test that empty JWT raises ValueError."""
         monkeypatch.setenv("GATEWAY_JWT", "")
 
-        with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_JWT environment variable is required"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_invalid_timeout_ms_error(self, monkeypatch) -> None:
@@ -363,7 +385,9 @@ class TestGatewayConfigAdvanced:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "invalid")
 
-        with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_invalid_max_retries_error(self, monkeypatch) -> None:
@@ -371,7 +395,9 @@ class TestGatewayConfigAdvanced:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_MAX_RETRIES", "not_a_number")
 
-        with pytest.raises(ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_invalid_retry_delay_ms_error(self, monkeypatch) -> None:
@@ -379,7 +405,9 @@ class TestGatewayConfigAdvanced:
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_RETRY_DELAY_MS", "float_value")
 
-        with pytest.raises(ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
     def test_negative_timeout_ms_error(self, monkeypatch) -> None:
@@ -473,7 +501,9 @@ class TestToolRouterConfigAdvanced:
         gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
         ai_config = AIConfig()
 
-        config = ToolRouterConfig(gateway=gateway_config, ai=ai_config, max_tools_search=0, default_top_n=0)
+        config = ToolRouterConfig(
+            gateway=gateway_config, ai=ai_config, max_tools_search=0, default_top_n=0
+        )
 
         assert config.max_tools_search == 0
         assert config.default_top_n == 0

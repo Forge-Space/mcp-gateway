@@ -62,7 +62,9 @@ class TestHealthCheck:
         health_check = HealthCheck()
 
         # Mock valid configuration
-        with patch("tool_router.observability.health.ToolRouterConfig.load_from_environment") as mock_load:
+        with patch(
+            "tool_router.observability.health.ToolRouterConfig.load_from_environment"
+        ) as mock_load:
             mock_config = Mock()
             mock_config.is_valid.return_value = True
             mock_load.return_value = mock_config
@@ -79,7 +81,9 @@ class TestHealthCheck:
         health_check = HealthCheck()
 
         # Mock invalid configuration
-        with patch("tool_router.observability.health.ToolRouterConfig.load_from_environment") as mock_load:
+        with patch(
+            "tool_router.observability.health.ToolRouterConfig.load_from_environment"
+        ) as mock_load:
             mock_config = Mock()
             mock_config.is_valid.return_value = False
             mock_config.validation_errors = ["Missing API key", "Invalid port"]
@@ -117,7 +121,9 @@ class TestHealthCheck:
             assert isinstance(result, ComponentHealth)
             assert result.status == HealthStatus.HEALTHY
             assert len(result.components) == 2
-            assert all(comp.status == HealthStatus.HEALTHY for comp in result.components)
+            assert all(
+                comp.status == HealthStatus.HEALTHY for comp in result.components
+            )
 
     def test_check_all_degraded(self) -> None:
         """Test overall health check when some components are degraded."""
@@ -207,7 +213,9 @@ class TestHealthCheck:
             ),
         ]
 
-        component_health = ComponentHealth(status=HealthStatus.DEGRADED, components=components)
+        component_health = ComponentHealth(
+            status=HealthStatus.DEGRADED, components=components
+        )
 
         assert component_health.status == HealthStatus.DEGRADED
         assert len(component_health.components) == 2
@@ -235,7 +243,9 @@ class TestHealthCheck:
             ),
         ]
 
-        component_health = ComponentHealth(status=HealthStatus.HEALTHY, components=components)
+        component_health = ComponentHealth(
+            status=HealthStatus.HEALTHY, components=components
+        )
 
         assert component_health.status == HealthStatus.HEALTHY
         assert component_health.is_ready() is True
@@ -256,7 +266,9 @@ class TestHealthCheck:
             ),
         ]
 
-        component_health = ComponentHealth(status=HealthStatus.UNHEALTHY, components=components)
+        component_health = ComponentHealth(
+            status=HealthStatus.UNHEALTHY, components=components
+        )
 
         assert component_health.status == HealthStatus.UNHEALTHY
         assert component_health.is_ready() is False

@@ -279,7 +279,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.ACCURACY, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.ACCURACY, suite
+        )
 
         assert result.specialist_type == "ui_specialist"
         assert result.metric == EvaluationMetric.ACCURACY
@@ -321,7 +323,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.PRECISION, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.PRECISION, suite
+        )
 
         assert result.metric == EvaluationMetric.PRECISION
         assert 0.0 <= result.value <= 1.0
@@ -350,7 +354,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.RECALL, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.RECALL, suite
+        )
 
         assert result.metric == EvaluationMetric.RECALL
         assert 0.0 <= result.value <= 1.0
@@ -368,7 +374,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.F1_SCORE, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.F1_SCORE, suite
+        )
 
         assert result.metric == EvaluationMetric.F1_SCORE
         assert 0.0 <= result.value <= 1.0
@@ -387,7 +395,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.RESPONSE_TIME, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.RESPONSE_TIME, suite
+        )
 
         assert result.metric == EvaluationMetric.RESPONSE_TIME
         assert 0.0 <= result.value <= 1.0
@@ -431,7 +441,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.CODE_QUALITY, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.CODE_QUALITY, suite
+        )
 
         assert result.metric == EvaluationMetric.CODE_QUALITY
         assert 0.0 <= result.value <= 1.0
@@ -469,7 +481,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.ACCESSIBILITY_SCORE, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.ACCESSIBILITY_SCORE, suite
+        )
 
         assert result.metric == EvaluationMetric.ACCESSIBILITY_SCORE
         assert 0.0 <= result.value <= 1.0
@@ -489,7 +503,9 @@ class TestSpecialistEvaluator:
             category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.USER_SATISFACTION, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.USER_SATISFACTION, suite
+        )
 
         assert result.metric == EvaluationMetric.USER_SATISFACTION
         assert result.value == 0.8  # Default score
@@ -595,7 +611,9 @@ class TestSpecialistEvaluator:
 
         self.evaluator.evaluation_history.extend(results)
 
-        comparison = self.evaluator.compare_specialists(["ui_specialist", "prompt_architect"])
+        comparison = self.evaluator.compare_specialists(
+            ["ui_specialist", "prompt_architect"]
+        )
 
         assert "rankings" in comparison
         assert "comparison_data" in comparison
@@ -637,7 +655,9 @@ class TestSpecialistEvaluator:
 
         self.evaluator.evaluation_history.extend(results)
 
-        recommendations = self.evaluator.generate_improvement_recommendations("ui_specialist")
+        recommendations = self.evaluator.generate_improvement_recommendations(
+            "ui_specialist"
+        )
 
         assert isinstance(recommendations, list)
         assert len(recommendations) > 0
@@ -651,7 +671,9 @@ class TestSpecialistEvaluator:
 
     def test_generate_improvement_recommendations_no_data(self):
         """Test generating recommendations with no evaluation data."""
-        recommendations = self.evaluator.generate_improvement_recommendations("nonexistent")
+        recommendations = self.evaluator.generate_improvement_recommendations(
+            "nonexistent"
+        )
 
         assert len(recommendations) == 1
         assert "No evaluation data available" in recommendations[0]
@@ -678,7 +700,9 @@ class TestSpecialistEvaluator:
 
         self.evaluator.evaluation_history.extend(results)
 
-        recommendations = self.evaluator.generate_improvement_recommendations("ui_specialist")
+        recommendations = self.evaluator.generate_improvement_recommendations(
+            "ui_specialist"
+        )
 
         assert len(recommendations) == 1
         assert "Performance is good" in recommendations[0]
@@ -800,16 +824,24 @@ class TestSpecialistEvaluatorIntegration:
             ui_results = evaluator.evaluate_specialist("ui_specialist")
 
             assert len(ui_results) > 0
-            assert all(result.specialist_type == "ui_specialist" for result in ui_results)
+            assert all(
+                result.specialist_type == "ui_specialist" for result in ui_results
+            )
 
             # Verify specific metrics
-            accuracy_result = next((r for r in ui_results if r.metric == EvaluationMetric.ACCURACY), None)
+            accuracy_result = next(
+                (r for r in ui_results if r.metric == EvaluationMetric.ACCURACY), None
+            )
             code_quality_result = next(
                 (r for r in ui_results if r.metric == EvaluationMetric.CODE_QUALITY),
                 None,
             )
             accessibility_result = next(
-                (r for r in ui_results if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE),
+                (
+                    r
+                    for r in ui_results
+                    if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE
+                ),
                 None,
             )
 
@@ -820,7 +852,9 @@ class TestSpecialistEvaluatorIntegration:
             # Should have decent scores due to good patterns
             assert accuracy_result.value > 0.5
             assert code_quality_result.value > 0.5
-            assert accessibility_result.value > 0.0  # Should have some accessibility patterns
+            assert (
+                accessibility_result.value > 0.0
+            )  # Should have some accessibility patterns
 
             # Get evaluation summary
             summary = evaluator.get_evaluation_summary("ui_specialist")
@@ -830,7 +864,9 @@ class TestSpecialistEvaluatorIntegration:
             assert summary["ui_specialist"]["metrics_count"] == len(ui_results)
 
             # Generate recommendations
-            recommendations = evaluator.generate_improvement_recommendations("ui_specialist")
+            recommendations = evaluator.generate_improvement_recommendations(
+                "ui_specialist"
+            )
 
             assert isinstance(recommendations, list)
 
@@ -943,19 +979,28 @@ class TestSpecialistEvaluatorIntegration:
             assert len(results) > 0
 
             # Accuracy should be 0.0 with no relevant patterns
-            accuracy_result = next((r for r in results if r.metric == EvaluationMetric.ACCURACY), None)
+            accuracy_result = next(
+                (r for r in results if r.metric == EvaluationMetric.ACCURACY), None
+            )
             assert accuracy_result is not None
             assert accuracy_result.value == 0.0
             assert "No relevant patterns found" in accuracy_result.details["error"]
 
             # Accessibility should also be 0.0 with no accessibility patterns
             accessibility_result = next(
-                (r for r in results if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE),
+                (
+                    r
+                    for r in results
+                    if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE
+                ),
                 None,
             )
             assert accessibility_result is not None
             assert accessibility_result.value == 0.0
-            assert "No accessibility patterns found" in accessibility_result.details["error"]
+            assert (
+                "No accessibility patterns found"
+                in accessibility_result.details["error"]
+            )
 
         finally:
             import shutil

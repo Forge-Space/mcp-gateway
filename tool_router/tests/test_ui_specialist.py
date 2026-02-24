@@ -246,7 +246,9 @@ class TestUIStandardsCompliance:
             responsive_breakpoints=[],
         )
 
-        score = compliance._check_accessibility_compliance(spec, AccessibilityLevel.MINIMAL)
+        score = compliance._check_accessibility_compliance(
+            spec, AccessibilityLevel.MINIMAL
+        )
         assert score == 0.0  # No features present, so 0 compliance
 
     def test_check_framework_compliance_react(self):
@@ -390,7 +392,9 @@ class TestUIStandardsCompliance:
             responsive_breakpoints=[],
         )
 
-        score = compliance._check_design_system_compliance(spec, DesignSystem.TAILWIND_UI)
+        score = compliance._check_design_system_compliance(
+            spec, DesignSystem.TAILWIND_UI
+        )
         assert score == 0.9
 
     def test_check_design_system_compliance_material(self):
@@ -406,7 +410,9 @@ class TestUIStandardsCompliance:
             responsive_breakpoints=[],
         )
 
-        score = compliance._check_design_system_compliance(spec, DesignSystem.MATERIAL_DESIGN)
+        score = compliance._check_design_system_compliance(
+            spec, DesignSystem.MATERIAL_DESIGN
+        )
         assert score == 0.9
 
     def test_check_design_system_compliance_bootstrap(self):
@@ -781,7 +787,9 @@ class TestUISpecialist:
         """Test AA level accessibility features."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.AA)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.AA
+        )
 
         assert "color_contrast_4_5" in features
         assert "keyboard_navigation" in features
@@ -795,7 +803,9 @@ class TestUISpecialist:
         """Test AAA level accessibility features."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.AAA)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.AAA
+        )
 
         assert "color_contrast_7_1" in features
         assert "no_reflow" in features
@@ -809,7 +819,9 @@ class TestUISpecialist:
         """Test minimal accessibility features."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.MINIMAL)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.MINIMAL
+        )
 
         assert "basic_keyboard_access" in features
         assert "alt_text_important" in features
@@ -1096,7 +1108,9 @@ class TestComponentGeneratorAdditional:
         generator = ComponentGenerator()
 
         code = "<div>Content</div>"
-        enhanced = generator._apply_accessibility_features(code, AccessibilityLevel.MINIMAL)
+        enhanced = generator._apply_accessibility_features(
+            code, AccessibilityLevel.MINIMAL
+        )
 
         # Should return unchanged (implementation placeholder)
         assert enhanced == code

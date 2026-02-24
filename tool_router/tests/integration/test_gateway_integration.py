@@ -40,7 +40,9 @@ def mock_response():
 class TestGatewayClientIntegration:
     """Integration tests for HTTPGatewayClient."""
 
-    def test_get_tools_and_call_tool_workflow(self, gateway_config: GatewayConfig, mock_response) -> None:
+    def test_get_tools_and_call_tool_workflow(
+        self, gateway_config: GatewayConfig, mock_response
+    ) -> None:
         """Test complete workflow: fetch tools, select one, call it."""
         client = HTTPGatewayClient(gateway_config)
 
@@ -82,7 +84,9 @@ class TestGatewayClientIntegration:
             assert result == "Search results here"
             assert mock_urlopen.call_count == 2
 
-    def test_retry_logic_on_server_error(self, gateway_config: GatewayConfig, mock_response) -> None:
+    def test_retry_logic_on_server_error(
+        self, gateway_config: GatewayConfig, mock_response
+    ) -> None:
         """Test that client retries on 5xx errors."""
         client = HTTPGatewayClient(gateway_config)
 
@@ -129,7 +133,9 @@ class TestGatewayClientIntegration:
         assert client._timeout_seconds == 30.0
         assert client.config.max_retries == 5
 
-    def test_authentication_header_included(self, gateway_config: GatewayConfig, mock_response) -> None:
+    def test_authentication_header_included(
+        self, gateway_config: GatewayConfig, mock_response
+    ) -> None:
         """Test that JWT token is included in request headers."""
         client = HTTPGatewayClient(gateway_config)
 
@@ -145,13 +151,17 @@ class TestGatewayClientIntegration:
                 assert "Authorization" in headers
                 assert headers["Authorization"] == "Bearer test-token-123"
 
-    def test_error_handling_preserves_context(self, gateway_config: GatewayConfig) -> None:
+    def test_error_handling_preserves_context(
+        self, gateway_config: GatewayConfig
+    ) -> None:
         """Test that errors include helpful context."""
         client = HTTPGatewayClient(gateway_config)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
             # Test retry-related ConnectionError that gets converted to ValueError
-            mock_urlopen.side_effect = ConnectionError("Failed after 3 attempts. Last error: Network unreachable")
+            mock_urlopen.side_effect = ConnectionError(
+                "Failed after 3 attempts. Last error: Network unreachable"
+            )
 
             with patch("time.sleep"):
                 with pytest.raises(ValueError) as exc_info:

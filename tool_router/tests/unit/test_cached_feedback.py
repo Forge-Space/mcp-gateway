@@ -45,7 +45,9 @@ class TestFeedbackEntry:
 
     def test_feedback_entry_defaults(self):
         """Test feedback entry with default values."""
-        entry = FeedbackEntry(task="test task", selected_tool="test_tool", success=False)
+        entry = FeedbackEntry(
+            task="test task", selected_tool="test_tool", success=False
+        )
 
         assert entry.task == "test task"
         assert entry.selected_tool == "test_tool"
@@ -83,7 +85,9 @@ class TestToolStats:
 
     def test_tool_stats_properties(self):
         """Test tool stats calculated properties."""
-        stats = ToolStats(tool_name="test_tool", success_count=8, failure_count=2, avg_confidence=0.6)
+        stats = ToolStats(
+            tool_name="test_tool", success_count=8, failure_count=2, avg_confidence=0.6
+        )
 
         assert stats.total == 10
         assert stats.success_rate == 0.8
@@ -152,7 +156,9 @@ class TestCachedFeedbackStore:
         """Test store initialization with custom parameters."""
         with tempfile.TemporaryDirectory() as temp_dir:
             custom_file = Path(temp_dir) / "custom_feedback.json"
-            store = CachedFeedbackStore(feedback_file=str(custom_file), cache_ttl=1800, cache_size=500)
+            store = CachedFeedbackStore(
+                feedback_file=str(custom_file), cache_ttl=1800, cache_size=500
+            )
 
         assert store._file == custom_file
         assert store._boost_cache.maxsize == 500
@@ -198,7 +204,9 @@ class TestCachedFeedbackStore:
 
         for task, expected_intent in test_cases:
             result = CachedFeedbackStore._classify_intent(task)
-            assert result == expected_intent, f"Task '{task}' should be '{expected_intent}'"
+            assert (
+                result == expected_intent
+            ), f"Task '{task}' should be '{expected_intent}'"
 
     def test_extract_entities(self):
         """Test entity extraction from tasks."""
@@ -222,7 +230,9 @@ class TestCachedFeedbackStore:
 
         for task, expected_entities in test_cases:
             result = CachedFeedbackStore._extract_entities(task)
-            assert set(result) == set(expected_entities), f"Task '{task}' entities mismatch"
+            assert set(result) == set(
+                expected_entities
+            ), f"Task '{task}' entities mismatch"
 
     def test_record_feedback(self):
         """Test recording feedback entry."""
@@ -370,7 +380,10 @@ class TestCachedFeedbackStore:
         cache_metrics2 = store.get_cache_metrics()
 
         assert boost1 == boost2
-        assert cache_metrics2["cache_hits"]["boost"] > cache_metrics1["cache_hits"]["boost"]
+        assert (
+            cache_metrics2["cache_hits"]["boost"]
+            > cache_metrics1["cache_hits"]["boost"]
+        )
 
     def test_task_type_boost(self):
         """Test task type specific boost calculation."""
@@ -414,7 +427,9 @@ class TestCachedFeedbackStore:
 
         # Should be a weighted combination of all factors
         base_boost = store.get_boost("comprehensive_tool")
-        task_type_boost = store.get_task_type_boost("comprehensive_tool", "file_operations")
+        task_type_boost = store.get_task_type_boost(
+            "comprehensive_tool", "file_operations"
+        )
         intent_boost = store.get_intent_boost("comprehensive_tool", "create")
 
         expected = base_boost * 0.5 + task_type_boost * 0.3 + intent_boost * 0.2
@@ -488,7 +503,10 @@ class TestCachedFeedbackStore:
         cache_metrics2 = store.get_cache_metrics()
 
         assert stats1 == stats2
-        assert cache_metrics2["cache_hits"]["stats"] > cache_metrics1["cache_hits"]["stats"]
+        assert (
+            cache_metrics2["cache_hits"]["stats"]
+            > cache_metrics1["cache_hits"]["stats"]
+        )
 
     def test_get_all_stats(self):
         """Test getting all stats."""
@@ -511,7 +529,9 @@ class TestCachedFeedbackStore:
         store.record("create file with data", "file_tool", True, confidence=0.9)
         store.record("edit file content", "file_tool", True, confidence=0.7)
         store.record("delete file", "delete_tool", True, confidence=0.6)
-        store.record("create file", "file_tool", False, confidence=0.2)  # Failed, shouldn't be included
+        store.record(
+            "create file", "file_tool", False, confidence=0.2
+        )  # Failed, shouldn't be included
 
         similar = store.similar_task_tools("create new file")
 
@@ -636,12 +656,16 @@ class TestCachedFeedbackStore:
         store = CachedFeedbackStore()
 
         # Mock file operations to raise exception
-        with patch.object(store._file, "write_text", side_effect=OSError("Write error")):
+        with patch.object(
+            store._file, "write_text", side_effect=OSError("Write error")
+        ):
             # Should not raise exception
             store._persist()
 
         with patch.object(store._file, "exists", return_value=True):
-            with patch.object(store._file, "read_text", side_effect=OSError("Read error")):
+            with patch.object(
+                store._file, "read_text", side_effect=OSError("Read error")
+            ):
                 # Should not raise exception
                 store._load()
 
@@ -719,7 +743,9 @@ class TestFeedbackStoreIntegration:
             boost = store.get_boost("file_creator")
             assert boost > 1.0  # Should be boosted due to good performance
 
-            task_type_boost = store.get_task_type_boost("file_creator", "file_operations")
+            task_type_boost = store.get_task_type_boost(
+                "file_creator", "file_operations"
+            )
             assert task_type_boost > 1.0
 
             insights = store.get_learning_insights("create file")
@@ -804,7 +830,9 @@ class TestFeedbackStoreIntegration:
         assert "code_operations" in store._patterns
 
         # Test comprehensive boost calculation
-        comprehensive_boost = store.get_comprehensive_boost("markdown_tool", "create markdown file")
+        comprehensive_boost = store.get_comprehensive_boost(
+            "markdown_tool", "create markdown file"
+        )
 
         # Should consider all learning factors
         base_boost = store.get_boost("markdown_tool")

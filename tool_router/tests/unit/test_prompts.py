@@ -30,27 +30,35 @@ class TestPromptTemplates:
         task = "Search the web"
         tool_list = "- search_web: Search the web"
         context = "User is looking for recent news"
-        result = PromptTemplates.create_tool_selection_prompt(task, tool_list, context=context)
+        result = PromptTemplates.create_tool_selection_prompt(
+            task, tool_list, context=context
+        )
         assert task in result
         assert tool_list in result
         assert context in result
         assert "## Context" in result
 
     def test_create_tool_selection_prompt_no_context_section_when_empty(self) -> None:
-        result = PromptTemplates.create_tool_selection_prompt("task", "- tool: desc", context="")
+        result = PromptTemplates.create_tool_selection_prompt(
+            "task", "- tool: desc", context=""
+        )
         assert "Context:" not in result
 
     def test_create_tool_selection_prompt_with_similar_tools(self) -> None:
         task = "Search the web"
         tool_list = "- search_web: Search the web"
         similar_tools = ["search_web", "find_info"]
-        result = PromptTemplates.create_tool_selection_prompt(task, tool_list, similar_tools=similar_tools)
+        result = PromptTemplates.create_tool_selection_prompt(
+            task, tool_list, similar_tools=similar_tools
+        )
         assert "search_web" in result
         assert "find_info" in result
         assert "Previously successful for similar tasks" in result
 
     def test_create_tool_selection_prompt_no_history_when_none(self) -> None:
-        result = PromptTemplates.create_tool_selection_prompt("task", "- tool: desc", similar_tools=None)
+        result = PromptTemplates.create_tool_selection_prompt(
+            "task", "- tool: desc", similar_tools=None
+        )
         assert "Previously successful for similar tasks" not in result
 
     def test_create_tool_selection_prompt_with_all_parameters(self) -> None:
@@ -68,7 +76,9 @@ class TestPromptTemplates:
         assert "find_info" in result
 
     def test_create_tool_selection_prompt_empty_task(self) -> None:
-        result = PromptTemplates.create_tool_selection_prompt("", "- test_tool: Test tool")
+        result = PromptTemplates.create_tool_selection_prompt(
+            "", "- test_tool: Test tool"
+        )
         assert "- test_tool: Test tool" in result
 
     def test_create_tool_selection_prompt_empty_tool_list(self) -> None:
@@ -97,7 +107,9 @@ class TestPromptTemplates:
         assert len(result) > 1500
 
     def test_create_tool_selection_prompt_json_structure(self) -> None:
-        result = PromptTemplates.create_tool_selection_prompt("Test task", "- test_tool: Test tool")
+        result = PromptTemplates.create_tool_selection_prompt(
+            "Test task", "- test_tool: Test tool"
+        )
         assert '"tool_name"' in result
         assert '"confidence"' in result
         assert '"reasoning"' in result
@@ -128,14 +140,20 @@ class TestPromptTemplates:
         assert '"reasoning"' in result
 
     def test_create_multi_tool_selection_prompt_max_tools(self) -> None:
-        result = PromptTemplates.create_multi_tool_selection_prompt("task", "- tool: desc", max_tools=5)
+        result = PromptTemplates.create_multi_tool_selection_prompt(
+            "task", "- tool: desc", max_tools=5
+        )
         assert "5" in result
 
     def test_create_multi_tool_selection_prompt_with_context(self) -> None:
-        result = PromptTemplates.create_multi_tool_selection_prompt("task", "- tool: desc", context="some context")
+        result = PromptTemplates.create_multi_tool_selection_prompt(
+            "task", "- tool: desc", context="some context"
+        )
         assert "some context" in result
         assert "## Context" in result
 
     def test_create_multi_tool_selection_prompt_no_context_when_empty(self) -> None:
-        result = PromptTemplates.create_multi_tool_selection_prompt("task", "- tool: desc", context="")
+        result = PromptTemplates.create_multi_tool_selection_prompt(
+            "task", "- tool: desc", context=""
+        )
         assert "## Context" not in result

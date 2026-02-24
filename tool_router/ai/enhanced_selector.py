@@ -12,7 +12,6 @@ import httpx
 
 from tool_router.ai.prompts import PromptTemplates
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -86,7 +85,9 @@ class AIModel(Enum):
                 "hardware_tier": "n100_ultra_fast",
             },
         }
-        return requirements.get(model, {"ram_gb": 8, "tokens_per_sec": 5, "hardware_tier": "unknown"})
+        return requirements.get(
+            model, {"ram_gb": 8, "tokens_per_sec": 5, "hardware_tier": "unknown"}
+        )
 
     @classmethod
     def get_cost_per_million_tokens(cls, model: str) -> dict[str, float]:
@@ -215,7 +216,8 @@ class OllamaSelector(BaseAISelector):
             return None
 
         tool_list = "\n".join(
-            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}" for tool in tools
+            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
+            for tool in tools
         )
         prompt = PromptTemplates.create_tool_selection_prompt(
             task=task,
@@ -254,7 +256,8 @@ class OllamaSelector(BaseAISelector):
             return None
 
         tool_list = "\n".join(
-            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}" for tool in tools
+            f"- {tool.get('name', 'Unknown')}: {tool.get('description', 'No description')}"
+            for tool in tools
         )
         prompt = PromptTemplates.create_multi_tool_selection_prompt(
             task=task,
@@ -321,7 +324,9 @@ class OllamaSelector(BaseAISelector):
 
             result = json.loads(response[start_idx:end_idx])
 
-            if not all(key in result for key in ["tool_name", "confidence", "reasoning"]):
+            if not all(
+                key in result for key in ["tool_name", "confidence", "reasoning"]
+            ):
                 logger.warning("Missing required fields in AI response")
                 return None
 
@@ -339,7 +344,9 @@ class OllamaSelector(BaseAISelector):
         else:
             return result
 
-    def _parse_multi_response(self, response: str, available_tools: list[dict[str, Any]]) -> dict[str, Any] | None:
+    def _parse_multi_response(
+        self, response: str, available_tools: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
         """Parse the multi-tool JSON response from Ollama."""
         try:
             start_idx = response.find("{")
@@ -360,7 +367,9 @@ class OllamaSelector(BaseAISelector):
 
             confidence = result["confidence"]
             if not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1:
-                logger.warning("Invalid confidence value in multi-tool response: %s", confidence)
+                logger.warning(
+                    "Invalid confidence value in multi-tool response: %s", confidence
+                )
                 return None
 
             valid_names = {t.get("name", "") for t in available_tools}
@@ -415,9 +424,13 @@ class CostTracker:
             # Calculate what it would have cost with premium model
             premium_model = AIModel.GPT4O_MINI.value  # Mid-tier paid model
             premium_costs = AIModel.get_cost_per_million_tokens(premium_model)
-            estimated_premium_cost = (estimated_tokens["input"] / 1_000_000) * premium_costs["input"] + (
+            estimated_premium_cost = (
+                estimated_tokens["input"] / 1_000_000
+            ) * premium_costs["input"] + (
                 estimated_tokens["output"] / 1_000_000
-            ) * premium_costs["output"]
+            ) * premium_costs[
+                "output"
+            ]
             self.total_cost_saved += estimated_premium_cost
             self.model_usage_stats[model]["total_cost"] = 0.0  # Local models are free
         else:
@@ -431,7 +444,9 @@ class CostTracker:
         """Record response time for performance tracking."""
         self._response_times.append(response_time_ms)
         if self._response_times:
-            self.average_response_time = sum(self._response_times) / len(self._response_times)
+            self.average_response_time = sum(self._response_times) / len(
+                self._response_times
+            )
 
 
 class EnhancedAISelector:
@@ -463,7 +478,9 @@ class EnhancedAISelector:
         self.fallback_weight = fallback_weight
         self.timeout_ms = timeout
         self.min_confidence = min_confidence
-        self.hardware_constraints = hardware_constraints or self._get_default_hardware_constraints()
+        self.hardware_constraints = (
+            hardware_constraints or self._get_default_hardware_constraints()
+        )
         self.cost_optimization = cost_optimization
         self._performance_cache = {}
         self._cost_tracker = CostTracker()
@@ -582,7 +599,9 @@ class EnhancedAISelector:
                 optimal_model = cheaper_model
 
         # Track cost for analytics
-        self._cost_tracker.track_selection(optimal_model, task_complexity, estimated_tokens)
+        self._cost_tracker.track_selection(
+            optimal_model, task_complexity, estimated_tokens
+        )
 
         # Use the optimal model for routing
         enhanced_providers = []
@@ -612,7 +631,9 @@ class EnhancedAISelector:
             # Add cost and hardware info
             result["model_used"] = optimal_model
             result["model_tier"] = AIModel.get_model_tier(optimal_model)
-            result["hardware_requirements"] = AIModel.get_hardware_requirements(optimal_model)
+            result["hardware_requirements"] = AIModel.get_hardware_requirements(
+                optimal_model
+            )
             result["estimated_cost"] = self.estimate_request_cost(
                 optimal_model, estimated_tokens["input"], estimated_tokens["output"]
             )
@@ -671,7 +692,9 @@ class EnhancedAISelector:
         if result:
             result["model_used"] = optimal_model
             result["model_tier"] = AIModel.get_model_tier(optimal_model)
-            result["hardware_requirements"] = AIModel.get_hardware_requirements(optimal_model)
+            result["hardware_requirements"] = AIModel.get_hardware_requirements(
+                optimal_model
+            )
             result["estimated_cost"] = self.estimate_request_cost(
                 optimal_model, estimated_tokens["input"], estimated_tokens["output"]
             )
@@ -685,11 +708,20 @@ class EnhancedAISelector:
         task_lower = task.lower().strip()
 
         # Simple heuristic based on task characteristics
-        if len(task_lower) < 50 or any(keyword in task_lower for keyword in ["what is", "how to", "explain", "define"]):
+        if len(task_lower) < 50 or any(
+            keyword in task_lower
+            for keyword in ["what is", "how to", "explain", "define"]
+        ):
             return "simple"
-        if any(keyword in task_lower for keyword in ["create", "generate", "build", "implement", "develop"]):
+        if any(
+            keyword in task_lower
+            for keyword in ["create", "generate", "build", "implement", "develop"]
+        ):
             return "complex"
-        if any(keyword in task_lower for keyword in ["analyze", "optimize", "refactor", "debug", "test"]):
+        if any(
+            keyword in task_lower
+            for keyword in ["analyze", "optimize", "refactor", "debug", "test"]
+        ):
             return "moderate"
         return "unknown"
 
@@ -709,7 +741,9 @@ class EnhancedAISelector:
         # For multi-tool, account for orchestration overhead
         orchestration_overhead = max_tools * 20
 
-        total_input = task_tokens + context_tokens + tool_list_tokens + orchestration_overhead
+        total_input = (
+            task_tokens + context_tokens + tool_list_tokens + orchestration_overhead
+        )
 
         # Estimate output tokens (typically 2-3x input for generation tasks)
         output_tokens = int(total_input * 2.5)
@@ -723,7 +757,8 @@ class EnhancedAISelector:
     def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance and cost metrics."""
         return {
-            "cache_hit_rate": len(self._performance_cache) / max(1, len(self._performance_cache)),
+            "cache_hit_rate": len(self._performance_cache)
+            / max(1, len(self._performance_cache)),
             "total_requests": self._cost_tracker.total_requests,
             "total_cost_saved": self._cost_tracker.total_cost_saved,
             "average_response_time": self._cost_tracker.average_response_time,
@@ -745,7 +780,9 @@ class EnhancedAISelector:
         similar_tools: list[str] | None = None,
     ) -> dict[str, Any] | None:
         """Legacy method - delegates to cost-optimized version."""
-        return self.select_tool_with_cost_optimization(task, tools, context, similar_tools)
+        return self.select_tool_with_cost_optimization(
+            task, tools, context, similar_tools
+        )
 
     def select_tools_multi(
         self,
@@ -755,4 +792,6 @@ class EnhancedAISelector:
         max_tools: int = 3,
     ) -> dict[str, Any] | None:
         """Legacy method - delegates to cost-optimized version."""
-        return self.select_tools_multi_with_cost_optimization(task, tools, context, max_tools)
+        return self.select_tools_multi_with_cost_optimization(
+            task, tools, context, max_tools
+        )

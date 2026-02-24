@@ -126,19 +126,27 @@ class TestSecurityMiddleware:
 
     def test_check_request_allowed(self) -> None:
         """Test request check that should be allowed."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools")
+        context = SecurityContext(
+            user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools"
+        )
         request_data = {"query": "search for information"}
 
         with (
-            patch.object(self.middleware.input_validator, "validate_input") as mock_validate,
-            patch.object(self.middleware.rate_limiter, "check_rate_limit") as mock_rate_limit,
+            patch.object(
+                self.middleware.input_validator, "validate_input"
+            ) as mock_validate,
+            patch.object(
+                self.middleware.rate_limiter, "check_rate_limit"
+            ) as mock_rate_limit,
             patch.object(self.middleware.audit_logger, "log_event") as mock_audit,
         ):
             # Mock successful validation
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=True, violations=[], sanitized_data=request_data
             )
-            mock_rate_limit.return_value = RateLimitResult(allowed=True, remaining_requests=50)
+            mock_rate_limit.return_value = RateLimitResult(
+                allowed=True, remaining_requests=50
+            )
 
             result = self.middleware.check_request(context, request_data)
 
@@ -149,11 +157,15 @@ class TestSecurityMiddleware:
 
     def test_check_request_blocked_by_validation(self) -> None:
         """Test request check blocked by input validation."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools")
+        context = SecurityContext(
+            user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools"
+        )
         request_data = {"query": "<script>alert('xss')</script>"}
 
         with (
-            patch.object(self.middleware.input_validator, "validate_input") as mock_validate,
+            patch.object(
+                self.middleware.input_validator, "validate_input"
+            ) as mock_validate,
             patch.object(self.middleware.audit_logger, "log_event") as mock_audit,
         ):
             # Mock validation failure
@@ -173,19 +185,27 @@ class TestSecurityMiddleware:
 
     def test_check_request_blocked_by_rate_limit(self) -> None:
         """Test request check blocked by rate limiting."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools")
+        context = SecurityContext(
+            user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools"
+        )
         request_data = {"query": "search for information"}
 
         with (
-            patch.object(self.middleware.input_validator, "validate_input") as mock_validate,
-            patch.object(self.middleware.rate_limiter, "check_rate_limit") as mock_rate_limit,
+            patch.object(
+                self.middleware.input_validator, "validate_input"
+            ) as mock_validate,
+            patch.object(
+                self.middleware.rate_limiter, "check_rate_limit"
+            ) as mock_rate_limit,
             patch.object(self.middleware.audit_logger, "log_event") as mock_audit,
         ):
             # Mock successful validation but rate limit exceeded
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=True, violations=[], sanitized_data=request_data
             )
-            mock_rate_limit.return_value = RateLimitResult(allowed=False, remaining_requests=0, retry_after=60)
+            mock_rate_limit.return_value = RateLimitResult(
+                allowed=False, remaining_requests=0, retry_after=60
+            )
 
             result = self.middleware.check_request(context, request_data)
 
@@ -213,12 +233,16 @@ class TestSecurityMiddleware:
         config = {"enabled": True, "strict_mode": True, "validation_level": "strict"}
         middleware = SecurityMiddleware(config)
 
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools")
+        context = SecurityContext(
+            user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools"
+        )
         request_data = {"query": "test data"}
 
         with (
             patch.object(middleware.input_validator, "validate_input") as mock_validate,
-            patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit,
+            patch.object(
+                middleware.rate_limiter, "check_rate_limit"
+            ) as mock_rate_limit,
             patch.object(middleware.audit_logger, "log_event") as mock_audit,
         ):
             # Mock validation with minor issues that would be allowed in standard mode
@@ -227,7 +251,9 @@ class TestSecurityMiddleware:
                 violations=["suspicious_pattern"],
                 sanitized_data=request_data,
             )
-            mock_rate_limit.return_value = RateLimitResult(allowed=True, remaining_requests=50)
+            mock_rate_limit.return_value = RateLimitResult(
+                allowed=True, remaining_requests=50
+            )
 
             result = middleware.check_request(context, request_data)
 

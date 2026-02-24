@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-
 # Common synonyms for better matching
 SYNONYMS = {
     "search": {"find", "lookup", "query", "seek"},
@@ -76,7 +75,9 @@ def score_tool(task: str, context: str, tool: dict[str, Any]) -> float:
     return float(total_score)
 
 
-def pick_best_tools(tools: list[dict[str, Any]], task: str, context: str, top_n: int = 1) -> list[dict[str, Any]]:
+def pick_best_tools(
+    tools: list[dict[str, Any]], task: str, context: str, top_n: int = 1
+) -> list[dict[str, Any]]:
     """Select the best matching tools based on task and context."""
     if not tools:
         return []

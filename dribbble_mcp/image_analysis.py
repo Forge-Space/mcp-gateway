@@ -8,7 +8,6 @@ from typing import Any
 
 import httpx
 
-
 logger = logging.getLogger(__name__)
 
 _MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
@@ -134,7 +133,9 @@ def _extract_dominant_colors(img: Any) -> list[str]:
         for px in pixels:
             pixel_counts[px] = pixel_counts.get(px, 0) + 1
 
-        sorted_indices = sorted(pixel_counts, key=lambda i: pixel_counts[i], reverse=True)
+        sorted_indices = sorted(
+            pixel_counts, key=lambda i: pixel_counts[i], reverse=True
+        )
 
         colors: list[str] = []
         for idx in sorted_indices[:_TOP_COLORS]:

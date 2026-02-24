@@ -127,7 +127,10 @@ class TestExtractedPattern:
         assert pattern.category == PatternCategory.UI_COMPONENT
         assert pattern.title == "React Button Component"
         assert pattern.description == "A reusable button component"
-        assert pattern.code_example == "const Button: React.FC = () => <button>Click me</button>"
+        assert (
+            pattern.code_example
+            == "const Button: React.FC = () => <button>Click me</button>"
+        )
         assert pattern.source_url == "https://example.com/button"
         assert pattern.confidence_score == 0.9
 
@@ -144,7 +147,10 @@ class TestExtractedPattern:
         assert pattern.category == PatternCategory.REACT_PATTERN
         assert pattern.title == "React Hook Pattern"
         assert pattern.description == "Custom hook for state management"
-        assert pattern.code_example == "const useCustomHook = () => { /* hook implementation */ }"
+        assert (
+            pattern.code_example
+            == "const useCustomHook = () => { /* hook implementation */ }"
+        )
         assert pattern.source_url == "https://example.com/hook"
         # Optional fields should have default values
         assert pattern.confidence_score >= 0 and pattern.confidence_score <= 1

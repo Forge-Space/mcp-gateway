@@ -55,7 +55,9 @@ def test_cache_config_creation():
         assert default_config.enable_metrics is True
 
         # Test custom config
-        custom_config = CacheConfig(max_size=2000, ttl=7200, cleanup_interval=600, enable_metrics=False)
+        custom_config = CacheConfig(
+            max_size=2000, ttl=7200, cleanup_interval=600, enable_metrics=False
+        )
         assert custom_config.max_size == 2000
         assert custom_config.ttl == 7200
         assert custom_config.cleanup_interval == 600

@@ -196,7 +196,9 @@ class TestRAGManager:
         query = "How to implement React hooks with TypeScript"
 
         # Step 1: Analyze query
-        analysis = await rag_manager_tool._handle_analyze_query({"query": query, "agent_type": "ui_specialist"})
+        analysis = await rag_manager_tool._handle_analyze_query(
+            {"query": query, "agent_type": "ui_specialist"}
+        )
         assert analysis["success"] is True
 
         # Step 2: Retrieve knowledge

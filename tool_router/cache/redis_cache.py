@@ -11,7 +11,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
 
-
 try:
     import redis
 
@@ -23,7 +22,6 @@ except ImportError:
 from cachetools import TTLCache
 
 from .types import CacheConfig
-
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +95,9 @@ class RedisCache:
             # Test connection
             self._redis_client.ping()
             self._is_healthy = True
-            logger.info(f"Redis cache initialized: {self.config.host}:{self.config.port}")
+            logger.info(
+                f"Redis cache initialized: {self.config.host}:{self.config.port}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to initialize Redis: {e}")
@@ -347,7 +347,9 @@ class RedisCache:
                         "used_memory": redis_info.get("used_memory"),
                         "used_memory_human": redis_info.get("used_memory_human"),
                         "connected_clients": redis_info.get("connected_clients"),
-                        "total_commands_processed": redis_info.get("total_commands_processed"),
+                        "total_commands_processed": redis_info.get(
+                            "total_commands_processed"
+                        ),
                     }
                 )
             except Exception as e:
@@ -388,6 +390,8 @@ def create_redis_cache(
     # Create fallback cache
     fallback_cache = None
     if fallback_config:
-        fallback_cache = TTLCache(maxsize=fallback_config.max_size, ttl=fallback_config.ttl)
+        fallback_cache = TTLCache(
+            maxsize=fallback_config.max_size, ttl=fallback_config.ttl
+        )
 
     return RedisCache(config=config, fallback_cache=fallback_cache, **kwargs)

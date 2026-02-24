@@ -17,7 +17,6 @@ from typing import Any
 from ..training.data_extraction import PatternCategory
 from ..training.knowledge_base import KnowledgeBase, PatternCategory
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +69,9 @@ class EnhancedUISpecialist:
             patterns = self._get_relevant_patterns(component_type, framework)
 
             # Generate component based on patterns
-            component = self._build_component(component_type, framework, requirements, context, patterns)
+            component = self._build_component(
+                component_type, framework, requirements, context, patterns
+            )
 
             # Apply accessibility enhancements
             component = self._enhance_accessibility(component, requirements)
@@ -80,7 +81,9 @@ class EnhancedUISpecialist:
 
             # Generate TypeScript types if requested
             if "typescript" in requirements:
-                component["typescript_types"] = self._generate_typescript_types(component)
+                component["typescript_types"] = self._generate_typescript_types(
+                    component
+                )
 
             return component
 
@@ -88,14 +91,20 @@ class EnhancedUISpecialist:
             logger.error(f"Error generating component: {e}")
             return self._get_fallback_component(request)
 
-    def _get_relevant_patterns(self, component_type: str, framework: str) -> list[dict[str, Any]]:
+    def _get_relevant_patterns(
+        self, component_type: str, framework: str
+    ) -> list[dict[str, Any]]:
         """Get relevant patterns from the knowledge base."""
         patterns = []
 
         # Search for framework-specific patterns
         framework_patterns = self.knowledge_base.search_knowledge(
             f"{framework} {component_type}",
-            (PatternCategory.REACT_PATTERN if framework == "react" else PatternCategory.UI_COMPONENT),
+            (
+                PatternCategory.REACT_PATTERN
+                if framework == "react"
+                else PatternCategory.UI_COMPONENT
+            ),
             limit=10,
         )
 
@@ -152,7 +161,9 @@ class EnhancedUISpecialist:
 
         return component
 
-    def _generate_component_code(self, component_type: str, framework: str, patterns: list[dict[str, Any]]) -> str:
+    def _generate_component_code(
+        self, component_type: str, framework: str, patterns: list[dict[str, Any]]
+    ) -> str:
         """Generate component code based on framework and patterns."""
         if framework == "react":
             return self._generate_react_component(component_type, patterns)
@@ -164,11 +175,15 @@ class EnhancedUISpecialist:
             return self._generate_svelte_component(component_type, patterns)
         return self._generate_generic_component(component_type, patterns)
 
-    def _generate_react_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
+    def _generate_react_component(
+        self, component_type: str, patterns: list[dict[str, Any]]
+    ) -> str:
         """Generate React component with 2024 best practices."""
 
         # Get the best pattern for this component type
-        best_pattern = max(patterns, key=lambda p: p["confidence"]) if patterns else None
+        best_pattern = (
+            max(patterns, key=lambda p: p["confidence"]) if patterns else None
+        )
 
         if component_type == "button":
             return """import React from 'react';
@@ -396,7 +411,9 @@ const {component_name} = React.forwardRef<HTMLDivElement, {component_name}Props>
 
 export {{ {component_name} }};"""
 
-    def _generate_vue_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
+    def _generate_vue_component(
+        self, component_type: str, patterns: list[dict[str, Any]]
+    ) -> str:
         """Generate Vue 3 component with Composition API."""
         return f"""<template>
   <div class="{component_type}-component">
@@ -422,7 +439,9 @@ const props = defineProps<Props>();
 }}
 </style>"""
 
-    def _generate_angular_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
+    def _generate_angular_component(
+        self, component_type: str, patterns: list[dict[str, Any]]
+    ) -> str:
         """Generate Angular 17+ standalone component."""
         return rf"""import {{ Component, Input }} from '@angular/core';
 import {{ CommonModule }} from '@angular/common';
@@ -447,7 +466,9 @@ export class {component_type.title()}Component {{
   @Input() data: any;
 }}"""
 
-    def _generate_svelte_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
+    def _generate_svelte_component(
+        self, component_type: str, patterns: list[dict[str, Any]]
+    ) -> str:
         """Generate Svelte 5+ component."""
         return f"""<script lang="ts">
   // Component logic here
@@ -523,7 +544,9 @@ export class {component_type.title()}Component {{
 
         return base_props
 
-    def _generate_component_styling(self, component_type: str, framework: str) -> dict[str, Any]:
+    def _generate_component_styling(
+        self, component_type: str, framework: str
+    ) -> dict[str, Any]:
         """Generate styling configuration for the component."""
         return {
             "framework": framework,
@@ -534,7 +557,9 @@ export class {component_type.title()}Component {{
             "design_tokens": True,
         }
 
-    def _generate_dependencies(self, framework: str, requirements: list[str]) -> list[str]:
+    def _generate_dependencies(
+        self, framework: str, requirements: list[str]
+    ) -> list[str]:
         """Generate dependency list for the component."""
         dependencies = []
 
@@ -567,7 +592,9 @@ export class {component_type.title()}Component {{
 
         return dependencies
 
-    def _enhance_accessibility(self, component: dict[str, Any], requirements: list[str]) -> dict[str, Any]:
+    def _enhance_accessibility(
+        self, component: dict[str, Any], requirements: list[str]
+    ) -> dict[str, Any]:
         """Enhance component with accessibility features."""
         if "accessibility" not in requirements:
             return component
@@ -622,7 +649,9 @@ export class {component_type.title()}Component {{
             '<Input\n          aria-label={props["aria-label"]}\n          aria-invalid={errors ? "true" : "false"}',
         )
 
-    def _optimize_performance(self, component: dict[str, Any], framework: str) -> dict[str, Any]:
+    def _optimize_performance(
+        self, component: dict[str, Any], framework: str
+    ) -> dict[str, Any]:
         """Add performance optimizations to the component."""
         component["performance"] = {
             "memoization": framework == "react",
@@ -688,7 +717,9 @@ export default {component_type.title()};""",
             "fallback": True,
         }
 
-    def get_component_recommendations(self, component_type: str, framework: str) -> list[str]:
+    def get_component_recommendations(
+        self, component_type: str, framework: str
+    ) -> list[str]:
         """Get recommendations for component improvements."""
         recommendations = []
 
@@ -696,22 +727,32 @@ export default {component_type.title()};""",
         patterns = self._get_relevant_patterns(component_type, framework)
 
         if not patterns:
-            recommendations.append("Consider adding more specific patterns to the knowledge base")
+            recommendations.append(
+                "Consider adding more specific patterns to the knowledge base"
+            )
             return recommendations
 
         # Analyze patterns and generate recommendations
         high_confidence_patterns = [p for p in patterns if p["confidence"] > 0.8]
 
         if len(high_confidence_patterns) < 3:
-            recommendations.append("Add more high-quality patterns for better component generation")
+            recommendations.append(
+                "Add more high-quality patterns for better component generation"
+            )
 
         # Check for accessibility patterns
-        accessibility_patterns = [p for p in patterns if "accessibility" in p.get("tags", [])]
+        accessibility_patterns = [
+            p for p in patterns if "accessibility" in p.get("tags", [])
+        ]
         if not accessibility_patterns:
-            recommendations.append("Include accessibility patterns for inclusive design")
+            recommendations.append(
+                "Include accessibility patterns for inclusive design"
+            )
 
         # Check for performance patterns
-        performance_patterns = [p for p in patterns if "performance" in p.get("tags", [])]
+        performance_patterns = [
+            p for p in patterns if "performance" in p.get("tags", [])
+        ]
         if not performance_patterns:
             recommendations.append("Add performance optimization patterns")
 
@@ -744,12 +785,21 @@ export default {component_type.title()};""",
                 "input",
             ]:
                 validation_result["issues"].append("Missing accessibility attributes")
-                validation_result["recommendations"].append("Add ARIA attributes for better accessibility")
+                validation_result["recommendations"].append(
+                    "Add ARIA attributes for better accessibility"
+                )
 
             # Check for TypeScript types
-            if "typescript" in component.get("requirements", []) and "interface" not in code:
-                validation_result["issues"].append("Missing TypeScript type definitions")
-                validation_result["recommendations"].append("Add proper TypeScript interfaces")
+            if (
+                "typescript" in component.get("requirements", [])
+                and "interface" not in code
+            ):
+                validation_result["issues"].append(
+                    "Missing TypeScript type definitions"
+                )
+                validation_result["recommendations"].append(
+                    "Add proper TypeScript interfaces"
+                )
 
         # Calculate score
         base_score = 100

@@ -15,7 +15,9 @@ from tool_router.core.config import ToolRouterConfig
 class TestToolRoutingWorkflows:
     """Integration tests for complete tool routing workflows."""
 
-    def test_complete_tool_selection_workflow_with_learning(self, tmp_path: Path) -> None:
+    def test_complete_tool_selection_workflow_with_learning(
+        self, tmp_path: Path
+    ) -> None:
         """Test complete workflow from user request to tool execution with learning."""
         # Setup components
         feedback_file = str(tmp_path / "feedback.json")
@@ -65,7 +67,9 @@ class TestToolRoutingWorkflows:
         ai_selector.select_tool.side_effect = Exception("AI service unavailable")
 
         # Mock keyword-based fallback
-        with patch("tool_router.ai.enhanced_selector.EnhancedSelector._select_by_keywords") as mock_keywords:
+        with patch(
+            "tool_router.ai.enhanced_selector.EnhancedSelector._select_by_keywords"
+        ) as mock_keywords:
             mock_keywords.return_value = {
                 "selected_tool": "file_reader",
                 "confidence": 0.6,
@@ -81,7 +85,9 @@ class TestToolRoutingWorkflows:
             except Exception:
                 # Fallback to keyword selection
                 real_selector = EnhancedSelector(Mock())
-                selection_result = real_selector._select_by_keywords("read the configuration file")
+                selection_result = real_selector._select_by_keywords(
+                    "read the configuration file"
+                )
 
         # Verify fallback worked
         assert selection_result["selected_tool"] == "file_reader"
@@ -189,7 +195,9 @@ class TestToolRoutingWorkflows:
 
         # Record successful selection based on config
         selected_tool = config.tool_preferences.get(task_type, "default_tool")
-        feedback_store.record(task=task, selected_tool=selected_tool, success=True, confidence=0.8)
+        feedback_store.record(
+            task=task, selected_tool=selected_tool, success=True, confidence=0.8
+        )
 
         # Verify configuration was respected
         assert selected_tool == "search_web"
@@ -257,7 +265,9 @@ class TestToolRoutingWorkflows:
         ]
 
         for task in related_tasks:
-            feedback_store.record(task=task, selected_tool="config_reader", success=True, confidence=0.8)
+            feedback_store.record(
+                task=task, selected_tool="config_reader", success=True, confidence=0.8
+            )
 
         # Verify pattern learning
         stats = feedback_store.get_stats("config_reader")
@@ -314,7 +324,9 @@ class TestToolRoutingWorkflows:
         feedback_store = FeedbackStore(feedback_file)
 
         # Mock security check
-        with patch("tool_router.security.audit_logger.SecurityAuditLogger.log_security_event") as mock_audit:
+        with patch(
+            "tool_router.security.audit_logger.SecurityAuditLogger.log_security_event"
+        ) as mock_audit:
             # Record security-sensitive operations
             feedback_store.record(
                 task="execute system command",
@@ -324,7 +336,9 @@ class TestToolRoutingWorkflows:
             )
 
             # Verify security logging
-            assert mock_audit.call_count >= 0  # Should be called for security-sensitive tasks
+            assert (
+                mock_audit.call_count >= 0
+            )  # Should be called for security-sensitive tasks
 
             # Verify learning respects security constraints
             stats = feedback_store.get_stats("secure_executor")

@@ -63,26 +63,50 @@ class SecurityMiddleware:
 
         # Default rate limit configurations
         self.default_rate_limit = RateLimitConfig(
-            requests_per_minute=rate_limit_config.get("default", {}).get("requests_per_minute", 60),
-            requests_per_hour=rate_limit_config.get("default", {}).get("requests_per_hour", 1000),
-            requests_per_day=rate_limit_config.get("default", {}).get("requests_per_day", 10000),
-            burst_capacity=rate_limit_config.get("default", {}).get("burst_capacity", 10),
+            requests_per_minute=rate_limit_config.get("default", {}).get(
+                "requests_per_minute", 60
+            ),
+            requests_per_hour=rate_limit_config.get("default", {}).get(
+                "requests_per_hour", 1000
+            ),
+            requests_per_day=rate_limit_config.get("default", {}).get(
+                "requests_per_day", 10000
+            ),
+            burst_capacity=rate_limit_config.get("default", {}).get(
+                "burst_capacity", 10
+            ),
             penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
         self.authenticated_rate_limit = RateLimitConfig(
-            requests_per_minute=rate_limit_config.get("authenticated_user", {}).get("requests_per_minute", 120),
-            requests_per_hour=rate_limit_config.get("authenticated_user", {}).get("requests_per_hour", 2000),
-            requests_per_day=rate_limit_config.get("authenticated_user", {}).get("requests_per_day", 20000),
-            burst_capacity=rate_limit_config.get("authenticated_user", {}).get("burst_capacity", 20),
+            requests_per_minute=rate_limit_config.get("authenticated_user", {}).get(
+                "requests_per_minute", 120
+            ),
+            requests_per_hour=rate_limit_config.get("authenticated_user", {}).get(
+                "requests_per_hour", 2000
+            ),
+            requests_per_day=rate_limit_config.get("authenticated_user", {}).get(
+                "requests_per_day", 20000
+            ),
+            burst_capacity=rate_limit_config.get("authenticated_user", {}).get(
+                "burst_capacity", 20
+            ),
             penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
         self.enterprise_rate_limit = RateLimitConfig(
-            requests_per_minute=rate_limit_config.get("enterprise_user", {}).get("requests_per_minute", 300),
-            requests_per_hour=rate_limit_config.get("enterprise_user", {}).get("requests_per_hour", 5000),
-            requests_per_day=rate_limit_config.get("enterprise_user", {}).get("requests_per_day", 50000),
-            burst_capacity=rate_limit_config.get("enterprise_user", {}).get("burst_capacity", 50),
+            requests_per_minute=rate_limit_config.get("enterprise_user", {}).get(
+                "requests_per_minute", 300
+            ),
+            requests_per_hour=rate_limit_config.get("enterprise_user", {}).get(
+                "requests_per_hour", 5000
+            ),
+            requests_per_day=rate_limit_config.get("enterprise_user", {}).get(
+                "requests_per_day", 50000
+            ),
+            burst_capacity=rate_limit_config.get("enterprise_user", {}).get(
+                "burst_capacity", 50
+            ),
             penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
@@ -132,7 +156,9 @@ class SecurityMiddleware:
         # Input validation
         prompt_result = self.input_validator.validate_prompt(task, context_str)
         sanitized_inputs["task"] = prompt_result.sanitized_input
-        sanitized_inputs["context"] = context_str  # Context is validated within prompt validation
+        sanitized_inputs["context"] = (
+            context_str  # Context is validated within prompt validation
+        )
 
         violations.extend(prompt_result.violations)
         risk_score += prompt_result.risk_score
@@ -171,7 +197,9 @@ class SecurityMiddleware:
         identifier = self._get_rate_limit_identifier(context)
         rate_limit_config = self._get_rate_limit_config(context)
 
-        rate_limit_result = self.rate_limiter.check_rate_limit(identifier, rate_limit_config)
+        rate_limit_result = self.rate_limiter.check_rate_limit(
+            identifier, rate_limit_config
+        )
 
         if not rate_limit_result.allowed:
             violations.append("Rate limit exceeded")
@@ -193,7 +221,9 @@ class SecurityMiddleware:
 
         # Check for prompt injection patterns specifically
         if self.config.get("prompt_injection", {}).get("enabled", True):
-            injection_patterns = self._detect_prompt_injection_patterns(prompt_result.sanitized_input)
+            injection_patterns = self._detect_prompt_injection_patterns(
+                prompt_result.sanitized_input
+            )
             if injection_patterns:
                 violations.append("Prompt injection patterns detected")
                 risk_score = max(risk_score, 0.9)
@@ -207,7 +237,9 @@ class SecurityMiddleware:
                     endpoint=context.endpoint,
                     patterns=injection_patterns,
                     risk_score=risk_score,
-                    details={"sanitized_prompt": prompt_result.sanitized_input[:200] + "..."},
+                    details={
+                        "sanitized_prompt": prompt_result.sanitized_input[:200] + "..."
+                    },
                 )
 
         # Apply strict mode rules
@@ -355,8 +387,14 @@ class SecurityMiddleware:
         if "rate_limiting" in new_config:
             rate_limit_config = new_config["rate_limiting"]
             if "default" in rate_limit_config:
-                self.default_rate_limit = RateLimitConfig(**rate_limit_config["default"])
+                self.default_rate_limit = RateLimitConfig(
+                    **rate_limit_config["default"]
+                )
             if "authenticated_user" in rate_limit_config:
-                self.authenticated_rate_limit = RateLimitConfig(**rate_limit_config["authenticated_user"])
+                self.authenticated_rate_limit = RateLimitConfig(
+                    **rate_limit_config["authenticated_user"]
+                )
             if "enterprise_user" in rate_limit_config:
-                self.enterprise_rate_limit = RateLimitConfig(**rate_limit_config["enterprise_user"])
+                self.enterprise_rate_limit = RateLimitConfig(
+                    **rate_limit_config["enterprise_user"]
+                )

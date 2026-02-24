@@ -117,7 +117,9 @@ def test_common_task_parameter_names_priority() -> None:
     expected_params = ["task", "query", "prompt", "text", "input"]
 
     for param in expected_params:
-        assert param in COMMON_TASK_PARAMETER_NAMES, f"Missing common parameter: {param}"
+        assert (
+            param in COMMON_TASK_PARAMETER_NAMES
+        ), f"Missing common parameter: {param}"
 
 
 def test_build_arguments_case_sensitivity() -> None:
