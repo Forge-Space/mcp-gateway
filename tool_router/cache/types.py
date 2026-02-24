@@ -65,9 +65,7 @@ class CacheConfig:
         if self.retention_days:
             for classification, days in self.retention_days.items():
                 if days < 1:
-                    raise ValueError(
-                        f"retention_days for {classification} must be positive"
-                    )
+                    raise ValueError(f"retention_days for {classification} must be positive")
 
 
 @dataclass

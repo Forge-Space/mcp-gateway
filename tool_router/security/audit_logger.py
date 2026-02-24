@@ -168,9 +168,7 @@ class SecurityAuditLogger:
     ) -> str:
         """Log a blocked request."""
         event_id = str(uuid.uuid4())
-        severity = (
-            SecuritySeverity.HIGH if risk_score >= 0.8 else SecuritySeverity.MEDIUM
-        )
+        severity = SecuritySeverity.HIGH if risk_score >= 0.8 else SecuritySeverity.MEDIUM
 
         event = SecurityEvent(
             event_id=event_id,
@@ -245,9 +243,7 @@ class SecurityAuditLogger:
     ) -> str:
         """Log a prompt injection detection event."""
         event_id = str(uuid.uuid4())
-        severity = (
-            SecuritySeverity.CRITICAL if risk_score >= 0.8 else SecuritySeverity.HIGH
-        )
+        severity = SecuritySeverity.CRITICAL if risk_score >= 0.8 else SecuritySeverity.HIGH
 
         event = SecurityEvent(
             event_id=event_id,
@@ -355,9 +351,7 @@ class SecurityAuditLogger:
     ) -> str:
         """Log a validation failure."""
         event_id = str(uuid.uuid4())
-        severity = (
-            SecuritySeverity.HIGH if risk_score >= 0.7 else SecuritySeverity.MEDIUM
-        )
+        severity = SecuritySeverity.HIGH if risk_score >= 0.7 else SecuritySeverity.MEDIUM
 
         event = SecurityEvent(
             event_id=event_id,
@@ -436,9 +430,7 @@ class SecurityAuditLogger:
     ) -> str:
         """Log suspicious activity."""
         event_id = str(uuid.uuid4())
-        severity = (
-            SecuritySeverity.HIGH if risk_score >= 0.7 else SecuritySeverity.MEDIUM
-        )
+        severity = SecuritySeverity.HIGH if risk_score >= 0.7 else SecuritySeverity.MEDIUM
 
         event = SecurityEvent(
             event_id=event_id,
@@ -478,7 +470,5 @@ class SecurityAuditLogger:
     def create_request_hash(self, request_data: dict[str, Any]) -> str:
         """Create a hash for request deduplication."""
         # Create a normalized string representation
-        normalized_data = json.dumps(
-            request_data, sort_keys=True, separators=(",", ":")
-        )
+        normalized_data = json.dumps(request_data, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(normalized_data.encode()).hexdigest()[:16]

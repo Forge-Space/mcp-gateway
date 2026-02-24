@@ -306,9 +306,7 @@ class TestKnowledgeBase:
         assert results[0].id == "item-1"
 
         # Search with category filter
-        results = self.knowledge_base.search_knowledge(
-            "component", PatternCategory.UI_COMPONENT
-        )
+        results = self.knowledge_base.search_knowledge("component", PatternCategory.UI_COMPONENT)
         assert len(results) == 1
         assert results[0].id == "item-2"
 
@@ -357,18 +355,12 @@ class TestKnowledgeBase:
         self.knowledge_base.add_knowledge_item(item2)
         self.knowledge_base.add_knowledge_item(item3)
 
-        react_patterns = self.knowledge_base.get_patterns_by_category(
-            PatternCategory.REACT_PATTERN
-        )
-        ui_patterns = self.knowledge_base.get_patterns_by_category(
-            PatternCategory.UI_COMPONENT
-        )
+        react_patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.REACT_PATTERN)
+        ui_patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.UI_COMPONENT)
 
         assert len(react_patterns) == 2
         assert len(ui_patterns) == 1
-        assert all(
-            item.category == PatternCategory.REACT_PATTERN for item in react_patterns
-        )
+        assert all(item.category == PatternCategory.REACT_PATTERN for item in react_patterns)
         assert ui_patterns[0].category == PatternCategory.UI_COMPONENT
 
     def test_get_top_patterns(self):

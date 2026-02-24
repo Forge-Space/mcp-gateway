@@ -134,9 +134,7 @@ class RetentionPolicyManager:
                 data_classification=DataClassification.SENSITIVE,
                 trigger=RetentionTrigger.TIME_BASED,
                 action=RetentionAction.DELETE,
-                retention_days=self.config.retention_days.get(
-                    DataClassification.SENSITIVE, 90
-                ),
+                retention_days=self.config.retention_days.get(DataClassification.SENSITIVE, 90),
                 priority=100,
             ),
             RetentionRule(
@@ -146,9 +144,7 @@ class RetentionPolicyManager:
                 data_classification=DataClassification.CONFIDENTIAL,
                 trigger=RetentionTrigger.TIME_BASED,
                 action=RetentionAction.DELETE,
-                retention_days=self.config.retention_days.get(
-                    DataClassification.CONFIDENTIAL, 30
-                ),
+                retention_days=self.config.retention_days.get(DataClassification.CONFIDENTIAL, 30),
                 priority=90,
             ),
             RetentionRule(
@@ -158,9 +154,7 @@ class RetentionPolicyManager:
                 data_classification=DataClassification.PUBLIC,
                 trigger=RetentionTrigger.TIME_BASED,
                 action=RetentionAction.DELETE,
-                retention_days=self.config.retention_days.get(
-                    DataClassification.PUBLIC, 365
-                ),
+                retention_days=self.config.retention_days.get(DataClassification.PUBLIC, 365),
                 priority=80,
             ),
             RetentionRule(
@@ -170,9 +164,7 @@ class RetentionPolicyManager:
                 data_classification=DataClassification.INTERNAL,
                 trigger=RetentionTrigger.TIME_BASED,
                 action=RetentionAction.DELETE,
-                retention_days=self.config.retention_days.get(
-                    DataClassification.INTERNAL, 180
-                ),
+                retention_days=self.config.retention_days.get(DataClassification.INTERNAL, 180),
                 priority=85,
             ),
         ]
@@ -210,9 +202,7 @@ class RetentionPolicyManager:
                 return True
             return False
 
-    def get_rules(
-        self, classification: DataClassification | None = None
-    ) -> list[RetentionRule]:
+    def get_rules(self, classification: DataClassification | None = None) -> list[RetentionRule]:
         """Get retention rules, optionally filtered by classification."""
         with self._lock:
             rules = list(self._rules.values())
@@ -238,9 +228,7 @@ class RetentionPolicyManager:
         # Return highest priority rule
         return applicable_rules[0] if applicable_rules else None
 
-    def _evaluate_conditions(
-        self, rule: RetentionRule, metadata: CacheEntryMetadata
-    ) -> bool:
+    def _evaluate_conditions(self, rule: RetentionRule, metadata: CacheEntryMetadata) -> bool:
         """Evaluate rule conditions against metadata."""
         conditions = rule.conditions
 
@@ -407,10 +395,7 @@ class LifecycleManager:
         with self._lock:
             if current_stage_id in self._stages:
                 current_stage = self._stages[current_stage_id]
-                if (
-                    current_stage.next_stage
-                    and current_stage.next_stage in self._stages
-                ):
+                if current_stage.next_stage and current_stage.next_stage in self._stages:
                     return self._stages[current_stage.next_stage]
             return None
 
@@ -437,9 +422,7 @@ class RetentionScheduler:
         self._lock = Lock()
         self._running = False
         self._scheduler_thread: threading.Thread | None = None
-        self._cleanup_interval = (
-            getattr(config, "retention_cleanup_interval_hours", 24) * 3600
-        )  # Convert to seconds
+        self._cleanup_interval = getattr(config, "retention_cleanup_interval_hours", 24) * 3600  # Convert to seconds
 
         # Setup logging
         self.logger = logging.getLogger(__name__)
@@ -451,9 +434,7 @@ class RetentionScheduler:
                 return
 
             self._running = True
-            self._scheduler_thread = threading.Thread(
-                target=self._scheduler_loop, daemon=True
-            )
+            self._scheduler_thread = threading.Thread(target=self._scheduler_loop, daemon=True)
             self._scheduler_thread.start()
 
             self.logger.info("Retention scheduler started")
@@ -546,12 +527,8 @@ class RetentionAuditor:
             for classification in required_classifications:
                 if classification.value not in classification_counts:
                     base_score -= 20
-                    audit_results["findings"].append(
-                        f"Missing retention rule for {classification.value} data"
-                    )
-                    audit_results["recommendations"].append(
-                        f"Create retention rule for {classification.value} data"
-                    )
+                    audit_results["findings"].append(f"Missing retention rule for {classification.value} data")
+                    audit_results["recommendations"].append(f"Create retention rule for {classification.value} data")
 
             audit_results["compliance_score"] = max(0, base_score)
 

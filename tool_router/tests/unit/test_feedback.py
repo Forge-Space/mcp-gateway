@@ -191,15 +191,11 @@ class TestFeedbackStoreEntityExtraction:
         assert "/path/to/file.txt" in entities
 
     def test_extract_entities_urls(self) -> None:
-        entities = FeedbackStore._extract_entities(
-            "fetch data from https://example.com/api"
-        )
+        entities = FeedbackStore._extract_entities("fetch data from https://example.com/api")
         assert "https://example.com/api" in entities
 
     def test_extract_entities_quoted_strings(self) -> None:
-        entities = FeedbackStore._extract_entities(
-            'search for "test query" in database'
-        )
+        entities = FeedbackStore._extract_entities('search for "test query" in database')
         assert "test query" in entities
 
     def test_extract_entities_empty(self) -> None:
@@ -393,15 +389,11 @@ class TestFeedbackStoreEntityExtraction:
         assert "/path/to/file.txt" in entities
 
     def test_extract_entities_urls(self) -> None:
-        entities = FeedbackStore._extract_entities(
-            "fetch data from https://example.com/api"
-        )
+        entities = FeedbackStore._extract_entities("fetch data from https://example.com/api")
         assert "https://example.com/api" in entities
 
     def test_extract_entities_quoted_strings(self) -> None:
-        entities = FeedbackStore._extract_entities(
-            'search for "test query" in database'
-        )
+        entities = FeedbackStore._extract_entities('search for "test query" in database')
         assert "test query" in entities
 
     def test_extract_entities_empty(self) -> None:
@@ -463,9 +455,7 @@ class TestFeedbackStoreAdvanced:
 
     def test_classify_task_type_database_operations(self) -> None:
         task_type = FeedbackStore._classify_task_type("query the database table")
-        assert (
-            task_type == "search_operations"
-        )  # "query" matches search before database
+        assert task_type == "search_operations"  # "query" matches search before database
 
     def test_classify_task_type_network_operations(self) -> None:
         task_type = FeedbackStore._classify_task_type("fetch data from api")
@@ -557,7 +547,7 @@ class TestFeedbackStoreAdvanced:
         for i in range(7):
             store.record(f"task {i}", "mytool", success=True)
         for i in range(3):
-            store.record(f"task {i+7}", "mytool", success=False)
+            store.record(f"task {i + 7}", "mytool", success=False)
 
         stats = store.get_stats("mytool")
         assert stats is not None
@@ -571,9 +561,7 @@ class TestFeedbackStoreAdvanced:
             success=True,
             context="data analysis",
         )
-        store.record(
-            "analyze python code", "code_analyzer", success=True, context="code review"
-        )
+        store.record("analyze python code", "code_analyzer", success=True, context="code review")
 
         similar = store.similar_task_tools("process python files")
         assert "data_processor" in similar
@@ -731,10 +719,7 @@ class TestFeedbackStoreBusinessLogic:
         assert pattern.total_occurrences >= 8  # 5 + 3 entries
         assert "search_tool" in pattern.preferred_tools
         assert "bad_search" in pattern.preferred_tools
-        assert (
-            pattern.preferred_tools["search_tool"]
-            > pattern.preferred_tools["bad_search"]
-        )
+        assert pattern.preferred_tools["search_tool"] > pattern.preferred_tools["bad_search"]
 
     def test_entity_extraction_and_learning(self, tmp_path: Path) -> None:
         """Test that entities are extracted and learned from tasks."""
@@ -863,15 +848,11 @@ class TestFeedbackStoreEntityExtraction:
         assert "/path/to/file.txt" in entities
 
     def test_extract_entities_urls(self) -> None:
-        entities = FeedbackStore._extract_entities(
-            "fetch data from https://example.com/api"
-        )
+        entities = FeedbackStore._extract_entities("fetch data from https://example.com/api")
         assert "https://example.com/api" in entities
 
     def test_extract_entities_quoted_strings(self) -> None:
-        entities = FeedbackStore._extract_entities(
-            'search for "test query" in database'
-        )
+        entities = FeedbackStore._extract_entities('search for "test query" in database')
         assert "test query" in entities
 
     def test_extract_entities_empty(self) -> None:

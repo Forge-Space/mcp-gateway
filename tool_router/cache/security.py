@@ -232,8 +232,7 @@ class AccessControlManager:
             key=key,
             data_classification=data_classification,
             reason=reason,
-            expires_at=datetime.now()
-            + timedelta(hours=self.config.access_request_expiry_hours),
+            expires_at=datetime.now() + timedelta(hours=self.config.access_request_expiry_hours),
         )
 
         with self._lock:
@@ -256,9 +255,7 @@ class AccessControlManager:
                     return True
             return False
 
-    def deny_access_request(
-        self, request_id: int, denied_by: str, reason: str = ""
-    ) -> bool:
+    def deny_access_request(self, request_id: int, denied_by: str, reason: str = "") -> bool:
         """Deny an access request."""
         with self._lock:
             if 0 <= request_id < len(self.access_requests):
@@ -318,9 +315,7 @@ class AccessControlManager:
                 return True
             return False
 
-    def get_access_requests(
-        self, user_id: str | None = None, status: str | None = None
-    ) -> list[AccessRequest]:
+    def get_access_requests(self, user_id: str | None = None, status: str | None = None) -> list[AccessRequest]:
         """Get access requests with optional filtering."""
         requests = self.access_requests.copy()
 
@@ -333,9 +328,7 @@ class AccessControlManager:
             elif status == "pending":
                 requests = [r for r in requests if not r.approved and not r.expired()]
             elif status == "denied":
-                requests = [
-                    r for r in requests if not r.approved and "denied_by" in r.metadata
-                ]
+                requests = [r for r in requests if not r.approved and "denied_by" in r.metadata]
             elif status == "expired":
                 requests = [r for r in requests if r.expired()]
 
@@ -416,15 +409,9 @@ class GDPRComplianceManager:
     def get_user_consents(self, user_id: str) -> list[ConsentRecord]:
         """Get all consents for a user."""
         with self._lock:
-            return [
-                consent
-                for consent in self.consents.values()
-                if consent.user_id == user_id
-            ]
+            return [consent for consent in self.consents.values() if consent.user_id == user_id]
 
-    def add_user_data(
-        self, user_id: str, data_type: str, data: Any, timestamp: datetime | None = None
-    ) -> None:
+    def add_user_data(self, user_id: str, data_type: str, data: Any, timestamp: datetime | None = None) -> None:
         """Add user data for GDPR compliance tracking."""
         if timestamp is None:
             timestamp = datetime.now()
@@ -436,9 +423,7 @@ class GDPRComplianceManager:
                 "last_updated": timestamp,
             }
 
-    def get_user_data(
-        self, user_id: str, data_type: str | None = None
-    ) -> dict[str, Any]:
+    def get_user_data(self, user_id: str, data_type: str | None = None) -> dict[str, Any]:
         """Get user data for GDPR compliance."""
         with self._lock:
             if user_id not in self.user_data:
@@ -495,9 +480,7 @@ class GDPRComplianceManager:
         # Delete consents
         with self._lock:
             consent_ids_to_delete = [
-                consent_id
-                for consent_id, consent in self.consents.items()
-                if consent.user_id == user_id
+                consent_id for consent_id, consent in self.consents.items() if consent.user_id == user_id
             ]
 
             for consent_id in consent_ids_to_delete:
@@ -512,9 +495,7 @@ class GDPRComplianceManager:
 
         return deleted_count
 
-    def create_data_subject_request(
-        self, user_id: str, request_type: str, details: dict[str, Any]
-    ) -> str:
+    def create_data_subject_request(self, user_id: str, request_type: str, details: dict[str, Any]) -> str:
         """Create a data subject request."""
         request_id = secrets.token_urlsafe(32)
 
@@ -525,8 +506,7 @@ class GDPRComplianceManager:
             "details": details,
             "status": "pending",
             "created_at": datetime.now(),
-            "due_date": datetime.now()
-            + timedelta(hours=self.config.data_subject_request_timeout_hours),
+            "due_date": datetime.now() + timedelta(hours=self.config.data_subject_request_timeout_hours),
             "metadata": {},
         }
 
@@ -535,9 +515,7 @@ class GDPRComplianceManager:
 
         return request_id
 
-    def get_data_subject_requests(
-        self, user_id: str | None = None, status: str | None = None
-    ) -> list[dict[str, Any]]:
+    def get_data_subject_requests(self, user_id: str | None = None, status: str | None = None) -> list[dict[str, Any]]:
         """Get data subject requests with optional filtering."""
         requests = self.data_subject_requests.copy()
 
@@ -554,9 +532,7 @@ class GDPRComplianceManager:
         with self._lock:
             original_count = len(self.consents)
             self.consents = {
-                consent_id: consent
-                for consent_id, consent in self.consents.items()
-                if not consent.expired()
+                consent_id: consent for consent_id, consent in self.consents.items() if not consent.expired()
             }
             return original_count - len(self.consents)
 
@@ -619,17 +595,11 @@ class RetentionPolicyManager:
         """Get a retention rule by ID."""
         return self.retention_rules.get(rule_id)
 
-    def get_rules(
-        self, classification: DataClassification | None = None
-    ) -> list[dict[str, Any]]:
+    def get_rules(self, classification: DataClassification | None = None) -> list[dict[str, Any]]:
         """Get all retention rules as a list, optionally filtered by classification."""
         rules = list(self.retention_rules.values())
         if classification is not None:
-            rules = [
-                rule
-                for rule in rules
-                if rule.get("data_classification") == classification
-            ]
+            rules = [rule for rule in rules if rule.get("data_classification") == classification]
         return rules
 
     def list_rules(self) -> dict[str, dict[str, Any]]:
@@ -645,14 +615,8 @@ class RetentionPolicyManager:
                 "name": rule.name,
                 "description": rule.description,
                 "data_classification": rule.data_classification,
-                "trigger": (
-                    rule.trigger.value
-                    if hasattr(rule.trigger, "value")
-                    else rule.trigger
-                ),
-                "action": (
-                    rule.action.value if hasattr(rule.action, "value") else rule.action
-                ),
+                "trigger": (rule.trigger.value if hasattr(rule.trigger, "value") else rule.trigger),
+                "action": (rule.action.value if hasattr(rule.action, "value") else rule.action),
                 "retention_days": rule.retention_days,
                 "enabled": getattr(rule, "enabled", True),
                 "priority": getattr(rule, "priority", 100),
@@ -688,10 +652,7 @@ class RetentionPolicyManager:
         # Find applicable rule
         rule = None
         for rule_data in self.retention_rules.values():
-            if (
-                rule_data["data_classification"] == classification
-                and rule_data["enabled"]
-            ):
+            if rule_data["data_classification"] == classification and rule_data["enabled"]:
                 rule = rule_data
                 break
 
@@ -704,9 +665,7 @@ class RetentionPolicyManager:
 
         return metadata.created_at > cutoff_date
 
-    def get_expired_entries(
-        self, entries: list[CacheEntryMetadata]
-    ) -> list[CacheEntryMetadata]:
+    def get_expired_entries(self, entries: list[CacheEntryMetadata]) -> list[CacheEntryMetadata]:
         """Get entries that have expired according to retention policies."""
         expired = []
 
@@ -716,9 +675,7 @@ class RetentionPolicyManager:
 
         return expired
 
-    def add_user_data(
-        self, user_id: str, data_type: str, data: Any, timestamp: datetime | None = None
-    ) -> None:
+    def add_user_data(self, user_id: str, data_type: str, data: Any, timestamp: datetime | None = None) -> None:
         """Add user data with timestamp for retention tracking."""
         if timestamp is None:
             timestamp = datetime.now()
@@ -794,9 +751,7 @@ class CacheSecurityManager:
             if not self.config.security.access_control_enabled:
                 has_access = True
             else:
-                has_access = self.access_control.check_access(
-                    user_id, AccessLevel.WRITE, key, data_classification
-                )
+                has_access = self.access_control.check_access(user_id, AccessLevel.WRITE, key, data_classification)
 
             if not has_access:
                 self._log_audit_event(
@@ -811,12 +766,8 @@ class CacheSecurityManager:
                 return False
 
             # Check GDPR consent if applicable
-            if self.config.security.gdpr_enabled and self.config.is_gdpr_applicable(
-                data_classification
-            ):
-                has_consent = self.gdpr_manager.check_consent(
-                    user_id, "cache_data", "storage"
-                )
+            if self.config.security.gdpr_enabled and self.config.is_gdpr_applicable(data_classification):
+                has_consent = self.gdpr_manager.check_consent(user_id, "cache_data", "storage")
                 if not has_consent:
                     self._log_audit_event(
                         "gdpr_consent_denied",
@@ -867,18 +818,14 @@ class CacheSecurityManager:
             )
             return False
 
-    def secure_get(
-        self, cache, key: str, user_id: str, data_classification: DataClassification
-    ) -> Any:
+    def secure_get(self, cache, key: str, user_id: str, data_classification: DataClassification) -> Any:
         """Securely get a value from the cache with access control."""
         try:
             # Check access permissions
             if not self.config.security.access_control_enabled:
                 has_access = True
             else:
-                has_access = self.access_control.check_access(
-                    user_id, AccessLevel.READ, key, data_classification
-                )
+                has_access = self.access_control.check_access(user_id, AccessLevel.READ, key, data_classification)
 
             if not has_access:
                 self._log_audit_event(
@@ -940,18 +887,14 @@ class CacheSecurityManager:
             )
             return None
 
-    def secure_delete(
-        self, cache, key: str, user_id: str, data_classification: DataClassification
-    ) -> bool:
+    def secure_delete(self, cache, key: str, user_id: str, data_classification: DataClassification) -> bool:
         """Securely delete a value from the cache with access control."""
         try:
             # Check access permissions
             if not self.config.security.access_control_enabled:
                 has_access = True
             else:
-                has_access = self.access_control.check_access(
-                    user_id, AccessLevel.DELETE, key, data_classification
-                )
+                has_access = self.access_control.check_access(user_id, AccessLevel.DELETE, key, data_classification)
 
             if not has_access:
                 self._log_audit_event(
@@ -1009,15 +952,9 @@ class CacheSecurityManager:
                 audit_enabled=self.config.security.audit_enabled,
                 audit_entries_count=len(self.audit_trail),
                 active_policies=len(self.access_control.policies),
-                pending_requests=len(
-                    self.access_control.get_access_requests(status="pending")
-                ),
-                approved_requests=len(
-                    self.access_control.get_access_requests(status="approved")
-                ),
-                denied_requests=len(
-                    self.access_control.get_access_requests(status="denied")
-                ),
+                pending_requests=len(self.access_control.get_access_requests(status="pending")),
+                approved_requests=len(self.access_control.get_access_requests(status="approved")),
+                denied_requests=len(self.access_control.get_access_requests(status="denied")),
             )
 
     def _log_audit_event(

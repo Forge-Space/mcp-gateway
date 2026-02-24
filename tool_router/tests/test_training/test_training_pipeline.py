@@ -44,9 +44,7 @@ class TestTrainingPipeline:
         pipeline = TrainingPipeline(config)
 
         # Mock data loading
-        with patch(
-            "tool_router.training.training_pipeline.load_training_data"
-        ) as mock_load:
+        with patch("tool_router.training.training_pipeline.load_training_data") as mock_load:
             mock_data = [
                 {"input": "test input 1", "output": "test output 1"},
                 {"input": "test input 2", "output": "test output 2"},
@@ -92,14 +90,10 @@ class TestTrainingPipeline:
         pipeline = TrainingPipeline(config)
 
         # Mock model training
-        with patch(
-            "tool_router.training.training_pipeline.ModelTrainer"
-        ) as mock_trainer:
+        with patch("tool_router.training.training_pipeline.ModelTrainer") as mock_trainer:
             mock_trainer_instance = Mock()
             mock_trainer.return_value = mock_trainer_instance
-            mock_trainer_instance.train.return_value = ModelPerformance(
-                accuracy=0.85, loss=0.15, epochs_trained=10
-            )
+            mock_trainer_instance.train.return_value = ModelPerformance(accuracy=0.85, loss=0.15, epochs_trained=10)
 
             training_data = [{"input": "test", "output": "test"}]
             result = pipeline.train_model(training_data)
@@ -121,9 +115,7 @@ class TestTrainingPipeline:
         pipeline = TrainingPipeline(config)
 
         # Mock model evaluation
-        with patch(
-            "tool_router.training.training_pipeline.ModelEvaluator"
-        ) as mock_evaluator:
+        with patch("tool_router.training.training_pipeline.ModelEvaluator") as mock_evaluator:
             mock_evaluator_instance = Mock()
             mock_evaluator.return_value = mock_evaluator_instance
             mock_evaluator_instance.evaluate.return_value = ModelPerformance(
@@ -149,9 +141,7 @@ class TestTrainingPipeline:
         pipeline = TrainingPipeline(config)
 
         # Mock model saving
-        with patch(
-            "tool_router.training.training_pipeline.save_model_to_disk"
-        ) as mock_save:
+        with patch("tool_router.training.training_pipeline.save_model_to_disk") as mock_save:
             mock_save.return_value = True
 
             result = pipeline.save_model("/path/to/save/model")
@@ -178,17 +168,10 @@ class TestTrainingPipeline:
             patch.object(pipeline, "evaluate_model") as mock_evaluate,
             patch.object(pipeline, "save_model") as mock_save,
         ):
-
             mock_load.return_value = [{"input": "test", "output": "test"}]
-            mock_preprocess.return_value = [
-                {"processed_input": "test", "processed_output": "test"}
-            ]
-            mock_train.return_value = ModelPerformance(
-                accuracy=0.85, loss=0.15, epochs_trained=10
-            )
-            mock_evaluate.return_value = ModelPerformance(
-                accuracy=0.90, loss=0.10, epochs_trained=10
-            )
+            mock_preprocess.return_value = [{"processed_input": "test", "processed_output": "test"}]
+            mock_train.return_value = ModelPerformance(accuracy=0.85, loss=0.15, epochs_trained=10)
+            mock_evaluate.return_value = ModelPerformance(accuracy=0.90, loss=0.10, epochs_trained=10)
             mock_save.return_value = True
 
             result = pipeline.run_training_cycle()
@@ -215,10 +198,7 @@ class TestTrainingPipeline:
             patch.object(pipeline, "load_training_data") as mock_load,
             patch.object(pipeline, "split_data") as mock_split,
         ):
-
-            full_data = [
-                {"input": f"test_{i}", "output": f"output_{i}"} for i in range(100)
-            ]
+            full_data = [{"input": f"test_{i}", "output": f"output_{i}"} for i in range(100)]
             mock_load.return_value = full_data
 
             train_data, val_data = mock_split.return_value = (
@@ -246,9 +226,7 @@ class TestTrainingPipeline:
         # Mock early stopping
         with patch.object(pipeline, "train_model") as mock_train:
             # Simulate early stopping after 10 epochs
-            mock_train.return_value = ModelPerformance(
-                accuracy=0.85, loss=0.15, epochs_trained=10, early_stopped=True
-            )
+            mock_train.return_value = ModelPerformance(accuracy=0.85, loss=0.15, epochs_trained=10, early_stopped=True)
 
             training_data = [{"input": "test", "output": "test"}]
             result = pipeline.train_model(training_data)
@@ -268,9 +246,7 @@ class TestTrainingPipeline:
         pipeline = TrainingPipeline(config)
 
         # Mock hyperparameter tuning
-        with patch(
-            "tool_router.training.training_pipeline.HyperparameterTuner"
-        ) as mock_tuner:
+        with patch("tool_router.training.training_pipeline.HyperparameterTuner") as mock_tuner:
             mock_tuner_instance = Mock()
             mock_tuner.return_value = mock_tuner_instance
             mock_tuner_instance.tune.return_value = {
@@ -302,7 +278,6 @@ class TestTrainingPipeline:
             patch.object(pipeline, "train_model") as mock_train,
             patch.object(pipeline, "save_checkpoint") as mock_checkpoint,
         ):
-
             mock_train.return_value = ModelPerformance(
                 accuracy=0.85,
                 loss=0.15,
@@ -390,12 +365,8 @@ class TestTrainingPipeline:
     def test_training_result_serialization(self) -> None:
         """Test TrainingResult serialization."""
         result = TrainingResult(
-            training_performance=ModelPerformance(
-                accuracy=0.85, loss=0.15, epochs_trained=10
-            ),
-            evaluation_performance=ModelPerformance(
-                accuracy=0.90, loss=0.10, epochs_trained=10
-            ),
+            training_performance=ModelPerformance(accuracy=0.85, loss=0.15, epochs_trained=10),
+            evaluation_performance=ModelPerformance(accuracy=0.90, loss=0.10, epochs_trained=10),
             model_saved=True,
             training_time_seconds=3600.0,
         )

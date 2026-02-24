@@ -7,6 +7,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

@@ -11,6 +11,7 @@ from typing import Any
 
 from ..training.knowledge_base import KnowledgeBase, KnowledgeItem, PatternCategory
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -115,15 +116,11 @@ class KnowledgeBaseTool:
                     }
 
             # Search knowledge base
-            results = self.knowledge_base.search_knowledge(
-                query=query, category=pattern_category, limit=limit
-            )
+            results = self.knowledge_base.search_knowledge(query=query, category=pattern_category, limit=limit)
 
             # Filter by confidence if specified
             if min_confidence is not None:
-                results = [
-                    item for item in results if item.confidence >= min_confidence
-                ]
+                results = [item for item in results if item.confidence >= min_confidence]
 
             # Format results
             formatted_results = []
@@ -133,9 +130,7 @@ class KnowledgeBaseTool:
                         "id": item.id,
                         "title": item.title,
                         "description": (
-                            item.description[:100] + "..."
-                            if len(item.description) > 100
-                            else item.description
+                            item.description[:100] + "..." if len(item.description) > 100 else item.description
                         ),
                         "category": item.category.value,
                         "confidence": item.confidence,
@@ -295,9 +290,7 @@ class KnowledgeBaseTool:
             logger.error(f"Error deleting pattern: {e}")
             return {"error": str(e), "message": "Failed to delete pattern"}
 
-    def get_patterns_by_category(
-        self, category: str, limit: int = 20
-    ) -> dict[str, Any]:
+    def get_patterns_by_category(self, category: str, limit: int = 20) -> dict[str, Any]:
         """Get patterns by category.
 
         Args:
@@ -318,9 +311,7 @@ class KnowledgeBaseTool:
                 }
 
             # Get patterns by category
-            patterns = self.knowledge_base.get_patterns_by_category(
-                pattern_category, limit=limit
-            )
+            patterns = self.knowledge_base.get_patterns_by_category(pattern_category, limit=limit)
 
             # Format results
             formatted_patterns = []
@@ -330,9 +321,7 @@ class KnowledgeBaseTool:
                         "id": item.id,
                         "title": item.title,
                         "description": (
-                            item.description[:100] + "..."
-                            if len(item.description) > 100
-                            else item.description
+                            item.description[:100] + "..." if len(item.description) > 100 else item.description
                         ),
                         "confidence": item.confidence,
                         "effectiveness": item.effectiveness,
@@ -559,9 +548,7 @@ def knowledge_base_handler(args: dict[str, Any]) -> dict[str, Any]:
                     "message": "Field 'category' is required for get_patterns_by_category action",
                 }
 
-            return tool.get_patterns_by_category(
-                category=category, limit=args.get("limit", 20)
-            )
+            return tool.get_patterns_by_category(category=category, limit=args.get("limit", 20))
 
         if action == "get_statistics":
             return tool.get_knowledge_base_statistics()

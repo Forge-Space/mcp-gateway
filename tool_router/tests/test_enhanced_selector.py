@@ -71,16 +71,12 @@ class TestAIModel:
         assert gpt4o_mini_cost["output"] == 0.60
 
         # Test Anthropic models
-        claude_sonnet_cost = AIModel.get_cost_per_million_tokens(
-            AIModel.CLAUDE_SONNET.value
-        )
+        claude_sonnet_cost = AIModel.get_cost_per_million_tokens(AIModel.CLAUDE_SONNET.value)
         assert claude_sonnet_cost["input"] == 3.00
         assert claude_sonnet_cost["output"] == 15.00
 
         # Test Google models
-        gemini_flash_cost = AIModel.get_cost_per_million_tokens(
-            AIModel.GEMINI_FLASH.value
-        )
+        gemini_flash_cost = AIModel.get_cost_per_million_tokens(AIModel.GEMINI_FLASH.value)
         assert gemini_flash_cost["input"] == 0.075
         assert gemini_flash_cost["output"] == 0.30
 
@@ -155,9 +151,7 @@ class TestBaseAISelector:
         assert selector.min_confidence == 0.3
 
         # Test with custom parameters
-        selector = TestSelector(
-            model=AIModel.GPT4O_MINI.value, timeout=5000, min_confidence=0.5
-        )
+        selector = TestSelector(model=AIModel.GPT4O_MINI.value, timeout=5000, min_confidence=0.5)
         assert selector.model == AIModel.GPT4O_MINI.value
         assert selector.timeout_ms == 5000
         assert selector.timeout_s == 5.0
@@ -357,9 +351,7 @@ class TestOllamaSelector:
         import httpx
 
         mock_client = MagicMock()
-        mock_client.post.side_effect = httpx.HTTPStatusError(
-            "HTTP Error", request=MagicMock(), response=MagicMock()
-        )
+        mock_client.post.side_effect = httpx.HTTPStatusError("HTTP Error", request=MagicMock(), response=MagicMock())
         mock_client_class.return_value.__enter__.return_value = mock_client
 
         selector = OllamaSelector("http://localhost:11434")

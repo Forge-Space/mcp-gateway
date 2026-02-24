@@ -20,9 +20,7 @@ def test_build_arguments_uses_search_when_no_query_or_q() -> None:
 
 def test_build_arguments_uses_first_required() -> None:
     tool = {"inputSchema": {"properties": {"url": {}}, "required": ["url"]}}
-    assert build_arguments(tool, "https://example.com") == {
-        "url": "https://example.com"
-    }
+    assert build_arguments(tool, "https://example.com") == {"url": "https://example.com"}
 
 
 def test_build_arguments_falls_back_to_task() -> None:

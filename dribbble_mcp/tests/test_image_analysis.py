@@ -11,9 +11,7 @@ import pytest
 from dribbble_mcp.image_analysis import ImageAnalyzer, _extract_dominant_colors
 
 
-def _make_png_bytes(
-    width: int = 10, height: int = 10, color: tuple = (255, 0, 0)
-) -> bytes:
+def _make_png_bytes(width: int = 10, height: int = 10, color: tuple = (255, 0, 0)) -> bytes:
     """Create a minimal PNG image in memory."""
     from PIL import Image
 
@@ -62,16 +60,12 @@ class TestImageAnalyzer:
         result = analyzer.analyze_from_bytes(png)
         assert result["aspect_ratio"] == pytest.approx(2.0, rel=0.01)
 
-    def test_analyze_from_bytes_square_aspect_ratio(
-        self, analyzer: ImageAnalyzer
-    ) -> None:
+    def test_analyze_from_bytes_square_aspect_ratio(self, analyzer: ImageAnalyzer) -> None:
         png = _make_png_bytes(50, 50)
         result = analyzer.analyze_from_bytes(png)
         assert result["aspect_ratio"] == pytest.approx(1.0, rel=0.01)
 
-    def test_analyze_from_bytes_invalid_data_raises(
-        self, analyzer: ImageAnalyzer
-    ) -> None:
+    def test_analyze_from_bytes_invalid_data_raises(self, analyzer: ImageAnalyzer) -> None:
         with pytest.raises(RuntimeError, match="Failed to open image"):
             analyzer.analyze_from_bytes(b"not an image")
 
@@ -101,9 +95,7 @@ class TestImageAnalyzer:
         with pytest.raises(ValueError, match="valid HTTP"):
             analyzer.analyze_from_url("")
 
-    def test_analyze_from_url_invalid_scheme_raises(
-        self, analyzer: ImageAnalyzer
-    ) -> None:
+    def test_analyze_from_url_invalid_scheme_raises(self, analyzer: ImageAnalyzer) -> None:
         with pytest.raises(ValueError, match="valid HTTP"):
             analyzer.analyze_from_url("ftp://example.com/image.png")
 
@@ -115,17 +107,13 @@ class TestImageAnalyzer:
             mock_client = MagicMock()
             mock_client.__enter__ = MagicMock(return_value=mock_client)
             mock_client.__exit__ = MagicMock(return_value=False)
-            mock_client.get.side_effect = httpx.HTTPStatusError(
-                "404", request=MagicMock(), response=mock_response
-            )
+            mock_client.get.side_effect = httpx.HTTPStatusError("404", request=MagicMock(), response=mock_response)
             mock_client_cls.return_value = mock_client
 
             with pytest.raises(RuntimeError, match="Failed to download image"):
                 analyzer.analyze_from_url("https://cdn.dribbble.com/missing.png")
 
-    def test_analyze_from_url_network_error_raises(
-        self, analyzer: ImageAnalyzer
-    ) -> None:
+    def test_analyze_from_url_network_error_raises(self, analyzer: ImageAnalyzer) -> None:
         with patch("httpx.Client") as mock_client_cls:
             mock_client = MagicMock()
             mock_client.__enter__ = MagicMock(return_value=mock_client)

@@ -228,9 +228,7 @@ class TestToolSelection:
         result = select_top_matching_tools(sample_tools, "search web", "", top_n=0)
         assert result == []
 
-    def test_select_top_matching_tools_top_n_greater_than_available(
-        self, sample_tools
-    ) -> None:
+    def test_select_top_matching_tools_top_n_greater_than_available(self, sample_tools) -> None:
         """Test tool selection with top_n greater than available tools."""
         result = select_top_matching_tools(sample_tools, "search web", "", top_n=10)
         assert len(result) == 3  # All tools should be returned
@@ -243,24 +241,18 @@ class TestToolSelection:
         assert result[0]["name"] == "web_search"
 
         # Scores should be in descending order
-        scores = [
-            calculate_tool_relevance_score("search web", "", tool) for tool in result
-        ]
+        scores = [calculate_tool_relevance_score("search web", "", tool) for tool in result]
         assert scores == sorted(scores, reverse=True)
 
     def test_select_top_matching_tools_with_context(self, sample_tools) -> None:
         """Test tool selection with context."""
-        result = select_top_matching_tools(
-            sample_tools, "search", "web information", top_n=2
-        )
+        result = select_top_matching_tools(sample_tools, "search", "web information", top_n=2)
         assert len(result) == 2
         assert result[0]["name"] == "web_search"
 
     def test_select_top_matching_tools_complex_query(self, sample_tools) -> None:
         """Test tool selection with complex query."""
-        result = select_top_matching_tools(
-            sample_tools, "find information online", "", top_n=1
-        )
+        result = select_top_matching_tools(sample_tools, "find information online", "", top_n=1)
         assert len(result) == 1
         assert result[0]["name"] == "web_search"
 

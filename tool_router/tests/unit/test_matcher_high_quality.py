@@ -157,9 +157,7 @@ class TestToolRelevanceScoring:
         assert isinstance(score, float)
         assert score >= 0.0  # Score can be any positive value
 
-    def test_calculate_tool_relevance_score_irrelevant_tool(
-        self, sample_task, sample_context
-    ):
+    def test_calculate_tool_relevance_score_irrelevant_tool(self, sample_task, sample_context):
         """Test tool relevance score with irrelevant tool."""
         tool = {
             "name": "delete_file",
@@ -182,22 +180,16 @@ class TestToolSelection:
 
     def test_select_top_matching_tools(self, sample_tools, sample_task, sample_context):
         """Test selecting top matching tools."""
-        results = select_top_matching_tools(
-            sample_tools, sample_task, sample_context, top_n=2
-        )
+        results = select_top_matching_tools(sample_tools, sample_task, sample_context, top_n=2)
 
         assert isinstance(results, list)
         assert len(results) <= 2
         assert all(isinstance(tool, dict) for tool in results)
         assert all("name" in tool for tool in results)
 
-    def test_select_top_matching_tools_single(
-        self, sample_tools, sample_task, sample_context
-    ):
+    def test_select_top_matching_tools_single(self, sample_tools, sample_task, sample_context):
         """Test selecting single top matching tool."""
-        results = select_top_matching_tools(
-            sample_tools, sample_task, sample_context, top_n=1
-        )
+        results = select_top_matching_tools(sample_tools, sample_task, sample_context, top_n=1)
 
         assert isinstance(results, list)
         assert len(results) == 1
@@ -231,17 +223,13 @@ class TestIntegration:
             scores.append((tool, score))
 
         # Step 4: Select top tools
-        top_tools = select_top_matching_tools(
-            sample_tools, sample_task, sample_context, top_n=2
-        )
+        top_tools = select_top_matching_tools(sample_tools, sample_task, sample_context, top_n=2)
 
         assert isinstance(top_tools, list)
         assert len(top_tools) == 2
         # Verify that the selected tools have positive scores
         for tool in top_tools:
-            tool_score = calculate_tool_relevance_score(
-                sample_task, sample_context, tool
-            )
+            tool_score = calculate_tool_relevance_score(sample_task, sample_context, tool)
             assert tool_score > 0
 
     def test_search_task_prioritizes_search_tools(self, sample_tools):
@@ -249,12 +237,7 @@ class TestIntegration:
         search_task = "find information about python"
         search_context = "user wants to learn python programming"
 
-        results = select_top_matching_tools(
-            sample_tools, search_task, search_context, top_n=1
-        )
+        results = select_top_matching_tools(sample_tools, search_task, search_context, top_n=1)
 
         assert len(results) == 1
-        assert (
-            "search" in results[0]["name"].lower()
-            or "find" in results[0]["description"].lower()
-        )
+        assert "search" in results[0]["name"].lower() or "find" in results[0]["description"].lower()

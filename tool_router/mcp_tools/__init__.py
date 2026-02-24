@@ -23,6 +23,7 @@ from .training_manager import (
     training_manager_handler,
 )
 
+
 __all__ = [
     # Training Manager
     "TrainingManagerTool",

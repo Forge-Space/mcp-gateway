@@ -18,6 +18,7 @@ from typing import Any
 from .data_extraction import ExtractedPattern, PatternCategory, PatternExtractor
 from .knowledge_base import KnowledgeBase, KnowledgeIndexer
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,9 +46,7 @@ class TrainingPipeline:
             "errors": [],
         }
 
-    def run_training_pipeline(
-        self, data_sources: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def run_training_pipeline(self, data_sources: list[dict[str, Any]]) -> dict[str, Any]:
         """Run the complete training pipeline."""
         logger.info("Starting specialist AI agent training pipeline")
 
@@ -98,17 +97,13 @@ class TrainingPipeline:
             self.training_stats["errors"].append(error_msg)
             return self.training_stats
 
-    def _extract_patterns(
-        self, data_sources: list[dict[str, Any]]
-    ) -> list[ExtractedPattern]:
+    def _extract_patterns(self, data_sources: list[dict[str, Any]]) -> list[ExtractedPattern]:
         """Extract patterns from data sources."""
         all_patterns = []
 
         for i, source in enumerate(data_sources):
             try:
-                logger.info(
-                    f"Extracting from source {i+1}/{len(data_sources)}: {source.get('url', 'Unknown')}"
-                )
+                logger.info(f"Extracting from source {i + 1}/{len(data_sources)}: {source.get('url', 'Unknown')}")
 
                 patterns = self.extractor.extract_from_multiple_sources([source])
                 all_patterns.extend(patterns)
@@ -116,17 +111,13 @@ class TrainingPipeline:
                 logger.info(f"Extracted {len(patterns)} patterns from source")
 
             except Exception as e:
-                error_msg = (
-                    f"Failed to extract from source {source.get('url', 'Unknown')}: {e}"
-                )
+                error_msg = f"Failed to extract from source {source.get('url', 'Unknown')}: {e}"
                 logger.error(error_msg)
                 self.training_stats["errors"].append(error_msg)
 
         return all_patterns
 
-    def _validate_patterns(
-        self, patterns: list[ExtractedPattern]
-    ) -> list[ExtractedPattern]:
+    def _validate_patterns(self, patterns: list[ExtractedPattern]) -> list[ExtractedPattern]:
         """Validate extracted patterns."""
         validated_patterns = []
 
@@ -138,9 +129,7 @@ class TrainingPipeline:
 
             # Validate required fields
             if not pattern.title or not pattern.description:
-                logger.debug(
-                    f"Skipping pattern with missing required fields: {pattern.title}"
-                )
+                logger.debug(f"Skipping pattern with missing required fields: {pattern.title}")
                 continue
 
             # Check for duplicates
@@ -152,9 +141,7 @@ class TrainingPipeline:
             if self._validate_pattern_by_category(pattern):
                 validated_patterns.append(pattern)
 
-        logger.info(
-            f"Validated {len(validated_patterns)} out of {len(patterns)} patterns"
-        )
+        logger.info(f"Validated {len(validated_patterns)} out of {len(patterns)} patterns")
         return validated_patterns
 
     def _validate_pattern_by_category(self, pattern: ExtractedPattern) -> bool:
@@ -189,9 +176,7 @@ class TrainingPipeline:
 
         return True
 
-    def _is_duplicate_pattern(
-        self, pattern: ExtractedPattern, existing_patterns: list[ExtractedPattern]
-    ) -> bool:
+    def _is_duplicate_pattern(self, pattern: ExtractedPattern, existing_patterns: list[ExtractedPattern]) -> bool:
         """Check if a pattern is a duplicate of existing patterns."""
         for existing in existing_patterns:
             # Check for similar titles
@@ -252,17 +237,12 @@ class TrainingPipeline:
 
         # Train each specialist category
         for category in PatternCategory:
-            category_patterns = self.knowledge_base.get_patterns_by_category(
-                category, limit=100
-            )
+            category_patterns = self.knowledge_base.get_patterns_by_category(category, limit=100)
 
             if category_patterns:
                 training_results[category.value] = {
                     "patterns_count": len(category_patterns),
-                    "avg_effectiveness": sum(
-                        p.effectiveness_score for p in category_patterns
-                    )
-                    / len(category_patterns),
+                    "avg_effectiveness": sum(p.effectiveness_score for p in category_patterns) / len(category_patterns),
                     "top_patterns": [
                         {
                             "title": p.title,
@@ -273,9 +253,7 @@ class TrainingPipeline:
                     ],
                 }
 
-                logger.info(
-                    f"Trained {category.value} specialist with {len(category_patterns)} patterns"
-                )
+                logger.info(f"Trained {category.value} specialist with {len(category_patterns)} patterns")
 
         return training_results
 
@@ -294,36 +272,26 @@ class TrainingPipeline:
             all_patterns.extend(patterns)
 
         if all_patterns:
-            avg_confidence = sum(p.confidence_score for p in all_patterns) / len(
-                all_patterns
-            )
-            avg_effectiveness = sum(p.effectiveness_score for p in all_patterns) / len(
-                all_patterns
-            )
+            avg_confidence = sum(p.confidence_score for p in all_patterns) / len(all_patterns)
+            avg_effectiveness = sum(p.effectiveness_score for p in all_patterns) / len(all_patterns)
 
             evaluation_results["quality_metrics"] = {
                 "total_patterns": len(all_patterns),
                 "avg_confidence": avg_confidence,
                 "avg_effectiveness": avg_effectiveness,
-                "high_quality_patterns": len(
-                    [p for p in all_patterns if p.effectiveness_score > 0.8]
-                ),
+                "high_quality_patterns": len([p for p in all_patterns if p.effectiveness_score > 0.8]),
             }
 
         # Coverage assessment
         evaluation_results["coverage"] = {
             "categories_covered": len(set(p.category for p in all_patterns)),
             "total_categories": len(PatternCategory),
-            "coverage_percentage": len(set(p.category for p in all_patterns))
-            / len(PatternCategory)
-            * 100,
+            "coverage_percentage": len(set(p.category for p in all_patterns)) / len(PatternCategory) * 100,
         }
 
         return evaluation_results
 
-    def run_continuous_learning(
-        self, new_data_sources: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def run_continuous_learning(self, new_data_sources: list[dict[str, Any]]) -> dict[str, Any]:
         """Run continuous learning with new data sources."""
         logger.info("Starting continuous learning with new data sources")
 
@@ -340,19 +308,14 @@ class TrainingPipeline:
         # Update statistics
         self.training_stats.update(
             {
-                "patterns_extracted": self.training_stats["patterns_extracted"]
-                + len(new_patterns),
-                "patterns_validated": self.training_stats["patterns_validated"]
-                + len(validated_patterns),
-                "patterns_added": self.training_stats["patterns_added"]
-                + len(added_ids),
+                "patterns_extracted": self.training_stats["patterns_extracted"] + len(new_patterns),
+                "patterns_validated": self.training_stats["patterns_validated"] + len(validated_patterns),
+                "patterns_added": self.training_stats["patterns_added"] + len(added_ids),
                 "last_training": datetime.now().isoformat(),
             }
         )
 
-        logger.info(
-            f"Continuous learning completed: {len(added_ids)} new patterns added"
-        )
+        logger.info(f"Continuous learning completed: {len(added_ids)} new patterns added")
         return self.training_stats
 
     def get_training_report(self) -> dict[str, Any]:
@@ -378,9 +341,7 @@ class TrainingPipeline:
         coverage = stats["by_category"]
         for category in PatternCategory:
             if category.value not in coverage or coverage[category.value] < 10:
-                recommendations.append(
-                    f"Consider adding more {category.value} patterns"
-                )
+                recommendations.append(f"Consider adding more {category.value} patterns")
 
         # Quality recommendations
         if stats["average_effectiveness"] < 0.7:
@@ -525,9 +486,7 @@ if __name__ == "__main__":
 
         if "coverage" in eval_results:
             coverage = eval_results["coverage"]
-            print(
-                f"Categories Covered: {coverage['categories_covered']}/{coverage['total_categories']}"
-            )
+            print(f"Categories Covered: {coverage['categories_covered']}/{coverage['total_categories']}")
             print(f"Coverage Percentage: {coverage['coverage_percentage']:.1f}%")
 
     print("\nTraining Report:")

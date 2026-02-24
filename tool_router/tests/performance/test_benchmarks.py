@@ -19,9 +19,7 @@ class TestPerformanceBaselines:
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         # Memory usage should be reasonable for startup
-        assert (
-            initial_memory < 500
-        ), f"Startup memory usage too high: {initial_memory:.2f} MB"
+        assert initial_memory < 500, f"Startup memory usage too high: {initial_memory:.2f} MB"
 
     def test_response_time_baseline(self):
         """Test basic response time for simple operations."""
@@ -135,11 +133,7 @@ class TestResourceLimits:
         """Test file handle usage doesn't leak."""
         process = psutil.Process(os.getpid())
 
-        initial_handles = (
-            process.num_handles()
-            if hasattr(process, "num_handles")
-            else process.num_fds()
-        )
+        initial_handles = process.num_handles() if hasattr(process, "num_handles") else process.num_fds()
 
         # Open and close some files
         for i in range(10):
@@ -150,11 +144,7 @@ class TestResourceLimits:
         for i in range(10):
             os.remove(f"/tmp/test_{i}.txt")
 
-        final_handles = (
-            process.num_handles()
-            if hasattr(process, "num_handles")
-            else process.num_fds()
-        )
+        final_handles = process.num_handles() if hasattr(process, "num_handles") else process.num_fds()
         handle_growth = final_handles - initial_handles
 
         # Handle count should not grow significantly

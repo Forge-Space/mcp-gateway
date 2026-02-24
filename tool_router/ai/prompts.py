@@ -128,13 +128,10 @@ Respond with valid JSON only, no additional text:
         history_section = ""
         if similar_tools:
             history_section = (
-                f"\n\n## Similar Successful Tools\n"
-                f"Previously successful for similar tasks: {', '.join(similar_tools)}"
+                f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
             )
 
-        template = (
-            cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
-        )
+        template = cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
 
         return template.format(
             task=task,
@@ -158,7 +155,9 @@ Respond with valid JSON only, no additional text:
             context_section = f"\n\n## Context\n{context}"
 
         if enhanced:
-            context_section += "\n\n## Workflow Considerations\nConsider the logical flow and dependencies between tools."
+            context_section += (
+                "\n\n## Workflow Considerations\nConsider the logical flow and dependencies between tools."
+            )
 
         return cls.MULTI_TOOL_SELECTION_TEMPLATE.format(
             task=task,
@@ -194,9 +193,7 @@ Respond with valid JSON only, no additional text:
 
         similar_tools_section = ""
         if similar_tools:
-            similar_tools_section = (
-                f"\n\n## Similar Successful Tools\n{', '.join(similar_tools)}"
-            )
+            similar_tools_section = f"\n\n## Similar Successful Tools\n{', '.join(similar_tools)}"
 
         return cls.CONTEXT_ENHANCED_TEMPLATE.format(
             task=task,

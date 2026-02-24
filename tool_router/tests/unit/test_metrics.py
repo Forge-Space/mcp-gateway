@@ -335,9 +335,7 @@ class TestGetMetrics:
         # Clear the cache first to ensure clean test
         get_metrics.cache_clear()
 
-        with patch(
-            "tool_router.observability.metrics.MetricsCollector"
-        ) as mock_collector_class:
+        with patch("tool_router.observability.metrics.MetricsCollector") as mock_collector_class:
             mock_instance = MagicMock()
             mock_collector_class.return_value = mock_instance
 

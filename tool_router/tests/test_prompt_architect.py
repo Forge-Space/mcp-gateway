@@ -209,16 +209,12 @@ class TestTaskAnalyzer:
         """Test extracting functional requirements."""
         analyzer = TaskAnalyzer()
 
-        prompt = (
-            "Create a user authentication system that supports login and registration"
-        )
+        prompt = "Create a user authentication system that supports login and registration"
         requirements = analyzer.extract_requirements(prompt, TaskType.CODE_GENERATION)
 
         assert len(requirements) > 0
         assert any(req.type == RequirementType.FUNCTIONALITY for req in requirements)
-        assert any(
-            "user authentication" in req.description.lower() for req in requirements
-        )
+        assert any("user authentication" in req.description.lower() for req in requirements)
 
     def test_extract_requirements_performance(self):
         """Test extracting performance requirements."""
@@ -625,9 +621,7 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Create something"
-        optimized = architect._apply_task_specific_optimizations(
-            prompt, TaskType.CODE_GENERATION
-        )
+        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.CODE_GENERATION)
 
         assert "code" in optimized.lower()
         assert "programming language" in optimized.lower()
@@ -637,9 +631,7 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Fix something"
-        optimized = architect._apply_task_specific_optimizations(
-            prompt, TaskType.CODE_DEBUGGING
-        )
+        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.CODE_DEBUGGING)
 
         assert "debugging approach" in optimized.lower()
         assert "root cause analysis" in optimized.lower()
@@ -649,9 +641,7 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Write something"
-        optimized = architect._apply_task_specific_optimizations(
-            prompt, TaskType.DOCUMENTATION
-        )
+        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.DOCUMENTATION)
 
         assert "documentation" in optimized.lower()
         assert "examples" in optimized.lower()
@@ -696,9 +686,7 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Create a function with proper error handling."
-        completeness = architect._calculate_completeness(
-            prompt, TaskType.CODE_GENERATION
-        )
+        completeness = architect._calculate_completeness(prompt, TaskType.CODE_GENERATION)
 
         assert completeness > 0.5  # Has code and error handling
 
@@ -734,9 +722,7 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         # Create prompt with ~100 tokens
-        prompt = (
-            "Create a React component with proper error handling and validation. " * 10
-        )
+        prompt = "Create a React component with proper error handling and validation. " * 10
         efficiency = architect._calculate_token_efficiency(prompt)
 
         assert efficiency == 1.0  # Ideal range

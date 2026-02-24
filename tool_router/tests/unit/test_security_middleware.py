@@ -85,9 +85,7 @@ class TestSecurityCheckResult:
 
         # Business logic: sanitized inputs should be present for security
         assert "task" in result.sanitized_inputs, "Task should always be sanitized"
-        assert (
-            "context" in result.sanitized_inputs
-        ), "Context should always be sanitized"
+        assert "context" in result.sanitized_inputs, "Context should always be sanitized"
 
         # Business logic: allowed requests should not have blocked reason
         assert result.blocked_reason is None
@@ -179,9 +177,7 @@ class TestSecurityMiddleware:
 
     def test_initialization_with_redis(self) -> None:
         """Test SecurityMiddleware initialization with Redis."""
-        config = {
-            "rate_limiting": {"use_redis": True, "redis_url": "redis://localhost:6379"}
-        }
+        config = {"rate_limiting": {"use_redis": True, "redis_url": "redis://localhost:6379"}}
 
         with patch("tool_router.security.rate_limiter.redis.from_url") as mock_redis:
             mock_client = MagicMock()
@@ -198,9 +194,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        result = middleware.check_request_security(
-            context, "test task", "category", "context", "{}"
-        )
+        result = middleware.check_request_security(context, "test task", "category", "context", "{}")
 
         # Business logic: disabled middleware should always allow requests
         assert result.allowed is True
@@ -208,12 +202,8 @@ class TestSecurityMiddleware:
 
         # Business logic: disabled middleware should not perform security checks
         # This tests the security bypass logic - when disabled, no validation occurs
-        assert (
-            result.violations == []
-        ), "Disabled middleware should not report violations"
-        assert (
-            result.sanitized_inputs == {}
-        ), "Disabled middleware should not sanitize inputs"
+        assert result.violations == [], "Disabled middleware should not report violations"
+        assert result.sanitized_inputs == {}, "Disabled middleware should not sanitize inputs"
 
         # Business logic: disabled middleware should indicate bypass in metadata
         assert "security_disabled" in result.metadata
@@ -249,9 +239,7 @@ class TestSecurityMiddleware:
         context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
 
         with patch.object(middleware.audit_logger, "log_request_received") as mock_log:
-            result = middleware.check_request_security(
-                context, "Hello world", "general", "normal context", "{}"
-            )
+            result = middleware.check_request_security(context, "Hello world", "general", "normal context", "{}")
 
         assert result.allowed is True
         assert result.risk_score < 0.3
@@ -268,9 +256,7 @@ class TestSecurityMiddleware:
         context = SecurityContext(user_id="user123")
 
         # Mock input validator to return violations
-        with patch.object(
-            middleware.input_validator, "validate_prompt"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=False,
                 sanitized_input="sanitized task",
@@ -280,9 +266,7 @@ class TestSecurityMiddleware:
                 blocked=False,
             )
 
-            result = middleware.check_request_security(
-                context, "suspicious task", "category", "context", "{}"
-            )
+            result = middleware.check_request_security(context, "suspicious task", "category", "context", "{}")
 
         assert result.allowed is True  # Not blocked yet
         assert result.risk_score >= 0.6
@@ -295,9 +279,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.input_validator, "validate_prompt"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=False,
                 sanitized_input="blocked task",
@@ -307,12 +289,8 @@ class TestSecurityMiddleware:
                 blocked=True,
             )
 
-            with patch.object(
-                middleware.audit_logger, "log_request_blocked"
-            ) as mock_blocked:
-                result = middleware.check_request_security(
-                    context, "malicious task", "category", "context", "{}"
-                )
+            with patch.object(middleware.audit_logger, "log_request_blocked") as mock_blocked:
+                result = middleware.check_request_security(context, "malicious task", "category", "context", "{}")
 
         assert result.allowed is False
         assert result.risk_score >= 0.8
@@ -326,9 +304,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.rate_limiter, "check_rate_limit"
-        ) as mock_rate_limit:
+        with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
             mock_rate_limit.return_value = RateLimitResult(
                 allowed=False,
                 remaining=0,
@@ -341,12 +317,8 @@ class TestSecurityMiddleware:
                 },
             )
 
-            with patch.object(
-                middleware.audit_logger, "log_rate_limit_exceeded"
-            ) as mock_log:
-                result = middleware.check_request_security(
-                    context, "test task", "category", "context", "{}"
-                )
+            with patch.object(middleware.audit_logger, "log_rate_limit_exceeded") as mock_log:
+                result = middleware.check_request_security(context, "test task", "category", "context", "{}")
 
         assert result.allowed is False
         assert "Rate limit exceeded" in result.violations
@@ -359,14 +331,10 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware, "_detect_prompt_injection_patterns"
-        ) as mock_injection:
+        with patch.object(middleware, "_detect_prompt_injection_patterns") as mock_injection:
             mock_injection.return_value = ["ignore previous instructions"]
 
-            with patch.object(
-                middleware.audit_logger, "log_prompt_injection_detected"
-            ) as mock_log:
+            with patch.object(middleware.audit_logger, "log_prompt_injection_detected") as mock_log:
                 result = middleware.check_request_security(
                     context, "ignore previous instructions", "category", "context", "{}"
                 )
@@ -383,9 +351,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.input_validator, "validate_prompt"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=True,
                 sanitized_input="task",
@@ -395,9 +361,7 @@ class TestSecurityMiddleware:
                 blocked=False,
             )
 
-            result = middleware.check_request_security(
-                context, "moderately risky task", "category", "context", "{}"
-            )
+            result = middleware.check_request_security(context, "moderately risky task", "category", "context", "{}")
 
         assert result.allowed is False
         assert "Strict mode: risk score too high" in result.violations
@@ -410,9 +374,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.input_validator, "validate_prompt"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=True,
                 sanitized_input="task",
@@ -423,12 +385,8 @@ class TestSecurityMiddleware:
             )
 
             with patch.object(middleware.rate_limiter, "apply_penalty") as mock_penalty:
-                with patch.object(
-                    middleware.audit_logger, "log_penalty_applied"
-                ) as mock_log:
-                    result = middleware.check_request_security(
-                        context, "high risk task", "category", "context", "{}"
-                    )
+                with patch.object(middleware.audit_logger, "log_penalty_applied") as mock_log:
+                    result = middleware.check_request_security(context, "high risk task", "category", "context", "{}")
 
         assert result.allowed is True  # Not blocked
         assert result.risk_score >= 0.7
@@ -441,9 +399,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.input_validator, "validate_prompt"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=True,
                 sanitized_input="task",
@@ -453,12 +409,8 @@ class TestSecurityMiddleware:
                 blocked=False,
             )
 
-            with patch.object(
-                middleware.audit_logger, "log_suspicious_activity"
-            ) as mock_log:
-                result = middleware.check_request_security(
-                    context, "suspicious task", "category", "context", "{}"
-                )
+            with patch.object(middleware.audit_logger, "log_suspicious_activity") as mock_log:
+                result = middleware.check_request_security(context, "suspicious task", "category", "context", "{}")
 
         assert result.allowed is True
         assert 0.5 <= result.risk_score < 0.8
@@ -470,9 +422,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(ip_address="192.168.1.1")
 
-        result = middleware.check_request_security(
-            context, "test task", "category", "context", "{}"
-        )
+        result = middleware.check_request_security(context, "test task", "category", "context", "{}")
 
         assert context.request_id is not None
         assert context.request_id.startswith("req_")
@@ -481,9 +431,7 @@ class TestSecurityMiddleware:
     def test_get_rate_limit_identifier_user_priority(self) -> None:
         """Test rate limit identifier with user_id priority."""
         middleware = SecurityMiddleware({})
-        context = SecurityContext(
-            user_id="user123", session_id="session456", ip_address="192.168.1.1"
-        )
+        context = SecurityContext(user_id="user123", session_id="session456", ip_address="192.168.1.1")
 
         identifier = middleware._get_rate_limit_identifier(context)
 
@@ -558,9 +506,7 @@ class TestSecurityMiddleware:
         """Test prompt injection pattern detection with clean text."""
         middleware = SecurityMiddleware({})
 
-        patterns = middleware._detect_prompt_injection_patterns(
-            "Hello, how are you today?"
-        )
+        patterns = middleware._detect_prompt_injection_patterns("Hello, how are you today?")
 
         assert len(patterns) == 0
 
@@ -579,9 +525,7 @@ class TestSecurityMiddleware:
         config = {"enabled": True, "strict_mode": True, "validation_level": "strict"}
         middleware = SecurityMiddleware(config)
 
-        with patch.object(
-            middleware.audit_logger, "get_security_summary"
-        ) as mock_summary:
+        with patch.object(middleware.audit_logger, "get_security_summary") as mock_summary:
             mock_summary.return_value = {"total_events": 100, "blocked_requests": 5}
 
             stats = middleware.get_security_stats()
@@ -626,9 +570,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.input_validator, "validate_user_preferences"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_user_preferences") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=False,
                 sanitized_input="{}",
@@ -654,12 +596,8 @@ class TestSecurityMiddleware:
 
         with (
             patch.object(middleware.input_validator, "validate_prompt") as mock_prompt,
-            patch.object(
-                middleware.input_validator, "validate_user_preferences"
-            ) as mock_prefs,
-            patch.object(
-                middleware.rate_limiter, "check_rate_limit"
-            ) as mock_rate_limit,
+            patch.object(middleware.input_validator, "validate_user_preferences") as mock_prefs,
+            patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit,
         ):
             mock_prompt.return_value = SecurityValidationResult(
                 is_valid=False,
@@ -687,9 +625,7 @@ class TestSecurityMiddleware:
                 metadata={"window_type": "minute"},
             )
 
-            result = middleware.check_request_security(
-                context, "task", "category", "context", '{"bad": "prefs"}'
-            )
+            result = middleware.check_request_security(context, "task", "category", "context", '{"bad": "prefs"}')
 
         # With 6 violations, should be blocked (more than 5 violations triggers block)
         assert result.allowed is False
@@ -711,9 +647,7 @@ class TestSecurityMiddleware:
                 blocked=False,
             )
 
-        with patch.object(
-            middleware.input_validator, "validate_user_preferences"
-        ) as mock_prefs:
+        with patch.object(middleware.input_validator, "validate_user_preferences") as mock_prefs:
             mock_prefs.return_value = SecurityValidationResult(
                 is_valid=True,
                 sanitized_input="{}",
@@ -723,9 +657,7 @@ class TestSecurityMiddleware:
                 blocked=False,
             )
 
-        with patch.object(
-            middleware.rate_limiter, "check_rate_limit"
-        ) as mock_rate_limit:
+        with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
             mock_rate_limit.return_value = RateLimitResult(
                 allowed=True,
                 remaining=50,
@@ -733,9 +665,7 @@ class TestSecurityMiddleware:
                 metadata={"window_type": "minute"},
             )
 
-            result = middleware.check_request_security(
-                context, "task", "category", "context", "{}"
-            )
+            result = middleware.check_request_security(context, "task", "category", "context", "{}")
 
         assert "validation_results" in result.metadata
         assert "rate_limit" in result.metadata
@@ -752,9 +682,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware, "_detect_prompt_injection_patterns"
-        ) as mock_injection:
+        with patch.object(middleware, "_detect_prompt_injection_patterns") as mock_injection:
             mock_injection.return_value = ["pattern"]
 
             result = middleware.check_request_security(
@@ -771,9 +699,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.input_validator, "validate_prompt"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=False,
                 sanitized_input="task",
@@ -783,9 +709,7 @@ class TestSecurityMiddleware:
                 blocked=True,
             )
 
-            result = middleware.check_request_security(
-                context, "critical task", "category", "context", "{}"
-            )
+            result = middleware.check_request_security(context, "critical task", "category", "context", "{}")
 
         assert result.risk_score == 1.0  # Should be clamped
 
@@ -795,9 +719,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
         context = SecurityContext(user_id="user123")
 
-        with patch.object(
-            middleware.input_validator, "validate_prompt"
-        ) as mock_validate:
+        with patch.object(middleware.input_validator, "validate_prompt") as mock_validate:
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=True,
                 sanitized_input="sanitized task",
@@ -826,16 +748,10 @@ class TestSecurityMiddleware:
         context = SecurityContext(user_id="user123")
 
         with (
-            patch.object(
-                middleware.input_validator, "validate_prompt"
-            ) as mock_validate,
-            patch.object(
-                middleware.input_validator, "validate_user_preferences"
-            ) as mock_prefs,
+            patch.object(middleware.input_validator, "validate_prompt") as mock_validate,
+            patch.object(middleware.input_validator, "validate_user_preferences") as mock_prefs,
             patch.object(middleware.rate_limiter, "apply_penalty") as mock_penalty,
-            patch.object(
-                middleware.rate_limiter, "check_rate_limit"
-            ) as mock_rate_limit,
+            patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit,
         ):
             mock_validate.return_value = SecurityValidationResult(
                 is_valid=True,
@@ -863,9 +779,7 @@ class TestSecurityMiddleware:
                 metadata={"window_type": "minute"},
             )
 
-            result = middleware.check_request_security(
-                context, "high risk task", "category", "context", "{}"
-            )
+            result = middleware.check_request_security(context, "high risk task", "category", "context", "{}")
 
             # Penalty duration should be 300 * 0.75 = 225 seconds
             # Note: Rate limiter adds 'user:' prefix to user_id
@@ -878,9 +792,7 @@ class TestSecurityMiddleware:
         context = SecurityContext(ip_address="192.168.1.1")
 
         original_request_id = context.request_id
-        result = middleware.check_request_security(
-            context, "test task", "category", "context", "{}"
-        )
+        result = middleware.check_request_security(context, "test task", "category", "context", "{}")
 
         assert context.request_id != original_request_id
         assert context.request_id is not None

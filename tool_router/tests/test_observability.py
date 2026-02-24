@@ -37,9 +37,7 @@ class TestHealthChecker:
 
     def test_check_health_healthy(self) -> None:
         """Test health check when all components are healthy."""
-        with patch.object(
-            self.health_checker.gateway_client, "test_connection"
-        ) as mock_connection:
+        with patch.object(self.health_checker.gateway_client, "test_connection") as mock_connection:
             mock_connection.return_value = True
 
             result = self.health_checker.check_health()
@@ -52,9 +50,7 @@ class TestHealthChecker:
 
     def test_check_health_gateway_unreachable(self) -> None:
         """Test health check when gateway is unreachable."""
-        with patch.object(
-            self.health_checker.gateway_client, "test_connection"
-        ) as mock_connection:
+        with patch.object(self.health_checker.gateway_client, "test_connection") as mock_connection:
             mock_connection.return_value = False
 
             result = self.health_checker.check_health()
@@ -68,11 +64,8 @@ class TestHealthChecker:
         """Test health check with slow response time."""
         with (
             patch.object(self.health_checker, "_measure_response_time") as mock_measure,
-            patch.object(
-                self.health_checker.gateway_client, "test_connection"
-            ) as mock_connection,
+            patch.object(self.health_checker.gateway_client, "test_connection") as mock_connection,
         ):
-
             # Mock slow response
             mock_connection.return_value = True
             mock_measure.return_value = 6000  # 6 seconds
@@ -130,9 +123,7 @@ class TestHealthChecker:
 
     def test_health_check_with_timeout(self) -> None:
         """Test health check with custom timeout."""
-        with patch.object(
-            self.health_checker.gateway_client, "test_connection"
-        ) as mock_connection:
+        with patch.object(self.health_checker.gateway_client, "test_connection") as mock_connection:
             mock_connection.return_value = True
 
             # Set custom timeout
@@ -208,7 +199,6 @@ class TestStructuredLogger:
             patch.object(self.logger, "_measure_execution_time") as mock_measure,
             patch.object(self.logger.logger, "info") as mock_log,
         ):
-
             mock_measure.return_value = 150.5
             self.logger.info("Operation completed", {"operation": "test"})
 
@@ -356,17 +346,13 @@ class TestMetricsCollector:
 
         def record_metrics(metrics_collector, start_id, end_id):
             for i in range(start_id, end_id):
-                metric = PerformanceMetric(
-                    name=f"op_{i}", value=float(i), unit="ms", timestamp=datetime.now()
-                )
+                metric = PerformanceMetric(name=f"op_{i}", value=float(i), unit="ms", timestamp=datetime.now())
                 metrics_collector.record_metric(metric)
 
         # Create multiple threads to record metrics concurrently
         threads = []
         for i in range(5):
-            thread = threading.Thread(
-                target=record_metrics, args=(self.metrics, i * 10, (i + 1) * 10)
-            )
+            thread = threading.Thread(target=record_metrics, args=(self.metrics, i * 10, (i + 1) * 10))
             threads.append(thread)
             thread.start()
 
@@ -427,9 +413,7 @@ class TestMetricsCollector:
     def test_export_metrics(self) -> None:
         """Test exporting metrics to different formats."""
         # Add test metrics
-        self.metrics.record_metric(
-            PerformanceMetric("export_test", 1.0, "ms", datetime.now())
-        )
+        self.metrics.record_metric(PerformanceMetric("export_test", 1.0, "ms", datetime.now()))
 
         # Test JSON export
         json_data = self.metrics.export_metrics("json")
