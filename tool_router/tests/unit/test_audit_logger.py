@@ -8,7 +8,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from tool_router.security.audit_logger import SecurityAuditLogger, SecurityEvent, SecurityEventType, SecuritySeverity
+from tool_router.security.audit_logger import (
+    SecurityAuditLogger,
+    SecurityEvent,
+    SecurityEventType,
+    SecuritySeverity,
+)
 
 
 class TestSecurityAuditLogger:
@@ -72,7 +77,7 @@ class TestSecurityAuditLogger:
             details={"action": "test"},
             risk_score=0.0,
             blocked=False,
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
 
         with patch.object(logger.logger, "info") as mock_info:
@@ -105,7 +110,7 @@ class TestSecurityAuditLogger:
             details={"limit": 100},
             risk_score=0.6,
             blocked=True,
-            metadata={}
+            metadata={},
         )
 
         with patch.object(logger.logger, "warning") as mock_warning:
@@ -130,7 +135,7 @@ class TestSecurityAuditLogger:
             details={"reason": "invalid_password"},
             risk_score=0.7,
             blocked=True,
-            metadata={}
+            metadata={},
         )
 
         with patch.object(logger.logger, "error") as mock_error:
@@ -155,7 +160,7 @@ class TestSecurityAuditLogger:
             details={"patterns": ["<script>", "javascript:"], "risk_score": 0.9},
             risk_score=0.9,
             blocked=True,
-            metadata={}
+            metadata={},
         )
 
         with patch.object(logger.logger, "error") as mock_error:
@@ -174,7 +179,7 @@ class TestSecurityAuditLogger:
                 user_agent="Mozilla/5.0",
                 request_id="req-123",
                 endpoint="/api/tools",
-                details={"tool": "read_file"}
+                details={"tool": "read_file"},
             )
 
             assert event_id is not None
@@ -203,7 +208,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/admin",
                 reason="Rate limit exceeded",
                 risk_score=0.8,
-                details={"limit": 100, "current": 150}
+                details={"limit": 100, "current": 150},
             )
 
             mock_log.assert_called_once()
@@ -227,7 +232,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/tools",
                 reason="Suspicious activity",
                 risk_score=0.6,
-                details={"pattern": "rapid_requests"}
+                details={"pattern": "rapid_requests"},
             )
 
             mock_log.assert_called_once()
@@ -249,7 +254,7 @@ class TestSecurityAuditLogger:
                 limit_type="requests_per_minute",
                 current_count=150,
                 limit=100,
-                details={"window": "60s"}
+                details={"window": "60s"},
             )
 
             mock_log.assert_called_once()
@@ -275,7 +280,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/chat",
                 patterns=["<script>", "javascript:", "data:"],
                 risk_score=0.9,
-                details={"prompt_length": 1000}
+                details={"prompt_length": 1000},
             )
 
             mock_log.assert_called_once()
@@ -297,7 +302,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/chat",
                 patterns=["DROP TABLE"],
                 risk_score=0.7,
-                details={"prompt_length": 500}
+                details={"prompt_length": 500},
             )
 
             mock_log.assert_called_once()
@@ -318,7 +323,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/login",
                 auth_method="password",
                 reason="Invalid credentials",
-                details={"attempts": 3}
+                details={"attempts": 3},
             )
 
             mock_log.assert_called_once()
@@ -342,7 +347,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/admin",
                 required_permission="admin:access",
                 user_permissions=["user:read", "user:write"],
-                details={"resource": "user_data"}
+                details={"resource": "user_data"},
             )
 
             mock_log.assert_called_once()
@@ -366,7 +371,7 @@ class TestSecurityAuditLogger:
                 validation_type="input_validation",
                 violations=["missing_required_field", "invalid_format"],
                 risk_score=0.8,
-                details={"field": "tool_name"}
+                details={"field": "tool_name"},
             )
 
             mock_log.assert_called_once()
@@ -388,7 +393,7 @@ class TestSecurityAuditLogger:
                 validation_type="schema_validation",
                 violations=["additional_property"],
                 risk_score=0.5,
-                details={"field": "extra_data"}
+                details={"field": "extra_data"},
             )
 
             mock_log.assert_called_once()
@@ -410,7 +415,7 @@ class TestSecurityAuditLogger:
                 penalty_type="rate_limit",
                 duration=300,
                 reason="Too many requests",
-                details={"previous_violations": 5}
+                details={"previous_violations": 5},
             )
 
             mock_log.assert_called_once()
@@ -433,7 +438,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/tools",
                 activity_type="rapid_tool_requests",
                 risk_score=0.8,
-                details={"request_count": 50, "time_window": "60s"}
+                details={"request_count": 50, "time_window": "60s"},
             )
 
             mock_log.assert_called_once()
@@ -455,7 +460,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/tools",
                 activity_type="unusual_time_pattern",
                 risk_score=0.6,
-                details={"time": "03:00:00", "timezone": "UTC"}
+                details={"time": "03:00:00", "timezone": "UTC"},
             )
 
             mock_log.assert_called_once()
@@ -496,7 +501,7 @@ class TestSecurityAuditLogger:
             "method": "POST",
             "path": "/api/tools",
             "user_id": "user123",
-            "body": "test data"
+            "body": "test data",
         }
 
         hash1 = logger.create_request_hash(request_data)
@@ -546,7 +551,7 @@ class TestSecurityAuditLogger:
             details={"key": "value"},
             risk_score=0.0,
             blocked=False,
-            metadata={"meta": "data"}
+            metadata={"meta": "data"},
         )
 
         assert event.event_id == "test-event"
@@ -570,13 +575,19 @@ class TestSecurityAuditLogger:
         assert SecurityEventType.REQUEST_RECEIVED.value == "request_received"
         assert SecurityEventType.REQUEST_BLOCKED.value == "request_blocked"
         assert SecurityEventType.RATE_LIMIT_EXCEEDED.value == "rate_limit_exceeded"
-        assert SecurityEventType.PROMPT_INJECTION_DETECTED.value == "prompt_injection_detected"
+        assert (
+            SecurityEventType.PROMPT_INJECTION_DETECTED.value
+            == "prompt_injection_detected"
+        )
         assert SecurityEventType.AUTHENTICATION_FAILED.value == "authentication_failed"
         assert SecurityEventType.AUTHORIZATION_FAILED.value == "authorization_failed"
         assert SecurityEventType.VALIDATION_FAILED.value == "validation_failed"
         assert SecurityEventType.PENALTY_APPLIED.value == "penalty_applied"
         assert SecurityEventType.SUSPICIOUS_ACTIVITY.value == "suspicious_activity"
-        assert SecurityEventType.SECURITY_POLICY_VIOLATION.value == "security_policy_violation"
+        assert (
+            SecurityEventType.SECURITY_POLICY_VIOLATION.value
+            == "security_policy_violation"
+        )
 
         # Test SecuritySeverity
         assert SecuritySeverity.LOW.value == "low"
@@ -608,7 +619,7 @@ class TestSecurityAuditLogger:
                 user_agent=None,
                 request_id="req1",
                 endpoint="/api/test",
-                details={}
+                details={},
             )
 
             event_id2 = logger.log_request_received(
@@ -618,7 +629,7 @@ class TestSecurityAuditLogger:
                 user_agent=None,
                 request_id="req2",
                 endpoint="/api/test",
-                details={}
+                details={},
             )
 
             assert event_id1 != event_id2

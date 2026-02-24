@@ -15,7 +15,6 @@ from .evaluation import EvaluationMetric, SpecialistEvaluator
 from .knowledge_base import KnowledgeBase, PatternCategory
 from .training_pipeline import TrainingPipeline
 
-
 __all__ = [
     "DataSource",
     "EvaluationMetric",

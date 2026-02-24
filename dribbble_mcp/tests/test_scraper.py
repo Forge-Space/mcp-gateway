@@ -13,7 +13,6 @@ from dribbble_mcp.scraper import (
     _parse_count,
 )
 
-
 SEARCH_HTML = """
 <html><body>
 <ul>
@@ -87,7 +86,9 @@ class TestDribbbleScraper:
         with pytest.raises(ValueError, match="query must not be empty"):
             scraper.search_shots("")
 
-    def test_search_shots_whitespace_query_raises(self, scraper: DribbbleScraper) -> None:
+    def test_search_shots_whitespace_query_raises(
+        self, scraper: DribbbleScraper
+    ) -> None:
         with pytest.raises(ValueError, match="query must not be empty"):
             scraper.search_shots("   ")
 
@@ -98,19 +99,25 @@ class TestDribbbleScraper:
 
     def test_search_shots_with_filters(self, scraper: DribbbleScraper) -> None:
         with patch.object(scraper, "_get", return_value=SEARCH_HTML) as mock_get:
-            scraper.search_shots("ui", timeframe="week", category="web-design", color="ff5733")
+            scraper.search_shots(
+                "ui", timeframe="week", category="web-design", color="ff5733"
+            )
         call_url = mock_get.call_args[0][0]
         assert "timeframe=week" in call_url
         assert "category=web-design" in call_url
         assert "color=ff5733" in call_url
 
-    def test_search_shots_invalid_timeframe_ignored(self, scraper: DribbbleScraper) -> None:
+    def test_search_shots_invalid_timeframe_ignored(
+        self, scraper: DribbbleScraper
+    ) -> None:
         with patch.object(scraper, "_get", return_value=SEARCH_HTML) as mock_get:
             scraper.search_shots("ui", timeframe="invalid")
         call_url = mock_get.call_args[0][0]
         assert "timeframe" not in call_url
 
-    def test_search_shots_invalid_category_ignored(self, scraper: DribbbleScraper) -> None:
+    def test_search_shots_invalid_category_ignored(
+        self, scraper: DribbbleScraper
+    ) -> None:
         with patch.object(scraper, "_get", return_value=SEARCH_HTML) as mock_get:
             scraper.search_shots("ui", category="not-a-category")
         call_url = mock_get.call_args[0][0]
@@ -122,12 +129,16 @@ class TestDribbbleScraper:
         with patch.object(
             scraper,
             "_get",
-            side_effect=httpx.HTTPStatusError("403", request=MagicMock(), response=mock_response),
+            side_effect=httpx.HTTPStatusError(
+                "403", request=MagicMock(), response=mock_response
+            ),
         ):
             with pytest.raises(httpx.HTTPStatusError):
                 scraper.search_shots("ui")
 
-    def test_search_shots_request_error_propagates(self, scraper: DribbbleScraper) -> None:
+    def test_search_shots_request_error_propagates(
+        self, scraper: DribbbleScraper
+    ) -> None:
         with patch.object(
             scraper,
             "_get",
@@ -136,7 +147,9 @@ class TestDribbbleScraper:
             with pytest.raises(httpx.RequestError):
                 scraper.search_shots("ui")
 
-    def test_search_shots_empty_page_returns_empty(self, scraper: DribbbleScraper) -> None:
+    def test_search_shots_empty_page_returns_empty(
+        self, scraper: DribbbleScraper
+    ) -> None:
         with patch.object(scraper, "_get", return_value="<html><body></body></html>"):
             shots = scraper.search_shots("ui")
         assert shots == []
@@ -160,7 +173,9 @@ class TestDribbbleScraper:
         assert details["views"] == 45000
         assert "#1A2B3C" in details["colors"]
 
-    def test_get_shot_details_invalid_url_raises(self, scraper: DribbbleScraper) -> None:
+    def test_get_shot_details_invalid_url_raises(
+        self, scraper: DribbbleScraper
+    ) -> None:
         with pytest.raises(ValueError, match="valid Dribbble shot URL"):
             scraper.get_shot_details("https://example.com/not-dribbble")
 
@@ -168,13 +183,17 @@ class TestDribbbleScraper:
         with pytest.raises(ValueError):
             scraper.get_shot_details("")
 
-    def test_get_shot_details_http_error_propagates(self, scraper: DribbbleScraper) -> None:
+    def test_get_shot_details_http_error_propagates(
+        self, scraper: DribbbleScraper
+    ) -> None:
         mock_response = MagicMock()
         mock_response.status_code = 404
         with patch.object(
             scraper,
             "_get",
-            side_effect=httpx.HTTPStatusError("404", request=MagicMock(), response=mock_response),
+            side_effect=httpx.HTTPStatusError(
+                "404", request=MagicMock(), response=mock_response
+            ),
         ):
             with pytest.raises(httpx.HTTPStatusError):
                 scraper.get_shot_details("https://dribbble.com/shots/999-gone")

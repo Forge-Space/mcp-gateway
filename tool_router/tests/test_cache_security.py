@@ -28,7 +28,6 @@ from unittest.mock import Mock, patch
 import pytest
 from cryptography.fernet import Fernet
 
-
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from cache.compliance import ComplianceManager
@@ -102,7 +101,7 @@ class TestCacheConfig:
             "CACHE_ENCRYPTION_ENABLED": "true",
             "CACHE_AUDIT_ENABLED": "false",
             "CACHE_RETENTION_DAYS_SENSITIVE": "60",
-            "CACHE_RETENTION_DAYS_CONFIDENTIAL": "30"
+            "CACHE_RETENTION_DAYS_CONFIDENTIAL": "30",
         }
 
         with patch.dict(os.environ, env_vars):
@@ -146,8 +145,7 @@ class TestCacheEncryption:
 
         # Decrypt
         decrypt_result = self.encryption.decrypt(
-            result.encrypted_data,
-            result.operation_id
+            result.encrypted_data, result.operation_id
         )
 
         assert decrypt_result.decrypted_data == test_data
@@ -161,14 +159,13 @@ class TestCacheEncryption:
             DataClassification.PUBLIC,
             DataClassification.INTERNAL,
             DataClassification.SENSITIVE,
-            DataClassification.CONFIDENTIAL
+            DataClassification.CONFIDENTIAL,
         ]
 
         for classification in classifications:
             result = self.encryption.encrypt(test_data, classification)
             decrypt_result = self.encryption.decrypt(
-                result.encrypted_data,
-                result.operation_id
+                result.encrypted_data, result.operation_id
             )
 
             assert decrypt_result.decrypted_data == test_data
@@ -190,15 +187,13 @@ class TestCacheEncryption:
         # New encryption should work with new key
         result2 = self.encryption.encrypt(test_data, DataClassification.SENSITIVE)
         decrypt_result2 = self.encryption.decrypt(
-            result2.encrypted_data,
-            result2.operation_id
+            result2.encrypted_data, result2.operation_id
         )
         assert decrypt_result2.decrypted_data == test_data
 
         # Old encrypted data should still be decryptable
         decrypt_result1 = self.encryption.decrypt(
-            result1.encrypted_data,
-            result1.operation_id
+            result1.encrypted_data, result1.operation_id
         )
         assert decrypt_result1.decrypted_data == test_data
 
@@ -211,10 +206,7 @@ class TestCacheEncryption:
         test_data = "Test data with custom key"
         result = encryption.encrypt(test_data, DataClassification.SENSITIVE)
 
-        decrypt_result = encryption.decrypt(
-            result.encrypted_data,
-            result.operation_id
-        )
+        decrypt_result = encryption.decrypt(result.encrypted_data, result.operation_id)
 
         assert decrypt_result.decrypted_data == test_data
 
@@ -284,7 +276,7 @@ class TestAccessControlManager:
             requested_level=AccessLevel.WRITE,
             justification="Need to update configuration",
             status="pending",
-            created=datetime.utcnow()
+            created=datetime.utcnow(),
         )
 
         # Submit request
@@ -311,9 +303,7 @@ class TestAccessControlManager:
         """Test permission inheritance."""
         # Create a role with specific permissions
         self.access_manager.create_role(
-            "data_analyst",
-            [AccessLevel.READ],
-            ["analytics_*", "reports_*"]
+            "data_analyst", [AccessLevel.READ], ["analytics_*", "reports_*"]
         )
 
         # Assign role to user
@@ -369,7 +359,7 @@ class TestGDPRComplianceManager:
         consent_data = {
             "data_types": ["personal_data", "analytics_data"],
             "purposes": ["marketing", "analytics"],
-            "legal_basis": "consent"
+            "legal_basis": "consent",
         }
 
         consent_id = self.gdpr_manager.record_consent("subject_123", consent_data)
@@ -378,40 +368,43 @@ class TestGDPRComplianceManager:
         assert len(consent_id) == 32  # Hex string length
 
         # Check consent exists
-        assert self.gdpr_manager.check_consent(
-            "subject_123", "personal_data", "marketing"
-        ) is True
+        assert (
+            self.gdpr_manager.check_consent("subject_123", "personal_data", "marketing")
+            is True
+        )
 
     def test_consent_withdrawal(self):
         """Test consent withdrawal."""
         consent_data = {
             "data_types": ["personal_data"],
             "purposes": ["marketing"],
-            "legal_basis": "consent"
+            "legal_basis": "consent",
         }
 
         consent_id = self.gdpr_manager.record_consent("subject_456", consent_data)
 
         # Initially should have consent
-        assert self.gdpr_manager.check_consent(
-            "subject_456", "personal_data", "marketing"
-        ) is True
+        assert (
+            self.gdpr_manager.check_consent("subject_456", "personal_data", "marketing")
+            is True
+        )
 
         # Withdraw consent
         success = self.gdpr_manager.withdraw_consent(consent_id)
         assert success is True
 
         # Should no longer have consent
-        assert self.gdpr_manager.check_consent(
-            "subject_456", "personal_data", "marketing"
-        ) is False
+        assert (
+            self.gdpr_manager.check_consent("subject_456", "personal_data", "marketing")
+            is False
+        )
 
     def test_consent_expiration(self):
         """Test consent expiration."""
         consent_data = {
             "data_types": ["personal_data"],
             "purposes": ["analytics"],
-            "legal_basis": "consent"
+            "legal_basis": "consent",
         }
 
         consent_id = self.gdpr_manager.record_consent("subject_789", consent_data)
@@ -419,13 +412,15 @@ class TestGDPRComplianceManager:
         # Manually set expiration to past
         with self.gdpr_manager._lock:
             if consent_id in self.gdpr_manager._consent_records:
-                self.gdpr_manager._consent_records[consent_id].expires_at = \
+                self.gdpr_manager._consent_records[consent_id].expires_at = (
                     datetime.utcnow() - timedelta(days=1)
+                )
 
         # Should not have consent due to expiration
-        assert self.gdpr_manager.check_consent(
-            "subject_789", "personal_data", "analytics"
-        ) is False
+        assert (
+            self.gdpr_manager.check_consent("subject_789", "personal_data", "analytics")
+            is False
+        )
 
     def test_right_to_be_forgotten(self):
         """Test GDPR right to be forgotten."""
@@ -443,7 +438,7 @@ class TestGDPRComplianceManager:
             "request_type": "access",
             "subject_id": "subject_111",
             "subject_contact": "user@example.com",
-            "description": "Request for data access"
+            "description": "Request for data access",
         }
 
         request_id = self.gdpr_manager.create_data_subject_request(request_data)
@@ -491,7 +486,7 @@ class TestRetentionPolicyManager:
             trigger=RetentionTrigger.TIME_BASED,
             action=RetentionAction.DELETE,
             retention_days=45,
-            priority=150
+            priority=150,
         )
 
         rule_id = self.retention_manager.add_rule(custom_rule)
@@ -512,7 +507,7 @@ class TestRetentionPolicyManager:
             created_at=datetime.utcnow() - timedelta(days=100),  # 100 days old
             last_accessed=datetime.utcnow() - timedelta(days=50),
             access_count=10,
-            tags=[]
+            tags=[],
         )
 
         # Evaluate retention
@@ -533,7 +528,7 @@ class TestRetentionPolicyManager:
             classification=DataClassification.PUBLIC,
             created_at=datetime.utcnow() - timedelta(days=400),  # Very old
             access_count=5,
-            tags=[]
+            tags=[],
         )
 
         # Mock cache delete function
@@ -568,7 +563,9 @@ class TestRetentionPolicyManager:
 
         # Verify update
         updated_rules = self.retention_manager.get_rules(DataClassification.SENSITIVE)
-        updated_rule = next(r for r in updated_rules if r.rule_id == initial_rule.rule_id)
+        updated_rule = next(
+            r for r in updated_rules if r.rule_id == initial_rule.rule_id
+        )
 
         assert updated_rule.retention_days == 120
         assert updated_rule.enabled is False
@@ -586,7 +583,7 @@ class TestRetentionPolicyManager:
             data_classification=DataClassification.INTERNAL,
             trigger=RetentionTrigger.TIME_BASED,
             action=RetentionAction.DELETE,
-            retention_days=30
+            retention_days=30,
         )
 
         self.retention_manager.add_rule(test_rule)
@@ -648,7 +645,9 @@ class TestCacheSecurityManager:
         """Test integrated audit logging."""
         # Perform some operations that should be audited
         self.security_manager.encrypt_data("audit_test", DataClassification.PUBLIC)
-        self.security_manager.check_access("test_user", "test_resource", AccessLevel.READ)
+        self.security_manager.check_access(
+            "test_user", "test_resource", AccessLevel.READ
+        )
 
         # Check audit trail
         audit_entries = self.security_manager.get_audit_entries(limit=10)
@@ -656,7 +655,9 @@ class TestCacheSecurityManager:
         assert len(audit_entries) >= 2
 
         # Check specific events
-        encryption_events = [e for e in audit_entries if e.event_type == "data_encryption"]
+        encryption_events = [
+            e for e in audit_entries if e.event_type == "data_encryption"
+        ]
         access_events = [e for e in audit_entries if e.event_type == "access_check"]
 
         assert len(encryption_events) >= 1
@@ -666,7 +667,9 @@ class TestCacheSecurityManager:
         """Test integrated metrics collection."""
         # Perform various operations
         self.security_manager.encrypt_data("metrics_test", DataClassification.INTERNAL)
-        self.security_manager.check_access("metrics_user", "metrics_resource", AccessLevel.WRITE)
+        self.security_manager.check_access(
+            "metrics_user", "metrics_resource", AccessLevel.WRITE
+        )
 
         # Get metrics
         metrics = self.security_manager.get_metrics()
@@ -738,7 +741,7 @@ class TestComplianceManager:
         consent_data = {
             "data_types": ["email", "name"],
             "purposes": ["communication"],
-            "legal_basis": "consent"
+            "legal_basis": "consent",
         }
 
         consent_id = self.compliance_manager.record_consent("user_123", consent_data)
@@ -766,7 +769,7 @@ class TestComplianceManager:
             "request_type": "erasure",
             "subject_id": "user_456",
             "subject_contact": "user@example.com",
-            "description": "Request data deletion"
+            "description": "Request data deletion",
         }
 
         request_id = self.compliance_manager.create_data_subject_request(request_data)
@@ -804,11 +807,10 @@ class TestComplianceManager:
     def test_compliance_metrics(self):
         """Test compliance metrics collection."""
         # Perform some compliance operations
-        self.compliance_manager.record_consent("metrics_user", {
-            "data_types": ["test"],
-            "purposes": ["test"],
-            "legal_basis": "consent"
-        })
+        self.compliance_manager.record_consent(
+            "metrics_user",
+            {"data_types": ["test"], "purposes": ["test"], "legal_basis": "consent"},
+        )
 
         metrics = self.compliance_manager.get_metrics()
 
@@ -829,11 +831,14 @@ class TestIntegrationScenarios:
     def test_end_to_end_security_workflow(self):
         """Test complete end-to-end security workflow."""
         # Step 1: Record consent for data processing
-        consent_id = self.compliance_manager.record_consent("integration_user", {
-            "data_types": ["personal_data"],
-            "purposes": ["analytics"],
-            "legal_basis": "consent"
-        })
+        consent_id = self.compliance_manager.record_consent(
+            "integration_user",
+            {
+                "data_types": ["personal_data"],
+                "purposes": ["analytics"],
+                "legal_basis": "consent",
+            },
+        )
 
         # Step 2: Encrypt sensitive data
         sensitive_data = "User's personal information"
@@ -852,7 +857,7 @@ class TestIntegrationScenarios:
             data_classification=DataClassification.SENSITIVE,
             created=datetime.utcnow(),
             size_bytes=len(sensitive_data),
-            encrypted=True
+            encrypted=True,
         )
 
         # Step 5: Apply retention policy
@@ -882,11 +887,14 @@ class TestIntegrationScenarios:
         assert has_consent is False
 
         # Scenario 2: Process data with consent
-        consent_id = self.compliance_manager.record_consent("consent_user", {
-            "data_types": ["personal_data"],
-            "purposes": ["marketing"],
-            "legal_basis": "consent"
-        })
+        consent_id = self.compliance_manager.record_consent(
+            "consent_user",
+            {
+                "data_types": ["personal_data"],
+                "purposes": ["marketing"],
+                "legal_basis": "consent",
+            },
+        )
 
         has_consent = self.compliance_manager.check_consent(
             "consent_user", "personal_data", "marketing"
@@ -939,7 +947,7 @@ class TestIntegrationScenarios:
             data_classification=DataClassification.SENSITIVE,
             created=datetime.utcnow() - timedelta(days=100),  # Old data
             size_bytes=1024,
-            encrypted=True
+            encrypted=True,
         )
 
         public_metadata = CacheEntryMetadata(
@@ -947,7 +955,7 @@ class TestIntegrationScenarios:
             data_classification=DataClassification.PUBLIC,
             created=datetime.utcnow() - timedelta(days=200),  # Very old data
             size_bytes=512,
-            encrypted=False
+            encrypted=False,
         )
 
         # Evaluate retention for both
@@ -996,7 +1004,9 @@ class TestPerformanceAndScalability:
             test_data = "x" * size
 
             start_time = time.time()
-            result = self.security_manager.encrypt_data(test_data, DataClassification.PUBLIC)
+            result = self.security_manager.encrypt_data(
+                test_data, DataClassification.PUBLIC
+            )
             encrypt_time = time.time() - start_time
 
             start_time = time.time()
@@ -1046,7 +1056,9 @@ class TestPerformanceAndScalability:
         """Test audit log scalability."""
         # Generate many audit entries
         for i in range(1000):
-            self.security_manager.encrypt_data(f"test_data_{i}", DataClassification.PUBLIC)
+            self.security_manager.encrypt_data(
+                f"test_data_{i}", DataClassification.PUBLIC
+            )
 
         # Test retrieval performance
         start_time = time.time()

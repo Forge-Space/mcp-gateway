@@ -7,7 +7,6 @@ import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -18,12 +17,14 @@ logger.info("Environment variables: %s", dict(os.environ))
 
 try:
     import fastapi
+
     logger.info("FastAPI imported successfully: %s", fastapi.__version__)
 except ImportError as e:
     logger.warning("FastAPI import failed: %s", e)
 
 try:
     import uvicorn
+
     logger.info("Uvicorn imported successfully: %s", uvicorn.__version__)
 except ImportError as e:
     logger.warning("Uvicorn import failed: %s", e)

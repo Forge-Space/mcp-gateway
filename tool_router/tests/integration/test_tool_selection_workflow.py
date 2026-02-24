@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from tool_router.scoring.matcher import calculate_tool_relevance_score, select_top_matching_tools
+from tool_router.scoring.matcher import (
+    calculate_tool_relevance_score,
+    select_top_matching_tools,
+)
 
 
 class TestToolSelectionWorkflow:
@@ -40,7 +43,9 @@ class TestToolSelectionWorkflow:
             },
         ]
 
-    def test_end_to_end_tool_selection_for_search_task(self, sample_tools: list[dict]) -> None:
+    def test_end_to_end_tool_selection_for_search_task(
+        self, sample_tools: list[dict]
+    ) -> None:
         """Test complete workflow for search-related task."""
         task = "search for information about python programming"
         context = "learning python"
@@ -59,30 +64,42 @@ class TestToolSelectionWorkflow:
 
         # Should prioritize search-related tools
         selected_names = [tool["name"] for tool in selected_tools]
-        assert "web_search" in selected_names, "Should select web search for search task"
+        assert (
+            "web_search" in selected_names
+        ), "Should select web search for search task"
 
         # Search tool should have highest relevance
         web_search_score = next(score for name, score in scores if name == "web_search")
-        assert web_search_score > 0.5, "Web search should have high relevance for search task"
+        assert (
+            web_search_score > 0.5
+        ), "Web search should have high relevance for search task"
 
-    def test_tool_selection_with_context_awareness(self, sample_tools: list[dict]) -> None:
+    def test_tool_selection_with_context_awareness(
+        self, sample_tools: list[dict]
+    ) -> None:
         """Test tool selection considering context information."""
         task = "analyze data"
         context_programming = "programming context"
         context_files = "file system context"
 
         # Test with programming context
-        tools_programming = select_top_matching_tools(sample_tools, task, context_programming, top_n=2)
+        tools_programming = select_top_matching_tools(
+            sample_tools, task, context_programming, top_n=2
+        )
 
         # Test with file system context
-        tools_files = select_top_matching_tools(sample_tools, task, context_files, top_n=2)
+        tools_files = select_top_matching_tools(
+            sample_tools, task, context_files, top_n=2
+        )
 
         # Business logic: context should influence selection
         programming_names = [tool["name"] for tool in tools_programming]
         file_names = [tool["name"] for tool in tools_files]
 
         # Programming context should favor code analyzer
-        assert "code_analyzer" in programming_names, "Programming context should select code analyzer"
+        assert (
+            "code_analyzer" in programming_names
+        ), "Programming context should select code analyzer"
 
         # File context should favor file reader
         assert "file_reader" in file_names, "File context should select file reader"
@@ -99,13 +116,19 @@ class TestToolSelectionWorkflow:
         selected_names = [tool["name"] for tool in selected_tools]
 
         # Should include code analysis tool (highest score)
-        assert "code_analyzer" in selected_names, "Should include code analyzer for code analysis"
+        assert (
+            "code_analyzer" in selected_names
+        ), "Should include code analyzer for code analysis"
 
         # Should include file reader for code files (second highest score)
-        assert "file_reader" in selected_names, "Should include file reader for code files"
+        assert (
+            "file_reader" in selected_names
+        ), "Should include file reader for code files"
 
         # Should include data processor for documentation generation (third highest score)
-        assert "data_processor" in selected_names, "Should include data processor for documentation"
+        assert (
+            "data_processor" in selected_names
+        ), "Should include data processor for documentation"
 
         # Verify tools can work together (complementary capabilities)
         selected_tools_dict = {tool["name"]: tool for tool in selected_tools}
@@ -139,11 +162,21 @@ class TestToolSelectionWorkflow:
 
         # Test with no matching tools
         unrelated_tools = [
-            {"name": "database_connector", "description": "Connect to databases", "category": "database"},
-            {"name": "api_client", "description": "Make HTTP requests", "category": "network"},
+            {
+                "name": "database_connector",
+                "description": "Connect to databases",
+                "category": "database",
+            },
+            {
+                "name": "api_client",
+                "description": "Make HTTP requests",
+                "category": "network",
+            },
         ]
 
-        result = select_top_matching_tools(unrelated_tools, "cook food", "kitchen", top_n=2)
+        result = select_top_matching_tools(
+            unrelated_tools, "cook food", "kitchen", top_n=2
+        )
         assert result == [], "No matching tools should return empty result"
 
         # Business logic: test with None inputs (should handle gracefully)
@@ -180,7 +213,9 @@ class TestToolSelectionWorkflow:
         # Business logic: verify scoring robustness with edge cases
         # Should not crash with unusual characters
         special_chars_task = "test with @#$%^&*() characters"
-        result = select_top_matching_tools(sample_tools, special_chars_task, "", top_n=2)
+        result = select_top_matching_tools(
+            sample_tools, special_chars_task, "", top_n=2
+        )
         assert isinstance(result, list), "Should handle special characters"
 
     def test_performance_optimization_workflow(self, sample_tools: list[dict]) -> None:
@@ -198,7 +233,9 @@ class TestToolSelectionWorkflow:
         selection_time = end_time - start_time
 
         # Business logic: selection should be fast
-        assert selection_time < 0.1, f"Tool selection should be fast, took {selection_time:.3f}s"
+        assert (
+            selection_time < 0.1
+        ), f"Tool selection should be fast, took {selection_time:.3f}s"
 
         # Should return reasonable number of tools
         assert len(result) <= 5, "Should not exceed requested top_n"

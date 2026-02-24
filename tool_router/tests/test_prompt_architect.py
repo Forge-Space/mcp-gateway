@@ -63,7 +63,7 @@ class TestRequirement:
             type=RequirementType.FUNCTIONALITY,
             description="Create user authentication system",
             priority="high",
-            constraints=["Use OAuth 2.0", "Support JWT tokens"]
+            constraints=["Use OAuth 2.0", "Support JWT tokens"],
         )
 
         assert requirement.type == RequirementType.FUNCTIONALITY
@@ -76,7 +76,7 @@ class TestRequirement:
         requirement = Requirement(
             type=RequirementType.PERFORMANCE,
             description="Optimize database queries",
-            priority="medium"
+            priority="medium",
         )
 
         assert requirement.type == RequirementType.PERFORMANCE
@@ -96,7 +96,7 @@ class TestQualityScore:
             completeness=0.8,
             specificity=0.85,
             token_efficiency=0.9,
-            context_preservation=0.8
+            context_preservation=0.8,
         )
 
         assert score.overall_score == 0.85
@@ -209,12 +209,16 @@ class TestTaskAnalyzer:
         """Test extracting functional requirements."""
         analyzer = TaskAnalyzer()
 
-        prompt = "Create a user authentication system that supports login and registration"
+        prompt = (
+            "Create a user authentication system that supports login and registration"
+        )
         requirements = analyzer.extract_requirements(prompt, TaskType.CODE_GENERATION)
 
         assert len(requirements) > 0
         assert any(req.type == RequirementType.FUNCTIONALITY for req in requirements)
-        assert any("user authentication" in req.description.lower() for req in requirements)
+        assert any(
+            "user authentication" in req.description.lower() for req in requirements
+        )
 
     def test_extract_requirements_performance(self):
         """Test extracting performance requirements."""
@@ -289,7 +293,6 @@ class TestTaskAnalyzer:
     def test_extract_constraints_style(self):
         """Test extracting style constraints."""
         analyzer = TaskAnalyzer()
-
 
         prompt = "Create a modern and clean design for production use"
         constraints = analyzer._extract_constraints(prompt.lower())
@@ -605,7 +608,7 @@ class TestPromptArchitect:
             Requirement(
                 type=RequirementType.FUNCTIONALITY,
                 description="User authentication",
-                priority="high"
+                priority="high",
             )
         ]
 
@@ -622,7 +625,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Create something"
-        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.CODE_GENERATION)
+        optimized = architect._apply_task_specific_optimizations(
+            prompt, TaskType.CODE_GENERATION
+        )
 
         assert "code" in optimized.lower()
         assert "programming language" in optimized.lower()
@@ -632,7 +637,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Fix something"
-        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.CODE_DEBUGGING)
+        optimized = architect._apply_task_specific_optimizations(
+            prompt, TaskType.CODE_DEBUGGING
+        )
 
         assert "debugging approach" in optimized.lower()
         assert "root cause analysis" in optimized.lower()
@@ -642,7 +649,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Write something"
-        optimized = architect._apply_task_specific_optimizations(prompt, TaskType.DOCUMENTATION)
+        optimized = architect._apply_task_specific_optimizations(
+            prompt, TaskType.DOCUMENTATION
+        )
 
         assert "documentation" in optimized.lower()
         assert "examples" in optimized.lower()
@@ -687,7 +696,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         prompt = "Create a function with proper error handling."
-        completeness = architect._calculate_completeness(prompt, TaskType.CODE_GENERATION)
+        completeness = architect._calculate_completeness(
+            prompt, TaskType.CODE_GENERATION
+        )
 
         assert completeness > 0.5  # Has code and error handling
 
@@ -723,7 +734,9 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         # Create prompt with ~100 tokens
-        prompt = "Create a React component with proper error handling and validation. " * 10
+        prompt = (
+            "Create a React component with proper error handling and validation. " * 10
+        )
         efficiency = architect._calculate_token_efficiency(prompt)
 
         assert efficiency == 1.0  # Ideal range
@@ -742,7 +755,10 @@ class TestPromptArchitect:
         architect = PromptArchitect()
 
         # Create prompt with ~300 tokens
-        prompt = "This is a very long prompt with lots of detailed information and explanations that goes on and on without being concise or efficient in any way shape or form whatsoever." * 10
+        prompt = (
+            "This is a very long prompt with lots of detailed information and explanations that goes on and on without being concise or efficient in any way shape or form whatsoever."
+            * 10
+        )
         efficiency = architect._calculate_token_efficiency(prompt)
 
         assert efficiency < 1.0  # Penalized for being too long

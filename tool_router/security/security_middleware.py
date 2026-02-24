@@ -12,6 +12,7 @@ from .rate_limiter import RateLimitConfig, RateLimiter
 @dataclass
 class SecurityContext:
     """Security context for a request."""
+
     user_id: str | None = None
     session_id: str | None = None
     ip_address: str | None = None
@@ -25,6 +26,7 @@ class SecurityContext:
 @dataclass
 class SecurityCheckResult:
     """Result of security checks."""
+
     allowed: bool
     risk_score: float
     violations: list[str]
@@ -49,52 +51,85 @@ class SecurityMiddleware:
         rate_limit_config = config.get("rate_limiting", {})
         self.rate_limiter = RateLimiter(
             use_redis=rate_limit_config.get("use_redis", False),
-            redis_url=rate_limit_config.get("redis_url")
+            redis_url=rate_limit_config.get("redis_url"),
         )
 
         # Audit logger
         audit_config = config.get("audit_logging", {})
         self.audit_logger = SecurityAuditLogger(
             log_file=audit_config.get("log_file"),
-            enable_console=audit_config.get("enable_console", True)
+            enable_console=audit_config.get("enable_console", True),
         )
 
         # Default rate limit configurations
         self.default_rate_limit = RateLimitConfig(
-            requests_per_minute=rate_limit_config.get("default", {}).get("requests_per_minute", 60),
-            requests_per_hour=rate_limit_config.get("default", {}).get("requests_per_hour", 1000),
-            requests_per_day=rate_limit_config.get("default", {}).get("requests_per_day", 10000),
-            burst_capacity=rate_limit_config.get("default", {}).get("burst_capacity", 10),
-            penalty_duration=rate_limit_config.get("penalty_duration", 300)
+            requests_per_minute=rate_limit_config.get("default", {}).get(
+                "requests_per_minute", 60
+            ),
+            requests_per_hour=rate_limit_config.get("default", {}).get(
+                "requests_per_hour", 1000
+            ),
+            requests_per_day=rate_limit_config.get("default", {}).get(
+                "requests_per_day", 10000
+            ),
+            burst_capacity=rate_limit_config.get("default", {}).get(
+                "burst_capacity", 10
+            ),
+            penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
         self.authenticated_rate_limit = RateLimitConfig(
-            requests_per_minute=rate_limit_config.get("authenticated_user", {}).get("requests_per_minute", 120),
-            requests_per_hour=rate_limit_config.get("authenticated_user", {}).get("requests_per_hour", 2000),
-            requests_per_day=rate_limit_config.get("authenticated_user", {}).get("requests_per_day", 20000),
-            burst_capacity=rate_limit_config.get("authenticated_user", {}).get("burst_capacity", 20),
-            penalty_duration=rate_limit_config.get("penalty_duration", 300)
+            requests_per_minute=rate_limit_config.get("authenticated_user", {}).get(
+                "requests_per_minute", 120
+            ),
+            requests_per_hour=rate_limit_config.get("authenticated_user", {}).get(
+                "requests_per_hour", 2000
+            ),
+            requests_per_day=rate_limit_config.get("authenticated_user", {}).get(
+                "requests_per_day", 20000
+            ),
+            burst_capacity=rate_limit_config.get("authenticated_user", {}).get(
+                "burst_capacity", 20
+            ),
+            penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
         self.enterprise_rate_limit = RateLimitConfig(
-            requests_per_minute=rate_limit_config.get("enterprise_user", {}).get("requests_per_minute", 300),
-            requests_per_hour=rate_limit_config.get("enterprise_user", {}).get("requests_per_hour", 5000),
-            requests_per_day=rate_limit_config.get("enterprise_user", {}).get("requests_per_day", 50000),
-            burst_capacity=rate_limit_config.get("enterprise_user", {}).get("burst_capacity", 50),
-            penalty_duration=rate_limit_config.get("penalty_duration", 300)
+            requests_per_minute=rate_limit_config.get("enterprise_user", {}).get(
+                "requests_per_minute", 300
+            ),
+            requests_per_hour=rate_limit_config.get("enterprise_user", {}).get(
+                "requests_per_hour", 5000
+            ),
+            requests_per_day=rate_limit_config.get("enterprise_user", {}).get(
+                "requests_per_day", 50000
+            ),
+            burst_capacity=rate_limit_config.get("enterprise_user", {}).get(
+                "burst_capacity", 50
+            ),
+            penalty_duration=rate_limit_config.get("penalty_duration", 300),
         )
 
-    def check_request_security(self, context: SecurityContext,
-                               task: str, category: str, context_str: str,
-                               user_preferences: str) -> SecurityCheckResult:
+    def check_request_security(
+        self,
+        context: SecurityContext,
+        task: str,
+        category: str,
+        context_str: str,
+        user_preferences: str,
+    ) -> SecurityCheckResult:
         """Perform comprehensive security checks on a request."""
         if not self.enabled:
             return SecurityCheckResult(
                 allowed=True,
                 risk_score=0.0,
                 violations=[],
-                sanitized_inputs={"task": task, "context": context_str, "user_preferences": user_preferences},
-                metadata={"security_disabled": True}
+                sanitized_inputs={
+                    "task": task,
+                    "context": context_str,
+                    "user_preferences": user_preferences,
+                },
+                metadata={"security_disabled": True},
             )
 
         violations = []
@@ -115,13 +150,15 @@ class SecurityMiddleware:
             user_agent=context.user_agent,
             request_id=context.request_id,
             endpoint=context.endpoint,
-            details={"category": category, "task_length": len(task)}
+            details={"category": category, "task_length": len(task)},
         )
 
         # Input validation
         prompt_result = self.input_validator.validate_prompt(task, context_str)
         sanitized_inputs["task"] = prompt_result.sanitized_input
-        sanitized_inputs["context"] = context_str  # Context is validated within prompt validation
+        sanitized_inputs["context"] = (
+            context_str  # Context is validated within prompt validation
+        )
 
         violations.extend(prompt_result.violations)
         risk_score += prompt_result.risk_score
@@ -140,7 +177,7 @@ class SecurityMiddleware:
                 endpoint=context.endpoint,
                 reason=blocked_reason,
                 risk_score=risk_score,
-                details={"violations": prompt_result.violations}
+                details={"violations": prompt_result.violations},
             )
 
         # User preferences validation
@@ -160,7 +197,9 @@ class SecurityMiddleware:
         identifier = self._get_rate_limit_identifier(context)
         rate_limit_config = self._get_rate_limit_config(context)
 
-        rate_limit_result = self.rate_limiter.check_rate_limit(identifier, rate_limit_config)
+        rate_limit_result = self.rate_limiter.check_rate_limit(
+            identifier, rate_limit_config
+        )
 
         if not rate_limit_result.allowed:
             violations.append("Rate limit exceeded")
@@ -177,12 +216,14 @@ class SecurityMiddleware:
                 limit_type=rate_limit_result.metadata.get("window_type", "unknown"),
                 current_count=rate_limit_result.metadata.get("current_count", 0),
                 limit=rate_limit_result.metadata.get("max_requests", 0),
-                details={"retry_after": rate_limit_result.retry_after}
+                details={"retry_after": rate_limit_result.retry_after},
             )
 
         # Check for prompt injection patterns specifically
         if self.config.get("prompt_injection", {}).get("enabled", True):
-            injection_patterns = self._detect_prompt_injection_patterns(prompt_result.sanitized_input)
+            injection_patterns = self._detect_prompt_injection_patterns(
+                prompt_result.sanitized_input
+            )
             if injection_patterns:
                 violations.append("Prompt injection patterns detected")
                 risk_score = max(risk_score, 0.9)
@@ -196,7 +237,9 @@ class SecurityMiddleware:
                     endpoint=context.endpoint,
                     patterns=injection_patterns,
                     risk_score=risk_score,
-                    details={"sanitized_prompt": prompt_result.sanitized_input[:200] + "..."}
+                    details={
+                        "sanitized_prompt": prompt_result.sanitized_input[:200] + "..."
+                    },
                 )
 
         # Apply strict mode rules
@@ -207,10 +250,10 @@ class SecurityMiddleware:
 
         # Determine if request should be blocked
         blocked = (
-            blocked_reason is not None or
-            risk_score >= 0.8 or
-            len(violations) > 5 or
-            (self.strict_mode and risk_score > 0.5)
+            blocked_reason is not None
+            or risk_score >= 0.8
+            or len(violations) > 5
+            or (self.strict_mode and risk_score > 0.5)
         )
 
         # Log suspicious activity
@@ -223,7 +266,7 @@ class SecurityMiddleware:
                 endpoint=context.endpoint,
                 activity_type="high_risk_request",
                 risk_score=risk_score,
-                details={"violations": violations, "risk_score": risk_score}
+                details={"violations": violations, "risk_score": risk_score},
             )
 
         # Apply penalty if risk is high
@@ -240,23 +283,31 @@ class SecurityMiddleware:
                 penalty_type="high_risk_penalty",
                 duration=penalty_duration,
                 reason=f"High risk score: {risk_score:.2f}",
-                details={"violations": violations}
+                details={"violations": violations},
             )
 
         # Update metadata
-        metadata.update({
-            "validation_results": {
-                "prompt": {"valid": prompt_result.is_valid, "risk": prompt_result.risk_score},
-                "preferences": {"valid": prefs_result.is_valid, "risk": prefs_result.risk_score}
-            },
-            "rate_limit": {
-                "allowed": rate_limit_result.allowed,
-                "remaining": rate_limit_result.remaining,
-                "retry_after": rate_limit_result.retry_after
-            },
-            "security_level": self.config.get("validation_level", "standard"),
-            "strict_mode": self.strict_mode
-        })
+        metadata.update(
+            {
+                "validation_results": {
+                    "prompt": {
+                        "valid": prompt_result.is_valid,
+                        "risk": prompt_result.risk_score,
+                    },
+                    "preferences": {
+                        "valid": prefs_result.is_valid,
+                        "risk": prefs_result.risk_score,
+                    },
+                },
+                "rate_limit": {
+                    "allowed": rate_limit_result.allowed,
+                    "remaining": rate_limit_result.remaining,
+                    "retry_after": rate_limit_result.retry_after,
+                },
+                "security_level": self.config.get("validation_level", "standard"),
+                "strict_mode": self.strict_mode,
+            }
+        )
 
         return SecurityCheckResult(
             allowed=not blocked,
@@ -264,7 +315,7 @@ class SecurityMiddleware:
             violations=violations,
             sanitized_inputs=sanitized_inputs,
             metadata=metadata,
-            blocked_reason=blocked_reason
+            blocked_reason=blocked_reason,
         )
 
     def _get_rate_limit_identifier(self, context: SecurityContext) -> str:
@@ -303,6 +354,7 @@ class SecurityMiddleware:
         ]
 
         import re
+
         for pattern in injection_checks:
             if re.search(pattern, prompt):
                 injection_patterns.append(pattern)
@@ -318,9 +370,9 @@ class SecurityMiddleware:
             "rate_limiting": {
                 "default": self.default_rate_limit.__dict__,
                 "authenticated": self.authenticated_rate_limit.__dict__,
-                "enterprise": self.enterprise_rate_limit.__dict__
+                "enterprise": self.enterprise_rate_limit.__dict__,
             },
-            "audit_summary": self.audit_logger.get_security_summary()
+            "audit_summary": self.audit_logger.get_security_summary(),
         }
 
     def update_config(self, new_config: dict[str, Any]) -> None:
@@ -335,8 +387,14 @@ class SecurityMiddleware:
         if "rate_limiting" in new_config:
             rate_limit_config = new_config["rate_limiting"]
             if "default" in rate_limit_config:
-                self.default_rate_limit = RateLimitConfig(**rate_limit_config["default"])
+                self.default_rate_limit = RateLimitConfig(
+                    **rate_limit_config["default"]
+                )
             if "authenticated_user" in rate_limit_config:
-                self.authenticated_rate_limit = RateLimitConfig(**rate_limit_config["authenticated_user"])
+                self.authenticated_rate_limit = RateLimitConfig(
+                    **rate_limit_config["authenticated_user"]
+                )
             if "enterprise_user" in rate_limit_config:
-                self.enterprise_rate_limit = RateLimitConfig(**rate_limit_config["enterprise_user"])
+                self.enterprise_rate_limit = RateLimitConfig(
+                    **rate_limit_config["enterprise_user"]
+                )

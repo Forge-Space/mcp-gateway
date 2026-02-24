@@ -139,7 +139,9 @@ class TestHealthCheck:
                 latency_ms=10.5,
             )
         ]
-        result = HealthCheckResult(status=HealthStatus.HEALTHY, components=components, timestamp=time.time())
+        result = HealthCheckResult(
+            status=HealthStatus.HEALTHY, components=components, timestamp=time.time()
+        )
 
         data = result.to_dict()
         assert data["status"] == "healthy"

@@ -4,8 +4,17 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from tool_router.mcp_tools.knowledge_base_tool import KNOWLEDGE_BASE_SCHEMA, KnowledgeBaseTool, knowledge_base_handler
-from tool_router.training.knowledge_base import KnowledgeBase, KnowledgeItem, KnowledgeStatus, PatternCategory
+from tool_router.mcp_tools.knowledge_base_tool import (
+    KNOWLEDGE_BASE_SCHEMA,
+    KnowledgeBaseTool,
+    knowledge_base_handler,
+)
+from tool_router.training.knowledge_base import (
+    KnowledgeBase,
+    KnowledgeItem,
+    KnowledgeStatus,
+    PatternCategory,
+)
 
 
 class TestKnowledgeBaseTool:
@@ -50,7 +59,10 @@ class TestKnowledgeBaseTool:
         tool = KnowledgeBaseTool()
 
         result = tool.add_pattern(
-            title="Test Pattern", description="Test description", category="invalid_category", content="Test content"
+            title="Test Pattern",
+            description="Test description",
+            category="invalid_category",
+            content="Test content",
         )
 
         # Business logic: invalid category should return error with valid categories
@@ -67,7 +79,10 @@ class TestKnowledgeBaseTool:
             mock_add.side_effect = Exception("Database connection failed")
 
             result = tool.add_pattern(
-                title="Test Pattern", description="Test description", category="react_patterns", content="Test content"
+                title="Test Pattern",
+                description="Test description",
+                category="react_patterns",
+                content="Test content",
             )
 
         # Business logic: database errors should be caught and reported
@@ -83,7 +98,10 @@ class TestKnowledgeBaseTool:
             mock_add.return_value = "generated_id"
 
             result = tool.add_pattern(
-                title="Test Pattern", description="Test description", category="react_patterns", content="Test content"
+                title="Test Pattern",
+                description="Test description",
+                category="react_patterns",
+                content="Test content",
             )
 
         # Business logic: ID should be generated consistently
@@ -125,7 +143,12 @@ class TestKnowledgeBaseTool:
         with patch.object(tool.knowledge_base, "search_knowledge") as mock_search:
             mock_search.return_value = [mock_item1, mock_item2]
 
-            result = tool.search_patterns(query="react hooks", category="react_patterns", limit=10, min_confidence=0.8)
+            result = tool.search_patterns(
+                query="react hooks",
+                category="react_patterns",
+                limit=10,
+                min_confidence=0.8,
+            )
 
         # Business logic: search should return formatted results
         assert result["total_found"] == 1  # Only item1 meets confidence threshold
@@ -230,7 +253,9 @@ class TestKnowledgeBaseTool:
             mock_get.return_value = mock_item
             mock_update.return_value = True
 
-            result = tool.update_pattern(item_id="item123", title="Updated Title", confidence=0.95)
+            result = tool.update_pattern(
+                item_id="item123", title="Updated Title", confidence=0.95
+            )
 
         # Business logic: successful update should return confirmation
         assert result["item_id"] == "item123"
@@ -239,7 +264,9 @@ class TestKnowledgeBaseTool:
         assert result["message"] == "Pattern updated successfully"
 
         # Verify correct update data passed
-        mock_update.assert_called_once_with("item123", {"title": "Updated Title", "confidence": 0.95})
+        mock_update.assert_called_once_with(
+            "item123", {"title": "Updated Title", "confidence": 0.95}
+        )
 
     def test_update_pattern_not_found(self) -> None:
         """Test pattern update for non-existent pattern."""
@@ -383,7 +410,9 @@ class TestKnowledgeBaseTool:
 
         categories = result["categories"]
         for category in PatternCategory:
-            category_data = next(cat for cat in categories if cat["value"] == category.value)
+            category_data = next(
+                cat for cat in categories if cat["value"] == category.value
+            )
             assert category_data["name"] == category.value.replace("_", " ").title()
 
         assert result["message"] == "Categories retrieved successfully"
@@ -498,7 +527,9 @@ class TestKnowledgeBaseHandler:
             result = knowledge_base_handler(args)
 
         # Business logic: handler should call search with query
-        mock_search.assert_called_once_with(query="react hooks", category=None, limit=10, min_confidence=None)
+        mock_search.assert_called_once_with(
+            query="react hooks", category=None, limit=10, min_confidence=None
+        )
 
     def test_handler_search_patterns_missing_query(self) -> None:
         """Test handler with missing query for search_patterns."""

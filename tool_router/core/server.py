@@ -17,10 +17,17 @@ from tool_router.core.config import ToolRouterConfig
 from tool_router.gateway.client import call_tool, get_tools
 from tool_router.observability import get_logger, get_metrics
 from tool_router.observability.metrics import TimingContext
-from tool_router.scoring.matcher import select_top_matching_tools, select_top_matching_tools_hybrid
+from tool_router.scoring.matcher import (
+    select_top_matching_tools,
+    select_top_matching_tools_hybrid,
+)
 from tool_router.security import SecurityContext, SecurityMiddleware
-from tool_router.specialist_coordinator import SpecialistCoordinator, SpecialistType, TaskCategory, TaskRequest
-
+from tool_router.specialist_coordinator import (
+    SpecialistCoordinator,
+    SpecialistType,
+    TaskCategory,
+    TaskRequest,
+)
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -48,7 +55,9 @@ def initialize_ai(config: ToolRouterConfig) -> None:
     _feedback_store = FeedbackStore()
 
     # Initialize security middleware
-    security_config_path = Path(__file__).parent.parent.parent / "config" / "security.yaml"
+    security_config_path = (
+        Path(__file__).parent.parent.parent / "config" / "security.yaml"
+    )
     security_config = {}
 
     if security_config_path.exists():
@@ -96,7 +105,9 @@ def initialize_ai(config: ToolRouterConfig) -> None:
 
             # Initialize specialist coordinator
             _specialist_coordinator = SpecialistCoordinator(
-                enhanced_selector=_enhanced_ai_selector, prompt_architect=prompt_architect, ui_specialist=ui_specialist
+                enhanced_selector=_enhanced_ai_selector,
+                prompt_architect=prompt_architect,
+                ui_specialist=ui_specialist,
             )
 
             logger.info(
@@ -105,7 +116,9 @@ def initialize_ai(config: ToolRouterConfig) -> None:
                 config.ai.endpoint,
                 config.ai.min_confidence,
             )
-            logger.info("Specialist agents initialized: Router, Prompt Architect, UI Specialist")
+            logger.info(
+                "Specialist agents initialized: Router, Prompt Architect, UI Specialist"
+            )
         except Exception as e:
             logger.exception("Failed to initialize AI system: %s", e)
             _ai_selector = None
@@ -134,7 +147,9 @@ def execute_task(task: str, context: str = "") -> str:
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
             logger.exception(
-                "Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error
+                "Unexpected error listing tools: %s: %s",
+                type(unexpected_error).__name__,
+                unexpected_error,
             )
             metrics.increment_counter("execute_task.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
@@ -158,10 +173,16 @@ def execute_task(task: str, context: str = "") -> str:
                     )
                     metrics.increment_counter("execute_task.ai_selection_attempt")
                 else:
-                    best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
+                    best_matching_tools = select_top_matching_tools(
+                        tools, task, context, top_n=1
+                    )
                     metrics.increment_counter("execute_task.keyword_only_selection")
         except Exception as selection_error:
-            logger.exception("Error picking tool: %s: %s", type(selection_error).__name__, selection_error)
+            logger.exception(
+                "Error picking tool: %s: %s",
+                type(selection_error).__name__,
+                selection_error,
+            )
             metrics.increment_counter("execute_task.errors.pick_tools")
             return f"Error picking tool: {type(selection_error).__name__}: {selection_error}"
 
@@ -184,9 +205,15 @@ def execute_task(task: str, context: str = "") -> str:
             with TimingContext("execute_task.build_arguments"):
                 tool_arguments = build_arguments(tool, task)
         except Exception as build_error:
-            logger.exception("Error building arguments: %s: %s", type(build_error).__name__, build_error)
+            logger.exception(
+                "Error building arguments: %s: %s",
+                type(build_error).__name__,
+                build_error,
+            )
             metrics.increment_counter("execute_task.errors.build_args")
-            return f"Error building arguments: {type(build_error).__name__}: {build_error}"
+            return (
+                f"Error building arguments: {type(build_error).__name__}: {build_error}"
+            )
 
         with TimingContext("execute_task.call_tool"):
             result = call_tool(name, tool_arguments)
@@ -194,7 +221,9 @@ def execute_task(task: str, context: str = "") -> str:
         # Record feedback (success = no error string returned)
         if _feedback_store:
             success = not result.startswith("Error") and not result.startswith("Failed")
-            _feedback_store.record(task=task, selected_tool=name, success=success, context=context)
+            _feedback_store.record(
+                task=task, selected_tool=name, success=success, context=context
+            )
 
         logger.info("Task completed successfully with tool: %s", name)
         metrics.increment_counter("execute_task.success")
@@ -225,10 +254,14 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
         selected_names: list[str] = []
         if _ai_selector:
             try:
-                multi_result = _ai_selector.select_tools_multi(task, tools, context=context, max_tools=max_tools)
+                multi_result = _ai_selector.select_tools_multi(
+                    task, tools, context=context, max_tools=max_tools
+                )
                 if multi_result:
                     selected_names = multi_result.get("tools", [])
-                    logger.info("AI selected tools for orchestration: %s", selected_names)
+                    logger.info(
+                        "AI selected tools for orchestration: %s", selected_names
+                    )
             except Exception as e:
                 logger.warning("AI multi-tool selection failed: %s", e)
 
@@ -252,24 +285,33 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
                 logger.warning("Orchestration: tool %s not found, skipping", tool_name)
                 continue
 
-            logger.info("Orchestration step %d/%d: %s", step_num, len(selected_names), tool_name)
+            logger.info(
+                "Orchestration step %d/%d: %s", step_num, len(selected_names), tool_name
+            )
             metrics.increment_counter(f"execute_tasks.step.{tool_name}")
 
             try:
                 tool_arguments = build_arguments(tool, task)
             except Exception as build_error:
-                logger.warning("Error building arguments for %s: %s", tool_name, build_error)
+                logger.warning(
+                    "Error building arguments for %s: %s", tool_name, build_error
+                )
                 results.append(f"[{tool_name}] Error building arguments: {build_error}")
                 if _feedback_store:
                     _feedback_store.record(
-                        task=task, selected_tool=tool_name, success=False, context=accumulated_context
+                        task=task,
+                        selected_tool=tool_name,
+                        success=False,
+                        context=accumulated_context,
                     )
                 continue
 
             step_result = call_tool(tool_name, tool_arguments)
             results.append(f"[{tool_name}] {step_result}")
 
-            step_success = not step_result.startswith("Error") and not step_result.startswith("Failed")
+            step_success = not step_result.startswith(
+                "Error"
+            ) and not step_result.startswith("Failed")
             if _feedback_store:
                 _feedback_store.record(
                     task=task,
@@ -279,7 +321,9 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
                 )
 
             # Accumulate context for next step
-            accumulated_context = f"{accumulated_context}\nPrevious result: {step_result[:200]}"
+            accumulated_context = (
+                f"{accumulated_context}\nPrevious result: {step_result[:200]}"
+            )
 
         if not results:
             return "No tools were executed."
@@ -293,10 +337,14 @@ def record_feedback(tool_name: str, task: str, success: bool, context: str = "")
     """Record explicit feedback on a tool selection outcome for context learning."""
     if _feedback_store is None:
         return "Feedback store not initialized."
-    _feedback_store.record(task=task, selected_tool=tool_name, success=success, context=context)
+    _feedback_store.record(
+        task=task, selected_tool=tool_name, success=success, context=context
+    )
     stats = _feedback_store.get_stats(tool_name)
     rate = stats.success_rate if stats else 0.5
-    logger.info("Feedback recorded: tool=%s success=%s rate=%.2f", tool_name, success, rate)
+    logger.info(
+        "Feedback recorded: tool=%s success=%s rate=%.2f", tool_name, success, rate
+    )
     return f"Feedback recorded for '{tool_name}'. Current success rate: {rate:.0%}"
 
 
@@ -316,7 +364,9 @@ def search_tools(query: str, limit: int = 10) -> str:
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
             logger.exception(
-                "Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error
+                "Unexpected error listing tools: %s: %s",
+                type(unexpected_error).__name__,
+                unexpected_error,
             )
             metrics.increment_counter("search_tools.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
@@ -328,11 +378,19 @@ def search_tools(query: str, limit: int = 10) -> str:
 
         try:
             with TimingContext("search_tools.pick_best_tools"):
-                matching_tools = select_top_matching_tools(tools, query, "", top_n=limit)
+                matching_tools = select_top_matching_tools(
+                    tools, query, "", top_n=limit
+                )
         except Exception as search_error:
-            logger.exception("Error searching tools: %s: %s", type(search_error).__name__, search_error)
+            logger.exception(
+                "Error searching tools: %s: %s",
+                type(search_error).__name__,
+                search_error,
+            )
             metrics.increment_counter("search_tools.errors.search")
-            return f"Error searching tools: {type(search_error).__name__}: {search_error}"
+            return (
+                f"Error searching tools: {type(search_error).__name__}: {search_error}"
+            )
 
         if not matching_tools:
             logger.info("No tools found matching: %s", query)
@@ -398,18 +456,26 @@ def execute_specialist_task(
 
     # Perform security checks
     security_result = _security_middleware.check_request_security(
-        context=security_context, task=task, category=category, context_str=context, user_preferences=user_preferences
+        context=security_context,
+        task=task,
+        category=category,
+        context_str=context,
+        user_preferences=user_preferences,
     )
 
     if not security_result.allowed:
-        logger.warning("Request blocked by security: %s", security_result.blocked_reason)
+        logger.warning(
+            "Request blocked by security: %s", security_result.blocked_reason
+        )
         metrics.increment_counter("execute_specialist_task.blocked")
         return f"Request blocked: {security_result.blocked_reason}"
 
     # Use sanitized inputs
     sanitized_task = security_result.sanitized_inputs.get("task", task)
     sanitized_context = security_result.sanitized_inputs.get("context", context)
-    sanitized_preferences = security_result.sanitized_inputs.get("user_preferences", user_preferences)
+    sanitized_preferences = security_result.sanitized_inputs.get(
+        "user_preferences", user_preferences
+    )
 
     if security_result.risk_score > 0.5:
         logger.warning(
@@ -457,28 +523,52 @@ def execute_specialist_task(
             specialist_name = result.specialist_type.value.replace("_", " ").title()
             output_lines.append(f"\n{i}. {specialist_name} Specialist:")
             output_lines.append(f"   Confidence: {result.confidence:.2f}")
-            output_lines.append(f"   Processing time: {result.processing_time_ms:.1f}ms")
+            output_lines.append(
+                f"   Processing time: {result.processing_time_ms:.1f}ms"
+            )
             output_lines.append(f"   Cost estimate: ${result.cost_estimate:.4f}")
 
             # Add specialist-specific details
             if result.specialist_type == SpecialistType.ROUTER:
                 metadata = result.metadata
-                output_lines.append(f"   Model used: {metadata.get('model_used', 'Unknown')}")
-                output_lines.append(f"   Model tier: {metadata.get('model_tier', 'Unknown')}")
-                output_lines.append(f"   Task complexity: {metadata.get('task_complexity', 'Unknown')}")
+                output_lines.append(
+                    f"   Model used: {metadata.get('model_used', 'Unknown')}"
+                )
+                output_lines.append(
+                    f"   Model tier: {metadata.get('model_tier', 'Unknown')}"
+                )
+                output_lines.append(
+                    f"   Task complexity: {metadata.get('task_complexity', 'Unknown')}"
+                )
             elif result.specialist_type == SpecialistType.PROMPT_ARCHITECT:
                 metadata = result.metadata
-                output_lines.append(f"   Task type: {metadata.get('task_type', 'Unknown')}")
-                output_lines.append(f"   Token reduction: {metadata.get('token_reduction', 0):.1f}%")
+                output_lines.append(
+                    f"   Task type: {metadata.get('task_type', 'Unknown')}"
+                )
+                output_lines.append(
+                    f"   Token reduction: {metadata.get('token_reduction', 0):.1f}%"
+                )
                 quality = metadata.get("quality_score", {})
-                output_lines.append(f"   Quality score: {quality.get('overall_score', 0):.2f}")
+                output_lines.append(
+                    f"   Quality score: {quality.get('overall_score', 0):.2f}"
+                )
             elif result.specialist_type == SpecialistType.UI_SPECIALIST:
                 metadata = result.metadata
-                output_lines.append(f"   Component type: {metadata.get('component_type', 'Unknown')}")
-                output_lines.append(f"   Framework: {metadata.get('framework', 'Unknown')}")
-                output_lines.append(f"   Design system: {metadata.get('design_system', 'Unknown')}")
-                output_lines.append(f"   Accessibility compliant: {metadata.get('accessibility_compliant', False)}")
-                output_lines.append(f"   Responsive ready: {metadata.get('responsive_ready', False)}")
+                output_lines.append(
+                    f"   Component type: {metadata.get('component_type', 'Unknown')}"
+                )
+                output_lines.append(
+                    f"   Framework: {metadata.get('framework', 'Unknown')}"
+                )
+                output_lines.append(
+                    f"   Design system: {metadata.get('design_system', 'Unknown')}"
+                )
+                output_lines.append(
+                    f"   Accessibility compliant: {metadata.get('accessibility_compliant', False)}"
+                )
+                output_lines.append(
+                    f"   Responsive ready: {metadata.get('responsive_ready', False)}"
+                )
 
         metrics.increment_counter("execute_specialist_task.success")
         return "\n".join(output_lines)
@@ -504,7 +594,9 @@ def get_specialist_stats() -> str:
         # Routing statistics
         output_lines.append("Routing Statistics:")
         output_lines.append(f"  Total requests: {stats['total_requests']}")
-        output_lines.append(f"  Average processing time: {stats['average_processing_time']:.1f}ms")
+        output_lines.append(
+            f"  Average processing time: {stats['average_processing_time']:.1f}ms"
+        )
         output_lines.append(f"  Total cost saved: ${stats['total_cost_saved']:.4f}")
         output_lines.append(f"  Cache size: {stats['cache_size']}")
         output_lines.append("")
@@ -524,7 +616,9 @@ def get_specialist_stats() -> str:
             output_lines.append(f"  {specialist.title()}:")
             for capability, enabled in caps.items():
                 status = "✓" if enabled else "✗"
-                output_lines.append(f"    {status} {capability.replace('_', ' ').title()}")
+                output_lines.append(
+                    f"    {status} {capability.replace('_', ' ').title()}"
+                )
 
         return "\n".join(output_lines)
 
@@ -534,7 +628,12 @@ def get_specialist_stats() -> str:
 
 
 @mcp.tool()
-def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str = "", feedback: str = "") -> str:
+def optimize_prompt(
+    prompt: str,
+    cost_preference: str = "balanced",
+    context: str = "",
+    feedback: str = "",
+) -> str:
     """Optimize a prompt for token efficiency and effectiveness using the Prompt Architect.
 
     Cost preferences:
@@ -545,7 +644,9 @@ def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str
     if _specialist_coordinator is None:
         return "Specialist coordinator not initialized."
 
-    logger.info("Optimizing prompt: %s (cost_preference=%s)", prompt[:100], cost_preference)
+    logger.info(
+        "Optimizing prompt: %s (cost_preference=%s)", prompt[:100], cost_preference
+    )
     metrics.increment_counter("optimize_prompt.calls")
 
     try:
@@ -554,7 +655,10 @@ def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str
             task=prompt,
             category=TaskCategory.PROMPT_OPTIMIZATION,
             context=context,
-            user_preferences={"cost_preference": cost_preference, "feedback": feedback if feedback else None},
+            user_preferences={
+                "cost_preference": cost_preference,
+                "feedback": feedback if feedback else None,
+            },
             cost_optimization=True,
         )
 
@@ -579,9 +683,15 @@ def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str
         output_lines = ["Prompt Optimization Results:", ""]
 
         # Original vs optimized
-        original_tokens = prompt_result.get("token_metrics", {}).get("original_tokens", 0)
-        optimized_tokens = prompt_result.get("token_metrics", {}).get("optimized_tokens", 0)
-        token_reduction = prompt_result.get("token_metrics", {}).get("token_reduction_percent", 0)
+        original_tokens = prompt_result.get("token_metrics", {}).get(
+            "original_tokens", 0
+        )
+        optimized_tokens = prompt_result.get("token_metrics", {}).get(
+            "optimized_tokens", 0
+        )
+        token_reduction = prompt_result.get("token_metrics", {}).get(
+            "token_reduction_percent", 0
+        )
         cost_savings = prompt_result.get("token_metrics", {}).get("cost_savings", 0)
 
         output_lines.append(f"Original tokens: {original_tokens}")
@@ -597,7 +707,9 @@ def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str
         output_lines.append(f"  Clarity: {quality.get('clarity', 0):.2f}")
         output_lines.append(f"  Completeness: {quality.get('completeness', 0):.2f}")
         output_lines.append(f"  Specificity: {quality.get('specificity', 0):.2f}")
-        output_lines.append(f"  Token efficiency: {quality.get('token_efficiency', 0):.2f}")
+        output_lines.append(
+            f"  Token efficiency: {quality.get('token_efficiency', 0):.2f}"
+        )
         output_lines.append("")
 
         # Task analysis

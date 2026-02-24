@@ -44,7 +44,9 @@ class TestScreenshotCapture:
         with pytest.raises(ValueError, match="valid Dribbble shot URL"):
             capture.capture_shot("")
 
-    def test_missing_playwright_raises_runtime_error(self, capture: ScreenshotCapture) -> None:
+    def test_missing_playwright_raises_runtime_error(
+        self, capture: ScreenshotCapture
+    ) -> None:
         with patch("dribbble_mcp.screenshot.sync_playwright", None):
             with pytest.raises(RuntimeError, match="playwright is required"):
                 capture.capture_shot("https://dribbble.com/shots/123-test")
@@ -72,7 +74,9 @@ class TestScreenshotCapture:
         mock_pw = _make_sync_pw_mock(mock_page)
 
         with patch("dribbble_mcp.screenshot.sync_playwright", return_value=mock_pw):
-            result = capture.capture_shot("https://dribbble.com/shots/123-test", full_page=True)
+            result = capture.capture_shot(
+                "https://dribbble.com/shots/123-test", full_page=True
+            )
 
         mock_page.screenshot.assert_called_once_with(full_page=True, type="png")
         assert isinstance(result, str)
@@ -91,7 +95,9 @@ class TestScreenshotCapture:
 
         assert isinstance(result, str)
 
-    def test_playwright_exception_raises_runtime_error(self, capture: ScreenshotCapture) -> None:
+    def test_playwright_exception_raises_runtime_error(
+        self, capture: ScreenshotCapture
+    ) -> None:
         mock_pw = MagicMock()
         mock_pw.__enter__ = MagicMock(return_value=mock_pw)
         mock_pw.__exit__ = MagicMock(return_value=False)
@@ -113,7 +119,9 @@ class TestScreenshotCapture:
 
         mock_pw.chromium.launch.return_value.close.assert_called_once()
 
-    def test_element_screenshot_exception_falls_back(self, capture: ScreenshotCapture) -> None:
+    def test_element_screenshot_exception_falls_back(
+        self, capture: ScreenshotCapture
+    ) -> None:
         mock_element = MagicMock()
         mock_element.screenshot.side_effect = RuntimeError("element gone")
 

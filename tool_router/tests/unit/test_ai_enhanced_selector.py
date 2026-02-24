@@ -80,8 +80,12 @@ def test_ollama_selector_select_tool_success() -> None:
     mock_response.raise_for_status = MagicMock()
 
     with patch("httpx.Client") as mock_client:
-        mock_client.return_value.__enter__.return_value.post.return_value = mock_response
-        result = selector.select_tool("search web", [{"name": "search", "description": "Search web"}])
+        mock_client.return_value.__enter__.return_value.post.return_value = (
+            mock_response
+        )
+        result = selector.select_tool(
+            "search web", [{"name": "search", "description": "Search web"}]
+        )
 
     assert result["tool_name"] == "search"
     assert result["confidence"] == 0.8
@@ -102,7 +106,9 @@ def test_ollama_selector_select_tool_low_confidence() -> None:
     }
 
     with patch("httpx.post", return_value=mock_response):
-        result = selector.select_tool("search web", [{"name": "search", "description": "Search web"}])
+        result = selector.select_tool(
+            "search web", [{"name": "search", "description": "Search web"}]
+        )
 
     assert result is None
 
@@ -119,7 +125,9 @@ def test_ollama_selector_select_tool_invalid_response() -> None:
     mock_response.json.return_value = {"response": "invalid json"}
 
     with patch("httpx.post", return_value=mock_response):
-        result = selector.select_tool("search web", [{"name": "search", "description": "Search web"}])
+        result = selector.select_tool(
+            "search web", [{"name": "search", "description": "Search web"}]
+        )
 
     assert result is None
 
@@ -135,7 +143,9 @@ def test_ollama_selector_select_tool_http_error() -> None:
     mock_response.status_code = 500
 
     with patch("httpx.post", return_value=mock_response):
-        result = selector.select_tool("search web", [{"name": "search", "description": "Search web"}])
+        result = selector.select_tool(
+            "search web", [{"name": "search", "description": "Search web"}]
+        )
 
     assert result is None
 
@@ -181,8 +191,12 @@ def test_enhanced_ai_selector_select_tool() -> None:
     mock_response.raise_for_status = MagicMock()
 
     with patch("httpx.Client") as mock_client:
-        mock_client.return_value.__enter__.return_value.post.return_value = mock_response
-        result = selector.select_tool("search web", [{"name": "search", "description": "Search web"}])
+        mock_client.return_value.__enter__.return_value.post.return_value = (
+            mock_response
+        )
+        result = selector.select_tool(
+            "search web", [{"name": "search", "description": "Search web"}]
+        )
 
     assert result["tool_name"] == "search"
     assert result["confidence"] == 0.8
@@ -203,7 +217,7 @@ def test_cost_tracker_track_selection() -> None:
     tracker.track_selection(
         model="llama3.2:3b",
         task_complexity="simple",
-        estimated_tokens={"total": 100, "input": 80, "output": 20}
+        estimated_tokens={"total": 100, "input": 80, "output": 20},
     )
 
     assert tracker.total_requests == 1
@@ -217,12 +231,12 @@ def test_cost_tracker_multiple_selections() -> None:
     tracker.track_selection(
         model="llama3.2:3b",
         task_complexity="simple",
-        estimated_tokens={"total": 100, "input": 80, "output": 20}
+        estimated_tokens={"total": 100, "input": 80, "output": 20},
     )
     tracker.track_selection(
         model="llama3.2:3b",
         task_complexity="complex",
-        estimated_tokens={"total": 200, "input": 150, "output": 50}
+        estimated_tokens={"total": 200, "input": 150, "output": 50},
     )
 
     assert tracker.total_requests == 2

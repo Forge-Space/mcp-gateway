@@ -32,7 +32,7 @@ class TestSecurityAuditLogger:
             severity="high",
             user_id="user123",
             ip_address="192.168.1.1",
-            details={"reason": "Invalid credentials"}
+            details={"reason": "Invalid credentials"},
         )
 
         logger.log_security_event(event)
@@ -55,7 +55,7 @@ class TestSecurityAuditLogger:
             method="POST",
             path="/api/tools",
             user_id="user123",
-            ip_address="192.168.1.1"
+            ip_address="192.168.1.1",
         )
 
         logger.logger.info.assert_called_once()
@@ -73,7 +73,7 @@ class TestSecurityAuditLogger:
             request_id="req_123",
             reason="Rate limit exceeded",
             user_id="user123",
-            ip_address="192.168.1.1"
+            ip_address="192.168.1.1",
         )
 
         logger.logger.warning.assert_called_once()
@@ -91,7 +91,7 @@ class TestSecurityAuditLogger:
             user_id="user123",
             ip_address="192.168.1.1",
             limit_type="requests_per_minute",
-            limit_value=100
+            limit_value=100,
         )
 
         logger.logger.warning.assert_called_once()
@@ -109,7 +109,7 @@ class TestSecurityAuditLogger:
             request_id="req_123",
             prompt_content="malicious<script>alert('xss')</script>",
             user_id="user123",
-            confidence=0.95
+            confidence=0.95,
         )
 
         logger.logger.error.assert_called_once()
@@ -124,9 +124,7 @@ class TestSecurityAuditLogger:
         logger.logger = Mock()
 
         logger.log_authentication_failed(
-            user_id="user123",
-            reason="Invalid password",
-            ip_address="192.168.1.1"
+            user_id="user123", reason="Invalid password", ip_address="192.168.1.1"
         )
 
         logger.logger.warning.assert_called_once()
@@ -144,7 +142,7 @@ class TestSecurityAuditLogger:
             user_id="user123",
             resource="/api/admin",
             reason="Insufficient permissions",
-            ip_address="192.168.1.1"
+            ip_address="192.168.1.1",
         )
 
         logger.logger.warning.assert_called_once()
@@ -162,7 +160,7 @@ class TestSecurityAuditLogger:
             field_name="tool_name",
             value="invalid_tool",
             reason="Tool not found in registry",
-            user_id="user123"
+            user_id="user123",
         )
 
         logger.logger.warning.assert_called_once()
@@ -180,7 +178,7 @@ class TestSecurityAuditLogger:
             user_id="user123",
             penalty_type="rate_limit",
             duration_seconds=300,
-            reason="Too many requests"
+            reason="Too many requests",
         )
 
         logger.logger.info.assert_called_once()
@@ -197,7 +195,7 @@ class TestSecurityAuditLogger:
         logger.log_suspicious_activity(
             user_id="user123",
             activity_pattern="rapid_tool_requests",
-            details={"request_count": 50, "time_window": "60s"}
+            details={"request_count": 50, "time_window": "60s"},
         )
 
         logger.logger.warning.assert_called_once()
@@ -213,7 +211,7 @@ class TestSecurityAuditLogger:
         logger._event_counts = {
             "authentication_failed": 5,
             "request_blocked": 3,
-            "prompt_injection_detected": 1
+            "prompt_injection_detected": 1,
         }
 
         summary = logger.get_security_summary()
@@ -231,16 +229,10 @@ class TestSecurityAuditLogger:
 
         # Test hash creation
         hash1 = logger.create_request_hash(
-            method="POST",
-            path="/api/tools",
-            user_id="user123",
-            body="test data"
+            method="POST", path="/api/tools", user_id="user123", body="test data"
         )
         hash2 = logger.create_request_hash(
-            method="POST",
-            path="/api/tools",
-            user_id="user123",
-            body="test data"
+            method="POST", path="/api/tools", user_id="user123", body="test data"
         )
 
         assert hash1 == hash2  # Same input should produce same hash
@@ -261,7 +253,7 @@ class TestSecurityAuditLogger:
                         severity="low",
                         user_id="user123",
                         ip_address="192.168.1.1",
-                        details={}
+                        details={},
                     )
                 )
                 # Should not raise exception
@@ -284,7 +276,7 @@ class TestSecurityAuditLogger:
                         severity="low",
                         user_id=f"user{i}",
                         ip_address="192.168.1.1",
-                        details={}
+                        details={},
                     )
                 )
 
@@ -312,11 +304,12 @@ class TestSecurityAuditLogger:
             severity="medium",
             user_id="user123",
             ip_address="192.168.1.1",
-            details={"key": "value", "nested": {"inner": "data"}}
+            details={"key": "value", "nested": {"inner": "data"}},
         )
 
         # Test JSON serialization
         import json
+
         event_dict = event.__dict__
         json_str = json.dumps(event_dict)
 

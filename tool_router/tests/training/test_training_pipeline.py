@@ -24,6 +24,7 @@ class TestTrainingPipeline:
     def teardown_method(self):
         """Clean up test fixtures."""
         import shutil
+
         shutil.rmtree(self.temp_dir)
 
     def test_initialization(self):
@@ -51,15 +52,17 @@ class TestTrainingPipeline:
         """Test successful training pipeline execution."""
         data_sources = [
             {"url": "https://example.com/react", "type": "web_documentation"},
-            {"url": "https://example.com/vue", "type": "web_documentation"}
+            {"url": "https://example.com/vue", "type": "web_documentation"},
         ]
 
-        with patch.object(self.pipeline, "_extract_patterns") as mock_extract, \
-             patch.object(self.pipeline, "_validate_patterns") as mock_validate, \
-             patch.object(self.pipeline, "_populate_knowledge_base") as mock_populate, \
-             patch.object(self.pipeline, "_build_indexes") as mock_indexes, \
-             patch.object(self.pipeline, "_train_specialists") as mock_train, \
-             patch.object(self.pipeline, "_evaluate_training") as mock_evaluate:
+        with (
+            patch.object(self.pipeline, "_extract_patterns") as mock_extract,
+            patch.object(self.pipeline, "_validate_patterns") as mock_validate,
+            patch.object(self.pipeline, "_populate_knowledge_base") as mock_populate,
+            patch.object(self.pipeline, "_build_indexes") as mock_indexes,
+            patch.object(self.pipeline, "_train_specialists") as mock_train,
+            patch.object(self.pipeline, "_evaluate_training") as mock_evaluate,
+        ):
 
             # Mock successful phase results
             mock_extract.return_value = [
@@ -67,7 +70,7 @@ class TestTrainingPipeline:
                     category=PatternCategory.REACT_PATTERN,
                     title="React Pattern",
                     description="Test React pattern",
-                    confidence_score=0.8
+                    confidence_score=0.8,
                 )
             ]
             mock_validate.return_value = mock_extract.return_value
@@ -87,7 +90,9 @@ class TestTrainingPipeline:
 
     def test_run_training_pipeline_with_errors(self):
         """Test training pipeline with errors."""
-        data_sources = [{"url": "https://example.com/error", "type": "web_documentation"}]
+        data_sources = [
+            {"url": "https://example.com/error", "type": "web_documentation"}
+        ]
 
         with patch.object(self.pipeline, "_extract_patterns") as mock_extract:
             mock_extract.side_effect = Exception("Extraction failed")
@@ -101,16 +106,18 @@ class TestTrainingPipeline:
         """Test pattern extraction from data sources."""
         data_sources = [
             {"url": "https://example.com/react", "type": "web_documentation"},
-            {"url": "https://github.com/user/repo", "type": "github_repository"}
+            {"url": "https://github.com/user/repo", "type": "github_repository"},
         ]
 
-        with patch.object(self.pipeline.extractor, "extract_from_multiple_sources") as mock_extract:
+        with patch.object(
+            self.pipeline.extractor, "extract_from_multiple_sources"
+        ) as mock_extract:
             mock_extract.return_value = [
                 ExtractedPattern(
                     category=PatternCategory.REACT_PATTERN,
                     title="React Hook",
                     description="Test hook",
-                    confidence_score=0.9
+                    confidence_score=0.9,
                 )
             ]
 
@@ -124,13 +131,22 @@ class TestTrainingPipeline:
         """Test pattern extraction with error handling."""
         data_sources = [
             {"url": "https://example.com/good", "type": "web_documentation"},
-            {"url": "https://example.com/bad", "type": "web_documentation"}
+            {"url": "https://example.com/bad", "type": "web_documentation"},
         ]
 
-        with patch.object(self.pipeline.extractor, "extract_from_multiple_sources") as mock_extract:
+        with patch.object(
+            self.pipeline.extractor, "extract_from_multiple_sources"
+        ) as mock_extract:
             mock_extract.side_effect = [
-                [ExtractedPattern(category=PatternCategory.UI_COMPONENT, title="UI", description="Test", confidence_score=0.8)],
-                Exception("Network error")
+                [
+                    ExtractedPattern(
+                        category=PatternCategory.UI_COMPONENT,
+                        title="UI",
+                        description="Test",
+                        confidence_score=0.8,
+                    )
+                ],
+                Exception("Network error"),
             ]
 
             patterns = self.pipeline._extract_patterns(data_sources)
@@ -147,21 +163,21 @@ class TestTrainingPipeline:
                 title="React Hook",
                 description="Test hook",
                 code_example="useState(0)",
-                confidence_score=0.8
+                confidence_score=0.8,
             ),
             ExtractedPattern(
                 category=PatternCategory.REACT_PATTERN,
                 title="Another Hook",
                 description="Another test",
                 code_example="useEffect(() => {})",
-                confidence_score=0.6  # Below min_confidence
+                confidence_score=0.6,  # Below min_confidence
             ),
             ExtractedPattern(
                 category=PatternCategory.UI_COMPONENT,
                 title="UI Component",
                 description="",  # Missing description
-                confidence_score=0.9
-            )
+                confidence_score=0.9,
+            ),
         ]
 
         validated = self.pipeline._validate_patterns(patterns)
@@ -177,7 +193,7 @@ class TestTrainingPipeline:
             category=PatternCategory.REACT_PATTERN,
             title="React Hook",
             description="Test hook",
-            code_example="useState(0)"
+            code_example="useState(0)",
         )
 
         assert self.pipeline._validate_pattern_by_category(pattern_with_code) is True
@@ -186,10 +202,12 @@ class TestTrainingPipeline:
         pattern_without_code = ExtractedPattern(
             category=PatternCategory.REACT_PATTERN,
             title="React Hook",
-            description="Test hook"
+            description="Test hook",
         )
 
-        assert self.pipeline._validate_pattern_by_category(pattern_without_code) is False
+        assert (
+            self.pipeline._validate_pattern_by_category(pattern_without_code) is False
+        )
 
     def test_validate_pattern_by_category_accessibility(self):
         """Test accessibility pattern validation."""
@@ -197,7 +215,7 @@ class TestTrainingPipeline:
         pattern_with_wcag = ExtractedPattern(
             category=PatternCategory.ACCESSIBILITY,
             title="WCAG Guidelines",
-            description="Following WCAG 2.1 standards for accessibility"
+            description="Following WCAG 2.1 standards for accessibility",
         )
 
         assert self.pipeline._validate_pattern_by_category(pattern_with_wcag) is True
@@ -206,10 +224,13 @@ class TestTrainingPipeline:
         pattern_without_keywords = ExtractedPattern(
             category=PatternCategory.ACCESSIBILITY,
             title="Random Pattern",
-            description="Just a random pattern"
+            description="Just a random pattern",
         )
 
-        assert self.pipeline._validate_pattern_by_category(pattern_without_keywords) is False
+        assert (
+            self.pipeline._validate_pattern_by_category(pattern_without_keywords)
+            is False
+        )
 
     def test_validate_pattern_by_category_prompt_engineering(self):
         """Test prompt engineering pattern validation."""
@@ -217,7 +238,7 @@ class TestTrainingPipeline:
         pattern_with_cot = ExtractedPattern(
             category=PatternCategory.PROMPT_ENGINEERING,
             title="Chain of Thought",
-            description="Using chain-of-thought reasoning for better responses"
+            description="Using chain-of-thought reasoning for better responses",
         )
 
         assert self.pipeline._validate_pattern_by_category(pattern_with_cot) is True
@@ -226,10 +247,13 @@ class TestTrainingPipeline:
         pattern_without_keywords = ExtractedPattern(
             category=PatternCategory.PROMPT_ENGINEERING,
             title="Generic Pattern",
-            description="Just a generic pattern"
+            description="Just a generic pattern",
         )
 
-        assert self.pipeline._validate_pattern_by_category(pattern_without_keywords) is False
+        assert (
+            self.pipeline._validate_pattern_by_category(pattern_without_keywords)
+            is False
+        )
 
     def test_is_duplicate_pattern(self):
         """Test duplicate pattern detection."""
@@ -237,41 +261,47 @@ class TestTrainingPipeline:
             ExtractedPattern(
                 category=PatternCategory.REACT_PATTERN,
                 title="React Hook",
-                description="Test hook for React"
+                description="Test hook for React",
             ),
             ExtractedPattern(
                 category=PatternCategory.UI_COMPONENT,
                 title="Button Component",
-                description="Reusable button component"
-            )
+                description="Reusable button component",
+            ),
         ]
 
         # Same title - should be duplicate
         same_title = ExtractedPattern(
             category=PatternCategory.REACT_PATTERN,
             title="React Hook",
-            description="Different description"
+            description="Different description",
         )
 
-        assert self.pipeline._is_duplicate_pattern(same_title, existing_patterns) is True
+        assert (
+            self.pipeline._is_duplicate_pattern(same_title, existing_patterns) is True
+        )
 
         # Similar description - should be duplicate
         similar_desc = ExtractedPattern(
             category=PatternCategory.UI_COMPONENT,
             title="Button",
-            description="Reusable button component"
+            description="Reusable button component",
         )
 
-        assert self.pipeline._is_duplicate_pattern(similar_desc, existing_patterns) is True
+        assert (
+            self.pipeline._is_duplicate_pattern(similar_desc, existing_patterns) is True
+        )
 
         # Different pattern - should not be duplicate
         different = ExtractedPattern(
             category=PatternCategory.ACCESSIBILITY,
             title="ARIA Label",
-            description="Accessibility label pattern"
+            description="Accessibility label pattern",
         )
 
-        assert self.pipeline._is_duplicate_pattern(different, existing_patterns) is False
+        assert (
+            self.pipeline._is_duplicate_pattern(different, existing_patterns) is False
+        )
 
     def test_text_similarity(self):
         """Test text similarity calculation."""
@@ -282,7 +312,9 @@ class TestTrainingPipeline:
         assert self.pipeline._text_similarity("hello", "world") == 0.0
 
         # Some overlap
-        similarity = self.pipeline._text_similarity("hello world test", "hello universe test")
+        similarity = self.pipeline._text_similarity(
+            "hello world test", "hello universe test"
+        )
         # Common words: hello, test = 2/4 = 0.5
         assert abs(similarity - 0.5) < 0.01
 
@@ -293,14 +325,14 @@ class TestTrainingPipeline:
                 category=PatternCategory.REACT_PATTERN,
                 title="React Hook",
                 description="Test hook",
-                confidence_score=0.8
+                confidence_score=0.8,
             ),
             ExtractedPattern(
                 category=PatternCategory.UI_COMPONENT,
                 title="Button Component",
                 description="Test button",
-                confidence_score=0.9
-            )
+                confidence_score=0.9,
+            ),
         ]
 
         with patch.object(self.pipeline.knowledge_base, "add_pattern") as mock_add:
@@ -319,7 +351,7 @@ class TestTrainingPipeline:
                 category=PatternCategory.REACT_PATTERN,
                 title="React Hook",
                 description="Test hook",
-                confidence_score=0.8
+                confidence_score=0.8,
             )
         ]
 
@@ -351,8 +383,12 @@ class TestTrainingPipeline:
 
     def test_train_specialists(self):
         """Test training specialist agents."""
-        with patch.object(self.pipeline.knowledge_base, "get_statistics") as mock_stats, \
-             patch.object(self.pipeline.knowledge_base, "get_patterns_by_category") as mock_patterns:
+        with (
+            patch.object(self.pipeline.knowledge_base, "get_statistics") as mock_stats,
+            patch.object(
+                self.pipeline.knowledge_base, "get_patterns_by_category"
+            ) as mock_patterns,
+        ):
 
             mock_stats.return_value = {"total_items": 10}
             mock_patterns.return_value = [
@@ -368,12 +404,20 @@ class TestTrainingPipeline:
 
     def test_evaluate_training(self):
         """Test training evaluation."""
-        with patch.object(self.pipeline.knowledge_base, "get_statistics") as mock_stats, \
-             patch.object(self.pipeline.knowledge_base, "get_patterns_by_category") as mock_patterns:
+        with (
+            patch.object(self.pipeline.knowledge_base, "get_statistics") as mock_stats,
+            patch.object(
+                self.pipeline.knowledge_base, "get_patterns_by_category"
+            ) as mock_patterns,
+        ):
 
             mock_stats.return_value = {"total_items": 10, "average_effectiveness": 0.75}
             mock_patterns.return_value = [
-                MagicMock(confidence_score=0.8, effectiveness_score=0.9, category=PatternCategory.REACT_PATTERN)
+                MagicMock(
+                    confidence_score=0.8,
+                    effectiveness_score=0.9,
+                    category=PatternCategory.REACT_PATTERN,
+                )
                 for _ in range(5)
             ]
 
@@ -388,21 +432,21 @@ class TestTrainingPipeline:
 
     def test_run_continuous_learning(self):
         """Test continuous learning with new data."""
-        new_sources = [
-            {"url": "https://example.com/new", "type": "web_documentation"}
-        ]
+        new_sources = [{"url": "https://example.com/new", "type": "web_documentation"}]
 
-        with patch.object(self.pipeline, "_extract_patterns") as mock_extract, \
-             patch.object(self.pipeline, "_validate_patterns") as mock_validate, \
-             patch.object(self.pipeline, "_populate_knowledge_base") as mock_populate, \
-             patch.object(self.pipeline, "_build_indexes") as mock_indexes:
+        with (
+            patch.object(self.pipeline, "_extract_patterns") as mock_extract,
+            patch.object(self.pipeline, "_validate_patterns") as mock_validate,
+            patch.object(self.pipeline, "_populate_knowledge_base") as mock_populate,
+            patch.object(self.pipeline, "_build_indexes") as mock_indexes,
+        ):
 
             mock_extract.return_value = [
                 ExtractedPattern(
                     category=PatternCategory.REACT_PATTERN,
                     title="New Pattern",
                     description="New test pattern",
-                    confidence_score=0.8
+                    confidence_score=0.8,
                 )
             ]
             mock_validate.return_value = mock_extract.return_value
@@ -417,14 +461,18 @@ class TestTrainingPipeline:
 
     def test_get_training_report(self):
         """Test generating training report."""
-        with patch.object(self.pipeline.knowledge_base, "get_statistics") as mock_stats, \
-             patch.object(self.pipeline, "_generate_recommendations") as mock_recommendations:
+        with (
+            patch.object(self.pipeline.knowledge_base, "get_statistics") as mock_stats,
+            patch.object(
+                self.pipeline, "_generate_recommendations"
+            ) as mock_recommendations,
+        ):
 
             mock_stats.return_value = {
                 "total_items": 10,
                 "average_effectiveness": 0.8,
                 "by_category": {"react_pattern": 5, "ui_component": 3},
-                "most_used": []
+                "most_used": [],
             }
             mock_recommendations.return_value = ["Add more patterns", "Improve quality"]
 
@@ -442,8 +490,11 @@ class TestTrainingPipeline:
         with patch.object(self.pipeline.knowledge_base, "get_statistics") as mock_stats:
             mock_stats.return_value = {
                 "average_effectiveness": 0.6,  # Below threshold
-                "by_category": {"react_pattern": 5, "ui_component": 2},  # Missing some categories
-                "most_used": []  # No usage
+                "by_category": {
+                    "react_pattern": 5,
+                    "ui_component": 2,
+                },  # Missing some categories
+                "most_used": [],  # No usage
             }
 
             recommendations = self.pipeline._generate_recommendations()
@@ -459,8 +510,12 @@ class TestTrainingPipeline:
         """Test exporting training data."""
         export_path = Path(self.temp_dir) / "export.json"
 
-        with patch.object(self.pipeline.knowledge_base, "export_knowledge_base") as mock_export, \
-             patch.object(self.pipeline, "get_training_report") as mock_report:
+        with (
+            patch.object(
+                self.pipeline.knowledge_base, "export_knowledge_base"
+            ) as mock_export,
+            patch.object(self.pipeline, "get_training_report") as mock_report,
+        ):
 
             mock_export.return_value = None
             mock_report.return_value = {"test": "report"}
@@ -478,9 +533,9 @@ class TestTrainingPipeline:
             "training_statistics": {
                 "patterns_extracted": 10,
                 "patterns_validated": 8,
-                "patterns_added": 6
+                "patterns_added": 6,
             },
-            "knowledge_base_export": "kb_export.json"
+            "knowledge_base_export": "kb_export.json",
         }
 
         import_path = Path(self.temp_dir) / "import.json"
@@ -491,7 +546,9 @@ class TestTrainingPipeline:
         kb_export_path = Path(self.temp_dir) / "kb_export.json"
         kb_export_path.write_text("{}")
 
-        with patch.object(self.pipeline.knowledge_base, "import_knowledge") as mock_import:
+        with patch.object(
+            self.pipeline.knowledge_base, "import_knowledge"
+        ) as mock_import:
             mock_import.return_value = 5
 
             result = self.pipeline.import_training_data(import_path)
@@ -524,20 +581,20 @@ class TestTrainingPipeline:
                 category=PatternCategory.REACT_PATTERN,
                 title="",  # Empty title
                 description="Test",
-                confidence_score=0.8
+                confidence_score=0.8,
             ),
             ExtractedPattern(
                 category=PatternCategory.UI_COMPONENT,
                 title="Test",
                 description="",  # Empty description
-                confidence_score=0.8
+                confidence_score=0.8,
             ),
             ExtractedPattern(
                 category=PatternCategory.ACCESSIBILITY,
                 title="Test",
                 description="Test",
-                confidence_score=0.5  # Below threshold
-            )
+                confidence_score=0.5,  # Below threshold
+            ),
         ]
 
         result = self.pipeline._validate_patterns(patterns)
@@ -557,12 +614,14 @@ class TestTrainingPipelineIntegration:
             pipeline = TrainingPipeline(db_path)
 
             # Mock all external dependencies
-            with patch.object(pipeline, "_extract_patterns") as mock_extract, \
-                 patch.object(pipeline, "_validate_patterns") as mock_validate, \
-                 patch.object(pipeline, "_populate_knowledge_base") as mock_populate, \
-                 patch.object(pipeline, "_build_indexes") as mock_indexes, \
-                 patch.object(pipeline, "_train_specialists") as mock_train, \
-                 patch.object(pipeline, "_evaluate_training") as mock_evaluate:
+            with (
+                patch.object(pipeline, "_extract_patterns") as mock_extract,
+                patch.object(pipeline, "_validate_patterns") as mock_validate,
+                patch.object(pipeline, "_populate_knowledge_base") as mock_populate,
+                patch.object(pipeline, "_build_indexes") as mock_indexes,
+                patch.object(pipeline, "_train_specialists") as mock_train,
+                patch.object(pipeline, "_evaluate_training") as mock_evaluate,
+            ):
 
                 # Mock successful phase results
                 mock_extract.return_value = [
@@ -571,30 +630,30 @@ class TestTrainingPipelineIntegration:
                         title="React Hook",
                         description="Test hook",
                         code_example="useState(0)",
-                        confidence_score=0.8
+                        confidence_score=0.8,
                     ),
                     ExtractedPattern(
                         category=PatternCategory.UI_COMPONENT,
                         title="Button Component",
                         description="Test button",
-                        confidence_score=0.9
-                    )
+                        confidence_score=0.9,
+                    ),
                 ]
                 mock_validate.return_value = mock_extract.return_value
                 mock_populate.return_value = ["pattern-1", "pattern-2"]
                 mock_train.return_value = {
                     "react_pattern": {"patterns_count": 1, "avg_effectiveness": 0.8},
-                    "ui_component": {"patterns_count": 1, "avg_effectiveness": 0.9}
+                    "ui_component": {"patterns_count": 1, "avg_effectiveness": 0.9},
                 }
                 mock_evaluate.return_value = {
                     "quality_metrics": {"total_patterns": 2, "avg_confidence": 0.85},
-                    "coverage": {"categories_covered": 2, "total_categories": 8}
+                    "coverage": {"categories_covered": 2, "total_categories": 8},
                 }
 
                 # Run pipeline
                 data_sources = [
                     {"url": "https://example.com/react", "type": "web_documentation"},
-                    {"url": "https://example.com/ui", "type": "web_documentation"}
+                    {"url": "https://example.com/ui", "type": "web_documentation"},
                 ]
 
                 result = pipeline.run_training_pipeline(data_sources)
@@ -619,6 +678,7 @@ class TestTrainingPipelineIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_continuous_learning_integration(self):
@@ -630,23 +690,27 @@ class TestTrainingPipelineIntegration:
             pipeline = TrainingPipeline(db_path)
 
             # Initial training
-            with patch.object(pipeline, "_extract_patterns") as mock_extract, \
-                 patch.object(pipeline, "_validate_patterns") as mock_validate, \
-                 patch.object(pipeline, "_populate_knowledge_base") as mock_populate:
+            with (
+                patch.object(pipeline, "_extract_patterns") as mock_extract,
+                patch.object(pipeline, "_validate_patterns") as mock_validate,
+                patch.object(pipeline, "_populate_knowledge_base") as mock_populate,
+            ):
 
                 mock_extract.return_value = [
                     ExtractedPattern(
                         category=PatternCategory.REACT_PATTERN,
                         title="Initial Pattern",
                         description="Initial test",
-                        confidence_score=0.8
+                        confidence_score=0.8,
                     )
                 ]
                 mock_validate.return_value = mock_extract.return_value
                 mock_populate.return_value = ["initial-pattern"]
 
                 # Run initial training
-                initial_sources = [{"url": "https://example.com/initial", "type": "web_documentation"}]
+                initial_sources = [
+                    {"url": "https://example.com/initial", "type": "web_documentation"}
+                ]
                 initial_result = pipeline.run_training_pipeline(initial_sources)
 
                 assert initial_result["patterns_added"] == 1
@@ -657,22 +721,31 @@ class TestTrainingPipelineIntegration:
                         category=PatternCategory.UI_COMPONENT,
                         title="New Pattern",
                         description="New test",
-                        confidence_score=0.9
+                        confidence_score=0.9,
                     )
                 ]
                 mock_extract.return_value = new_patterns
                 mock_validate.return_value = new_patterns
                 mock_populate.return_value = ["new-pattern"]
 
-                new_sources = [{"url": "https://example.com/new", "type": "web_documentation"}]
+                new_sources = [
+                    {"url": "https://example.com/new", "type": "web_documentation"}
+                ]
                 continuous_result = pipeline.run_continuous_learning(new_sources)
 
                 # Should have added new patterns to existing count
-                assert continuous_result["patterns_added"] > initial_result["patterns_added"]
-                assert continuous_result["patterns_extracted"] > initial_result["patterns_extracted"]
+                assert (
+                    continuous_result["patterns_added"]
+                    > initial_result["patterns_added"]
+                )
+                assert (
+                    continuous_result["patterns_extracted"]
+                    > initial_result["patterns_extracted"]
+                )
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_error_recovery_integration(self):
@@ -684,19 +757,23 @@ class TestTrainingPipelineIntegration:
             pipeline = TrainingPipeline(db_path)
 
             # Mock extraction failure
-            with patch.object(pipeline, "_extract_patterns") as mock_extract, \
-                 patch.object(pipeline, "_validate_patterns") as mock_validate, \
-                 patch.object(pipeline, "_populate_knowledge_base") as mock_populate:
+            with (
+                patch.object(pipeline, "_extract_patterns") as mock_extract,
+                patch.object(pipeline, "_validate_patterns") as mock_validate,
+                patch.object(pipeline, "_populate_knowledge_base") as mock_populate,
+            ):
 
                 # First source fails, second succeeds
                 mock_extract.side_effect = [
                     Exception("First source failed"),
-                    [ExtractedPattern(
-                        category=PatternCategory.REACT_PATTERN,
-                        title="Working Pattern",
-                        description="Test pattern",
-                        confidence_score=0.8
-                    )]
+                    [
+                        ExtractedPattern(
+                            category=PatternCategory.REACT_PATTERN,
+                            title="Working Pattern",
+                            description="Test pattern",
+                            confidence_score=0.8,
+                        )
+                    ],
                 ]
                 mock_validate.return_value = mock_extract.return_value
                 mock_populate.return_value = ["working-pattern"]
@@ -704,7 +781,7 @@ class TestTrainingPipelineIntegration:
                 # Run pipeline with mixed sources
                 data_sources = [
                     {"url": "https://example.com/failing", "type": "web_documentation"},
-                    {"url": "https://example.com/working", "type": "web_documentation"}
+                    {"url": "https://example.com/working", "type": "web_documentation"},
                 ]
 
                 result = pipeline.run_training_pipeline(data_sources)
@@ -718,6 +795,7 @@ class TestTrainingPipelineIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_training_report_integration(self):
@@ -737,12 +815,12 @@ class TestTrainingPipelineIntegration:
                         "react_pattern": 8,
                         "ui_component": 4,
                         "accessibility": 2,
-                        "prompt_engineering": 1
+                        "prompt_engineering": 1,
                     },
                     "most_used": [
                         {"title": "Popular Pattern", "usage_count": 10},
-                        {"title": "Unused Pattern", "usage_count": 2}
-                    ]
+                        {"title": "Unused Pattern", "usage_count": 2},
+                    ],
                 }
 
                 report = pipeline.get_training_report()
@@ -759,15 +837,20 @@ class TestTrainingPipelineIntegration:
                 assert len(recommendations) > 0
 
                 # Should recommend adding patterns for categories with low counts
-                category_recommendations = [r for r in recommendations if "add more" in r.lower()]
+                category_recommendations = [
+                    r for r in recommendations if "add more" in r.lower()
+                ]
                 assert len(category_recommendations) > 0
 
                 # Should recommend improving quality due to low effectiveness
-                quality_recommendations = [r for r in recommendations if "quality" in r.lower()]
+                quality_recommendations = [
+                    r for r in recommendations if "quality" in r.lower()
+                ]
                 assert len(quality_recommendations) > 0
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
 
@@ -794,7 +877,7 @@ class TestDefaultTrainingSources:
             "react_patterns",
             "design_systems",
             "accessibility",
-            "prompt_engineering"
+            "prompt_engineering",
         ]
 
         for category in expected_categories:

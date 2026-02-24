@@ -20,7 +20,6 @@ from shared_logger import (
     get_or_create_correlation_id,
 )
 
-
 # Global logger instance
 shared_logger: SharedLogger | None = None
 
@@ -73,6 +72,7 @@ def init_sentry(
 
         # Initialize Sentry
         import sentry_sdk
+
         sentry_sdk.init(
             dsn=dsn,
             integrations=integrations,
@@ -108,7 +108,11 @@ def init_sentry(
         )
 
         logger = structlog.get_logger()
-        logger.info("Sentry initialized successfully", service_name=service_name, environment=environment)
+        logger.info(
+            "Sentry initialized successfully",
+            service_name=service_name,
+            environment=environment,
+        )
 
         return True
 
@@ -117,7 +121,9 @@ def init_sentry(
         return False
 
 
-def before_send_filter(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
+def before_send_filter(
+    event: dict[str, Any], hint: dict[str, Any]
+) -> dict[str, Any] | None:
     """Filter events before sending to Sentry"""
     # Remove sensitive environment variables
     if "extra" in event and "environment" in event["extra"]:
@@ -175,18 +181,23 @@ def should_skip_transaction(transaction_name: str) -> bool:
     return any(path in transaction_name for path in skip_paths)
 
 
-def add_service_context(logger, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+def add_service_context(
+    logger, method_name: str, event_dict: dict[str, Any]
+) -> dict[str, Any]:
     """Add service context to all log entries"""
     event_dict["service_name"] = "mcp-gateway"
     event_dict["service_version"] = os.getenv("SERVICE_VERSION", "unknown")
     return event_dict
 
 
-def add_correlation_context(logger, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+def add_correlation_context(
+    logger, method_name: str, event_dict: dict[str, Any]
+) -> dict[str, Any]:
     """Add correlation context to log entries"""
     # Try to get correlation ID from current scope
     try:
         from sentry_sdk import get_current_span
+
         span = get_current_span()
         if span and span.trace_id:
             event_dict["trace_id"] = span.trace_id
@@ -224,7 +235,9 @@ def add_supabase_context(
 
     if query:
         sanitized_query = sanitize_query(query)
-        configure_scope(lambda scope: scope.set_extra("database.query", sanitized_query))
+        configure_scope(
+            lambda scope: scope.set_extra("database.query", sanitized_query)
+        )
 
 
 def capture_supabase_error(
@@ -237,13 +250,15 @@ def capture_supabase_error(
     add_supabase_context(operation, table, query)
 
     configure_scope(
-        lambda scope: scope.set_tag("database.error", True)
-        .set_context("supabase_error", {
-            "operation": operation,
-            "table": table,
-            "error_type": error.__class__.__name__,
-            "error_message": str(error),
-        })
+        lambda scope: scope.set_tag("database.error", True).set_context(
+            "supabase_error",
+            {
+                "operation": operation,
+                "table": table,
+                "error_type": error.__class__.__name__,
+                "error_message": str(error),
+            },
+        )
     )
 
     capture_exception(error)
@@ -256,13 +271,21 @@ def sanitize_query(query: str) -> str:
 
     # Remove email addresses
     import re
-    sanitized = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]", query)
+
+    sanitized = re.sub(
+        r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]", query
+    )
 
     # Remove API keys and tokens
     sanitized = re.sub(r"[A-Za-z0-9]{20,}", "[REDACTED]", sanitized)
 
     # Remove password patterns
-    sanitized = re.sub(r"password\s*=\s*'[^']*'", "password='[REDACTED]'", sanitized, flags=re.IGNORECASE)
+    sanitized = re.sub(
+        r"password\s*=\s*'[^']*'",
+        "password='[REDACTED]'",
+        sanitized,
+        flags=re.IGNORECASE,
+    )
 
     return sanitized
 
@@ -271,6 +294,7 @@ def create_supabase_span(operation: str, table: str | None = None) -> Any:
     """Create a Sentry span for Supabase operations"""
     try:
         from sentry_sdk import start_span
+
         span_name = f"supabase.{operation}"
         full_span_name = f"{span_name}.{table}" if table else span_name
         return start_span(full_span_name)
@@ -286,18 +310,23 @@ async def monitor_mcp_request(
 ) -> None:
     """Monitor MCP tool execution"""
     if shared_logger:
-        await shared_logger.log_mcp_tool_execution(tool_name, success, duration, context)
+        await shared_logger.log_mcp_tool_execution(
+            tool_name, success, duration, context
+        )
 
     # Also send to Sentry
     configure_scope(
         lambda scope: scope.set_tag("mcp.tool_name", tool_name)
         .set_tag("mcp.success", success)
-        .set_context("mcp", {
-            "tool_name": tool_name,
-            "success": success,
-            "duration_ms": duration,
-            **(context or {}),
-        })
+        .set_context(
+            "mcp",
+            {
+                "tool_name": tool_name,
+                "success": success,
+                "duration_ms": duration,
+                **(context or {}),
+            },
+        )
     )
 
     level = "info" if success else "error"
@@ -326,11 +355,14 @@ async def monitor_service_lifecycle(
     configure_scope(
         lambda scope: scope.set_tag("service.event", event)
         .set_tag("service.success", success)
-        .set_context("service_lifecycle", {
-            "event": event,
-            "success": success,
-            **(context or {}),
-        })
+        .set_context(
+            "service_lifecycle",
+            {
+                "event": event,
+                "success": success,
+                **(context or {}),
+            },
+        )
     )
 
     level = "info" if success else "error"
@@ -357,13 +389,17 @@ async def correlation_context(correlation_id: str | None = None):
 
     # Add correlation ID to shared logger context
     if shared_logger:
-        await shared_logger.debug("Starting correlation context", {"correlation_id": correlation_id})
+        await shared_logger.debug(
+            "Starting correlation context", {"correlation_id": correlation_id}
+        )
 
     try:
         yield correlation_id
     finally:
         if shared_logger:
-            await shared_logger.debug("Ending correlation context", {"correlation_id": correlation_id})
+            await shared_logger.debug(
+                "Ending correlation context", {"correlation_id": correlation_id}
+            )
 
 
 def get_correlation_id_from_request(request) -> str:
@@ -389,7 +425,9 @@ async def log_api_request(
 ) -> None:
     """Log API request to shared logger"""
     if shared_logger:
-        await shared_logger.log_api_request(request_id, method, endpoint, status_code, duration, context)
+        await shared_logger.log_api_request(
+            request_id, method, endpoint, status_code, duration, context
+        )
 
 
 async def log_database_operation(
@@ -401,7 +439,9 @@ async def log_database_operation(
 ) -> None:
     """Log database operation to shared logger"""
     if shared_logger:
-        await shared_logger.log_database_operation(operation, table, success, duration, context)
+        await shared_logger.log_database_operation(
+            operation, table, success, duration, context
+        )
 
 
 async def log_user_activity(

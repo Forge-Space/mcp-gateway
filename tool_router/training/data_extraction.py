@@ -20,6 +20,7 @@ from bs4 import BeautifulSoup
 
 class DataSource(Enum):
     """Types of data sources for pattern extraction."""
+
     WEB_DOCUMENTATION = "web_documentation"
     RESEARCH_PAPER = "research_paper"
     GITHUB_REPOSITORY = "github_repository"
@@ -29,6 +30,7 @@ class DataSource(Enum):
 
 class PatternCategory(Enum):
     """Categories of patterns for specialist training."""
+
     UI_COMPONENT = "ui_component"
     REACT_PATTERN = "react_pattern"
     ACCESSIBILITY = "accessibility"
@@ -42,6 +44,7 @@ class PatternCategory(Enum):
 @dataclass
 class ExtractedPattern:
     """Represents an extracted pattern from training data."""
+
     category: PatternCategory
     title: str
     description: str
@@ -72,9 +75,7 @@ class WebDocumentationExtractor(DataExtractor):
 
     def __init__(self) -> None:
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "MCP-Gateway-Training/1.0"
-        })
+        self.session.headers.update({"User-Agent": "MCP-Gateway-Training/1.0"})
 
     def extract_patterns(self, url: str) -> list[ExtractedPattern]:
         """Extract patterns from web documentation."""
@@ -109,15 +110,29 @@ class WebDocumentationExtractor(DataExtractor):
             print(f"Error extracting from {url}: {e}")
             return []
 
-    def _extract_react_patterns(self, text: str, source_url: str) -> list[ExtractedPattern]:
+    def _extract_react_patterns(
+        self, text: str, source_url: str
+    ) -> list[ExtractedPattern]:
         """Extract React-specific patterns."""
         patterns = []
 
         # React hooks patterns
         hooks_patterns = [
-            (r"useState\([^)]+\)", "useState Hook", "State management with functional components"),
-            (r"useEffect\([^)]+\)", "useEffect Hook", "Side effects in functional components"),
-            (r"useContext\([^)]+\)", "useContext Hook", "Context consumption in functional components"),
+            (
+                r"useState\([^)]+\)",
+                "useState Hook",
+                "State management with functional components",
+            ),
+            (
+                r"useEffect\([^)]+\)",
+                "useEffect Hook",
+                "Side effects in functional components",
+            ),
+            (
+                r"useContext\([^)]+\)",
+                "useContext Hook",
+                "Context consumption in functional components",
+            ),
             (r"useReducer\([^)]+\)", "useReducer Hook", "Complex state management"),
             (r"useMemo\([^)]+\)", "useMemo Hook", "Memoization for performance"),
             (r"useCallback\([^)]+\)", "useCallback Hook", "Function memoization"),
@@ -126,21 +141,35 @@ class WebDocumentationExtractor(DataExtractor):
         for pattern, title, description in hooks_patterns:
             matches = re.findall(pattern, text, re.IGNORECASE)
             if matches:
-                patterns.append(ExtractedPattern(
-                    category=PatternCategory.REACT_PATTERN,
-                    title=title,
-                    description=description,
-                    code_example=matches[0] if matches else None,
-                    source_url=source_url,
-                    tags=["hooks", "functional-components"],
-                    metadata={"usage_count": len(matches)}
-                ))
+                patterns.append(
+                    ExtractedPattern(
+                        category=PatternCategory.REACT_PATTERN,
+                        title=title,
+                        description=description,
+                        code_example=matches[0] if matches else None,
+                        source_url=source_url,
+                        tags=["hooks", "functional-components"],
+                        metadata={"usage_count": len(matches)},
+                    )
+                )
 
         # Component patterns
         component_patterns = [
-            (r"const\s+\w+\s*=\s*\([^)]+\)\s*=>\s*{", "Functional Component", "Arrow function component syntax"),
-            (r"export\s+default\s+function\s+\w+", "Named Function Component", "Named function export"),
-            (r"export\s+default\s+const\s+\w+", "Const Component", "Const component declaration"),
+            (
+                r"const\s+\w+\s*=\s*\([^)]+\)\s*=>\s*{",
+                "Functional Component",
+                "Arrow function component syntax",
+            ),
+            (
+                r"export\s+default\s+function\s+\w+",
+                "Named Function Component",
+                "Named function export",
+            ),
+            (
+                r"export\s+default\s+const\s+\w+",
+                "Const Component",
+                "Const component declaration",
+            ),
             (r"React\.memo\([^)]+\)", "React.memo", "Component memoization"),
             (r"React\.forwardRef\([^)]+\)", "forwardRef", "Ref forwarding"),
         ]
@@ -148,19 +177,23 @@ class WebDocumentationExtractor(DataExtractor):
         for pattern, title, description in component_patterns:
             matches = re.findall(pattern, text, re.IGNORECASE)
             if matches:
-                patterns.append(ExtractedPattern(
-                    category=PatternCategory.REACT_PATTERN,
-                    title=title,
-                    description=description,
-                    code_example=matches[0] if matches else None,
-                    source_url=source_url,
-                    tags=["components", "syntax"],
-                    metadata={"usage_count": len(matches)}
-                ))
+                patterns.append(
+                    ExtractedPattern(
+                        category=PatternCategory.REACT_PATTERN,
+                        title=title,
+                        description=description,
+                        code_example=matches[0] if matches else None,
+                        source_url=source_url,
+                        tags=["components", "syntax"],
+                        metadata={"usage_count": len(matches)},
+                    )
+                )
 
         return patterns
 
-    def _extract_ui_patterns(self, text: str, source_url: str) -> list[ExtractedPattern]:
+    def _extract_ui_patterns(
+        self, text: str, source_url: str
+    ) -> list[ExtractedPattern]:
         """Extract UI design patterns."""
         patterns = []
 
@@ -175,42 +208,56 @@ class WebDocumentationExtractor(DataExtractor):
 
         for pattern, title, description in design_patterns:
             if re.search(pattern, text, re.IGNORECASE):
-                patterns.append(ExtractedPattern(
-                    category=PatternCategory.UI_COMPONENT,
-                    title=title,
-                    description=description,
-                    source_url=source_url,
-                    tags=["design-system", "ui"],
-                    metadata={"mentioned": True}
-                ))
+                patterns.append(
+                    ExtractedPattern(
+                        category=PatternCategory.UI_COMPONENT,
+                        title=title,
+                        description=description,
+                        source_url=source_url,
+                        tags=["design-system", "ui"],
+                        metadata={"mentioned": True},
+                    )
+                )
 
         return patterns
 
-    def _extract_accessibility_patterns(self, text: str, source_url: str) -> list[ExtractedPattern]:
+    def _extract_accessibility_patterns(
+        self, text: str, source_url: str
+    ) -> list[ExtractedPattern]:
         """Extract accessibility patterns."""
         patterns = []
 
         # Accessibility patterns
         a11y_patterns = [
-            (r"aria-[a-z]+", "ARIA Attributes", "Accessibility attributes for screen readers"),
+            (
+                r"aria-[a-z]+",
+                "ARIA Attributes",
+                "Accessibility attributes for screen readers",
+            ),
             (r"role=[\"'][^\"']+[\"']", "Semantic Roles", "HTML5 semantic roles"),
             (r"tabindex", "Tab Navigation", "Keyboard navigation support"),
             (r"alt=[\"'][^\"']+[\"']", "Alt Text", "Alternative text for images"),
-            (r"wcag\s*2\.[0-9]", "WCAG Guidelines", "Web Content Accessibility Guidelines"),
+            (
+                r"wcag\s*2\.[0-9]",
+                "WCAG Guidelines",
+                "Web Content Accessibility Guidelines",
+            ),
         ]
 
         for pattern, title, description in a11y_patterns:
             matches = re.findall(pattern, text, re.IGNORECASE)
             if matches:
-                patterns.append(ExtractedPattern(
-                    category=PatternCategory.ACCESSIBILITY,
-                    title=title,
-                    description=description,
-                    code_example=matches[0] if matches else None,
-                    source_url=source_url,
-                    tags=["accessibility", "a11y"],
-                    metadata={"usage_count": len(matches)}
-                ))
+                patterns.append(
+                    ExtractedPattern(
+                        category=PatternCategory.ACCESSIBILITY,
+                        title=title,
+                        description=description,
+                        code_example=matches[0] if matches else None,
+                        source_url=source_url,
+                        tags=["accessibility", "a11y"],
+                        metadata={"usage_count": len(matches)},
+                    )
+                )
 
         return patterns
 
@@ -220,10 +267,12 @@ class GitHubRepositoryExtractor(DataExtractor):
 
     def __init__(self) -> None:
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "MCP-Gateway-Training/1.0",
-            "Accept": "application/vnd.github.v3+json"
-        })
+        self.session.headers.update(
+            {
+                "User-Agent": "MCP-Gateway-Training/1.0",
+                "Accept": "application/vnd.github.v3+json",
+            }
+        )
 
     def extract_patterns(self, repo_url: str) -> list[ExtractedPattern]:
         """Extract patterns from a GitHub repository."""
@@ -245,18 +294,20 @@ class GitHubRepositoryExtractor(DataExtractor):
             patterns = []
 
             # Add repository as a pattern source
-            patterns.append(ExtractedPattern(
-                category=PatternCategory.UI_COMPONENT,
-                title=f"Repository: {repo_data['name']}",
-                description=repo_data.get("description", ""),
-                source_url=repo_url,
-                tags=["repository", "open-source"],
-                metadata={
-                    "stars": repo_data.get("stargazers_count", 0),
-                    "language": repo_data.get("language", ""),
-                    "topics": repo_data.get("topics", [])
-                }
-            ))
+            patterns.append(
+                ExtractedPattern(
+                    category=PatternCategory.UI_COMPONENT,
+                    title=f"Repository: {repo_data['name']}",
+                    description=repo_data.get("description", ""),
+                    source_url=repo_url,
+                    tags=["repository", "open-source"],
+                    metadata={
+                        "stars": repo_data.get("stargazers_count", 0),
+                        "language": repo_data.get("language", ""),
+                        "topics": repo_data.get("topics", []),
+                    },
+                )
+            )
 
             return patterns
 
@@ -274,7 +325,9 @@ class PatternExtractor:
             DataSource.GITHUB_REPOSITORY: GitHubRepositoryExtractor(),
         }
 
-    def extract_from_url(self, url: str, source_type: DataSource) -> list[ExtractedPattern]:
+    def extract_from_url(
+        self, url: str, source_type: DataSource
+    ) -> list[ExtractedPattern]:
         """Extract patterns from a URL."""
         extractor = self.extractors.get(source_type)
         if not extractor:
@@ -283,7 +336,9 @@ class PatternExtractor:
 
         return extractor.extract_patterns(url)
 
-    def extract_from_multiple_sources(self, sources: list[dict[str, Any]]) -> list[ExtractedPattern]:
+    def extract_from_multiple_sources(
+        self, sources: list[dict[str, Any]]
+    ) -> list[ExtractedPattern]:
         """Extract patterns from multiple sources."""
         all_patterns = []
 
@@ -297,7 +352,9 @@ class PatternExtractor:
 
         return all_patterns
 
-    def categorize_patterns(self, patterns: list[ExtractedPattern]) -> dict[PatternCategory, list[ExtractedPattern]]:
+    def categorize_patterns(
+        self, patterns: list[ExtractedPattern]
+    ) -> dict[PatternCategory, list[ExtractedPattern]]:
         """Categorize patterns by type."""
         categorized = {}
 
@@ -309,11 +366,15 @@ class PatternExtractor:
 
         return categorized
 
-    def filter_by_confidence(self, patterns: list[ExtractedPattern], min_confidence: float = 0.7) -> list[ExtractedPattern]:
+    def filter_by_confidence(
+        self, patterns: list[ExtractedPattern], min_confidence: float = 0.7
+    ) -> list[ExtractedPattern]:
         """Filter patterns by confidence score."""
         return [p for p in patterns if p.confidence_score >= min_confidence]
 
-    def get_top_patterns(self, patterns: list[ExtractedPattern], limit: int = 10) -> list[ExtractedPattern]:
+    def get_top_patterns(
+        self, patterns: list[ExtractedPattern], limit: int = 10
+    ) -> list[ExtractedPattern]:
         """Get top patterns by confidence score."""
         return sorted(patterns, key=lambda p: p.confidence_score, reverse=True)[:limit]
 
@@ -324,43 +385,40 @@ TRAINING_DATA_SOURCES = [
     {
         "url": "https://react.dev/reference/rules",
         "type": "web_documentation",
-        "category": "react_patterns"
+        "category": "react_patterns",
     },
     {
         "url": "https://medium.com/@regondaakhil/react-best-practices-and-patterns-for-2024-f5cdf8e132f1",
         "type": "web_documentation",
-        "category": "react_patterns"
+        "category": "react_patterns",
     },
-
     # Design Systems
     {
         "url": "https://carbondesignsystem.com/",
         "type": "web_documentation",
-        "category": "design_systems"
+        "category": "design_systems",
     },
     {
         "url": "https://www.lightningdesignsystem.com/",
         "type": "web_documentation",
-        "category": "design_systems"
+        "category": "design_systems",
     },
-
     # Accessibility
     {
         "url": "https://www.w3.org/WAI/WCAG21/quickref/",
         "type": "web_documentation",
-        "category": "accessibility"
+        "category": "accessibility",
     },
-
     # GitHub Repositories
     {
         "url": "https://github.com/facebook/react",
         "type": "github_repository",
-        "category": "react_patterns"
+        "category": "react_patterns",
     },
     {
         "url": "https://github.com/microsoft/fluentui",
         "type": "github_repository",
-        "category": "design_systems"
+        "category": "design_systems",
     },
 ]
 

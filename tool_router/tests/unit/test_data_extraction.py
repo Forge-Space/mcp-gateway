@@ -10,7 +10,12 @@ Tests the pattern extraction functionality including:
 
 from unittest.mock import patch
 
-from tool_router.training.data_extraction import DataSource, ExtractedPattern, PatternCategory, PatternExtractor
+from tool_router.training.data_extraction import (
+    DataSource,
+    ExtractedPattern,
+    PatternCategory,
+    PatternExtractor,
+)
 
 
 class TestPatternExtractor:
@@ -32,7 +37,9 @@ class TestPatternExtractor:
         url = "https://react.dev/docs/components"
 
         with patch.object(
-            self.extractor.extractors[DataSource.WEB_DOCUMENTATION], "extract_patterns", return_value=[]
+            self.extractor.extractors[DataSource.WEB_DOCUMENTATION],
+            "extract_patterns",
+            return_value=[],
         ) as mock_extract:
             result = self.extractor.extract_from_url(url, DataSource.WEB_DOCUMENTATION)
 
@@ -44,7 +51,9 @@ class TestPatternExtractor:
         url = "https://github.com/facebook/react"
 
         with patch.object(
-            self.extractor.extractors[DataSource.GITHUB_REPOSITORY], "extract_patterns", return_value=[]
+            self.extractor.extractors[DataSource.GITHUB_REPOSITORY],
+            "extract_patterns",
+            return_value=[],
         ) as mock_extract:
             result = self.extractor.extract_from_url(url, DataSource.GITHUB_REPOSITORY)
 
@@ -54,8 +63,16 @@ class TestPatternExtractor:
     def test_extract_from_multiple_sources(self):
         """Test extraction from multiple sources."""
         sources = [
-            {"url": "https://example.com/doc1", "type": "web_documentation", "category": "react_patterns"},
-            {"url": "https://github.com/example/repo", "type": "github_repository", "category": "react_patterns"},
+            {
+                "url": "https://example.com/doc1",
+                "type": "web_documentation",
+                "category": "react_patterns",
+            },
+            {
+                "url": "https://github.com/example/repo",
+                "type": "github_repository",
+                "category": "react_patterns",
+            },
         ]
 
         with patch.object(self.extractor, "extract_from_url") as mock_extract:
@@ -110,7 +127,10 @@ class TestExtractedPattern:
         assert pattern.category == PatternCategory.UI_COMPONENT
         assert pattern.title == "React Button Component"
         assert pattern.description == "A reusable button component"
-        assert pattern.code_example == "const Button: React.FC = () => <button>Click me</button>"
+        assert (
+            pattern.code_example
+            == "const Button: React.FC = () => <button>Click me</button>"
+        )
         assert pattern.source_url == "https://example.com/button"
         assert pattern.confidence_score == 0.9
 
@@ -127,7 +147,10 @@ class TestExtractedPattern:
         assert pattern.category == PatternCategory.REACT_PATTERN
         assert pattern.title == "React Hook Pattern"
         assert pattern.description == "Custom hook for state management"
-        assert pattern.code_example == "const useCustomHook = () => { /* hook implementation */ }"
+        assert (
+            pattern.code_example
+            == "const useCustomHook = () => { /* hook implementation */ }"
+        )
         assert pattern.source_url == "https://example.com/hook"
         # Optional fields should have default values
         assert pattern.confidence_score >= 0 and pattern.confidence_score <= 1

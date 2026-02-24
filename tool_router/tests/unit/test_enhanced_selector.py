@@ -138,7 +138,9 @@ class TestOllamaSelector:
 
     def test_initialization_custom_model(self) -> None:
         """Test OllamaSelector initialization with custom model."""
-        selector = OllamaSelector("http://localhost:11434", model=AIModel.TINYLLAMA.value)
+        selector = OllamaSelector(
+            "http://localhost:11434", model=AIModel.TINYLLAMA.value
+        )
 
         assert selector.model == AIModel.TINYLLAMA.value
 
@@ -197,7 +199,10 @@ class TestOllamaSelector:
         """Test successful multi-tool selection."""
         selector = OllamaSelector("http://localhost:11434")
 
-        tools = [{"name": "tool1", "description": "Tool 1"}, {"name": "tool2", "description": "Tool 2"}]
+        tools = [
+            {"name": "tool1", "description": "Tool 1"},
+            {"name": "tool2", "description": "Tool 2"},
+        ]
 
         with patch.object(selector, "_call_ollama") as mock_call:
             mock_call.return_value = '{"tools": ["tool1", "tool2"], "confidence": 0.8, "reasoning": "Good combination"}'
@@ -246,7 +251,9 @@ class TestOllamaSelector:
         selector = OllamaSelector("http://localhost:11434")
 
         with patch("httpx.Client") as mock_client:
-            mock_client.return_value.__enter__.side_effect = httpx.TimeoutException("Timeout")
+            mock_client.return_value.__enter__.side_effect = httpx.TimeoutException(
+                "Timeout"
+            )
 
             result = selector._call_ollama("test prompt")
 
@@ -257,7 +264,9 @@ class TestOllamaSelector:
         selector = OllamaSelector("http://localhost:11434")
 
         with patch("httpx.Client") as mock_client:
-            mock_client.return_value.__enter__.side_effect = httpx.HTTPStatusError("HTTP error")
+            mock_client.return_value.__enter__.side_effect = httpx.HTTPStatusError(
+                "HTTP error"
+            )
 
             result = selector._call_ollama("test prompt")
 
@@ -344,11 +353,15 @@ class TestCostTracker:
         """Test tracking model selection."""
         tracker = CostTracker()
 
-        tracker.track_selection("test_model", "simple", {"input": 100, "output": 50, "total": 150})
+        tracker.track_selection(
+            "test_model", "simple", {"input": 100, "output": 50, "total": 150}
+        )
 
         assert tracker.total_requests == 1
         assert tracker.model_usage_stats["test_model"]["usage_count"] == 1
-        assert tracker.model_usage_stats["test_model"]["total_tokens"] == 150  # total from estimated_tokens
+        assert (
+            tracker.model_usage_stats["test_model"]["total_tokens"] == 150
+        )  # total from estimated_tokens
 
     def test_track_cost_savings(self) -> None:
         """Test tracking cost savings."""
@@ -394,7 +407,9 @@ class TestEnhancedAISelector:
         }
 
         selector = EnhancedAISelector(
-            providers=providers, hardware_constraints=hardware_constraints, cost_optimization=False
+            providers=providers,
+            hardware_constraints=hardware_constraints,
+            cost_optimization=False,
         )
 
         assert selector.cost_optimization is False
@@ -403,7 +418,9 @@ class TestEnhancedAISelector:
 
     def test_get_default_hardware_constraints(self) -> None:
         """Test default hardware constraints."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         constraints = selector._get_default_hardware_constraints()
 
@@ -414,7 +431,9 @@ class TestEnhancedAISelector:
 
     def test_select_optimal_model_simple_task(self) -> None:
         """Test optimal model selection for simple task."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         model = selector.select_optimal_model("simple", "balanced")
 
@@ -423,7 +442,9 @@ class TestEnhancedAISelector:
 
     def test_select_optimal_model_complex_task(self) -> None:
         """Test optimal model selection for complex task."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         model = selector.select_optimal_model("complex", "quality")
 
@@ -432,7 +453,9 @@ class TestEnhancedAISelector:
 
     def test_select_optimal_model_efficient_preference(self) -> None:
         """Test optimal model selection with efficient preference."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         model = selector.select_optimal_model("moderate", "efficient")
 
@@ -441,7 +464,9 @@ class TestEnhancedAISelector:
 
     def test_select_optimal_model_no_suitable_models(self) -> None:
         """Test optimal model selection with no suitable models."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         # Mock no suitable models
         with patch.object(selector, "select_optimal_model") as mock_select:
@@ -453,7 +478,9 @@ class TestEnhancedAISelector:
 
     def test_analyze_task_complexity_simple(self) -> None:
         """Test task complexity analysis for simple tasks."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         complexity = selector._analyze_task_complexity("What is this?")
 
@@ -461,26 +488,39 @@ class TestEnhancedAISelector:
 
     def test_analyze_task_complexity_complex(self) -> None:
         """Test task complexity analysis for complex tasks."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
-        complexity = selector._analyze_task_complexity("Create a complex system with multiple components")
+        complexity = selector._analyze_task_complexity(
+            "Create a complex system with multiple components"
+        )
 
         assert complexity == "complex"
 
     def test_analyze_task_complexity_moderate(self) -> None:
         """Test task complexity analysis for moderate tasks."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
-        complexity = selector._analyze_task_complexity("Analyze the performance and optimize")
+        complexity = selector._analyze_task_complexity(
+            "Analyze the performance and optimize"
+        )
 
         assert complexity == "moderate"
 
     def test_estimate_token_usage(self) -> None:
         """Test token usage estimation."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         task = "test task"
-        tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
+        tools = [
+            {"name": "tool1", "description": "desc1"},
+            {"name": "tool2", "description": "desc2"},
+        ]
         context = "test context"
 
         usage = selector._estimate_token_usage(task, tools, context)
@@ -491,7 +531,9 @@ class TestEnhancedAISelector:
 
     def test_estimate_token_usage_multi_tool(self) -> None:
         """Test token usage estimation for multi-tool selection."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         task = "test task"
         tools = [{"name": "tool1", "description": "desc1"}]
@@ -505,7 +547,9 @@ class TestEnhancedAISelector:
 
     def test_estimate_request_cost(self) -> None:
         """Test request cost estimation."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         # Test local model (free)
         cost = selector.estimate_request_cost(AIModel.LLAMA32_3B.value, 100, 50)
@@ -523,7 +567,9 @@ class TestEnhancedAISelector:
 
     def test_select_tool_with_cost_optimization(self) -> None:
         """Test tool selection with cost optimization."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         tools = [{"name": "test_tool", "description": "Test description"}]
 
@@ -555,9 +601,14 @@ class TestEnhancedAISelector:
 
     def test_select_tools_multi_with_cost_optimization(self) -> None:
         """Test multi-tool selection with cost optimization."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
-        tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
+        tools = [
+            {"name": "tool1", "description": "desc1"},
+            {"name": "tool2", "description": "desc2"},
+        ]
 
         with patch.object(selector, "_analyze_task_complexity") as mock_analyze:
             mock_analyze.return_value = "moderate"
@@ -565,10 +616,17 @@ class TestEnhancedAISelector:
         with patch.object(selector, "select_optimal_model") as mock_model:
             mock_model.return_value = AIModel.LLAMA32_3B.value
 
-            with patch.object(selector.providers[0], "select_tools_multi") as mock_select:
-                mock_select.return_value = {"tools": ["tool1", "tool2"], "confidence": 0.8}
+            with patch.object(
+                selector.providers[0], "select_tools_multi"
+            ) as mock_select:
+                mock_select.return_value = {
+                    "tools": ["tool1", "tool2"],
+                    "confidence": 0.8,
+                }
 
-                result = selector.select_tools_multi_with_cost_optimization("test task", tools, max_tools=2)
+                result = selector.select_tools_multi_with_cost_optimization(
+                    "test task", tools, max_tools=2
+                )
 
                 assert result is not None
                 assert result["tools"] == ["tool1", "tool2"]
@@ -576,11 +634,15 @@ class TestEnhancedAISelector:
 
     def test_get_performance_metrics(self) -> None:
         """Test performance metrics retrieval."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         # Add some mock data
         selector._performance_cache["test_key"] = {"result": "test"}
-        selector._cost_tracker.track_selection("test_model", "simple", {"input": 100, "output": 50, "total": 150})
+        selector._cost_tracker.track_selection(
+            "test_model", "simple", {"input": 100, "output": 50, "total": 150}
+        )
 
         metrics = selector.get_performance_metrics()
 
@@ -593,7 +655,9 @@ class TestEnhancedAISelector:
 
     def test_clear_cache(self) -> None:
         """Test cache clearing."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         # Add some data to cache
         selector._performance_cache["test_key"] = {"result": "test"}
@@ -606,11 +670,15 @@ class TestEnhancedAISelector:
 
     def test_legacy_select_tool(self) -> None:
         """Test legacy select_tool method delegates to cost-optimized version."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
         tools = [{"name": "test_tool", "description": "Test description"}]
 
-        with patch.object(selector, "select_tool_with_cost_optimization") as mock_optimized:
+        with patch.object(
+            selector, "select_tool_with_cost_optimization"
+        ) as mock_optimized:
             mock_optimized.return_value = {"tool_name": "test_tool"}
 
             result = selector.select_tool("test task", tools)
@@ -620,11 +688,18 @@ class TestEnhancedAISelector:
 
     def test_legacy_select_tools_multi(self) -> None:
         """Test legacy select_tools_multi method delegates to cost-optimized version."""
-        selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
+        selector = EnhancedAISelector(
+            providers=[OllamaSelector("http://localhost:11434")]
+        )
 
-        tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
+        tools = [
+            {"name": "tool1", "description": "desc1"},
+            {"name": "tool2", "description": "desc2"},
+        ]
 
-        with patch.object(selector, "select_tools_multi_with_cost_optimization") as mock_optimized:
+        with patch.object(
+            selector, "select_tools_multi_with_cost_optimization"
+        ) as mock_optimized:
             mock_optimized.return_value = {"tools": ["tool1", "tool2"]}
 
             result = selector.select_tools_multi("test task", tools)

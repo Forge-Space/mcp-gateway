@@ -12,7 +12,6 @@ from typing import Any
 from ..training.evaluation import EvaluationMetric, SpecialistEvaluator
 from ..training.knowledge_base import KnowledgeBase
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +24,10 @@ class EvaluationTool:
         self.evaluator = SpecialistEvaluator(self.knowledge_base)
 
     def run_evaluation(
-        self, specialist_name: str, benchmark_suite: str | None = None, test_cases: int | None = None
+        self,
+        specialist_name: str,
+        benchmark_suite: str | None = None,
+        test_cases: int | None = None,
     ) -> dict[str, Any]:
         """Run evaluation for a specialist.
 
@@ -48,7 +50,9 @@ class EvaluationTool:
 
             # Run evaluation
             results = self.evaluator.evaluate_specialist(
-                specialist_name=specialist_name, benchmark_suite=benchmark_suite, test_cases=test_cases
+                specialist_name=specialist_name,
+                benchmark_suite=benchmark_suite,
+                test_cases=test_cases,
             )
 
             # Format results
@@ -76,7 +80,9 @@ class EvaluationTool:
             average_score = total_score / len(results) if results else 0
             pass_rate = (passed_count / test_count * 100) if test_count > 0 else 0
 
-            logger.info(f"Completed evaluation for {specialist_name}: {len(results)} metrics")
+            logger.info(
+                f"Completed evaluation for {specialist_name}: {len(results)} metrics"
+            )
 
             return {
                 "specialist_name": specialist_name,
@@ -95,7 +101,9 @@ class EvaluationTool:
             logger.error(f"Error running evaluation: {e}")
             return {"error": str(e), "message": "Failed to run evaluation"}
 
-    def get_evaluation_history(self, specialist_name: str | None = None, limit: int = 50) -> dict[str, Any]:
+    def get_evaluation_history(
+        self, specialist_name: str | None = None, limit: int = 50
+    ) -> dict[str, Any]:
         """Get evaluation history.
 
         Args:
@@ -121,7 +129,9 @@ class EvaluationTool:
                 # Get all results
                 results = []
                 for spec_name in self.evaluator.benchmark_suites.keys():
-                    spec_results = self.evaluator.get_evaluation_results(spec_name, limit)
+                    spec_results = self.evaluator.get_evaluation_results(
+                        spec_name, limit
+                    )
                     results.extend(spec_results)
 
                 # Sort by timestamp and limit
@@ -193,7 +203,12 @@ class EvaluationTool:
             metrics = []
 
             for metric in EvaluationMetric:
-                metrics.append({"name": metric.value, "description": self._get_metric_description(metric)})
+                metrics.append(
+                    {
+                        "name": metric.value,
+                        "description": self._get_metric_description(metric),
+                    }
+                )
 
             return {
                 "metrics": metrics,
@@ -221,7 +236,9 @@ class EvaluationTool:
         }
         return descriptions.get(metric, "No description available")
 
-    def compare_specialists(self, specialist_names: list[str], metric: str | None = None) -> dict[str, Any]:
+    def compare_specialists(
+        self, specialist_names: list[str], metric: str | None = None
+    ) -> dict[str, Any]:
         """Compare multiple specialists.
 
         Args:
@@ -282,7 +299,11 @@ class EvaluationTool:
                     }
 
             # Sort by average score
-            sorted_specialists = sorted(comparison_data.items(), key=lambda x: x[1]["average_score"], reverse=True)
+            sorted_specialists = sorted(
+                comparison_data.items(),
+                key=lambda x: x[1]["average_score"],
+                reverse=True,
+            )
 
             return {
                 "comparison": dict(sorted_specialists),
@@ -356,7 +377,10 @@ class EvaluationTool:
                     }
                 )
 
-            return {"summary": summary, "message": "Evaluation summary retrieved successfully"}
+            return {
+                "summary": summary,
+                "message": "Evaluation summary retrieved successfully",
+            }
 
         except Exception as e:
             logger.error(f"Error getting evaluation summary: {e}")
@@ -388,9 +412,21 @@ EVALUATION_SCHEMA = {
             "items": {"type": "string"},
             "description": "List of specialist names (for compare_specialists)",
         },
-        "benchmark_suite": {"type": "string", "description": "Specific benchmark suite to use"},
-        "test_cases": {"type": "integer", "minimum": 1, "description": "Number of test cases to run"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "description": "Maximum number of results"},
+        "benchmark_suite": {
+            "type": "string",
+            "description": "Specific benchmark suite to use",
+        },
+        "test_cases": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of test cases to run",
+        },
+        "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Maximum number of results",
+        },
         "metric": {"type": "string", "description": "Specific metric to compare"},
     },
     "required": ["action"],
@@ -425,7 +461,9 @@ def evaluation_handler(args: dict[str, Any]) -> dict[str, Any]:
             )
 
         if action == "get_history":
-            return tool.get_evaluation_history(specialist_name=args.get("specialist_name"), limit=args.get("limit", 50))
+            return tool.get_evaluation_history(
+                specialist_name=args.get("specialist_name"), limit=args.get("limit", 50)
+            )
 
         if action == "get_specialists":
             return tool.get_available_specialists()
@@ -441,12 +479,17 @@ def evaluation_handler(args: dict[str, Any]) -> dict[str, Any]:
                     "message": "Field 'specialist_names' is required for compare_specialists action",
                 }
 
-            return tool.compare_specialists(specialist_names=specialist_names, metric=args.get("metric"))
+            return tool.compare_specialists(
+                specialist_names=specialist_names, metric=args.get("metric")
+            )
 
         if action == "get_summary":
             return tool.get_evaluation_summary()
 
-        return {"error": f"Unknown action: {action}", "message": "Invalid action specified"}
+        return {
+            "error": f"Unknown action: {action}",
+            "message": "Invalid action specified",
+        }
 
     except Exception as e:
         logger.error(f"Error in evaluation handler: {e}")

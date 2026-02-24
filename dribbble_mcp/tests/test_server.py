@@ -15,7 +15,6 @@ from dribbble_mcp.server import (
     search_dribbble,
 )
 
-
 _SHOT = {
     "title": "Dark Dashboard",
     "url": "https://dribbble.com/shots/123-dark",
@@ -66,7 +65,9 @@ class TestSearchDribbble:
     def test_empty_query_returns_error(self) -> None:
         with patch("dribbble_mcp.server._get_scraper") as mock_scraper_fn:
             mock_scraper = MagicMock()
-            mock_scraper.search_shots.side_effect = ValueError("query must not be empty")
+            mock_scraper.search_shots.side_effect = ValueError(
+                "query must not be empty"
+            )
             mock_scraper_fn.return_value = mock_scraper
 
             result = search_dribbble("")
@@ -91,7 +92,9 @@ class TestSearchDribbble:
             mock_scraper.search_shots.return_value = []
             mock_scraper_fn.return_value = mock_scraper
 
-            search_dribbble("ui", limit=5, timeframe="week", category="web-design", color="ff5733")
+            search_dribbble(
+                "ui", limit=5, timeframe="week", category="web-design", color="ff5733"
+            )
 
         mock_scraper.search_shots.assert_called_once_with(
             query="ui",

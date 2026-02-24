@@ -11,7 +11,11 @@ from tool_router.training.evaluation import (
     EvaluationResult,
     SpecialistEvaluator,
 )
-from tool_router.training.knowledge_base import KnowledgeBase, KnowledgeItem, PatternCategory
+from tool_router.training.knowledge_base import (
+    KnowledgeBase,
+    KnowledgeItem,
+    PatternCategory,
+)
 
 
 class TestEvaluationMetric:
@@ -29,7 +33,7 @@ class TestEvaluationMetric:
             "code_quality",
             "accessibility_score",
             "performance_score",
-            "security_score"
+            "security_score",
         }
 
         actual_metrics = {metric.value for metric in EvaluationMetric}
@@ -44,7 +48,7 @@ class TestEvaluationResult:
         result = EvaluationResult(
             specialist_type="ui_specialist",
             metric=EvaluationMetric.ACCURACY,
-            value=0.85
+            value=0.85,
         )
 
         assert result.specialist_type == "ui_specialist"
@@ -65,11 +69,7 @@ class TestEvaluationResult:
             timestamp=test_time,
             test_cases=10,
             passed_cases=8,
-            details={
-                "code_examples": 5,
-                "best_practices": 3,
-                "test_coverage": 0.8
-            }
+            details={"code_examples": 5, "best_practices": 3, "test_coverage": 0.8},
         )
 
         assert result.specialist_type == "ui_specialist"
@@ -88,7 +88,7 @@ class TestEvaluationResult:
             metric=EvaluationMetric.ACCURACY,
             value=0.8,
             test_cases=0,
-            passed_cases=0
+            passed_cases=0,
         )
         assert result.success_rate == 0.0
 
@@ -98,7 +98,7 @@ class TestEvaluationResult:
             metric=EvaluationMetric.ACCURACY,
             value=0.8,
             test_cases=10,
-            passed_cases=8
+            passed_cases=8,
         )
         assert result2.success_rate == 0.8
 
@@ -108,7 +108,7 @@ class TestEvaluationResult:
             metric=EvaluationMetric.ACCURACY,
             value=1.0,
             test_cases=5,
-            passed_cases=5
+            passed_cases=5,
         )
         assert result3.success_rate == 1.0
 
@@ -123,7 +123,7 @@ class TestBenchmarkSuite:
             description="Test description",
             test_cases=[{"input": "test"}],
             expected_outputs=["test output"],
-            metrics=[EvaluationMetric.ACCURACY]
+            metrics=[EvaluationMetric.ACCURACY],
         )
 
         assert suite.name == "Test Suite"
@@ -140,14 +140,14 @@ class TestBenchmarkSuite:
             description="React component evaluation",
             test_cases=[
                 {"input": "Create button", "context": {"framework": "react"}},
-                {"input": "Create form", "context": {"framework": "react"}}
+                {"input": "Create form", "context": {"framework": "react"}},
             ],
-            expected_outputs=[
-                "Button component",
-                "Form component"
+            expected_outputs=["Button component", "Form component"],
+            metrics=[
+                EvaluationMetric.CODE_QUALITY,
+                EvaluationMetric.ACCESSIBILITY_SCORE,
             ],
-            metrics=[EvaluationMetric.CODE_QUALITY, EvaluationMetric.ACCESSIBILITY_SCORE],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
         assert suite.name == "React UI Suite"
@@ -169,6 +169,7 @@ class TestSpecialistEvaluator:
     def teardown_method(self):
         """Clean up test fixtures."""
         import shutil
+
         shutil.rmtree(self.temp_dir)
 
     def test_initialization(self):
@@ -179,7 +180,11 @@ class TestSpecialistEvaluator:
         assert len(self.evaluator.benchmark_suites) > 0
 
         # Should have benchmark suites for different specialist types
-        expected_specialists = ["ui_specialist", "prompt_architect", "router_specialist"]
+        expected_specialists = [
+            "ui_specialist",
+            "prompt_architect",
+            "router_specialist",
+        ]
         for specialist in expected_specialists:
             assert specialist in self.evaluator.benchmark_suites
 
@@ -215,7 +220,7 @@ class TestSpecialistEvaluator:
             code_example="<button>Click</button>",
             tags=["react", "button"],
             confidence_score=0.8,
-            usage_count=10
+            usage_count=10,
         )
         self.knowledge_base.add_knowledge_item(pattern)
 
@@ -237,7 +242,7 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test input"}],
             expected_outputs=["test output"],
             metrics=[EvaluationMetric.ACCURACY],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
         results = self.evaluator.evaluate_specialist("ui_specialist", custom_suite)
@@ -261,7 +266,7 @@ class TestSpecialistEvaluator:
             title="Test Pattern",
             description="Test description",
             content="Test content",
-            confidence_score=0.8
+            confidence_score=0.8,
         )
         self.knowledge_base.add_knowledge_item(pattern)
 
@@ -271,10 +276,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.ACCURACY],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.ACCURACY, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.ACCURACY, suite
+        )
 
         assert result.specialist_type == "ui_specialist"
         assert result.metric == EvaluationMetric.ACCURACY
@@ -292,7 +299,7 @@ class TestSpecialistEvaluator:
             description="Test pattern",
             content="Test content",
             tags=["react", "button", "accessible"],
-            metadata={"framework": "react", "type": "button"}
+            metadata={"framework": "react", "type": "button"},
         )
         pattern2 = KnowledgeItem(
             id="pattern-2",
@@ -301,7 +308,7 @@ class TestSpecialistEvaluator:
             description="Test pattern",
             content="Test content",
             tags=["react"],
-            metadata={}
+            metadata={},
         )
 
         self.knowledge_base.add_knowledge_item(pattern1)
@@ -313,10 +320,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.PRECISION],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.PRECISION, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.PRECISION, suite
+        )
 
         assert result.metric == EvaluationMetric.PRECISION
         assert 0.0 <= result.value <= 1.0
@@ -332,7 +341,7 @@ class TestSpecialistEvaluator:
                 category=PatternCategory.UI_COMPONENT,
                 title=f"Pattern {i}",
                 description="Test pattern",
-                content="Test content"
+                content="Test content",
             )
             self.knowledge_base.add_knowledge_item(pattern)
 
@@ -342,10 +351,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.RECALL],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.RECALL, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.RECALL, suite
+        )
 
         assert result.metric == EvaluationMetric.RECALL
         assert 0.0 <= result.value <= 1.0
@@ -360,10 +371,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.F1_SCORE],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.F1_SCORE, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.F1_SCORE, suite
+        )
 
         assert result.metric == EvaluationMetric.F1_SCORE
         assert 0.0 <= result.value <= 1.0
@@ -379,10 +392,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.RESPONSE_TIME],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.RESPONSE_TIME, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.RESPONSE_TIME, suite
+        )
 
         assert result.metric == EvaluationMetric.RESPONSE_TIME
         assert 0.0 <= result.value <= 1.0
@@ -401,7 +416,7 @@ class TestSpecialistEvaluator:
             content="Test content",
             code_example="const Component = () => {}",
             confidence_score=0.9,
-            usage_count=50
+            usage_count=50,
         )
         low_quality = KnowledgeItem(
             id="low-quality",
@@ -411,7 +426,7 @@ class TestSpecialistEvaluator:
             content="Test content",
             code_example=None,
             confidence_score=0.6,
-            usage_count=0
+            usage_count=0,
         )
 
         self.knowledge_base.add_knowledge_item(high_quality)
@@ -423,10 +438,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.CODE_QUALITY],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.CODE_QUALITY, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.CODE_QUALITY, suite
+        )
 
         assert result.metric == EvaluationMetric.CODE_QUALITY
         assert 0.0 <= result.value <= 1.0
@@ -442,14 +459,14 @@ class TestSpecialistEvaluator:
             category=PatternCategory.ACCESSIBILITY,
             title="WCAG Pattern",
             description="WCAG 2.1 compliant pattern",
-            content="WCAG guidelines for accessibility"
+            content="WCAG guidelines for accessibility",
         )
         aria_pattern = KnowledgeItem(
             id="aria-pattern",
             category=PatternCategory.ACCESSIBILITY,
             title="ARIA Pattern",
             description="ARIA label pattern",
-            content="ARIA labels for screen readers"
+            content="ARIA labels for screen readers",
         )
 
         self.knowledge_base.add_knowledge_item(wcag_pattern)
@@ -461,10 +478,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.ACCESSIBILITY_SCORE],
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.ACCESSIBILITY_SCORE, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.ACCESSIBILITY_SCORE, suite
+        )
 
         assert result.metric == EvaluationMetric.ACCESSIBILITY_SCORE
         assert 0.0 <= result.value <= 1.0
@@ -481,10 +500,12 @@ class TestSpecialistEvaluator:
             test_cases=[{"input": "test"}],
             expected_outputs=["output"],
             metrics=[EvaluationMetric.USER_SATISFACTION],  # Not specifically handled
-            category=PatternCategory.UI_COMPONENT
+            category=PatternCategory.UI_COMPONENT,
         )
 
-        result = self.evaluator._evaluate_metric("ui_specialist", EvaluationMetric.USER_SATISFACTION, suite)
+        result = self.evaluator._evaluate_metric(
+            "ui_specialist", EvaluationMetric.USER_SATISFACTION, suite
+        )
 
         assert result.metric == EvaluationMetric.USER_SATISFACTION
         assert result.value == 0.8  # Default score
@@ -500,14 +521,14 @@ class TestSpecialistEvaluator:
             metric=EvaluationMetric.ACCURACY,
             value=0.8,
             test_cases=10,
-            passed_cases=8
+            passed_cases=8,
         )
         result2 = EvaluationResult(
             specialist_type="prompt_architect",
             metric=EvaluationMetric.PRECISION,
             value=0.9,
             test_cases=5,
-            passed_cases=5
+            passed_cases=5,
         )
 
         self.evaluator.evaluation_history.extend([result1, result2])
@@ -529,14 +550,14 @@ class TestSpecialistEvaluator:
             metric=EvaluationMetric.ACCURACY,
             value=0.8,
             test_cases=10,
-            passed_cases=8
+            passed_cases=8,
         )
         result2 = EvaluationResult(
             specialist_type="prompt_architect",
             metric=EvaluationMetric.PRECISION,
             value=0.9,
             test_cases=5,
-            passed_cases=5
+            passed_cases=5,
         )
 
         self.evaluator.evaluation_history.extend([result1, result2])
@@ -563,34 +584,36 @@ class TestSpecialistEvaluator:
                 metric=EvaluationMetric.ACCURACY,
                 value=0.8,
                 test_cases=10,
-                passed_cases=8
+                passed_cases=8,
             ),
             EvaluationResult(
                 specialist_type="ui_specialist",
                 metric=EvaluationMetric.CODE_QUALITY,
                 value=0.9,
                 test_cases=10,
-                passed_cases=9
+                passed_cases=9,
             ),
             EvaluationResult(
                 specialist_type="prompt_architect",
                 metric=EvaluationMetric.ACCURACY,
                 value=0.7,
                 test_cases=5,
-                passed_cases=4
+                passed_cases=4,
             ),
             EvaluationResult(
                 specialist_type="prompt_architect",
                 metric=EvaluationMetric.PRECISION,
                 value=0.8,
                 test_cases=5,
-                passed_cases=4
-            )
+                passed_cases=4,
+            ),
         ]
 
         self.evaluator.evaluation_history.extend(results)
 
-        comparison = self.evaluator.compare_specialists(["ui_specialist", "prompt_architect"])
+        comparison = self.evaluator.compare_specialists(
+            ["ui_specialist", "prompt_architect"]
+        )
 
         assert "rankings" in comparison
         assert "comparison_data" in comparison
@@ -612,27 +635,29 @@ class TestSpecialistEvaluator:
                 metric=EvaluationMetric.ACCURACY,
                 value=0.4,  # Low score
                 test_cases=10,
-                passed_cases=4
+                passed_cases=4,
             ),
             EvaluationResult(
                 specialist_type="ui_specialist",
                 metric=EvaluationMetric.CODE_QUALITY,
                 value=0.6,  # Moderate score
                 test_cases=10,
-                passed_cases=6
+                passed_cases=6,
             ),
             EvaluationResult(
                 specialist_type="ui_specialist",
                 metric=EvaluationMetric.ACCESSIBILITY_SCORE,
                 value=0.9,  # High score
                 test_cases=10,
-                passed_cases=9
-            )
+                passed_cases=9,
+            ),
         ]
 
         self.evaluator.evaluation_history.extend(results)
 
-        recommendations = self.evaluator.generate_improvement_recommendations("ui_specialist")
+        recommendations = self.evaluator.generate_improvement_recommendations(
+            "ui_specialist"
+        )
 
         assert isinstance(recommendations, list)
         assert len(recommendations) > 0
@@ -646,7 +671,9 @@ class TestSpecialistEvaluator:
 
     def test_generate_improvement_recommendations_no_data(self):
         """Test generating recommendations with no evaluation data."""
-        recommendations = self.evaluator.generate_improvement_recommendations("nonexistent")
+        recommendations = self.evaluator.generate_improvement_recommendations(
+            "nonexistent"
+        )
 
         assert len(recommendations) == 1
         assert "No evaluation data available" in recommendations[0]
@@ -660,20 +687,22 @@ class TestSpecialistEvaluator:
                 metric=EvaluationMetric.ACCURACY,
                 value=0.9,
                 test_cases=10,
-                passed_cases=9
+                passed_cases=9,
             ),
             EvaluationResult(
                 specialist_type="ui_specialist",
                 metric=EvaluationMetric.CODE_QUALITY,
                 value=0.8,
                 test_cases=10,
-                passed_cases=8
-            )
+                passed_cases=8,
+            ),
         ]
 
         self.evaluator.evaluation_history.extend(results)
 
-        recommendations = self.evaluator.generate_improvement_recommendations("ui_specialist")
+        recommendations = self.evaluator.generate_improvement_recommendations(
+            "ui_specialist"
+        )
 
         assert len(recommendations) == 1
         assert "Performance is good" in recommendations[0]
@@ -688,7 +717,7 @@ class TestSpecialistEvaluator:
                 value=0.8,
                 test_cases=10,
                 passed_cases=8,
-                details={"test": "data"}
+                details={"test": "data"},
             )
         ]
 
@@ -750,7 +779,7 @@ class TestSpecialistEvaluatorIntegration:
                     code_example="<button aria-label='Click me'>Click</button>",
                     tags=["react", "button", "accessible"],
                     confidence_score=0.9,
-                    usage_count=25
+                    usage_count=25,
                 ),
                 KnowledgeItem(
                     id="ui-2",
@@ -761,8 +790,8 @@ class TestSpecialistEvaluatorIntegration:
                     code_example="<form><input required /></form>",
                     tags=["react", "form", "validation"],
                     confidence_score=0.8,
-                    usage_count=15
-                )
+                    usage_count=15,
+                ),
             ]
 
             # Add accessibility patterns
@@ -773,7 +802,7 @@ class TestSpecialistEvaluatorIntegration:
                     title="WCAG Guidelines",
                     description="WCAG 2.1 compliance",
                     content="Follow WCAG 2.1 guidelines for accessibility",
-                    tags=["wcag", "guidelines", "compliance"]
+                    tags=["wcag", "guidelines", "compliance"],
                 ),
                 KnowledgeItem(
                     id="a11y-2",
@@ -781,8 +810,8 @@ class TestSpecialistEvaluatorIntegration:
                     title="ARIA Labels",
                     description="ARIA label usage",
                     content="Use ARIA labels for screen readers",
-                    tags=["aria", "labels", "screen-reader"]
-                )
+                    tags=["aria", "labels", "screen-reader"],
+                ),
             ]
 
             for pattern in ui_patterns + accessibility_patterns:
@@ -795,12 +824,26 @@ class TestSpecialistEvaluatorIntegration:
             ui_results = evaluator.evaluate_specialist("ui_specialist")
 
             assert len(ui_results) > 0
-            assert all(result.specialist_type == "ui_specialist" for result in ui_results)
+            assert all(
+                result.specialist_type == "ui_specialist" for result in ui_results
+            )
 
             # Verify specific metrics
-            accuracy_result = next((r for r in ui_results if r.metric == EvaluationMetric.ACCURACY), None)
-            code_quality_result = next((r for r in ui_results if r.metric == EvaluationMetric.CODE_QUALITY), None)
-            accessibility_result = next((r for r in ui_results if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE), None)
+            accuracy_result = next(
+                (r for r in ui_results if r.metric == EvaluationMetric.ACCURACY), None
+            )
+            code_quality_result = next(
+                (r for r in ui_results if r.metric == EvaluationMetric.CODE_QUALITY),
+                None,
+            )
+            accessibility_result = next(
+                (
+                    r
+                    for r in ui_results
+                    if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE
+                ),
+                None,
+            )
 
             assert accuracy_result is not None
             assert code_quality_result is not None
@@ -809,7 +852,9 @@ class TestSpecialistEvaluatorIntegration:
             # Should have decent scores due to good patterns
             assert accuracy_result.value > 0.5
             assert code_quality_result.value > 0.5
-            assert accessibility_result.value > 0.0  # Should have some accessibility patterns
+            assert (
+                accessibility_result.value > 0.0
+            )  # Should have some accessibility patterns
 
             # Get evaluation summary
             summary = evaluator.get_evaluation_summary("ui_specialist")
@@ -819,7 +864,9 @@ class TestSpecialistEvaluatorIntegration:
             assert summary["ui_specialist"]["metrics_count"] == len(ui_results)
 
             # Generate recommendations
-            recommendations = evaluator.generate_improvement_recommendations("ui_specialist")
+            recommendations = evaluator.generate_improvement_recommendations(
+                "ui_specialist"
+            )
 
             assert isinstance(recommendations, list)
 
@@ -831,6 +878,7 @@ class TestSpecialistEvaluatorIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_multi_specialist_comparison(self):
@@ -852,7 +900,7 @@ class TestSpecialistEvaluatorIntegration:
                     content="UI content",
                     code_example="<div>UI</div>",
                     tags=["ui"],
-                    confidence_score=0.8
+                    confidence_score=0.8,
                 ),
                 KnowledgeItem(
                     id="prompt-1",
@@ -861,7 +909,7 @@ class TestSpecialistEvaluatorIntegration:
                     description="Test prompt pattern",
                     content="Prompt content",
                     tags=["prompt"],
-                    confidence_score=0.7
+                    confidence_score=0.7,
                 ),
                 KnowledgeItem(
                     id="arch-1",
@@ -870,8 +918,8 @@ class TestSpecialistEvaluatorIntegration:
                     description="Test architecture pattern",
                     content="Architecture content",
                     tags=["architecture"],
-                    confidence_score=0.6
-                )
+                    confidence_score=0.6,
+                ),
             ]
 
             for pattern in patterns:
@@ -881,7 +929,11 @@ class TestSpecialistEvaluatorIntegration:
             evaluator = SpecialistEvaluator(kb)
 
             # Evaluate all specialists
-            specialist_types = ["ui_specialist", "prompt_architect", "router_specialist"]
+            specialist_types = [
+                "ui_specialist",
+                "prompt_architect",
+                "router_specialist",
+            ]
             all_results = {}
 
             for specialist in specialist_types:
@@ -908,6 +960,7 @@ class TestSpecialistEvaluatorIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_evaluation_error_handling(self):
@@ -926,19 +979,32 @@ class TestSpecialistEvaluatorIntegration:
             assert len(results) > 0
 
             # Accuracy should be 0.0 with no relevant patterns
-            accuracy_result = next((r for r in results if r.metric == EvaluationMetric.ACCURACY), None)
+            accuracy_result = next(
+                (r for r in results if r.metric == EvaluationMetric.ACCURACY), None
+            )
             assert accuracy_result is not None
             assert accuracy_result.value == 0.0
             assert "No relevant patterns found" in accuracy_result.details["error"]
 
             # Accessibility should also be 0.0 with no accessibility patterns
-            accessibility_result = next((r for r in results if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE), None)
+            accessibility_result = next(
+                (
+                    r
+                    for r in results
+                    if r.metric == EvaluationMetric.ACCESSIBILITY_SCORE
+                ),
+                None,
+            )
             assert accessibility_result is not None
             assert accessibility_result.value == 0.0
-            assert "No accessibility patterns found" in accessibility_result.details["error"]
+            assert (
+                "No accessibility patterns found"
+                in accessibility_result.details["error"]
+            )
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_evaluation_consistency(self):
@@ -959,7 +1025,7 @@ class TestSpecialistEvaluatorIntegration:
                 code_example="const Component = () => {}",
                 tags=["react"],
                 confidence_score=0.8,
-                usage_count=10
+                usage_count=10,
             )
 
             kb.add_knowledge_item(pattern)
@@ -981,4 +1047,5 @@ class TestSpecialistEvaluatorIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)

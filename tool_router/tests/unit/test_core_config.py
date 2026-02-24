@@ -64,7 +64,9 @@ def test_gateway_config_load_from_environment_missing_jwt() -> None:
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_JWT environment variable is required"
+        ):
             GatewayConfig.load_from_environment()
 
 
@@ -77,7 +79,9 @@ def test_gateway_config_load_from_environment_invalid_timeout() -> None:
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
 
@@ -90,7 +94,9 @@ def test_gateway_config_load_from_environment_invalid_max_retries() -> None:
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        with pytest.raises(ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
 
@@ -103,7 +109,9 @@ def test_gateway_config_load_from_environment_invalid_retry_delay() -> None:
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        with pytest.raises(ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"
+        ):
             GatewayConfig.load_from_environment()
 
 
@@ -200,7 +208,9 @@ def test_ai_config_load_from_environment_invalid_timeout() -> None:
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        with pytest.raises(ValueError, match="ROUTER_AI_TIMEOUT_MS must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="ROUTER_AI_TIMEOUT_MS must be a valid integer"
+        ):
             AIConfig.load_from_environment()
 
 
@@ -222,7 +232,9 @@ def test_ai_config_load_from_environment_invalid_min_confidence() -> None:
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        with pytest.raises(ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be a valid float"):
+        with pytest.raises(
+            ValueError, match="ROUTER_AI_MIN_CONFIDENCE must be a valid float"
+        ):
             AIConfig.load_from_environment()
 
 
@@ -297,7 +309,9 @@ def test_tool_router_config_load_from_environment_invalid_max_tools() -> None:
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        with pytest.raises(ValueError, match="MAX_TOOLS_SEARCH must be a valid integer"):
+        with pytest.raises(
+            ValueError, match="MAX_TOOLS_SEARCH must be a valid integer"
+        ):
             ToolRouterConfig.load_from_environment()
 
 

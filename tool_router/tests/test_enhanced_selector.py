@@ -71,12 +71,16 @@ class TestAIModel:
         assert gpt4o_mini_cost["output"] == 0.60
 
         # Test Anthropic models
-        claude_sonnet_cost = AIModel.get_cost_per_million_tokens(AIModel.CLAUDE_SONNET.value)
+        claude_sonnet_cost = AIModel.get_cost_per_million_tokens(
+            AIModel.CLAUDE_SONNET.value
+        )
         assert claude_sonnet_cost["input"] == 3.00
         assert claude_sonnet_cost["output"] == 15.00
 
         # Test Google models
-        gemini_flash_cost = AIModel.get_cost_per_million_tokens(AIModel.GEMINI_FLASH.value)
+        gemini_flash_cost = AIModel.get_cost_per_million_tokens(
+            AIModel.GEMINI_FLASH.value
+        )
         assert gemini_flash_cost["input"] == 0.075
         assert gemini_flash_cost["output"] == 0.30
 
@@ -152,9 +156,7 @@ class TestBaseAISelector:
 
         # Test with custom parameters
         selector = TestSelector(
-            model=AIModel.GPT4O_MINI.value,
-            timeout=5000,
-            min_confidence=0.5
+            model=AIModel.GPT4O_MINI.value, timeout=5000, min_confidence=0.5
         )
         assert selector.model == AIModel.GPT4O_MINI.value
         assert selector.timeout_ms == 5000
@@ -174,11 +176,23 @@ class TestBaseAISelector:
 class TestSelector(BaseAISelector):
     """Test implementation of BaseAISelector for testing."""
 
-    def select_tool(self, task: str, tools: list[dict[str, any]], context: str = "", similar_tools: list[str] | None = None) -> dict[str, any] | None:
+    def select_tool(
+        self,
+        task: str,
+        tools: list[dict[str, any]],
+        context: str = "",
+        similar_tools: list[str] | None = None,
+    ) -> dict[str, any] | None:
         """Test implementation."""
         return {"tool_name": "test", "confidence": 0.8, "reasoning": "test"}
 
-    def select_tools_multi(self, task: str, tools: list[dict[str, any]], context: str = "", max_tools: int = 3) -> dict[str, any] | None:
+    def select_tools_multi(
+        self,
+        task: str,
+        tools: list[dict[str, any]],
+        context: str = "",
+        max_tools: int = 3,
+    ) -> dict[str, any] | None:
         """Test implementation."""
         return {"tools": ["tool1", "tool2"], "confidence": 0.7, "reasoning": "test"}
 
@@ -200,7 +214,7 @@ class TestOllamaSelector:
             endpoint="http://localhost:11434",
             model=AIModel.TINYLLAMA.value,
             timeout=3000,
-            min_confidence=0.4
+            min_confidence=0.4,
         )
         assert selector.endpoint == "http://localhost:11434"
         assert selector.model == AIModel.TINYLLAMA.value
@@ -222,18 +236,26 @@ class TestOllamaSelector:
         """Test successful tool selection."""
         # Setup mocks
         mock_call.return_value = "test response"
-        mock_parse.return_value = {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}
+        mock_parse.return_value = {
+            "tool_name": "test_tool",
+            "confidence": 0.8,
+            "reasoning": "test",
+        }
 
         selector = OllamaSelector("http://localhost:11434")
         tools = [
             {"name": "tool1", "description": "Test tool 1"},
-            {"name": "tool2", "description": "Test tool 2"}
+            {"name": "tool2", "description": "Test tool 2"},
         ]
 
         result = selector.select_tool("test task", tools)
 
         # Verify result
-        assert result == {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}
+        assert result == {
+            "tool_name": "test_tool",
+            "confidence": 0.8,
+            "reasoning": "test",
+        }
 
         # Verify mocks were called
         mock_call.assert_called_once()
@@ -278,7 +300,11 @@ class TestOllamaSelector:
     def test_select_tool_with_context(self, mock_parse, mock_call):
         """Test tool selection with context and similar tools."""
         mock_call.return_value = "test response"
-        mock_parse.return_value = {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}
+        mock_parse.return_value = {
+            "tool_name": "test_tool",
+            "confidence": 0.8,
+            "reasoning": "test",
+        }
 
         selector = OllamaSelector("http://localhost:11434")
         tools = [{"name": "tool1", "description": "Test tool"}]
@@ -287,10 +313,14 @@ class TestOllamaSelector:
             task="test task",
             tools=tools,
             context="test context",
-            similar_tools=["similar_tool1", "similar_tool2"]
+            similar_tools=["similar_tool1", "similar_tool2"],
         )
 
-        assert result == {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}
+        assert result == {
+            "tool_name": "test_tool",
+            "confidence": 0.8,
+            "reasoning": "test",
+        }
 
     @patch("httpx.Client")
     def test_call_ollama_success(self, mock_client_class):
@@ -327,7 +357,9 @@ class TestOllamaSelector:
         import httpx
 
         mock_client = MagicMock()
-        mock_client.post.side_effect = httpx.HTTPStatusError("HTTP Error", request=MagicMock(), response=MagicMock())
+        mock_client.post.side_effect = httpx.HTTPStatusError(
+            "HTTP Error", request=MagicMock(), response=MagicMock()
+        )
         mock_client_class.return_value.__enter__.return_value = mock_client
 
         selector = OllamaSelector("http://localhost:11434")
@@ -359,7 +391,11 @@ class TestOllamaSelector:
         response = '{"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}'
         result = selector._parse_response(response)
 
-        assert result == {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}
+        assert result == {
+            "tool_name": "test_tool",
+            "confidence": 0.8,
+            "reasoning": "test",
+        }
 
     def test_parse_response_invalid_json(self):
         """Test parsing invalid JSON response."""
@@ -398,7 +434,11 @@ class TestOllamaSelector:
         result = selector._parse_response(response)
 
         # Should still return the result, confidence check is done elsewhere
-        assert result == {"tool_name": "test_tool", "confidence": 0.3, "reasoning": "test"}
+        assert result == {
+            "tool_name": "test_tool",
+            "confidence": 0.3,
+            "reasoning": "test",
+        }
 
     def test_parse_response_high_confidence(self):
         """Test parsing response with high confidence."""
@@ -408,7 +448,11 @@ class TestOllamaSelector:
         response = '{"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}'
         result = selector._parse_response(response)
 
-        assert result == {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}
+        assert result == {
+            "tool_name": "test_tool",
+            "confidence": 0.8,
+            "reasoning": "test",
+        }
 
     def test_parse_response_invalid_confidence_range(self):
         """Test parsing response with invalid confidence range."""
@@ -434,4 +478,8 @@ class TestOllamaSelector:
         response = 'Some text before {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"} and after'
         result = selector._parse_response(response)
 
-        assert result == {"tool_name": "test_tool", "confidence": 0.8, "reasoning": "test"}
+        assert result == {
+            "tool_name": "test_tool",
+            "confidence": 0.8,
+            "reasoning": "test",
+        }

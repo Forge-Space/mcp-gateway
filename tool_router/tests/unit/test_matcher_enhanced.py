@@ -19,23 +19,19 @@ def sample_tools():
             "description": "Search the web for information",
             "inputSchema": {
                 "type": "object",
-                "properties": {
-                    "query": {"type": "string"}
-                },
-                "required": ["query"]
-            }
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
         },
         {
             "name": "file_reader",
             "description": "Read contents from local files",
             "inputSchema": {
                 "type": "object",
-                "properties": {
-                    "path": {"type": "string"}
-                },
-                "required": ["path"]
-            }
-        }
+                "properties": {"path": {"type": "string"}},
+                "required": ["path"],
+            },
+        },
     ]
 
 
@@ -51,7 +47,7 @@ class TestHybridSelection:
             top_n=2,
             ai_selector=None,
             ai_weight=0.7,
-            feedback_store=None
+            feedback_store=None,
         )
 
         assert len(result) <= 2
@@ -62,7 +58,7 @@ class TestHybridSelection:
         mock_ai_selector = Mock()
         mock_ai_selector.select_tool.return_value = {
             "tool_name": "web_search",
-            "confidence": 0.9
+            "confidence": 0.9,
         }
 
         result = select_top_matching_tools_hybrid(
@@ -72,7 +68,7 @@ class TestHybridSelection:
             top_n=1,
             ai_selector=mock_ai_selector,
             ai_weight=0.7,
-            feedback_store=None
+            feedback_store=None,
         )
 
         assert len(result) == 1
@@ -91,7 +87,7 @@ class TestHybridSelection:
             top_n=1,
             ai_selector=mock_ai_selector,
             ai_weight=0.7,
-            feedback_store=None
+            feedback_store=None,
         )
 
         # Should still return results based on keyword matching
@@ -110,7 +106,7 @@ class TestHybridSelection:
             top_n=1,
             ai_selector=None,
             ai_weight=0.7,
-            feedback_store=mock_feedback_store
+            feedback_store=mock_feedback_store,
         )
 
         assert isinstance(result, list)
@@ -125,7 +121,7 @@ class TestHybridSelection:
             top_n=1,
             ai_selector=None,
             ai_weight=0.7,
-            feedback_store=None
+            feedback_store=None,
         )
 
         assert result == []
@@ -144,7 +140,7 @@ class TestEnhancedSelection:
             ai_selector=None,
             ai_weight=0.6,
             feedback_store=None,
-            use_nlp_hints=False
+            use_nlp_hints=False,
         )
 
         assert len(result) <= 2
@@ -166,20 +162,22 @@ class TestEnhancedSelection:
             ai_selector=None,
             ai_weight=0.6,
             feedback_store=mock_feedback_store,
-            use_nlp_hints=True
+            use_nlp_hints=True,
         )
 
         assert isinstance(result, list)
         mock_feedback_store.get_adaptive_hints.assert_called_once_with("search the web")
         mock_feedback_store.similar_task_tools.assert_called_once_with("search the web")
-        mock_feedback_store.get_learning_insights.assert_called_once_with("search the web")
+        mock_feedback_store.get_learning_insights.assert_called_once_with(
+            "search the web"
+        )
 
     def test_select_top_matching_tools_enhanced_with_ai(self, sample_tools):
         """Test enhanced selection with AI."""
         mock_ai_selector = Mock()
         mock_ai_selector.select_tool.return_value = {
             "tool_name": "web_search",
-            "confidence": 0.85
+            "confidence": 0.85,
         }
 
         result = select_top_matching_tools_enhanced(
@@ -190,7 +188,7 @@ class TestEnhancedSelection:
             ai_selector=mock_ai_selector,
             ai_weight=0.6,
             feedback_store=None,
-            use_nlp_hints=False
+            use_nlp_hints=False,
         )
 
         assert len(result) == 1
@@ -201,7 +199,7 @@ class TestEnhancedSelection:
         mock_feedback_store = Mock()
         mock_feedback_store.get_learning_insights.return_value = {
             "web_search": 0.9,
-            "file_reader": 0.3
+            "file_reader": 0.3,
         }
         mock_feedback_store.get_comprehensive_boost.return_value = 1.15
 
@@ -213,7 +211,7 @@ class TestEnhancedSelection:
             ai_selector=None,
             ai_weight=0.6,
             feedback_store=mock_feedback_store,
-            use_nlp_hints=False
+            use_nlp_hints=False,
         )
 
         assert isinstance(result, list)
@@ -229,13 +227,15 @@ class TestEnhancedSelection:
             ai_selector=None,
             ai_weight=0.6,
             feedback_store=None,
-            use_nlp_hints=False
+            use_nlp_hints=False,
         )
 
         assert result == []
 
     @patch("tool_router.scoring.matcher.logger")
-    def test_select_top_matching_tools_enhanced_ai_exception(self, mock_logger, sample_tools):
+    def test_select_top_matching_tools_enhanced_ai_exception(
+        self, mock_logger, sample_tools
+    ):
         """Test enhanced selection when AI raises exception."""
         mock_ai_selector = Mock()
         mock_ai_selector.select_tool.side_effect = Exception("AI service unavailable")
@@ -248,7 +248,7 @@ class TestEnhancedSelection:
             ai_selector=mock_ai_selector,
             ai_weight=0.6,
             feedback_store=None,
-            use_nlp_hints=False
+            use_nlp_hints=False,
         )
 
         assert isinstance(result, list)

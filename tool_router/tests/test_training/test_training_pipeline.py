@@ -6,7 +6,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from tool_router.training.training_pipeline import ModelPerformance, TrainingConfig, TrainingPipeline, TrainingResult
+from tool_router.training.training_pipeline import (
+    ModelPerformance,
+    TrainingConfig,
+    TrainingPipeline,
+    TrainingResult,
+)
 
 
 class TestTrainingPipeline:
@@ -18,7 +23,7 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
@@ -33,16 +38,18 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock data loading
-        with patch("tool_router.training.training_pipeline.load_training_data") as mock_load:
+        with patch(
+            "tool_router.training.training_pipeline.load_training_data"
+        ) as mock_load:
             mock_data = [
                 {"input": "test input 1", "output": "test output 1"},
-                {"input": "test input 2", "output": "test output 2"}
+                {"input": "test input 2", "output": "test output 2"},
             ]
             mock_load.return_value = mock_data
 
@@ -57,14 +64,14 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
 
         raw_data = [
             {"input": "Test Input", "output": "Test Output"},
-            {"input": "Another Input", "output": "Another Output"}
+            {"input": "Another Input", "output": "Another Output"},
         ]
 
         processed_data = pipeline.preprocess_data(raw_data)
@@ -79,19 +86,19 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock model training
-        with patch("tool_router.training.training_pipeline.ModelTrainer") as mock_trainer:
+        with patch(
+            "tool_router.training.training_pipeline.ModelTrainer"
+        ) as mock_trainer:
             mock_trainer_instance = Mock()
             mock_trainer.return_value = mock_trainer_instance
             mock_trainer_instance.train.return_value = ModelPerformance(
-                accuracy=0.85,
-                loss=0.15,
-                epochs_trained=10
+                accuracy=0.85, loss=0.15, epochs_trained=10
             )
 
             training_data = [{"input": "test", "output": "test"}]
@@ -108,19 +115,19 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock model evaluation
-        with patch("tool_router.training.training_pipeline.ModelEvaluator") as mock_evaluator:
+        with patch(
+            "tool_router.training.training_pipeline.ModelEvaluator"
+        ) as mock_evaluator:
             mock_evaluator_instance = Mock()
             mock_evaluator.return_value = mock_evaluator_instance
             mock_evaluator_instance.evaluate.return_value = ModelPerformance(
-                accuracy=0.90,
-                loss=0.10,
-                epochs_trained=10
+                accuracy=0.90, loss=0.10, epochs_trained=10
             )
 
             test_data = [{"input": "test", "output": "test"}]
@@ -136,13 +143,15 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock model saving
-        with patch("tool_router.training.training_pipeline.save_model_to_disk") as mock_save:
+        with patch(
+            "tool_router.training.training_pipeline.save_model_to_disk"
+        ) as mock_save:
             mock_save.return_value = True
 
             result = pipeline.save_model("/path/to/save/model")
@@ -156,22 +165,30 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock all steps
-        with patch.object(pipeline, "load_training_data") as mock_load, \
-             patch.object(pipeline, "preprocess_data") as mock_preprocess, \
-             patch.object(pipeline, "train_model") as mock_train, \
-             patch.object(pipeline, "evaluate_model") as mock_evaluate, \
-             patch.object(pipeline, "save_model") as mock_save:
+        with (
+            patch.object(pipeline, "load_training_data") as mock_load,
+            patch.object(pipeline, "preprocess_data") as mock_preprocess,
+            patch.object(pipeline, "train_model") as mock_train,
+            patch.object(pipeline, "evaluate_model") as mock_evaluate,
+            patch.object(pipeline, "save_model") as mock_save,
+        ):
 
             mock_load.return_value = [{"input": "test", "output": "test"}]
-            mock_preprocess.return_value = [{"processed_input": "test", "processed_output": "test"}]
-            mock_train.return_value = ModelPerformance(accuracy=0.85, loss=0.15, epochs_trained=10)
-            mock_evaluate.return_value = ModelPerformance(accuracy=0.90, loss=0.10, epochs_trained=10)
+            mock_preprocess.return_value = [
+                {"processed_input": "test", "processed_output": "test"}
+            ]
+            mock_train.return_value = ModelPerformance(
+                accuracy=0.85, loss=0.15, epochs_trained=10
+            )
+            mock_evaluate.return_value = ModelPerformance(
+                accuracy=0.90, loss=0.10, epochs_trained=10
+            )
             mock_save.return_value = True
 
             result = pipeline.run_training_cycle()
@@ -188,19 +205,26 @@ class TestTrainingPipeline:
             training_data_path="/path/to/data",
             epochs=10,
             batch_size=32,
-            validation_split=0.2
+            validation_split=0.2,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock data splitting
-        with patch.object(pipeline, "load_training_data") as mock_load, \
-             patch.object(pipeline, "split_data") as mock_split:
+        with (
+            patch.object(pipeline, "load_training_data") as mock_load,
+            patch.object(pipeline, "split_data") as mock_split,
+        ):
 
-            full_data = [{"input": f"test_{i}", "output": f"output_{i}"} for i in range(100)]
+            full_data = [
+                {"input": f"test_{i}", "output": f"output_{i}"} for i in range(100)
+            ]
             mock_load.return_value = full_data
 
-            train_data, val_data = mock_split.return_value = full_data[:80], full_data[80:]
+            train_data, val_data = mock_split.return_value = (
+                full_data[:80],
+                full_data[80:],
+            )
 
             result = pipeline.load_and_split_data()
 
@@ -214,7 +238,7 @@ class TestTrainingPipeline:
             training_data_path="/path/to/data",
             epochs=100,
             batch_size=32,
-            early_stopping_patience=5
+            early_stopping_patience=5,
         )
 
         pipeline = TrainingPipeline(config)
@@ -223,10 +247,7 @@ class TestTrainingPipeline:
         with patch.object(pipeline, "train_model") as mock_train:
             # Simulate early stopping after 10 epochs
             mock_train.return_value = ModelPerformance(
-                accuracy=0.85,
-                loss=0.15,
-                epochs_trained=10,
-                early_stopped=True
+                accuracy=0.85, loss=0.15, epochs_trained=10, early_stopped=True
             )
 
             training_data = [{"input": "test", "output": "test"}]
@@ -241,19 +262,21 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock hyperparameter tuning
-        with patch("tool_router.training.training_pipeline.HyperparameterTuner") as mock_tuner:
+        with patch(
+            "tool_router.training.training_pipeline.HyperparameterTuner"
+        ) as mock_tuner:
             mock_tuner_instance = Mock()
             mock_tuner.return_value = mock_tuner_instance
             mock_tuner_instance.tune.return_value = {
                 "learning_rate": 0.001,
                 "batch_size": 64,
-                "epochs": 20
+                "epochs": 20,
             }
 
             best_params = pipeline.tune_hyperparameters()
@@ -269,20 +292,22 @@ class TestTrainingPipeline:
             training_data_path="/path/to/data",
             epochs=10,
             batch_size=32,
-            checkpoint_interval=2
+            checkpoint_interval=2,
         )
 
         pipeline = TrainingPipeline(config)
 
         # Mock checkpointing
-        with patch.object(pipeline, "train_model") as mock_train, \
-             patch.object(pipeline, "save_checkpoint") as mock_checkpoint:
+        with (
+            patch.object(pipeline, "train_model") as mock_train,
+            patch.object(pipeline, "save_checkpoint") as mock_checkpoint,
+        ):
 
             mock_train.return_value = ModelPerformance(
                 accuracy=0.85,
                 loss=0.15,
                 epochs_trained=10,
-                checkpoints_saved=[2, 4, 6, 8, 10]
+                checkpoints_saved=[2, 4, 6, 8, 10],
             )
 
             training_data = [{"input": "test", "output": "test"}]
@@ -296,7 +321,7 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
@@ -316,7 +341,7 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         pipeline = TrainingPipeline(config)
@@ -329,8 +354,8 @@ class TestTrainingPipeline:
                 epochs_trained=10,
                 training_history={
                     "accuracy": [0.5, 0.6, 0.7, 0.8, 0.85],
-                    "loss": [1.0, 0.8, 0.6, 0.4, 0.15]
-                }
+                    "loss": [1.0, 0.8, 0.6, 0.4, 0.15],
+                },
             )
 
             training_data = [{"input": "test", "output": "test"}]
@@ -346,7 +371,7 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=10,
-            batch_size=32
+            batch_size=32,
         )
 
         assert config.is_valid() is True
@@ -356,7 +381,7 @@ class TestTrainingPipeline:
             model_name="test_model",
             training_data_path="/path/to/data",
             epochs=-1,
-            batch_size=32
+            batch_size=32,
         )
 
         assert invalid_config.is_valid() is False
@@ -365,10 +390,14 @@ class TestTrainingPipeline:
     def test_training_result_serialization(self) -> None:
         """Test TrainingResult serialization."""
         result = TrainingResult(
-            training_performance=ModelPerformance(accuracy=0.85, loss=0.15, epochs_trained=10),
-            evaluation_performance=ModelPerformance(accuracy=0.90, loss=0.10, epochs_trained=10),
+            training_performance=ModelPerformance(
+                accuracy=0.85, loss=0.15, epochs_trained=10
+            ),
+            evaluation_performance=ModelPerformance(
+                accuracy=0.90, loss=0.10, epochs_trained=10
+            ),
             model_saved=True,
-            training_time_seconds=3600.0
+            training_time_seconds=3600.0,
         )
 
         result_dict = result.to_dict()
@@ -395,7 +424,7 @@ class TestTrainingPipeline:
             training_data_path="/path/to/data",
             epochs=10,
             batch_size=32,
-            custom_metrics=["precision", "recall", "f1_score"]
+            custom_metrics=["precision", "recall", "f1_score"],
         )
 
         pipeline = TrainingPipeline(config)
@@ -406,11 +435,7 @@ class TestTrainingPipeline:
                 accuracy=0.85,
                 loss=0.15,
                 epochs_trained=10,
-                custom_metrics={
-                    "precision": 0.88,
-                    "recall": 0.82,
-                    "f1_score": 0.85
-                }
+                custom_metrics={"precision": 0.88, "recall": 0.82, "f1_score": 0.85},
             )
 
             test_data = [{"input": "test", "output": "test"}]

@@ -15,10 +15,10 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "query": {"type": "string"},
-                    "max_results": {"type": "number"}
+                    "max_results": {"type": "number"},
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         }
         task = "search for files"
 
@@ -33,10 +33,10 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "task": {"type": "string"},
-                    "options": {"type": "object"}
+                    "options": {"type": "object"},
                 },
-                "required": ["task"]
-            }
+                "required": ["task"],
+            },
         }
         task = "process data"
 
@@ -49,11 +49,9 @@ class TestBuildArguments:
         tool = {
             "name": "test_tool",
             "inputSchema": {
-                "properties": {
-                    "search": {"type": "string"}
-                },
-                "required": ["search"]
-            }
+                "properties": {"search": {"type": "string"}},
+                "required": ["search"],
+            },
         }
         task = "find documents"
 
@@ -69,10 +67,10 @@ class TestBuildArguments:
                 "properties": {
                     "query": {"type": "string"},
                     "task": {"type": "string"},
-                    "search": {"type": "string"}
+                    "search": {"type": "string"},
                 },
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         }
         task = "test task"
 
@@ -88,10 +86,10 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "filename": {"type": "string"},
-                    "max_size": {"type": "number"}
+                    "max_size": {"type": "number"},
                 },
-                "required": ["filename", "max_size"]
-            }
+                "required": ["filename", "max_size"],
+            },
         }
         task = "test.txt"
 
@@ -106,10 +104,10 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "content": {"type": "text"},
-                    "metadata": {"type": "object"}
+                    "metadata": {"type": "object"},
                 },
-                "required": ["content", "metadata"]
-            }
+                "required": ["content", "metadata"],
+            },
         }
         task = "sample content"
 
@@ -124,10 +122,10 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "count": {"type": "number"},
-                    "size": {"type": "integer"}
+                    "size": {"type": "integer"},
                 },
-                "required": ["count", "size"]
-            }
+                "required": ["count", "size"],
+            },
         }
         task = "test task"
 
@@ -147,10 +145,7 @@ class TestBuildArguments:
 
     def test_build_arguments_with_empty_schema(self):
         """Test building arguments when tool has empty input schema."""
-        tool = {
-            "name": "test_tool",
-            "inputSchema": {}
-        }
+        tool = {"name": "test_tool", "inputSchema": {}}
         task = "test task"
 
         result = build_arguments(tool, task)
@@ -163,7 +158,7 @@ class TestBuildArguments:
             "name": "test_tool",
             "inputSchema": {
                 "required": ["unknown_param"]  # Not in COMMON_TASK_PARAMETER_NAMES
-            }
+            },
         }
         task = "test task"
 
@@ -179,9 +174,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "query": {"type": "string"},
-                    "optional": {"type": "string"}
+                    "optional": {"type": "string"},
                 }
-            }
+            },
         }
         task = "test task"
 
@@ -194,11 +189,9 @@ class TestBuildArguments:
         tool = {
             "name": "test_tool",
             "input_schema": {
-                "properties": {
-                    "query": {"type": "string"}
-                },
-                "required": ["query"]
-            }
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
         }
         task = "test task"
 
@@ -211,11 +204,9 @@ class TestBuildArguments:
         tool = {
             "name": "test_tool",
             "inputSchema": {
-                "properties": {
-                    "data": {}  # No type specified
-                },
-                "required": ["data"]
-            }
+                "properties": {"data": {}},  # No type specified
+                "required": ["data"],
+            },
         }
         task = "test data"
 
@@ -228,11 +219,9 @@ class TestBuildArguments:
         tool = {
             "name": "test_tool",
             "inputSchema": {
-                "properties": {
-                    "query": {"type": "string"}
-                },
-                "required": ["query"]
-            }
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
         }
         task = "search for files with pattern '*.py' and content 'import pytest'"
 
@@ -245,11 +234,9 @@ class TestBuildArguments:
         tool = {
             "name": "test_tool",
             "inputSchema": {
-                "properties": {
-                    "query": {"type": "string"}
-                },
-                "required": ["query"]
-            }
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
         }
         task = "buscar archivos con emoji 🚀 y caracteres ñáéíóú"
 
@@ -262,11 +249,9 @@ class TestBuildArguments:
         tool = {
             "name": "test_tool",
             "inputSchema": {
-                "properties": {
-                    "query": {"type": "string"}
-                },
-                "required": ["query"]
-            }
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
         }
         task = ""
 
@@ -282,11 +267,11 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "message": {"type": "string"},  # Later in list
-                    "query": {"type": "string"},    # First in list
-                    "task": {"type": "string"}     # Middle in list
+                    "query": {"type": "string"},  # First in list
+                    "task": {"type": "string"},  # Middle in list
                 },
-                "required": ["message", "query", "task"]
-            }
+                "required": ["message", "query", "task"],
+            },
         }
         task = "test task"
 

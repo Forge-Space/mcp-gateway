@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -172,7 +171,9 @@ class TaskAnalyzer:
         # Return the task type with the highest score
         return max(task_scores, key=task_scores.get)
 
-    def extract_requirements(self, prompt: str, task_type: TaskType) -> list[Requirement]:
+    def extract_requirements(
+        self, prompt: str, task_type: TaskType
+    ) -> list[Requirement]:
         """Extract specific requirements from the prompt."""
         requirements = []
         prompt_lower = prompt.lower()
@@ -185,12 +186,18 @@ class TaskAnalyzer:
         for req in functional_reqs:
             requirements.append(
                 Requirement(
-                    type=RequirementType.FUNCTIONALITY, description=req, priority="high", constraints=constraints
+                    type=RequirementType.FUNCTIONALITY,
+                    description=req,
+                    priority="high",
+                    constraints=constraints,
                 )
             )
 
         # Extract performance requirements
-        if any(keyword in prompt_lower for keyword in ["fast", "performance", "speed", "optimize", "efficient"]):
+        if any(
+            keyword in prompt_lower
+            for keyword in ["fast", "performance", "speed", "optimize", "efficient"]
+        ):
             requirements.append(
                 Requirement(
                     type=RequirementType.PERFORMANCE,
@@ -201,7 +208,10 @@ class TaskAnalyzer:
             )
 
         # Extract security requirements
-        if any(keyword in prompt_lower for keyword in ["secure", "security", "safe", "protect", "authenticate"]):
+        if any(
+            keyword in prompt_lower
+            for keyword in ["secure", "security", "safe", "protect", "authenticate"]
+        ):
             requirements.append(
                 Requirement(
                     type=RequirementType.SECURITY,
@@ -212,7 +222,16 @@ class TaskAnalyzer:
             )
 
         # Extract maintainability requirements
-        if any(keyword in prompt_lower for keyword in ["maintainable", "clean", "readable", "organized", "structured"]):
+        if any(
+            keyword in prompt_lower
+            for keyword in [
+                "maintainable",
+                "clean",
+                "readable",
+                "organized",
+                "structured",
+            ]
+        ):
             requirements.append(
                 Requirement(
                     type=RequirementType.MAINTAINABILITY,
@@ -223,7 +242,10 @@ class TaskAnalyzer:
             )
 
         # Extract accessibility requirements
-        if any(keyword in prompt_lower for keyword in ["accessible", "a11y", "screen reader", "keyboard", "wcag"]):
+        if any(
+            keyword in prompt_lower
+            for keyword in ["accessible", "a11y", "screen reader", "keyboard", "wcag"]
+        ):
             requirements.append(
                 Requirement(
                     type=RequirementType.ACCESSIBILITY,
@@ -243,22 +265,46 @@ class TaskAnalyzer:
         import re
 
         # Language/framework constraints
-        if re.search(r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b", prompt, re.IGNORECASE):
-            matches = re.findall(r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b", prompt, re.IGNORECASE)
+        if re.search(
+            r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b",
+            prompt,
+            re.IGNORECASE,
+        ):
+            matches = re.findall(
+                r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b",
+                prompt,
+                re.IGNORECASE,
+            )
             constraints.extend([f"Use {match}" for match in matches])
 
         # Technology constraints
-        if re.search(r"\b(react|vue|angular|node|express|flask|django)\b", prompt, re.IGNORECASE):
-            matches = re.findall(r"\b(react|vue|angular|node|express|flask|django)\b", prompt, re.IGNORECASE)
+        if re.search(
+            r"\b(react|vue|angular|node|express|flask|django)\b", prompt, re.IGNORECASE
+        ):
+            matches = re.findall(
+                r"\b(react|vue|angular|node|express|flask|django)\b",
+                prompt,
+                re.IGNORECASE,
+            )
             constraints.extend([f"Use {match}" for match in matches])
 
         # Version constraints
-        version_matches = re.findall(r"\b(version\s+\d+|v\d+|\d+\.\d+(\.\d+)?)\b", prompt, re.IGNORECASE)
+        version_matches = re.findall(
+            r"\b(version\s+\d+|v\d+|\d+\.\d+(\.\d+)?)\b", prompt, re.IGNORECASE
+        )
         constraints.extend(version_matches)
 
         # Style constraints
-        if re.search(r"\b(modern|clean|simple|minimal|enterprise|production)\b", prompt, re.IGNORECASE):
-            matches = re.findall(r"\b(modern|clean|simple|minimal|enterprise|production)\b", prompt, re.IGNORECASE)
+        if re.search(
+            r"\b(modern|clean|simple|minimal|enterprise|production)\b",
+            prompt,
+            re.IGNORECASE,
+        ):
+            matches = re.findall(
+                r"\b(modern|clean|simple|minimal|enterprise|production)\b",
+                prompt,
+                re.IGNORECASE,
+            )
             constraints.extend([f"{match.capitalize()} style" for match in matches])
 
         return constraints
@@ -281,14 +327,18 @@ class TaskAnalyzer:
 
         # "Implement X with Y" pattern
         implement_patterns = re.findall(
-            r"implement\s+(\w+(?:\s+\w+)*)\s+(?:with|using|for)\s+(\w+(?:\s+\w+)*)", prompt, re.IGNORECASE
+            r"implement\s+(\w+(?:\s+\w+)*)\s+(?:with|using|for)\s+(\w+(?:\s+\w+)*)",
+            prompt,
+            re.IGNORECASE,
         )
         for subject, feature in implement_patterns:
             requirements.append(f"Implement {subject} with {feature}")
 
         # "Support X functionality" pattern
         support_patterns = re.findall(
-            r"support\s+(\w+(?:\s+\w+)*)\s+(?:functionality|feature|capability)", prompt, re.IGNORECASE
+            r"support\s+(\w+(?:\s+\w+)*)\s+(?:functionality|feature|capability)",
+            prompt,
+            re.IGNORECASE,
         )
         for feature in support_patterns:
             requirements.append(f"Support {feature} functionality")
@@ -513,17 +563,23 @@ class PromptArchitect:
 
         # Step 1: Apply iterative refinement if feedback provided
         if feedback:
-            optimized_prompt = self.prompt_refiner.refine_prompt(optimized_prompt, feedback, task_type)
+            optimized_prompt = self.prompt_refiner.refine_prompt(
+                optimized_prompt, feedback, task_type
+            )
 
         # Step 2: Optimize for tokens based on user preference
         if user_cost_preference == "efficient":
             optimized_prompt = self.token_optimizer.minimize_tokens(optimized_prompt)
         elif user_cost_preference == "quality":
             # Add more detail and context for quality
-            optimized_prompt = self._enhance_for_quality(optimized_prompt, task_type, requirements)
+            optimized_prompt = self._enhance_for_quality(
+                optimized_prompt, task_type, requirements
+            )
 
         # Step 3: Add task-specific optimizations
-        optimized_prompt = self._apply_task_specific_optimizations(optimized_prompt, task_type)
+        optimized_prompt = self._apply_task_specific_optimizations(
+            optimized_prompt, task_type
+        )
 
         # Step 4: Validate quality
         quality_score = self._validate_prompt_quality(optimized_prompt, task_type)
@@ -531,7 +587,11 @@ class PromptArchitect:
         # Step 5: Calculate token savings
         original_tokens = self._estimate_tokens(prompt)
         optimized_tokens = self._estimate_tokens(optimized_prompt)
-        token_reduction = ((original_tokens - optimized_tokens) / original_tokens) * 100 if original_tokens > 0 else 0
+        token_reduction = (
+            ((original_tokens - optimized_tokens) / original_tokens) * 100
+            if original_tokens > 0
+            else 0
+        )
 
         return {
             "optimized_prompt": optimized_prompt,
@@ -542,12 +602,16 @@ class PromptArchitect:
                 "original_tokens": original_tokens,
                 "optimized_tokens": optimized_tokens,
                 "token_reduction_percent": token_reduction,
-                "cost_savings": self._calculate_cost_savings(original_tokens, optimized_tokens),
+                "cost_savings": self._calculate_cost_savings(
+                    original_tokens, optimized_tokens
+                ),
             },
             "optimization_applied": True,
         }
 
-    def _enhance_for_quality(self, prompt: str, task_type: TaskType, requirements: list[Requirement]) -> str:
+    def _enhance_for_quality(
+        self, prompt: str, task_type: TaskType, requirements: list[Requirement]
+    ) -> str:
         """Enhance prompt for higher quality output."""
         enhanced_prompt = prompt
 
@@ -570,7 +634,9 @@ class PromptArchitect:
 
         return enhanced_prompt
 
-    def _apply_task_specific_optimizations(self, prompt: str, task_type: TaskType) -> str:
+    def _apply_task_specific_optimizations(
+        self, prompt: str, task_type: TaskType
+    ) -> str:
         """Apply task-specific optimizations."""
         if task_type == TaskType.CODE_GENERATION:
             return self._optimize_for_code_generation(prompt)
@@ -584,11 +650,18 @@ class PromptArchitect:
         """Optimize prompt for code generation tasks."""
         # Add code-specific guidance
         if "code" not in prompt.lower():
-            prompt += "\n\nGenerate clean, well-structured code with proper error handling."
+            prompt += (
+                "\n\nGenerate clean, well-structured code with proper error handling."
+            )
 
         # Add language/framework hints if not present
-        if not any(lang in prompt.lower() for lang in ["javascript", "typescript", "python", "java"]):
-            prompt += "\n\nSpecify the programming language and framework if applicable."
+        if not any(
+            lang in prompt.lower()
+            for lang in ["javascript", "typescript", "python", "java"]
+        ):
+            prompt += (
+                "\n\nSpecify the programming language and framework if applicable."
+            )
 
         return prompt
 
@@ -596,7 +669,9 @@ class PromptArchitect:
         """Optimize prompt for debugging tasks."""
         # Add debugging-specific guidance
         if "debug" not in prompt.lower():
-            prompt += "\n\nProvide systematic debugging approach with root cause analysis."
+            prompt += (
+                "\n\nProvide systematic debugging approach with root cause analysis."
+            )
 
         return prompt
 
@@ -608,7 +683,9 @@ class PromptArchitect:
 
         return prompt
 
-    def _validate_prompt_quality(self, prompt: str, task_type: TaskType) -> QualityScore:
+    def _validate_prompt_quality(
+        self, prompt: str, task_type: TaskType
+    ) -> QualityScore:
         """Validate the quality of an optimized prompt."""
         # Calculate quality metrics
         clarity = self._calculate_clarity(prompt)
@@ -618,7 +695,13 @@ class PromptArchitect:
         context_preservation = self._calculate_context_preservation(prompt)
 
         # Calculate overall score
-        overall_score = (clarity + completeness + specificity + token_efficiency + context_preservation) / 5
+        overall_score = (
+            clarity
+            + completeness
+            + specificity
+            + token_efficiency
+            + context_preservation
+        ) / 5
 
         return QualityScore(
             overall_score=overall_score,
@@ -632,7 +715,9 @@ class PromptArchitect:
     def _calculate_clarity(self, prompt: str) -> float:
         """Calculate prompt clarity score."""
         # Check for clear structure and organization
-        has_structure = any(marker in prompt for marker in ["##", "---", "Requirements:", "Example:"])
+        has_structure = any(
+            marker in prompt for marker in ["##", "---", "Requirements:", "Example:"]
+        )
         has_clear_instructions = len(prompt.split(".")) >= 3  # At least 3 sentences
 
         clarity_score = 0.5
@@ -649,9 +734,15 @@ class PromptArchitect:
 
         # Check for essential elements based on task type
         if task_type == TaskType.CODE_GENERATION:
-            if any(keyword in prompt.lower() for keyword in ["function", "class", "method", "code"]):
+            if any(
+                keyword in prompt.lower()
+                for keyword in ["function", "class", "method", "code"]
+            ):
                 completeness_score += 0.3
-            if any(keyword in prompt.lower() for keyword in ["error", "exception", "handling"]):
+            if any(
+                keyword in prompt.lower()
+                for keyword in ["error", "exception", "handling"]
+            ):
                 completeness_score += 0.2
 
         return min(completeness_score, 1.0)
@@ -685,8 +776,16 @@ class PromptArchitect:
     def _calculate_context_preservation(self, prompt: str) -> float:
         """Calculate how well context is preserved."""
         # Check for context preservation indicators
-        context_indicators = ["remember", "keep in mind", "based on", "considering", "given"]
-        context_count = sum(1 for indicator in context_indicators if indicator in prompt.lower())
+        context_indicators = [
+            "remember",
+            "keep in mind",
+            "based on",
+            "considering",
+            "given",
+        ]
+        context_count = sum(
+            1 for indicator in context_indicators if indicator in prompt.lower()
+        )
 
         return min(context_count * 0.2, 1.0)
 
@@ -695,7 +794,9 @@ class PromptArchitect:
         # Rough estimation: ~1.3 tokens per word
         return int(len(text.split()) * 1.3)
 
-    def _calculate_cost_savings(self, original_tokens: int, optimized_tokens: int) -> float:
+    def _calculate_cost_savings(
+        self, original_tokens: int, optimized_tokens: int
+    ) -> float:
         """Calculate cost savings from token reduction."""
         if original_tokens == 0:
             return 0.0

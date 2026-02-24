@@ -28,7 +28,7 @@ class TestUIRequirement:
             responsive=True,
             dark_mode=False,
             animations=True,
-            custom_styling=True
+            custom_styling=True,
         )
 
         assert requirement.component_type == ComponentType.FORM
@@ -46,7 +46,7 @@ class TestUIRequirement:
             component_type=ComponentType.BUTTON,
             framework=UIFramework.VUE,
             design_system=DesignSystem.TAILWIND_UI,
-            accessibility_level=AccessibilityLevel.MINIMAL
+            accessibility_level=AccessibilityLevel.MINIMAL,
         )
 
         assert requirement.responsive is True  # Default
@@ -66,14 +66,17 @@ class TestComponentSpec:
             props={"username": "string", "password": "string"},
             styling={"padding": "16px", "borderRadius": "8px"},
             accessibility_features=["keyboard_navigation", "focus_indicators"],
-            responsive_breakpoints=["mobile", "tablet", "desktop"]
+            responsive_breakpoints=["mobile", "tablet", "desktop"],
         )
 
         assert spec.name == "LoginForm"
         assert spec.type == ComponentType.FORM
         assert spec.props == {"username": "string", "password": "string"}
         assert spec.styling == {"padding": "16px", "borderRadius": "8px"}
-        assert spec.accessibility_features == ["keyboard_navigation", "focus_indicators"]
+        assert spec.accessibility_features == [
+            "keyboard_navigation",
+            "focus_indicators",
+        ]
         assert spec.responsive_breakpoints == ["mobile", "tablet", "desktop"]
 
 
@@ -138,7 +141,7 @@ class TestUIStandardsCompliance:
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
             accessibility_level=AccessibilityLevel.AA,
-            responsive=True
+            responsive=True,
         )
 
         spec = ComponentSpec(
@@ -147,7 +150,7 @@ class TestUIStandardsCompliance:
             props={"functional_components": "enabled"},
             styling={"material": "true"},
             accessibility_features=["color_contrast_4_5", "keyboard_navigation"],
-            responsive_breakpoints=["mobile", "desktop"]
+            responsive_breakpoints=["mobile", "desktop"],
         )
 
         result = compliance.validate_component(spec, requirement)
@@ -170,7 +173,7 @@ class TestUIStandardsCompliance:
             framework=UIFramework.VUE,
             design_system=DesignSystem.TAILWIND_UI,
             accessibility_level=AccessibilityLevel.MINIMAL,
-            responsive=False
+            responsive=False,
         )
 
         spec = ComponentSpec(
@@ -179,7 +182,7 @@ class TestUIStandardsCompliance:
             props={"composition_api": "enabled"},
             styling={"tailwind": "true"},
             accessibility_features=["basic_keyboard_access"],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         result = compliance.validate_component(spec, requirement)
@@ -203,9 +206,9 @@ class TestUIStandardsCompliance:
                 "focus_indicators",
                 "screen_reader_support",
                 "alt_text_for_images",
-                "semantic_html"
+                "semantic_html",
             ],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_accessibility_compliance(spec, AccessibilityLevel.AA)
@@ -220,8 +223,11 @@ class TestUIStandardsCompliance:
             type=ComponentType.FORM,
             props={},
             styling={},
-            accessibility_features=["color_contrast_4_5", "keyboard_navigation"],  # Only 2 of 6
-            responsive_breakpoints=[]
+            accessibility_features=[
+                "color_contrast_4_5",
+                "keyboard_navigation",
+            ],  # Only 2 of 6
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_accessibility_compliance(spec, AccessibilityLevel.AA)
@@ -237,10 +243,12 @@ class TestUIStandardsCompliance:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
-        score = compliance._check_accessibility_compliance(spec, AccessibilityLevel.MINIMAL)
+        score = compliance._check_accessibility_compliance(
+            spec, AccessibilityLevel.MINIMAL
+        )
         assert score == 0.0  # No features present, so 0 compliance
 
     def test_check_framework_compliance_react(self):
@@ -253,7 +261,7 @@ class TestUIStandardsCompliance:
             props={"functional_components": "enabled"},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_framework_compliance(spec, UIFramework.REACT)
@@ -269,7 +277,7 @@ class TestUIStandardsCompliance:
             props={},  # Missing functional_components
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_framework_compliance(spec, UIFramework.REACT)
@@ -285,7 +293,7 @@ class TestUIStandardsCompliance:
             props={"composition_api": "enabled"},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_framework_compliance(spec, UIFramework.VUE)
@@ -301,7 +309,7 @@ class TestUIStandardsCompliance:
             props={"standalone_components": "enabled"},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_framework_compliance(spec, UIFramework.ANGULAR)
@@ -317,7 +325,7 @@ class TestUIStandardsCompliance:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_framework_compliance(spec, UIFramework.SVELTE)
@@ -333,7 +341,7 @@ class TestUIStandardsCompliance:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=["mobile", "tablet", "desktop"]
+            responsive_breakpoints=["mobile", "tablet", "desktop"],
         )
 
         score = compliance._check_responsive_compliance(spec, True)
@@ -349,7 +357,7 @@ class TestUIStandardsCompliance:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_responsive_compliance(spec, True)
@@ -365,7 +373,7 @@ class TestUIStandardsCompliance:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_responsive_compliance(spec, False)
@@ -381,10 +389,12 @@ class TestUIStandardsCompliance:
             props={},
             styling={"tailwind": "true"},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
-        score = compliance._check_design_system_compliance(spec, DesignSystem.TAILWIND_UI)
+        score = compliance._check_design_system_compliance(
+            spec, DesignSystem.TAILWIND_UI
+        )
         assert score == 0.9
 
     def test_check_design_system_compliance_material(self):
@@ -397,10 +407,12 @@ class TestUIStandardsCompliance:
             props={},
             styling={"material": "true"},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
-        score = compliance._check_design_system_compliance(spec, DesignSystem.MATERIAL_DESIGN)
+        score = compliance._check_design_system_compliance(
+            spec, DesignSystem.MATERIAL_DESIGN
+        )
         assert score == 0.9
 
     def test_check_design_system_compliance_bootstrap(self):
@@ -413,7 +425,7 @@ class TestUIStandardsCompliance:
             props={},
             styling={"bootstrap": "true"},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_design_system_compliance(spec, DesignSystem.BOOTSTRAP)
@@ -429,7 +441,7 @@ class TestUIStandardsCompliance:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         score = compliance._check_design_system_compliance(spec, DesignSystem.CUSTOM)
@@ -466,7 +478,7 @@ class TestComponentGenerator:
             component_type=ComponentType.FORM,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -475,7 +487,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         result = generator.generate_component(requirement, spec)
@@ -497,7 +509,7 @@ class TestComponentGenerator:
             component_type=ComponentType.FORM,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         # Create spec with invalid type by manually setting
@@ -507,7 +519,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         # Temporarily remove the form template to test error handling
@@ -528,7 +540,7 @@ class TestComponentGenerator:
             component_type=ComponentType.FORM,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -537,7 +549,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_form_template(requirement, spec)
@@ -556,7 +568,7 @@ class TestComponentGenerator:
             component_type=ComponentType.FORM,
             framework=UIFramework.VUE,  # Not React
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -565,7 +577,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_form_template(requirement, spec)
@@ -581,7 +593,7 @@ class TestComponentGenerator:
             component_type=ComponentType.TABLE,
             framework=UIFramework.HTML_CSS,
             design_system=DesignSystem.BOOTSTRAP,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -590,7 +602,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_table_template(requirement, spec)
@@ -610,7 +622,7 @@ class TestComponentGenerator:
             component_type=ComponentType.CHART,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -619,7 +631,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_chart_template(requirement, spec)
@@ -636,7 +648,7 @@ class TestComponentGenerator:
             component_type=ComponentType.MODAL,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -645,7 +657,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_modal_template(requirement, spec)
@@ -662,7 +674,7 @@ class TestComponentGenerator:
             component_type=ComponentType.NAVIGATION,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -671,7 +683,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_navigation_template(requirement, spec)
@@ -689,7 +701,7 @@ class TestComponentGenerator:
             component_type=ComponentType.CARD,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -698,7 +710,7 @@ class TestComponentGenerator:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_card_template(requirement, spec)
@@ -728,7 +740,7 @@ class TestUISpecialist:
             component_type=ComponentType.BUTTON,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         assert "component" in result
@@ -753,7 +765,7 @@ class TestUISpecialist:
             "animations": True,
             "custom_styling": True,
             "props": {"variant": "outlined"},
-            "styling": {"margin": "16px"}
+            "styling": {"margin": "16px"},
         }
 
         result = specialist.generate_ui_component(
@@ -763,7 +775,7 @@ class TestUISpecialist:
             design_system=DesignSystem.TAILWIND_UI,
             accessibility_level=AccessibilityLevel.AAA,
             user_preferences=user_preferences,
-            cost_optimization=False
+            cost_optimization=False,
         )
 
         assert result["optimization_applied"] is False
@@ -775,7 +787,9 @@ class TestUISpecialist:
         """Test AA level accessibility features."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.AA)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.AA
+        )
 
         assert "color_contrast_4_5" in features
         assert "keyboard_navigation" in features
@@ -789,7 +803,9 @@ class TestUISpecialist:
         """Test AAA level accessibility features."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.AAA)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.AAA
+        )
 
         assert "color_contrast_7_1" in features
         assert "no_reflow" in features
@@ -803,7 +819,9 @@ class TestUISpecialist:
         """Test minimal accessibility features."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.MINIMAL)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.MINIMAL
+        )
 
         assert "basic_keyboard_access" in features
         assert "alt_text_important" in features
@@ -816,7 +834,7 @@ class TestUISpecialist:
 
         generation_result = {
             "component_code": "<!-- Comment -->\n<div class='container'>\n  <p>Content</p>\n</div><!-- End -->",
-            "token_estimate": 100
+            "token_estimate": 100,
         }
 
         optimized = specialist._optimize_for_cost(generation_result)
@@ -830,15 +848,11 @@ class TestUISpecialist:
         """Test cost optimization with zero tokens."""
         specialist = UISpecialist()
 
-        generation_result = {
-            "component_code": "<div>Test</div>",
-            "token_estimate": 0
-        }
+        generation_result = {"component_code": "<div>Test</div>", "token_estimate": 0}
 
         optimized = specialist._optimize_for_cost(generation_result)
 
         assert optimized["token_reduction"] == 0
-
 
     def test_get_specialist_stats(self):
         """Test getting specialist statistics."""
@@ -855,7 +869,6 @@ class TestUISpecialist:
         assert stats["supported_components"] == 13
 
 
-
 class TestComponentGeneratorAdditional:
     """Additional test cases for ComponentGenerator."""
 
@@ -867,7 +880,7 @@ class TestComponentGeneratorAdditional:
             component_type=ComponentType.BUTTON,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -876,7 +889,7 @@ class TestComponentGeneratorAdditional:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_button_template(requirement, spec)
@@ -893,7 +906,7 @@ class TestComponentGeneratorAdditional:
             component_type=ComponentType.INPUT,
             framework=UIFramework.HTML_CSS,
             design_system=DesignSystem.BOOTSTRAP,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -902,7 +915,7 @@ class TestComponentGeneratorAdditional:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_input_template(requirement, spec)
@@ -919,7 +932,7 @@ class TestComponentGeneratorAdditional:
             component_type=ComponentType.LAYOUT,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -928,7 +941,7 @@ class TestComponentGeneratorAdditional:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_layout_template(requirement, spec)
@@ -946,7 +959,7 @@ class TestComponentGeneratorAdditional:
             component_type=ComponentType.DASHBOARD,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -955,7 +968,7 @@ class TestComponentGeneratorAdditional:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_dashboard_template(requirement, spec)
@@ -972,7 +985,7 @@ class TestComponentGeneratorAdditional:
             component_type=ComponentType.LANDING,
             framework=UIFramework.HTML_CSS,
             design_system=DesignSystem.BOOTSTRAP,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -981,7 +994,7 @@ class TestComponentGeneratorAdditional:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_landing_template(requirement, spec)
@@ -999,7 +1012,7 @@ class TestComponentGeneratorAdditional:
             component_type=ComponentType.AUTH,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -1008,7 +1021,7 @@ class TestComponentGeneratorAdditional:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_auth_template(requirement, spec)
@@ -1025,7 +1038,7 @@ class TestComponentGeneratorAdditional:
             component_type=ComponentType.SETTINGS,
             framework=UIFramework.VUE,
             design_system=DesignSystem.TAILWIND_UI,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         spec = ComponentSpec(
@@ -1034,7 +1047,7 @@ class TestComponentGeneratorAdditional:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         template = generator._generate_settings_template(requirement, spec)
@@ -1095,7 +1108,9 @@ class TestComponentGeneratorAdditional:
         generator = ComponentGenerator()
 
         code = "<div>Content</div>"
-        enhanced = generator._apply_accessibility_features(code, AccessibilityLevel.MINIMAL)
+        enhanced = generator._apply_accessibility_features(
+            code, AccessibilityLevel.MINIMAL
+        )
 
         # Should return unchanged (implementation placeholder)
         assert enhanced == code
@@ -1196,7 +1211,7 @@ class TestComponentGeneratorAdvanced:
             component_type=ComponentType.BUTTON,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         # Test each component type
@@ -1208,7 +1223,7 @@ class TestComponentGeneratorAdvanced:
                     props={},
                     styling={},
                     accessibility_features=[],
-                    responsive_breakpoints=[]
+                    responsive_breakpoints=[],
                 )
 
                 result = generator.generate_component(requirement, spec)
@@ -1227,7 +1242,7 @@ class TestComponentGeneratorAdvanced:
             component_type=ComponentType.BUTTON,
             framework=UIFramework.REACT,
             design_system=DesignSystem.MATERIAL_DESIGN,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
 
         # Test each component type
@@ -1239,7 +1254,7 @@ class TestComponentGeneratorAdvanced:
                     props={},
                     styling={},
                     accessibility_features=[],
-                    responsive_breakpoints=[]
+                    responsive_breakpoints=[],
                 )
 
                 result = generator.generate_component(requirement, spec)
@@ -1254,7 +1269,7 @@ class TestComponentGeneratorAdvanced:
             component_type=ComponentType.FORM,
             framework=UIFramework.VUE,
             design_system=DesignSystem.VUE_UI,
-            accessibility_level=AccessibilityLevel.AA
+            accessibility_level=AccessibilityLevel.AA,
         )
         spec = ComponentSpec(
             name="LoginForm",
@@ -1262,7 +1277,7 @@ class TestComponentGeneratorAdvanced:
             props={},
             styling={},
             accessibility_features=[],
-            responsive_breakpoints=[]
+            responsive_breakpoints=[],
         )
 
         result = generator.generate_component(requirement, spec)

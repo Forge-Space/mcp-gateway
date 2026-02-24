@@ -10,9 +10,16 @@ import logging
 from typing import Any
 
 from .evaluation_tool import EVALUATION_SCHEMA, EvaluationTool, evaluation_handler
-from .knowledge_base_tool import KNOWLEDGE_BASE_SCHEMA, KnowledgeBaseTool, knowledge_base_handler
-from .training_manager import TRAINING_MANAGER_SCHEMA, TrainingManagerTool, training_manager_handler
-
+from .knowledge_base_tool import (
+    KNOWLEDGE_BASE_SCHEMA,
+    KnowledgeBaseTool,
+    knowledge_base_handler,
+)
+from .training_manager import (
+    TRAINING_MANAGER_SCHEMA,
+    TrainingManagerTool,
+    training_manager_handler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +35,14 @@ class SpecialistTrainingMCPServer:
 
         # Tool registry
         self.tools = {
-            "training_manager": {"schema": TRAINING_MANAGER_SCHEMA, "handler": training_manager_handler},
-            "knowledge_base": {"schema": KNOWLEDGE_BASE_SCHEMA, "handler": knowledge_base_handler},
+            "training_manager": {
+                "schema": TRAINING_MANAGER_SCHEMA,
+                "handler": training_manager_handler,
+            },
+            "knowledge_base": {
+                "schema": KNOWLEDGE_BASE_SCHEMA,
+                "handler": knowledge_base_handler,
+            },
             "evaluation": {"schema": EVALUATION_SCHEMA, "handler": evaluation_handler},
         }
 
@@ -83,7 +96,10 @@ class SpecialistTrainingMCPServer:
         """
         try:
             if tool_name not in self.tools:
-                return {"error": f"Unknown tool: {tool_name}", "message": f"Available tools: {list(self.tools.keys())}"}
+                return {
+                    "error": f"Unknown tool: {tool_name}",
+                    "message": f"Available tools: {list(self.tools.keys())}",
+                }
 
             tool_config = self.tools[tool_name]
             handler = tool_config["handler"]
@@ -116,7 +132,11 @@ class SpecialistTrainingMCPServer:
                 "Pattern management",
                 "Performance monitoring",
             ],
-            "supported_specialists": ["ui_specialist", "prompt_architect", "router_specialist"],
+            "supported_specialists": [
+                "ui_specialist",
+                "prompt_architect",
+                "router_specialist",
+            ],
             "supported_categories": [
                 "react_pattern",
                 "ui_component",
@@ -135,7 +155,11 @@ class SpecialistTrainingMCPServer:
             Health check results
         """
         try:
-            health_status = {"status": "healthy", "timestamp": "2026-02-19T12:00:00Z", "components": {}}
+            health_status = {
+                "status": "healthy",
+                "timestamp": "2026-02-19T12:00:00Z",
+                "components": {},
+            }
 
             # Check training manager
             try:
@@ -145,7 +169,10 @@ class SpecialistTrainingMCPServer:
                     "total_runs": stats.get("total_runs", 0),
                 }
             except Exception as e:
-                health_status["components"]["training_manager"] = {"status": "unhealthy", "error": str(e)}
+                health_status["components"]["training_manager"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
                 health_status["status"] = "degraded"
 
             # Check knowledge base
@@ -156,7 +183,10 @@ class SpecialistTrainingMCPServer:
                     "total_items": kb_stats.get("statistics", {}).get("total_items", 0),
                 }
             except Exception as e:
-                health_status["components"]["knowledge_base"] = {"status": "unhealthy", "error": str(e)}
+                health_status["components"]["knowledge_base"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
                 health_status["status"] = "degraded"
 
             # Check evaluator
@@ -167,14 +197,21 @@ class SpecialistTrainingMCPServer:
                     "available_specialists": specialists.get("total_specialists", 0),
                 }
             except Exception as e:
-                health_status["components"]["evaluation"] = {"status": "unhealthy", "error": str(e)}
+                health_status["components"]["evaluation"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
                 health_status["status"] = "degraded"
 
             return health_status
 
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return {"status": "unhealthy", "error": str(e), "timestamp": "2026-02-19T12:00:00Z"}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": "2026-02-19T12:00:00Z",
+            }
 
 
 # Global server instance
@@ -211,11 +248,17 @@ def register_tools_with_mcp_server(mcp_server) -> None:
             # For now, we'll just log the registration
             logger.info(f"Registering tool: {tool_def['name']}")
 
-        logger.info(f"Registered {len(tool_definitions)} training tools with MCP server")
+        logger.info(
+            f"Registered {len(tool_definitions)} training tools with MCP server"
+        )
 
     except Exception as e:
         logger.error(f"Failed to register tools with MCP server: {e}")
 
 
 # Export main components
-__all__ = ["SpecialistTrainingMCPServer", "get_server_instance", "register_tools_with_mcp_server"]
+__all__ = [
+    "SpecialistTrainingMCPServer",
+    "get_server_instance",
+    "register_tools_with_mcp_server",
+]

@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import Mock, patch
 
-from tool_router.observability.health import ComponentHealth, HealthCheck, HealthCheckResult, HealthStatus
+from tool_router.observability.health import (
+    ComponentHealth,
+    HealthCheck,
+    HealthCheckResult,
+    HealthStatus,
+)
 
 
 class TestHealthCheck:
@@ -57,7 +62,9 @@ class TestHealthCheck:
         health_check = HealthCheck()
 
         # Mock valid configuration
-        with patch("tool_router.observability.health.ToolRouterConfig.load_from_environment") as mock_load:
+        with patch(
+            "tool_router.observability.health.ToolRouterConfig.load_from_environment"
+        ) as mock_load:
             mock_config = Mock()
             mock_config.is_valid.return_value = True
             mock_load.return_value = mock_config
@@ -74,7 +81,9 @@ class TestHealthCheck:
         health_check = HealthCheck()
 
         # Mock invalid configuration
-        with patch("tool_router.observability.health.ToolRouterConfig.load_from_environment") as mock_load:
+        with patch(
+            "tool_router.observability.health.ToolRouterConfig.load_from_environment"
+        ) as mock_load:
             mock_config = Mock()
             mock_config.is_valid.return_value = False
             mock_config.validation_errors = ["Missing API key", "Invalid port"]
@@ -92,18 +101,20 @@ class TestHealthCheck:
         health_check = HealthCheck()
 
         # Mock all checks as healthy
-        with patch.object(health_check, "check_gateway_connection") as mock_gateway, \
-             patch.object(health_check, "check_configuration") as mock_config:
+        with (
+            patch.object(health_check, "check_gateway_connection") as mock_gateway,
+            patch.object(health_check, "check_configuration") as mock_config,
+        ):
 
             mock_gateway.return_value = HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="gateway_connection",
-                message="Gateway connection successful"
+                message="Gateway connection successful",
             )
             mock_config.return_value = HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="configuration",
-                message="Configuration is valid"
+                message="Configuration is valid",
             )
 
             result = health_check.check_all()
@@ -111,25 +122,29 @@ class TestHealthCheck:
             assert isinstance(result, ComponentHealth)
             assert result.status == HealthStatus.HEALTHY
             assert len(result.components) == 2
-            assert all(comp.status == HealthStatus.HEALTHY for comp in result.components)
+            assert all(
+                comp.status == HealthStatus.HEALTHY for comp in result.components
+            )
 
     def test_check_all_degraded(self) -> None:
         """Test overall health check when some components are degraded."""
         health_check = HealthCheck()
 
         # Mock mixed health status
-        with patch.object(health_check, "check_gateway_connection") as mock_gateway, \
-             patch.object(health_check, "check_configuration") as mock_config:
+        with (
+            patch.object(health_check, "check_gateway_connection") as mock_gateway,
+            patch.object(health_check, "check_configuration") as mock_config,
+        ):
 
             mock_gateway.return_value = HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="gateway_connection",
-                message="Gateway connection successful"
+                message="Gateway connection successful",
             )
             mock_config.return_value = HealthCheckResult(
                 status=HealthStatus.DEGRADED,
                 component="configuration",
-                message="Configuration has warnings"
+                message="Configuration has warnings",
             )
 
             result = health_check.check_all()
@@ -174,7 +189,7 @@ class TestHealthCheck:
             status=HealthStatus.HEALTHY,
             component="test_component",
             message="Test message",
-            details={"key": "value"}
+            details={"key": "value"},
         )
 
         result_dict = result.to_dict()
@@ -191,18 +206,17 @@ class TestHealthCheck:
             HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="gateway",
-                message="Gateway healthy"
+                message="Gateway healthy",
             ),
             HealthCheckResult(
                 status=HealthStatus.DEGRADED,
                 component="database",
-                message="Database slow"
-            )
+                message="Database slow",
+            ),
         ]
 
         component_health = ComponentHealth(
-            status=HealthStatus.DEGRADED,
-            components=components
+            status=HealthStatus.DEGRADED, components=components
         )
 
         assert component_health.status == HealthStatus.DEGRADED
@@ -222,18 +236,17 @@ class TestHealthCheck:
             HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="gateway",
-                message="Gateway healthy"
+                message="Gateway healthy",
             ),
             HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="database",
-                message="Database healthy"
-            )
+                message="Database healthy",
+            ),
         ]
 
         component_health = ComponentHealth(
-            status=HealthStatus.HEALTHY,
-            components=components
+            status=HealthStatus.HEALTHY, components=components
         )
 
         assert component_health.status == HealthStatus.HEALTHY
@@ -246,18 +259,17 @@ class TestHealthCheck:
             HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="gateway",
-                message="Gateway healthy"
+                message="Gateway healthy",
             ),
             HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
                 component="database",
-                message="Database down"
-            )
+                message="Database down",
+            ),
         ]
 
         component_health = ComponentHealth(
-            status=HealthStatus.UNHEALTHY,
-            components=components
+            status=HealthStatus.UNHEALTHY, components=components
         )
 
         assert component_health.status == HealthStatus.UNHEALTHY
@@ -288,7 +300,7 @@ class TestHealthCheck:
                 status=HealthStatus.HEALTHY,
                 component="gateway_connection",
                 message="Gateway connection successful",
-                metrics={"response_time_ms": 150, "status_code": 200}
+                metrics={"response_time_ms": 150, "status_code": 200},
             )
             mock_gateway.return_value = mock_result
 
@@ -303,19 +315,21 @@ class TestHealthCheck:
         health_check = HealthCheck()
 
         # Mock dependent component checks
-        with patch.object(health_check, "check_gateway_connection") as mock_gateway, \
-             patch.object(health_check, "check_configuration") as mock_config:
+        with (
+            patch.object(health_check, "check_gateway_connection") as mock_gateway,
+            patch.object(health_check, "check_configuration") as mock_config,
+        ):
 
             # Gateway healthy, config unhealthy
             mock_gateway.return_value = HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 component="gateway_connection",
-                message="Gateway connection successful"
+                message="Gateway connection successful",
             )
             mock_config.return_value = HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
                 component="configuration",
-                message="Configuration invalid"
+                message="Configuration invalid",
             )
 
             result = health_check.check_all()

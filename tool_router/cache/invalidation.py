@@ -13,7 +13,6 @@ from typing import Any
 
 from .cache_manager import CacheManager
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -102,7 +101,9 @@ class TagInvalidationManager:
             invalidated_count = 0
 
             for cache_key in list(tag.cache_keys):
-                cache = self.cache_manager.get_cache(self._extract_cache_name(cache_key))
+                cache = self.cache_manager.get_cache(
+                    self._extract_cache_name(cache_key)
+                )
                 if cache and hasattr(cache, "delete"):
                     try:
                         cache.delete(cache_key)
@@ -117,18 +118,24 @@ class TagInvalidationManager:
                         self._key_to_tags.pop(cache_key, None)
 
                     except Exception as e:
-                        logger.error(f"Failed to invalidate cache key '{cache_key}': {e}")
+                        logger.error(
+                            f"Failed to invalidate cache key '{cache_key}': {e}"
+                        )
 
             tag.cache_keys.clear()
             tag.invalidation_count += 1
 
-            logger.info(f"Invalidated tag '{tag_name}': {invalidated_count} cache entries")
+            logger.info(
+                f"Invalidated tag '{tag_name}': {invalidated_count} cache entries"
+            )
             if reason:
                 logger.info(f"Invalidation reason: {reason}")
 
             return invalidated_count
 
-    def invalidate_multiple_tags(self, tag_names: list[str], reason: str | None = None) -> int:
+    def invalidate_multiple_tags(
+        self, tag_names: list[str], reason: str | None = None
+    ) -> int:
         """Invalidate multiple tags."""
         total_invalidated = 0
         for tag_name in tag_names:
@@ -165,7 +172,9 @@ class EventInvalidationManager:
         self._lock = threading.RLock()
         self._max_history = 1000
 
-    def register_handler(self, event_type: str, handler: Callable[[InvalidationEvent], None]) -> None:
+    def register_handler(
+        self, event_type: str, handler: Callable[[InvalidationEvent], None]
+    ) -> None:
         """Register an event handler."""
         with self._lock:
             self._event_handlers[event_type].append(handler)
@@ -181,7 +190,11 @@ class EventInvalidationManager:
     ) -> int:
         """Trigger cache invalidation event."""
         event = InvalidationEvent(
-            event_type=event_type, cache_keys=cache_keys, tags=tags or set(), source=source, metadata=metadata or {}
+            event_type=event_type,
+            cache_keys=cache_keys,
+            tags=tags or set(),
+            source=source,
+            metadata=metadata or {},
         )
 
         with self._lock:
@@ -201,17 +214,25 @@ class EventInvalidationManager:
 
             # Perform actual invalidation
             for cache_key in event.cache_keys:
-                cache = self.cache_manager.get_cache(self._extract_cache_name(cache_key))
+                cache = self.cache_manager.get_cache(
+                    self._extract_cache_name(cache_key)
+                )
                 if cache and hasattr(cache, "delete"):
                     try:
                         cache.delete(cache_key)
                     except Exception as e:
-                        logger.error(f"Failed to invalidate cache key '{cache_key}': {e}")
+                        logger.error(
+                            f"Failed to invalidate cache key '{cache_key}': {e}"
+                        )
 
-            logger.info(f"Triggered invalidation event '{event_type}': {len(event.cache_keys)} keys")
+            logger.info(
+                f"Triggered invalidation event '{event_type}': {len(event.cache_keys)} keys"
+            )
             return len(event.cache_keys)
 
-    def get_event_history(self, event_type: str | None = None, limit: int = 100) -> list[InvalidationEvent]:
+    def get_event_history(
+        self, event_type: str | None = None, limit: int = 100
+    ) -> list[InvalidationEvent]:
         """Get event history."""
         with self._lock:
             history = self._event_history
@@ -238,7 +259,9 @@ class DependencyInvalidationManager:
     def add_dependency(self, cache_key: str, depends_on: set[str]) -> None:
         """Add cache dependency."""
         with self._lock:
-            dependency = CacheDependency(cache_key=cache_key, depends_on=set(depends_on))
+            dependency = CacheDependency(
+                cache_key=cache_key, depends_on=set(depends_on)
+            )
             self._dependencies[cache_key] = dependency
 
             # Update reverse dependencies
@@ -254,17 +277,25 @@ class DependencyInvalidationManager:
             invalidated_count = 0
 
             for dependent_key in dependents:
-                cache = self.cache_manager.get_cache(self._extract_cache_name(dependent_key))
+                cache = self.cache_manager.get_cache(
+                    self._extract_cache_name(dependent_key)
+                )
                 if cache and hasattr(cache, "delete"):
                     try:
                         cache.delete(dependent_key)
                         invalidated_count += 1
-                        logger.debug(f"Invalidated dependent cache key: {dependent_key}")
+                        logger.debug(
+                            f"Invalidated dependent cache key: {dependent_key}"
+                        )
                     except Exception as e:
-                        logger.error(f"Failed to invalidate dependent '{dependent_key}': {e}")
+                        logger.error(
+                            f"Failed to invalidate dependent '{dependent_key}': {e}"
+                        )
 
             if invalidated_count > 0:
-                logger.info(f"Invalidated {invalidated_count} dependents of '{changed_key}'")
+                logger.info(
+                    f"Invalidated {invalidated_count} dependents of '{changed_key}'"
+                )
                 if reason:
                     logger.info(f"Dependency invalidation reason: {reason}")
 
@@ -305,14 +336,20 @@ class AdvancedInvalidationManager:
             for tag in event.tags:
                 self.tag_manager.invalidate_tag(tag, f"Event: {event.event_type}")
 
-        self.event_manager.register_handler("tag_invalidation", tag_invalidation_handler)
+        self.event_manager.register_handler(
+            "tag_invalidation", tag_invalidation_handler
+        )
 
         # Dependency invalidation handler
         def dependency_invalidation_handler(event: InvalidationEvent) -> None:
             for cache_key in event.cache_keys:
-                self.dependency_manager.invalidate_dependents(cache_key, f"Event: {event.event_type}")
+                self.dependency_manager.invalidate_dependents(
+                    cache_key, f"Event: {event.event_type}"
+                )
 
-        self.event_manager.register_handler("dependency_invalidation", dependency_invalidation_handler)
+        self.event_manager.register_handler(
+            "dependency_invalidation", dependency_invalidation_handler
+        )
 
     def invalidate_by_tags(self, tags: list[str], reason: str | None = None) -> int:
         """Invalidate cache entries by tags."""
@@ -327,14 +364,23 @@ class AdvancedInvalidationManager:
         metadata: dict[str, Any] | None = None,
     ) -> int:
         """Invalidate cache entries by event."""
-        return self.event_manager.trigger_invalidation(event_type, cache_keys, tags, source, metadata)
+        return self.event_manager.trigger_invalidation(
+            event_type, cache_keys, tags, source, metadata
+        )
 
-    def invalidate_by_dependency(self, changed_key: str, reason: str | None = None) -> int:
+    def invalidate_by_dependency(
+        self, changed_key: str, reason: str | None = None
+    ) -> int:
         """Invalidate cache entries by dependency."""
         return self.dependency_manager.invalidate_dependents(changed_key, reason)
 
     def create_tagged_cache(
-        self, cache_name: str, key: str, value: Any, tags: set[str], ttl: int | None = None
+        self,
+        cache_name: str,
+        key: str,
+        value: Any,
+        tags: set[str],
+        ttl: int | None = None,
     ) -> bool:
         """Create a cache entry with tags."""
         cache = self.cache_manager.get_cache(cache_name)
@@ -363,11 +409,15 @@ class AdvancedInvalidationManager:
         return {
             "tags": {
                 "total": len(self.tag_manager.list_tags()),
-                "invalidations": sum(tag.invalidation_count for tag in self.tag_manager.list_tags()),
+                "invalidations": sum(
+                    tag.invalidation_count for tag in self.tag_manager.list_tags()
+                ),
             },
             "events": {
                 "total": len(self.event_manager.get_event_history()),
-                "types": list(set(e.event_type for e in self.event_manager.get_event_history())),
+                "types": list(
+                    set(e.event_type for e in self.event_manager.get_event_history())
+                ),
             },
             "dependencies": {
                 "total": len(self.dependency_manager._dependencies),
@@ -403,9 +453,13 @@ def invalidate_by_event(
     metadata: dict[str, Any] | None = None,
 ) -> int:
     """Convenience function to invalidate by event."""
-    return get_advanced_invalidation_manager().invalidate_by_event(event_type, cache_keys, tags, source, metadata)
+    return get_advanced_invalidation_manager().invalidate_by_event(
+        event_type, cache_keys, tags, source, metadata
+    )
 
 
 def invalidate_by_dependency(changed_key: str, reason: str | None = None) -> int:
     """Convenience function to invalidate by dependency."""
-    return get_advanced_invalidation_manager().invalidate_by_dependency(changed_key, reason)
+    return get_advanced_invalidation_manager().invalidate_by_dependency(
+        changed_key, reason
+    )

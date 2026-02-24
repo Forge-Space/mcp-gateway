@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any
 
 from tool_router.ai.selector import OllamaSelector
 
-
 if TYPE_CHECKING:
     from tool_router.ai.feedback import FeedbackStore
 else:
@@ -55,7 +54,9 @@ def _calculate_substring_match_score(query_tokens: set[str], target_text: str) -
     return score
 
 
-def calculate_tool_relevance_score(task: str, context: str, tool: dict[str, Any]) -> float:
+def calculate_tool_relevance_score(
+    task: str, context: str, tool: dict[str, Any]
+) -> float:
     """Score a tool's relevance to the task with weighted components."""
     task_tokens = _extract_normalized_tokens(task)
     context_tokens = _extract_normalized_tokens(context) if context else set()
@@ -81,8 +82,12 @@ def calculate_tool_relevance_score(task: str, context: str, tool: dict[str, Any]
     gateway_exact_score = len(enriched_query_tokens & gateway_tokens) * 2
 
     # Partial matches for substring matching
-    name_partial_score = _calculate_substring_match_score(combined_tokens, tool_name) * 5
-    description_partial_score = _calculate_substring_match_score(combined_tokens, tool_description) * 1
+    name_partial_score = (
+        _calculate_substring_match_score(combined_tokens, tool_name) * 5
+    )
+    description_partial_score = (
+        _calculate_substring_match_score(combined_tokens, tool_description) * 1
+    )
 
     total_score = (
         name_exact_score
@@ -102,7 +107,10 @@ def select_top_matching_tools(
     if not tools:
         return []
 
-    scored_tools = [(tool, calculate_tool_relevance_score(task, context or "", tool)) for tool in tools]
+    scored_tools = [
+        (tool, calculate_tool_relevance_score(task, context or "", tool))
+        for tool in tools
+    ]
     scored_tools.sort(key=lambda x: -x[1])
 
     # Only return tools with positive scores
@@ -129,7 +137,9 @@ def select_top_matching_tools_hybrid(
     # Get keyword scores for all tools
     keyword_scores = {}
     for tool in tools:
-        keyword_scores[tool.get("name", "")] = calculate_tool_relevance_score(task, context or "", tool)
+        keyword_scores[tool.get("name", "")] = calculate_tool_relevance_score(
+            task, context or "", tool
+        )
 
     # Retrieve similar tools from feedback history for the AI prompt
     similar_tools: list[str] = []
@@ -143,11 +153,17 @@ def select_top_matching_tools_hybrid(
 
     if ai_selector:
         try:
-            ai_result = ai_selector.select_tool(task, tools, context=context or "", similar_tools=similar_tools or None)
+            ai_result = ai_selector.select_tool(
+                task, tools, context=context or "", similar_tools=similar_tools or None
+            )
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
-                logger.info("AI selected tool: %s with confidence: %s", selected_tool_name, ai_score)
+                logger.info(
+                    "AI selected tool: %s with confidence: %s",
+                    selected_tool_name,
+                    ai_score,
+                )
         except Exception as e:
             logger.warning("AI selection failed: %s", e)
 
@@ -163,7 +179,9 @@ def select_top_matching_tools_hybrid(
         # Base hybrid score calculation
         if selected_tool_name and tool_name == selected_tool_name:
             # AI-selected tool gets hybrid scoring
-            hybrid_score = (ai_score * ai_weight) + (normalized_keyword_score * (1 - ai_weight))
+            hybrid_score = (ai_score * ai_weight) + (
+                normalized_keyword_score * (1 - ai_weight)
+            )
             logger.info(
                 "Hybrid score for %s: AI=%.2f, Keyword=%.2f, Hybrid=%.2f",
                 tool_name,
@@ -207,7 +225,9 @@ def select_top_matching_tools_enhanced(
     # Get keyword scores for all tools
     keyword_scores = {}
     for tool in tools:
-        keyword_scores[tool.get("name", "")] = calculate_tool_relevance_score(task, context or "", tool)
+        keyword_scores[tool.get("name", "")] = calculate_tool_relevance_score(
+            task, context or "", tool
+        )
 
     # Generate NLP hints if available
     intent_hints = []
@@ -228,11 +248,17 @@ def select_top_matching_tools_enhanced(
 
     if ai_selector:
         try:
-            ai_result = ai_selector.select_tool(task, tools, context=context or "", similar_tools=similar_tools or None)
+            ai_result = ai_selector.select_tool(
+                task, tools, context=context or "", similar_tools=similar_tools or None
+            )
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
-                logger.info("Enhanced AI selected tool: %s with confidence: %s", selected_tool_name, ai_score)
+                logger.info(
+                    "Enhanced AI selected tool: %s with confidence: %s",
+                    selected_tool_name,
+                    ai_score,
+                )
         except Exception as e:
             logger.warning("Enhanced AI selection failed: %s", e)
 
@@ -245,14 +271,18 @@ def select_top_matching_tools_enhanced(
 
         # Base score calculation
         if selected_tool_name and tool_name == selected_tool_name:
-            base_score = (ai_score * ai_weight) + (normalized_keyword_score * (1 - ai_weight))
+            base_score = (ai_score * ai_weight) + (
+                normalized_keyword_score * (1 - ai_weight)
+            )
         else:
             base_score = normalized_keyword_score * (1 - ai_weight)
 
         # Apply comprehensive feedback boost
         final_score = base_score
         if feedback_store:
-            comprehensive_boost = feedback_store.get_comprehensive_boost(tool_name, task)
+            comprehensive_boost = feedback_store.get_comprehensive_boost(
+                tool_name, task
+            )
             final_score *= comprehensive_boost
 
         # Add learning-based adjustments

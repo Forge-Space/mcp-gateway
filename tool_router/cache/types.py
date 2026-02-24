@@ -65,7 +65,9 @@ class CacheConfig:
         if self.retention_days:
             for classification, days in self.retention_days.items():
                 if days < 1:
-                    raise ValueError(f"retention_days for {classification} must be positive")
+                    raise ValueError(
+                        f"retention_days for {classification} must be positive"
+                    )
 
 
 @dataclass
@@ -83,6 +85,7 @@ class CacheMetrics:
 
 class DataClassification(Enum):
     """Data classification levels for security handling."""
+
     PUBLIC = "public"
     INTERNAL = "internal"
     SENSITIVE = "sensitive"
@@ -91,6 +94,7 @@ class DataClassification(Enum):
 
 class AccessLevel(Enum):
     """Access levels for permission management."""
+
     READ = "read"
     WRITE = "write"
     DELETE = "delete"
@@ -100,6 +104,7 @@ class AccessLevel(Enum):
 @dataclass
 class CacheEntryMetadata:
     """Metadata for cache entries."""
+
     key: str
     classification: DataClassification
     created_at: datetime
@@ -113,6 +118,7 @@ class CacheEntryMetadata:
 @dataclass
 class AuditEntry:
     """Audit log entry for security events."""
+
     event_id: str
     timestamp: datetime
     event_type: str
@@ -128,6 +134,7 @@ class AuditEntry:
 @dataclass
 class AccessRequest:
     """Access control request."""
+
     request_id: str
     user_id: str
     resource_id: str
@@ -140,6 +147,7 @@ class AccessRequest:
 @dataclass
 class ConsentRecord:
     """GDPR consent record."""
+
     consent_id: str
     subject_id: str
     purpose: str
@@ -154,6 +162,7 @@ class ConsentRecord:
 @dataclass
 class SecurityMetrics:
     """Security-related metrics."""
+
     encryption_operations: int = 0
     decryption_operations: int = 0
     access_denied: int = 0
@@ -168,6 +177,7 @@ class SecurityMetrics:
 @dataclass
 class SecurityPolicy:
     """Security policy configuration."""
+
     policy_id: str
     name: str
     description: str
@@ -192,6 +202,7 @@ class ComplianceError(Exception):
 
 class ComplianceStandard(Enum):
     """Compliance standards for security policies."""
+
     GDPR = "gdpr"
     CCPA = "ccpa"
     HIPAA = "hipaa"
@@ -203,6 +214,7 @@ class ComplianceStandard(Enum):
 @dataclass
 class CacheOperationResult:
     """Result of a cache operation."""
+
     success: bool
     operation: str
     timestamp: datetime

@@ -132,7 +132,9 @@ Respond with valid JSON only, no additional text:
                 f"Previously successful for similar tasks: {', '.join(similar_tools)}"
             )
 
-        template = cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
+        template = (
+            cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
+        )
 
         return template.format(
             task=task,
@@ -192,7 +194,9 @@ Respond with valid JSON only, no additional text:
 
         similar_tools_section = ""
         if similar_tools:
-            similar_tools_section = f"\n\n## Similar Successful Tools\n{', '.join(similar_tools)}"
+            similar_tools_section = (
+                f"\n\n## Similar Successful Tools\n{', '.join(similar_tools)}"
+            )
 
         return cls.CONTEXT_ENHANCED_TEMPLATE.format(
             task=task,

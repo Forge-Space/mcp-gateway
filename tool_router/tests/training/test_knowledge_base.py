@@ -19,12 +19,7 @@ class TestKnowledgeStatus:
 
     def test_status_values(self):
         """Test that all expected status values are present."""
-        expected_statuses = {
-            "active",
-            "pending",
-            "deprecated",
-            "archived"
-        }
+        expected_statuses = {"active", "pending", "deprecated", "archived"}
 
         actual_statuses = {status.value for status in KnowledgeStatus}
         assert actual_statuses == expected_statuses
@@ -40,7 +35,7 @@ class TestKnowledgeItem:
             category=PatternCategory.UI_COMPONENT,
             title="Test Item",
             description="Test description",
-            content="Test content"
+            content="Test content",
         )
 
         assert item.id == "test-1"
@@ -82,8 +77,8 @@ class TestKnowledgeItem:
             metadata={
                 "author": "test_author",
                 "version": "1.0",
-                "source": "test_source"
-            }
+                "source": "test_source",
+            },
         )
 
         assert item.id == "test-2"
@@ -111,7 +106,7 @@ class TestKnowledgeItem:
             description="Test description",
             content="Test content",
             created_at="2023-01-01T12:00:00+00:00",
-            updated_at="2023-01-02T12:00:00+00:00"
+            updated_at="2023-01-02T12:00:00+00:00",
         )
 
         assert isinstance(item.created_at, datetime)
@@ -132,7 +127,7 @@ class TestKnowledgeItem:
             title="Test Item",
             description="Test description",
             content="Test content",
-            user_ratings=[]
+            user_ratings=[],
         )
         assert item.average_rating == 0.0
 
@@ -143,7 +138,7 @@ class TestKnowledgeItem:
             title="Test Item",
             description="Test description",
             content="Test content",
-            user_ratings=[4.0, 5.0, 3.0]
+            user_ratings=[4.0, 5.0, 3.0],
         )
         assert item_with_ratings.average_rating == 4.0
 
@@ -157,7 +152,7 @@ class TestKnowledgeItem:
             content="Test content",
             user_ratings=[4.0, 5.0],  # Average 4.5/5 = 0.9
             usage_count=50,  # 50/100 = 0.5
-            confidence_score=0.8
+            confidence_score=0.8,
         )
 
         # rating_score = 0.9 * 0.6 = 0.54
@@ -177,7 +172,7 @@ class TestKnowledgeItem:
             content="Test content",
             user_ratings=[],
             usage_count=25,
-            confidence_score=0.9
+            confidence_score=0.9,
         )
 
         # rating_score = 0.0 * 0.6 = 0.0
@@ -197,7 +192,7 @@ class TestKnowledgeItem:
             content="Test content",
             user_ratings=[5.0],
             usage_count=150,  # Should be capped at 100
-            confidence_score=0.7
+            confidence_score=0.7,
         )
 
         # rating_score = 1.0 * 0.6 = 0.6
@@ -220,6 +215,7 @@ class TestKnowledgeBase:
     def teardown_method(self):
         """Clean up test fixtures."""
         import shutil
+
         shutil.rmtree(self.temp_dir)
 
     def test_initialization(self):
@@ -243,7 +239,7 @@ class TestKnowledgeBase:
             description="Test React hook",
             code_example="useState(0)",
             confidence_score=0.8,
-            tags=["react", "hooks"]
+            tags=["react", "hooks"],
         )
 
         item_id = self.knowledge_base.add_pattern(pattern)
@@ -264,7 +260,7 @@ class TestKnowledgeBase:
             category=PatternCategory.UI_COMPONENT,
             title="Test Component",
             description="Test component description",
-            content="Test component content"
+            content="Test component content",
         )
 
         item_id = self.knowledge_base.add_knowledge_item(item)
@@ -290,7 +286,7 @@ class TestKnowledgeBase:
             title="React useState Hook",
             description="State management hook",
             content="React useState for state management",
-            tags=["react", "hooks", "state"]
+            tags=["react", "hooks", "state"],
         )
         item2 = KnowledgeItem(
             id="item-2",
@@ -298,7 +294,7 @@ class TestKnowledgeBase:
             title="Button Component",
             description="Reusable button",
             content="Button component for UI",
-            tags=["ui", "component", "button"]
+            tags=["ui", "component", "button"],
         )
 
         self.knowledge_base.add_knowledge_item(item1)
@@ -310,7 +306,9 @@ class TestKnowledgeBase:
         assert results[0].id == "item-1"
 
         # Search with category filter
-        results = self.knowledge_base.search_knowledge("component", PatternCategory.UI_COMPONENT)
+        results = self.knowledge_base.search_knowledge(
+            "component", PatternCategory.UI_COMPONENT
+        )
         assert len(results) == 1
         assert results[0].id == "item-2"
 
@@ -321,7 +319,7 @@ class TestKnowledgeBase:
             category=PatternCategory.REACT_PATTERN,
             title="React Pattern",
             description="Test pattern",
-            content="Test content"
+            content="Test content",
         )
 
         self.knowledge_base.add_knowledge_item(item)
@@ -338,33 +336,39 @@ class TestKnowledgeBase:
             category=PatternCategory.REACT_PATTERN,
             title="React Pattern 1",
             description="Test",
-            content="Test"
+            content="Test",
         )
         item2 = KnowledgeItem(
             id="item-2",
             category=PatternCategory.REACT_PATTERN,
             title="React Pattern 2",
             description="Test",
-            content="Test"
+            content="Test",
         )
         item3 = KnowledgeItem(
             id="item-3",
             category=PatternCategory.UI_COMPONENT,
             title="UI Pattern",
             description="Test",
-            content="Test"
+            content="Test",
         )
 
         self.knowledge_base.add_knowledge_item(item1)
         self.knowledge_base.add_knowledge_item(item2)
         self.knowledge_base.add_knowledge_item(item3)
 
-        react_patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.REACT_PATTERN)
-        ui_patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.UI_COMPONENT)
+        react_patterns = self.knowledge_base.get_patterns_by_category(
+            PatternCategory.REACT_PATTERN
+        )
+        ui_patterns = self.knowledge_base.get_patterns_by_category(
+            PatternCategory.UI_COMPONENT
+        )
 
         assert len(react_patterns) == 2
         assert len(ui_patterns) == 1
-        assert all(item.category == PatternCategory.REACT_PATTERN for item in react_patterns)
+        assert all(
+            item.category == PatternCategory.REACT_PATTERN for item in react_patterns
+        )
         assert ui_patterns[0].category == PatternCategory.UI_COMPONENT
 
     def test_get_top_patterns(self):
@@ -377,7 +381,7 @@ class TestKnowledgeBase:
             description="Test",
             content="Test",
             user_ratings=[5.0, 5.0],  # High rating
-            usage_count=80
+            usage_count=80,
         )
         item2 = KnowledgeItem(
             id="item-2",
@@ -386,7 +390,7 @@ class TestKnowledgeBase:
             description="Test",
             content="Test",
             user_ratings=[2.0, 3.0],  # Low rating
-            usage_count=5
+            usage_count=5,
         )
 
         self.knowledge_base.add_knowledge_item(item1)
@@ -407,7 +411,7 @@ class TestKnowledgeBase:
             title="Test Item",
             description="Test",
             content="Test",
-            usage_count=5
+            usage_count=5,
         )
 
         self.knowledge_base.add_knowledge_item(item)
@@ -427,7 +431,7 @@ class TestKnowledgeBase:
             title="Test Item",
             description="Test",
             content="Test",
-            user_ratings=[4.0]
+            user_ratings=[4.0],
         )
 
         self.knowledge_base.add_knowledge_item(item)
@@ -450,7 +454,7 @@ class TestKnowledgeBase:
             description="Test",
             content="Test",
             user_ratings=[4.0, 5.0],
-            usage_count=10
+            usage_count=10,
         )
         item2 = KnowledgeItem(
             id="item-2",
@@ -459,7 +463,7 @@ class TestKnowledgeBase:
             description="Test",
             content="Test",
             user_ratings=[3.0],
-            usage_count=5
+            usage_count=5,
         )
 
         self.knowledge_base.add_knowledge_item(item1)
@@ -485,7 +489,7 @@ class TestKnowledgeBase:
             title="Test Item",
             description="Test description",
             content="Test content",
-            tags=["test"]
+            tags=["test"],
         )
 
         self.knowledge_base.add_knowledge_item(item)
@@ -517,7 +521,7 @@ class TestKnowledgeBase:
                 "confidence_score": 0.8,
                 "usage_count": 5,
                 "user_ratings": [4.0, 5.0],
-                "metadata": {"imported": True}
+                "metadata": {"imported": True},
             }
         ]
 
@@ -545,15 +549,15 @@ class TestKnowledgeBase:
                 "category": "invalid_category",  # Invalid category
                 "title": "Invalid Item",
                 "description": "Invalid description",
-                "content": "Invalid content"
+                "content": "Invalid content",
             },
             {
                 "id": "valid-1",
                 "category": "react_pattern",
                 "title": "Valid Item",
                 "description": "Valid description",
-                "content": "Valid content"
-            }
+                "content": "Valid content",
+            },
         ]
 
         import_path = Path(self.temp_dir) / "import.json"
@@ -577,7 +581,7 @@ class TestKnowledgeBase:
             category=PatternCategory.REACT_PATTERN,
             title="React Hook",
             description="State management hook",
-            confidence_score=0.8
+            confidence_score=0.8,
         )
 
         item_id = self.knowledge_base._generate_item_id(pattern)
@@ -607,7 +611,7 @@ class TestKnowledgeBase:
             "2023-01-02T12:00:00+00:00",  # updated_at
             10,  # usage_count
             "[4.0, 5.0]",  # user_ratings (JSON)
-            '{"key": "value"}'  # metadata (JSON)
+            '{"key": "value"}',  # metadata (JSON)
         )
 
         item = self.knowledge_base._row_to_knowledge_item(row)
@@ -645,7 +649,7 @@ class TestKnowledgeIndexer:
             title="React Hook Pattern",
             description="State management hook",
             content="React useState for state management",
-            tags=["react", "hooks", "state"]
+            tags=["react", "hooks", "state"],
         )
         self.item2 = KnowledgeItem(
             id="item-2",
@@ -653,7 +657,7 @@ class TestKnowledgeIndexer:
             title="Button Component",
             description="Reusable button",
             content="Button component for UI",
-            tags=["ui", "component", "button"]
+            tags=["ui", "component", "button"],
         )
 
         self.knowledge_base.add_knowledge_item(self.item1)
@@ -664,6 +668,7 @@ class TestKnowledgeIndexer:
     def teardown_method(self):
         """Clean up test fixtures."""
         import shutil
+
         shutil.rmtree(self.temp_dir)
 
     def test_initialization(self):
@@ -747,7 +752,7 @@ class TestKnowledgeIndexer:
             title="Another React Pattern",
             description="Another React pattern",
             content="React content",
-            tags=["react", "hooks"]  # Shares tags with item-1
+            tags=["react", "hooks"],  # Shares tags with item-1
         )
 
         self.knowledge_base.add_knowledge_item(item3)
@@ -769,7 +774,7 @@ class TestKnowledgeIndexer:
             title="Accessibility Pattern",
             description="Test accessibility",
             content="Test content",
-            tags=[]
+            tags=[],
         )
 
         self.knowledge_base.add_knowledge_item(item4)
@@ -798,7 +803,7 @@ class TestKnowledgeBaseIntegration:
                     description="State management hook",
                     code_example="useState(0)",
                     confidence_score=0.8,
-                    tags=["react", "hooks", "state"]
+                    tags=["react", "hooks", "state"],
                 ),
                 ExtractedPattern(
                     category=PatternCategory.UI_COMPONENT,
@@ -806,8 +811,8 @@ class TestKnowledgeBaseIntegration:
                     description="Reusable button component",
                     code_example="<button>Click</button>",
                     confidence_score=0.9,
-                    tags=["ui", "component", "button"]
-                )
+                    tags=["ui", "component", "button"],
+                ),
             ]
 
             item_ids = []
@@ -852,6 +857,7 @@ class TestKnowledgeBaseIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_concurrent_access_simulation(self):
@@ -869,7 +875,7 @@ class TestKnowledgeBaseIntegration:
                     category=PatternCategory.REACT_PATTERN,
                     title=f"React Pattern {i}",
                     description=f"Test pattern {i}",
-                    content=f"Test content {i}"
+                    content=f"Test content {i}",
                 )
                 kb.add_knowledge_item(item)
 
@@ -891,6 +897,7 @@ class TestKnowledgeBaseIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
     def test_large_dataset_performance(self):
@@ -910,7 +917,7 @@ class TestKnowledgeBaseIntegration:
                     title=f"React Pattern {i}",
                     description=f"Test pattern {i}",
                     content=f"Test content {i}",
-                    tags=[f"tag-{j}" for j in range(3)]
+                    tags=[f"tag-{j}" for j in range(3)],
                 )
                 kb.add_knowledge_item(item)
 
@@ -937,6 +944,7 @@ class TestKnowledgeBaseIntegration:
 
         finally:
             import shutil
+
             shutil.rmtree(temp_dir)
 
 
@@ -967,7 +975,7 @@ class TestDefaultTrainingSources:
             "react_patterns",
             "design_systems",
             "accessibility",
-            "prompt_engineering"
+            "prompt_engineering",
         ]
 
         for category in expected_categories:

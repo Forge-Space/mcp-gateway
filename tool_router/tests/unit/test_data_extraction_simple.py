@@ -39,7 +39,9 @@ class TestPatternExtractor:
         url = "https://react.dev/docs/components"
         source_type = DataSource.WEB_DOCUMENTATION
 
-        with patch.object(self.extractor.extractors[source_type], "extract_patterns", return_value=[]) as mock_extract:
+        with patch.object(
+            self.extractor.extractors[source_type], "extract_patterns", return_value=[]
+        ) as mock_extract:
             result = self.extractor.extract_from_url(url, source_type)
 
             assert isinstance(result, list)
@@ -50,7 +52,9 @@ class TestPatternExtractor:
         url = "https://github.com/facebook/react"
         source_type = DataSource.GITHUB_REPOSITORY
 
-        with patch.object(self.extractor.extractors[source_type], "extract_patterns", return_value=[]) as mock_extract:
+        with patch.object(
+            self.extractor.extractors[source_type], "extract_patterns", return_value=[]
+        ) as mock_extract:
             result = self.extractor.extract_from_url(url, source_type)
 
             assert isinstance(result, list)
@@ -63,7 +67,9 @@ class TestPatternExtractor:
             {"url": "https://github.com/facebook/react", "type": "github_repository"},
         ]
 
-        with patch.object(self.extractor, "extract_from_url", return_value=[]) as mock_extract:
+        with patch.object(
+            self.extractor, "extract_from_url", return_value=[]
+        ) as mock_extract:
             result = self.extractor.extract_from_multiple_sources(sources)
 
             assert isinstance(result, list)
@@ -196,7 +202,9 @@ class TestWebDocumentationExtractor:
 
     def test_extract_patterns_network_error(self):
         """Test pattern extraction with network error."""
-        with patch.object(self.extractor.session, "get", side_effect=Exception("Network error")):
+        with patch.object(
+            self.extractor.session, "get", side_effect=Exception("Network error")
+        ):
             result = self.extractor.extract_patterns("https://react.dev/docs")
 
             assert result == []
@@ -238,7 +246,9 @@ class TestWebDocumentationExtractor:
         It also includes alt text for images.
         """
 
-        patterns = self.extractor._extract_accessibility_patterns(text, "https://example.com")
+        patterns = self.extractor._extract_accessibility_patterns(
+            text, "https://example.com"
+        )
 
         assert len(patterns) >= 0
         if patterns:
@@ -274,11 +284,16 @@ class TestGitHubRepositoryExtractor:
             mock_response.raise_for_status.return_value = None
             mock_get.return_value = mock_response
 
-            result = self.extractor.extract_patterns("https://github.com/facebook/react")
+            result = self.extractor.extract_patterns(
+                "https://github.com/facebook/react"
+            )
 
             assert len(result) == 1
             assert result[0].title == "Repository: react"
-            assert result[0].description == "A JavaScript library for building user interfaces"
+            assert (
+                result[0].description
+                == "A JavaScript library for building user interfaces"
+            )
             assert result[0].source_url == "https://github.com/facebook/react"
 
     def test_extract_patterns_invalid_url(self):
@@ -289,8 +304,12 @@ class TestGitHubRepositoryExtractor:
 
     def test_extract_patterns_network_error(self):
         """Test pattern extraction with network error."""
-        with patch.object(self.extractor.session, "get", side_effect=Exception("Network error")):
-            result = self.extractor.extract_patterns("https://github.com/facebook/react")
+        with patch.object(
+            self.extractor.session, "get", side_effect=Exception("Network error")
+        ):
+            result = self.extractor.extract_patterns(
+                "https://github.com/facebook/react"
+            )
 
             assert result == []
 
@@ -407,7 +426,9 @@ class TestDataExtractionIntegration:
             {"url": "https://github.com/facebook/react", "type": "github_repository"},
         ]
 
-        with patch.object(self.extractor, "extract_from_url", return_value=[]) as mock_extract:
+        with patch.object(
+            self.extractor, "extract_from_url", return_value=[]
+        ) as mock_extract:
             result = self.extractor.extract_from_multiple_sources(sources)
 
             assert isinstance(result, list)

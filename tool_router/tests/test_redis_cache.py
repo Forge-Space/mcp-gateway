@@ -25,7 +25,12 @@ class TestRedisCache:
     def test_redis_config_custom(self):
         """Test Redis configuration with custom values."""
         config = RedisConfig(
-            host="redis.example.com", port=6380, db=1, password="secret", socket_timeout=10, max_connections=20
+            host="redis.example.com",
+            port=6380,
+            db=1,
+            password="secret",
+            socket_timeout=10,
+            max_connections=20,
         )
         assert config.host == "redis.example.com"
         assert config.port == 6380
@@ -129,7 +134,11 @@ class TestCacheBackendConfig:
 
     def test_from_environment_hybrid(self):
         """Test hybrid configuration from environment."""
-        env_vars = {"CACHE_BACKEND": "hybrid", "REDIS_HOST": "localhost", "REDIS_PORT": "6379"}
+        env_vars = {
+            "CACHE_BACKEND": "hybrid",
+            "REDIS_HOST": "localhost",
+            "REDIS_PORT": "6379",
+        }
 
         with patch.dict("os.environ", env_vars, clear=True):
             config = CacheBackendConfig.from_environment()
@@ -146,10 +155,14 @@ class TestCacheIntegration:
     def test_fallback_only_mode(self):
         """Test cache behavior when Redis is unavailable."""
         config = CacheBackendConfig(
-            backend_type="redis", redis_config=RedisConfig(), fallback_config=CacheConfig(max_size=10, ttl=60)
+            backend_type="redis",
+            redis_config=RedisConfig(),
+            fallback_config=CacheConfig(max_size=10, ttl=60),
         )
 
-        cache = RedisCache(config=config.redis_config, fallback_config=config.fallback_config)
+        cache = RedisCache(
+            config=config.redis_config, fallback_config=config.fallback_config
+        )
 
         # Test basic operations work with fallback only
         cache.set("test_key", "test_value")
@@ -172,10 +185,14 @@ class TestCacheIntegration:
         mock_redis.Redis.return_value = mock_client
 
         config = CacheBackendConfig(
-            backend_type="hybrid", redis_config=RedisConfig(), fallback_config=CacheConfig(max_size=10, ttl=60)
+            backend_type="hybrid",
+            redis_config=RedisConfig(),
+            fallback_config=CacheConfig(max_size=10, ttl=60),
         )
 
-        cache = RedisCache(config=config.redis_config, fallback_config=config.fallback_config)
+        cache = RedisCache(
+            config=config.redis_config, fallback_config=config.fallback_config
+        )
 
         # Test operations
         cache.set("test_key", "test_value", ttl=300)
@@ -209,7 +226,8 @@ if __name__ == "__main__":
 
     try:
         cache = create_redis_cache(
-            config=RedisConfig(host="localhost", port=6379), fallback_config=CacheConfig(max_size=10, ttl=60)
+            config=RedisConfig(host="localhost", port=6379),
+            fallback_config=CacheConfig(max_size=10, ttl=60),
         )
 
         print("Cache created successfully")

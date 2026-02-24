@@ -695,7 +695,9 @@ class TestUISpecialist:
         """Test getting required accessibility features for AA level."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.AA)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.AA
+        )
 
         # Business logic: should return all AA level features
         expected_features = [
@@ -714,10 +716,16 @@ class TestUISpecialist:
         """Test getting required accessibility features for minimal level."""
         specialist = UISpecialist()
 
-        features = specialist._get_required_accessibility_features(AccessibilityLevel.MINIMAL)
+        features = specialist._get_required_accessibility_features(
+            AccessibilityLevel.MINIMAL
+        )
 
         # Business logic: should return minimal features only
-        expected_features = ["basic_keyboard_access", "alt_text_important", "semantic_structure"]
+        expected_features = [
+            "basic_keyboard_access",
+            "alt_text_important",
+            "semantic_structure",
+        ]
 
         for feature in expected_features:
             assert feature in features

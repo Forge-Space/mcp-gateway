@@ -81,7 +81,9 @@ class InputValidator:
             r"(?i)(private|confidential|sensitive).*(information|data)",
         ]
 
-        self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.suspicious_patterns]
+        self.compiled_patterns = [
+            re.compile(pattern, re.IGNORECASE) for pattern in self.suspicious_patterns
+        ]
 
     def _init_html_sanitizer(self) -> None:
         """Initialize HTML sanitizer configuration."""
@@ -89,9 +91,16 @@ class InputValidator:
         self.html_allowed_attributes = {}
 
         # Configure bleach for HTML sanitization
-        bleach.clean("", tags=self.html_allowed_tags, attributes=self.html_allowed_attributes, strip=True)
+        bleach.clean(
+            "",
+            tags=self.html_allowed_tags,
+            attributes=self.html_allowed_attributes,
+            strip=True,
+        )
 
-    def validate_prompt(self, prompt: str, context: str = "") -> SecurityValidationResult:
+    def validate_prompt(
+        self, prompt: str, context: str = ""
+    ) -> SecurityValidationResult:
         """Validate and sanitize a prompt."""
         violations = []
         risk_score = 0.0
@@ -242,7 +251,12 @@ class InputValidator:
     def _sanitize_html(self, text: str) -> str:
         """Sanitize HTML content."""
         try:
-            return bleach.clean(text, tags=self.html_allowed_tags, attributes=self.html_allowed_attributes, strip=True)
+            return bleach.clean(
+                text,
+                tags=self.html_allowed_tags,
+                attributes=self.html_allowed_attributes,
+                strip=True,
+            )
         except Exception:
             # Fallback to basic HTML escaping
             return html.escape(text)
@@ -285,5 +299,10 @@ class InputValidator:
             "html_sanitization": True,
             "max_prompt_length": 10000,
             "max_context_length": 5000,
-            "risk_thresholds": {"low": 0.3, "medium": 0.5, "high": 0.7, "critical": 1.0},
+            "risk_thresholds": {
+                "low": 0.3,
+                "medium": 0.5,
+                "high": 0.7,
+                "critical": 1.0,
+            },
         }

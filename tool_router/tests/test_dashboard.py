@@ -128,7 +128,10 @@ class TestCachePerformanceCollector:
         mock_redis_cache = Mock(spec=RedisCache)
         mock_redis_cache._redis_client = Mock()
         mock_redis_cache._is_healthy = True
-        mock_redis_cache.get_info.return_value = {"memory_usage": 1024000, "key_count": 25}
+        mock_redis_cache.get_info.return_value = {
+            "memory_usage": 1024000,
+            "key_count": 25,
+        }
         self.mock_cache_manager.get_cache.return_value = mock_redis_cache
 
         # Setup metrics
@@ -322,7 +325,9 @@ class TestCachePerformanceDashboard:
     def test_get_current_snapshot(self):
         """Test getting current snapshot."""
         # Mock collection
-        snapshot = CachePerformanceSnapshot(timestamp=time.time(), metrics={}, alerts=[], summary={})
+        snapshot = CachePerformanceSnapshot(
+            timestamp=time.time(), metrics={}, alerts=[], summary={}
+        )
         self.dashboard._snapshots.append(snapshot)
 
         # Get current snapshot
@@ -349,7 +354,9 @@ class TestCachePerformanceDashboard:
     def test_export_metrics_json(self):
         """Test exporting metrics as JSON."""
         # Mock snapshot
-        snapshot = CachePerformanceSnapshot(timestamp=time.time(), metrics={}, alerts=[], summary={"test": "data"})
+        snapshot = CachePerformanceSnapshot(
+            timestamp=time.time(), metrics={}, alerts=[], summary={"test": "data"}
+        )
         self.dashboard._snapshots.append(snapshot)
 
         # Export as JSON
@@ -369,7 +376,10 @@ class TestCachePerformanceDashboard:
             total_requests=100,
         )
         snapshot = CachePerformanceSnapshot(
-            timestamp=time.time(), metrics={"test_cache": metrics}, alerts=[], summary={}
+            timestamp=time.time(),
+            metrics={"test_cache": metrics},
+            alerts=[],
+            summary={},
         )
         self.dashboard._snapshots.append(snapshot)
 
@@ -430,7 +440,12 @@ if __name__ == "__main__":
 
     # Create metrics that should trigger alerts
     metrics = CachePerformanceMetrics(
-        timestamp=time.time(), cache_name="test_cache", backend_type="memory", hits=10, misses=90, total_requests=100
+        timestamp=time.time(),
+        cache_name="test_cache",
+        backend_type="memory",
+        hits=10,
+        misses=90,
+        total_requests=100,
     )
 
     alerts = alert_manager.check_alerts(metrics)

@@ -22,13 +22,19 @@ class TestSecurityEventType:
         assert SecurityEventType.REQUEST_RECEIVED.value == "request_received"
         assert SecurityEventType.REQUEST_BLOCKED.value == "request_blocked"
         assert SecurityEventType.RATE_LIMIT_EXCEEDED.value == "rate_limit_exceeded"
-        assert SecurityEventType.PROMPT_INJECTION_DETECTED.value == "prompt_injection_detected"
+        assert (
+            SecurityEventType.PROMPT_INJECTION_DETECTED.value
+            == "prompt_injection_detected"
+        )
         assert SecurityEventType.AUTHENTICATION_FAILED.value == "authentication_failed"
         assert SecurityEventType.AUTHORIZATION_FAILED.value == "authorization_failed"
         assert SecurityEventType.VALIDATION_FAILED.value == "validation_failed"
         assert SecurityEventType.PENALTY_APPLIED.value == "penalty_applied"
         assert SecurityEventType.SUSPICIOUS_ACTIVITY.value == "suspicious_activity"
-        assert SecurityEventType.SECURITY_POLICY_VIOLATION.value == "security_policy_violation"
+        assert (
+            SecurityEventType.SECURITY_POLICY_VIOLATION.value
+            == "security_policy_violation"
+        )
 
     def test_security_event_type_count(self):
         """Test number of security event types."""
@@ -70,7 +76,7 @@ class TestSecurityEvent:
             details={"action": "test"},
             risk_score=0.5,
             blocked=False,
-            metadata={"extra": "info"}
+            metadata={"extra": "info"},
         )
 
         assert event.event_id == "test-event-123"
@@ -105,7 +111,7 @@ class TestSecurityEvent:
             details={},
             risk_score=0.9,
             blocked=True,
-            metadata={}
+            metadata={},
         )
 
         assert event.event_id == "minimal-event"
@@ -139,7 +145,7 @@ class TestSecurityEvent:
             details={"action": "test"},
             risk_score=0.5,
             blocked=False,
-            metadata={"extra": "info"}
+            metadata={"extra": "info"},
         )
 
         event_dict = event.__dict__
@@ -240,7 +246,7 @@ class TestSecurityAuditLogger:
             details={"action": "test"},
             risk_score=0.1,
             blocked=False,
-            metadata={}
+            metadata={},
         )
 
         with patch.object(logger.logger, "info") as mock_info:
@@ -271,7 +277,7 @@ class TestSecurityAuditLogger:
             details={"limit": 100},
             risk_score=0.5,
             blocked=False,
-            metadata={}
+            metadata={},
         )
 
         with patch.object(logger.logger, "warning") as mock_warning:
@@ -302,7 +308,7 @@ class TestSecurityAuditLogger:
             details={"reason": "malicious"},
             risk_score=0.9,
             blocked=True,
-            metadata={}
+            metadata={},
         )
 
         with patch.object(logger.logger, "error") as mock_error:
@@ -333,7 +339,7 @@ class TestSecurityAuditLogger:
             details={"injection": "detected"},
             risk_score=1.0,
             blocked=True,
-            metadata={}
+            metadata={},
         )
 
         with patch.object(logger.logger, "error") as mock_error:
@@ -357,7 +363,7 @@ class TestSecurityAuditLogger:
                 user_agent="Mozilla/5.0",
                 request_id="req-789",
                 endpoint="/api/tools",
-                details={"action": "test"}
+                details={"action": "test"},
             )
 
             # Verify event ID is returned
@@ -391,7 +397,7 @@ class TestSecurityAuditLogger:
                 user_agent=None,
                 request_id=None,
                 endpoint=None,
-                details={}
+                details={},
             )
 
             # Verify event ID is returned
@@ -426,7 +432,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/tools",
                 reason="malicious payload",
                 risk_score=0.9,
-                details={"payload": "test"}
+                details={"payload": "test"},
             )
 
             # Verify event ID is returned
@@ -462,7 +468,7 @@ class TestSecurityAuditLogger:
                 endpoint="/api/tools",
                 reason="suspicious pattern",
                 risk_score=0.6,
-                details={"pattern": "test"}
+                details={"pattern": "test"},
             )
 
             # Verify event ID is returned
@@ -490,7 +496,7 @@ class TestSecurityAuditLogger:
                 endpoint=None,
                 reason="test reason",
                 risk_score=0.5,
-                details={}
+                details={},
             )
 
             # Verify event ID is returned
@@ -518,7 +524,7 @@ class TestSecurityAuditLogger:
                 limit_type="requests_per_minute",
                 current_count=150,
                 limit=100,
-                details={"window": "60s"}
+                details={"window": "60s"},
             )
 
             # Verify event ID is returned
@@ -555,7 +561,7 @@ class TestSecurityAuditLogger:
                 limit_type="global",
                 current_count=1000,
                 limit=500,
-                details={}
+                details={},
             )
 
             # Verify event ID is returned
