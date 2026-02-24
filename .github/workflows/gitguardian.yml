@@ -27,23 +27,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
+    env:
+      HAS_KEY: ${{ secrets.GITGUARDIAN_API_KEY != '' }}
 
     steps:
       - name: Checkout repository
+        if: env.HAS_KEY == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: GitGuardian Scan
+        if: env.HAS_KEY == 'true'
         uses: GitGuardian/gg-shield-action@v1
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
         with:
           args: >
-            scan 
-            --all 
-            --verbose 
+            scan
+            --all
+            --verbose
             --exit-code-on-secrets=1
 
       - name: Upload GitGuardian results to GitHub Security
@@ -75,22 +79,26 @@ jobs:
     timeout-minutes: 5
     continue-on-error: true
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    env:
+      HAS_KEY: ${{ secrets.GITGUARDIAN_API_KEY != '' }}
 
     steps:
       - name: Checkout repository
+        if: env.HAS_KEY == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: GitGuardian Monitoring
+        if: env.HAS_KEY == 'true'
         uses: GitGuardian/gg-shield-action@v1
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
         with:
           args: >
-            monitor 
-            --all 
+            monitor
+            --all
             --verbose
 
   workflow-summary:
