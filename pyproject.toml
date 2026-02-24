@@ -162,6 +162,7 @@ ignore = [
     "PTH110",  # os.path.exists → Path.exists (style preference)
     "PLC0415", # Import outside top level (conditional imports are intentional)
     "TID252",  # Relative imports (project uses both styles)
+    "UP038",   # Use X | Y instead of Union (defer to modernize)
     "ARG001",  # Unused function argument (common in handlers/callbacks)
     "ARG002",  # Unused method argument (common in OOP/handlers)
     "EM101",   # Raw string in exception (acceptable for clarity)
