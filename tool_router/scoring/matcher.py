@@ -30,8 +30,10 @@ SYNONYMS = {
 }
 
 
-def _extract_normalized_tokens(text: str) -> set[str]:
+def _extract_normalized_tokens(text: str | None) -> set[str]:
     """Extract tokens from string, including single-char tokens for better matching."""
+    if not text:
+        return set()
     normalized = re.sub(r"[^a-z0-9\s]", " ", text.lower())
     return {word for word in normalized.split() if word}
 
