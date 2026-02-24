@@ -71,10 +71,7 @@ jobs:
             --cov-report=term-missing \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
             -v \
-            --tb=short \
-            --maxfail=5 \
-            --dist=loadscope \
-            -n auto
+            --tb=short
 
       - name: Run integration tests
         continue-on-error: true
