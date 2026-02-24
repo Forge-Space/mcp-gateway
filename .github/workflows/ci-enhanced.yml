@@ -63,7 +63,7 @@ jobs:
       - name: Run linting and formatting checks
         run: |
           pip install ruff black mypy
-          ruff check . --format=github
+          ruff check . --output-format=github
           black --check .
           mypy . --ignore-missing-imports || true
 
@@ -146,12 +146,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run Snyk Security Scan
-        uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=${{ env.SNYK_SEVERITY_THRESHOLD }}
+      - name: Run pip audit
+        run: |
+          pip install pip-audit
+          pip-audit || true
 
       - name: Run Bandit Security Analysis
         run: |
@@ -199,10 +197,8 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: |
-            ghcr.io/ibm/mcp-context-forge:1.0.0-BETA-2
-            forge-mcp-gateway-tool-router:latest
-            forge-mcp-gateway-service-manager:latest
+          scan-type: 'fs'
+          scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
 

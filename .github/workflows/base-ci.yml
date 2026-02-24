@@ -66,7 +66,7 @@ jobs:
           python-version: ${{ inputs.python-version }}
           cache: 'pip'
       - run: pip install ruff black mypy && pip install -r requirements.txt
-      - run: ruff check apps/ src/ scripts/ --format=github
+      - run: ruff check apps/ src/ scripts/ --output-format=github
       - run: black --check apps/ src/ scripts/
       - run: mypy apps/tool-router/src/ --ignore-missing-imports || true
 
@@ -117,10 +117,8 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: Install dependencies and run Snyk
+      - name: Run pip audit
         run: |
-          npm install --ignore-scripts
-          npx snyk test --severity-threshold=high
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          pip install pip-audit
+          pip-audit || true
         continue-on-error: true

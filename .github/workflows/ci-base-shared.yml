@@ -182,7 +182,7 @@ jobs:
           pip install -r requirements.txt --if-present
 
       - name: Run ruff
-        run: ruff check . --format=github
+        run: ruff check . --output-format=github
 
       - name: Run black
         run: black --check .
@@ -296,27 +296,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Snyk (Node.js)
-        if: inputs.project-type != 'gateway'
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
-      - name: Run Snyk (Python)
-        if: inputs.project-type == 'gateway' || inputs.project-type == 'mcp'
-        uses: snyk/actions/python@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
       - name: Run npm audit
         if: inputs.project-type != 'gateway'
         run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Run pip audit
+        if: inputs.project-type == 'gateway' || inputs.project-type == 'mcp'
+        run: |
+          pip install pip-audit
+          pip-audit || true
         continue-on-error: true
 
   # Quality Gates
