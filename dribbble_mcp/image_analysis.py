@@ -8,6 +8,7 @@ from typing import Any
 
 import httpx
 
+
 logger = logging.getLogger(__name__)
 
 _MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB

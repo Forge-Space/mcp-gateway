@@ -16,6 +16,7 @@ from ..training.evaluation import SpecialistEvaluator
 from ..training.knowledge_base import KnowledgeBase
 from ..training.training_pipeline import DEFAULT_TRAINING_SOURCES, TrainingPipeline
 
+
 logger = logging.getLogger(__name__)
 
 

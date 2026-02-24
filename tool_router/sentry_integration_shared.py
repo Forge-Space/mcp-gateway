@@ -20,6 +20,7 @@ from shared_logger import (
     get_or_create_correlation_id,
 )
 
+
 # Global logger instance
 shared_logger: SharedLogger | None = None
 

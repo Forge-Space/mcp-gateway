@@ -8,6 +8,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from enum import Enum
 
+
 try:
     import redis
 
@@ -590,6 +591,7 @@ class EnhancedRateLimiter:
 
 # Set up logging
 import logging
+
 
 logger = logging.getLogger(__name__)
 

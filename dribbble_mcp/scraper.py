@@ -11,6 +11,7 @@ from urllib.parse import quote_plus, urljoin
 import httpx
 from bs4 import BeautifulSoup
 
+
 logger = logging.getLogger(__name__)
 
 DRIBBBLE_BASE = "https://dribbble.com"

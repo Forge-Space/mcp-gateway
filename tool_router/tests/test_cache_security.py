@@ -28,6 +28,7 @@ from unittest.mock import Mock, patch
 import pytest
 from cryptography.fernet import Fernet
 
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from cache.compliance import ComplianceManager

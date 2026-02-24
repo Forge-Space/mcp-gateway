@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+
 # Common synonyms for better matching
 SYNONYMS = {
     "search": {"find", "lookup", "query", "seek"},

@@ -17,6 +17,7 @@ from tool_router.cache.dashboard import (
     stop_dashboard_collection,
 )
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/cache/dashboard", tags=["cache-dashboard"])

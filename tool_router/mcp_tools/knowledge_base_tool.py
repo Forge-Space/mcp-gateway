@@ -11,6 +11,7 @@ from typing import Any
 
 from ..training.knowledge_base import KnowledgeBase, KnowledgeItem, PatternCategory
 
+
 logger = logging.getLogger(__name__)
 
 

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from tool_router.ai.selector import OllamaSelector
 
+
 if TYPE_CHECKING:
     from tool_router.ai.feedback import FeedbackStore
 else:

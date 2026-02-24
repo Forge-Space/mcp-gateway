@@ -16,6 +16,7 @@ from tool_router.database.supabase_client import (
     get_database_client,
 )
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/health", tags=["health"])
