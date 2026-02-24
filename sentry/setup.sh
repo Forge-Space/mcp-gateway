@@ -30,19 +30,19 @@ fi
 # Generate secure values if not set
 if grep -q "your_secure_postgres_password_here" .env; then
     echo "🔐 Generating secure passwords and keys..."
-    
+
     # Generate random passwords
     DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
     SECRET_KEY=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
     SSO_KEY=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
     SSO_SECRET=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-    
+
     # Update .env file
     sed -i.bak "s/your_secure_postgres_password_here/$DB_PASSWORD/" .env
     sed -i.bak "s/your_super_long_random_secret_key_at_least_32_characters/$SECRET_KEY/" .env
     sed -i.bak "s/your_sso_key_here/$SSO_KEY/" .env
     sed -i.bak "s/your_sso_secret_here/$SSO_SECRET/" .env
-    
+
     echo "✅ Generated secure configuration"
 fi
 
@@ -70,7 +70,7 @@ for i in {1..10}; do
         echo "⏳ Waiting for Sentry... ($i/10)"
         sleep 10
     fi
-    
+
     if [ $i -eq 10 ]; then
         echo "❌ Sentry failed to start. Check logs:"
         docker-compose logs web

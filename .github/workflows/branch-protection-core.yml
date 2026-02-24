@@ -27,15 +27,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event.inputs.action == 'validate'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Check branch protection settings
         run: |
           echo "🔍 Validating branch protection settings..."
-          
+
           # Check if release/core branch exists
           if git branch --list | grep -q "release/core"; then
             echo "✅ release/core branch exists"
@@ -44,7 +44,7 @@ jobs:
             echo "💡 Create it with: git checkout -b release/core main"
             exit 1
           fi
-          
+
           echo "✅ Branch protection validation passed"
 
   enable:
@@ -52,18 +52,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: github.event.inputs.action == 'enable'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
       - name: Create release/core branch
         run: |
           if ! git branch --list | grep -q "release/core"; then
@@ -74,14 +74,14 @@ jobs:
           else
             echo "✅ release/core branch already exists"
           fi
-          
+
       - name: Create branch protection
         uses: actions/github-script@v7
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            
+
             // Branch protection for release/core
             await github.rest.repos.updateBranchProtectionRule({
               owner,
@@ -141,7 +141,7 @@ jobs:
                 }
               }
             });
-            
+
             console.log('✅ Branch protection enabled for release/core');
 
   disable:
@@ -149,20 +149,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event.inputs.action == 'disable'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Remove branch protection
         uses: actions/github-script@v7
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            
+
             try {
               await github.rest.repos.deleteBranchProtectionRule({
                 owner,

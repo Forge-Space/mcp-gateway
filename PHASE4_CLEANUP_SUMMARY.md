@@ -28,7 +28,7 @@
 ```python
 class TemplateRegistry:
     """Central template registry for UIForge projects."""
-    
+
     def register_template(self, instance: TemplateInstance) -> str
     def get_template(self, template_id: str) -> Optional[TemplateInstance]
     def create_template_instance(self, template_id: str, variables: Dict[str, str]) -> str
@@ -68,7 +68,7 @@ class TemplateMetadata:
 ```python
 # Successfully registered templates:
 ✅ package.json/uiforge-package@1.0.0
-✅ pyproject.toml/uiforge-python@1.0.0  
+✅ pyproject.toml/uiforge-python@1.0.0
 ✅ tsconfig.json/uiforge-typescript@1.0.0
 ```
 
@@ -84,7 +84,7 @@ class TemplateMetadata:
 ```python
 class ProjectSyncManager:
     """Manages synchronization across multiple UIForge projects."""
-    
+
     def sync_project(self, project_name: str, dry_run: bool = False) -> Dict
     def sync_all_projects(self, dry_run: bool = False) -> Dict
     def detect_conflicts(self) -> Dict
@@ -102,7 +102,7 @@ class ProjectSyncManager:
 ```python
 def discover_projects(self, base_path: Path) -> List[str]:
     """Discover UIForge projects in the given base path."""
-    
+
 def _is_uiforge_project(self, path: Path) -> bool:
     """Check if a directory is a UIForge project."""
 ```
@@ -126,7 +126,7 @@ def _is_uiforge_project(self, path: Path) -> bool:
 ```python
 class DependencyManager:
     """Manages dependencies across UIForge projects."""
-    
+
     def check_dependencies(self, project_name: str) -> Dict
     def update_dependencies(self, project_name: str, dry_run: bool = True) -> Dict
     def sync_versions(self, template_id: str, version: str) -> Dict

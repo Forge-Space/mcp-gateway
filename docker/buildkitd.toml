@@ -1,7 +1,7 @@
 # BuildKit configuration for optimal performance
 [worker.oci]
   max-parallelism = 4
-  
+
 [gc]
   # Keep cache for 24 hours
   keep-storage = 86400

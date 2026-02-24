@@ -39,7 +39,7 @@ if [ -f "data/knowledge_base.db" ]; then
     # Create backup
     cp data/knowledge_base.db data/knowledge_base.db.backup.$(date +%Y%m%d_%H%M%S)
     echo "✅ Database backup created"
-    
+
     # Test migration syntax
     docker run --rm -v "$(pwd):/app" tool-router:test sqlite3 data/knowledge_base.db ".schema" >/dev/null 2>&1 && echo "✅ Database accessible" || echo "❌ Database not accessible"
 else
@@ -83,11 +83,11 @@ if [ -f "tests/test_rag_manager.py" ]; then
     echo "✅ Test file exists"
     line_count=$(wc -l < tests/test_rag_manager.py)
     echo "✅ Test file has $line_count lines"
-    
+
     # Count test classes
     test_classes=$(grep -c "class Test" tests/test_rag_manager.py || echo "0")
     echo "✅ Test classes: $test_classes"
-    
+
     # Count test methods
     test_methods=$(grep -c "def test_" tests/test_rag_manager.py || echo "0")
     echo "✅ Test methods: $test_methods"
@@ -118,20 +118,20 @@ try:
     # Test basic performance metrics
     import time
     start_time = time.time()
-    
+
     # Simulate query analysis time
     time.sleep(0.01)  # 10ms simulation
-    
+
     end_time = time.time()
     elapsed = (end_time - start_time) * 1000  # Convert to ms
-    
+
     if elapsed < 100:  # Target <100ms
         print('✅ Query analysis target achievable')
     else:
         print('⚠️  Query analysis may need optimization')
-        
+
     print(f'   Simulated time: {elapsed:.2f}ms')
-    
+
 except Exception as e:
     print(f'❌ Performance test error: {e}')
 " 2>/dev/null || echo "❌ Performance test failed"

@@ -92,11 +92,11 @@ EOF
 cmd_quality_check() {
     local file_path="${1:-}"
     local project_root="${2:-$PROJECT_ROOT}"
-    
+
     log_info "Running test quality validation..."
-    
+
     cd "$project_root"
-    
+
     if [[ -n "$file_path" ]]; then
         log_info "Checking file: $file_path"
         python3 scripts/test_workflows/test_quality_validation.py check --file "$file_path"
@@ -104,15 +104,15 @@ cmd_quality_check() {
         log_info "Checking entire project..."
         python3 scripts/test_workflows/test_quality_validation.py check
     fi
-    
+
     local exit_code=$?
-    
+
     if [[ $exit_code -eq 0 ]]; then
         log_success "Quality check passed"
     else
         log_error "Quality check failed"
     fi
-    
+
     return $exit_code
 }
 
@@ -121,11 +121,11 @@ cmd_generate_report() {
     local output_path="${1:-}"
     local project_root="${2:-$PROJECT_ROOT}"
     local no_summary="${3:-false}"
-    
+
     log_info "Generating test quality report..."
-    
+
     cd "$project_root"
-    
+
     local args=("report")
     if [[ -n "$output_path" ]]; then
         args+=("--output" "$output_path")
@@ -133,11 +133,11 @@ cmd_generate_report() {
     if [[ "$no_summary" == "true" ]]; then
         args+=("--no-summary")
     fi
-    
+
     python3 scripts/test_workflows/test_quality_validation.py "${args[@]}"
-    
+
     local exit_code=$?
-    
+
     if [[ $exit_code -eq 0 ]]; then
         log_success "Report generated successfully"
         if [[ -n "$output_path" ]]; then
@@ -146,32 +146,32 @@ cmd_generate_report() {
     else
         log_error "Report generation failed"
     fi
-    
+
     return $exit_code
 }
 
 # Command: Run Coverage
 cmd_run_coverage() {
     local project_root="${1:-$PROJECT_ROOT}"
-    
+
     log_info "Running test coverage analysis..."
-    
+
     cd "$project_root"
-    
+
     # Check if pytest is available
     if ! command -v pytest &> /dev/null; then
         log_error "pytest not found. Please install it: pip install pytest pytest-cov"
         return 1
     fi
-    
+
     # Run coverage analysis
     python3 scripts/test_workflows/test_quality_validation.py coverage
-    
+
     local exit_code=$?
-    
+
     if [[ $exit_code -eq 0 ]]; then
         log_success "Coverage analysis completed"
-        
+
         # Display coverage summary if available
         if [[ -f "coverage.json" ]]; then
             log_info "Coverage report available in coverage.json and htmlcov/"
@@ -179,7 +179,7 @@ cmd_run_coverage() {
     else
         log_error "Coverage analysis failed"
     fi
-    
+
     return $exit_code
 }
 
@@ -188,32 +188,32 @@ cmd_create_tests() {
     local module_path="${1:-}"
     local test_type="${2:-unit}"
     local project_root="${3:-$PROJECT_ROOT}"
-    
+
     if [[ -z "$module_path" ]]; then
         log_error "Module path is required for test creation"
         return 1
     fi
-    
+
     log_info "Creating $test_type tests for module: $module_path"
-    
+
     cd "$project_root"
-    
+
     # Check if module exists
     if [[ ! -f "$module_path" ]]; then
         log_error "Module not found: $module_path"
         return 1
     fi
-    
+
     python3 scripts/test_workflows/test_creation_workflows.py create "$module_path" --type "$test_type"
-    
+
     local exit_code=$?
-    
+
     if [[ $exit_code -eq 0 ]]; then
         log_success "Tests created successfully"
     else
         log_error "Test creation failed"
     fi
-    
+
     return $exit_code
 }
 
@@ -222,26 +222,26 @@ cmd_batch_create() {
     local module_pattern="${1:-}"
     local test_type="${2:-unit}"
     local project_root="${3:-$PROJECT_ROOT}"
-    
+
     if [[ -z "$module_pattern" ]]; then
         log_error "Module pattern is required for batch test creation"
         return 1
     fi
-    
+
     log_info "Creating $test_type tests for modules matching: $module_pattern"
-    
+
     cd "$project_root"
-    
+
     python3 scripts/test_workflows/test_creation_workflows.py batch "$module_pattern" --type "$test_type"
-    
+
     local exit_code=$?
-    
+
     if [[ $exit_code -eq 0 ]]; then
         log_success "Batch test creation completed"
     else
         log_error "Batch test creation failed"
     fi
-    
+
     return $exit_code
 }
 
@@ -249,11 +249,11 @@ cmd_batch_create() {
 cmd_validate_quality() {
     local file_path="${1:-}"
     local project_root="${2:-$PROJECT_ROOT}"
-    
+
     log_info "Validating test quality against standards..."
-    
+
     cd "$project_root"
-    
+
     if [[ -n "$file_path" ]]; then
         log_info "Validating file: $file_path"
         python3 scripts/test_workflows/test_quality_validation.py check --file "$file_path"
@@ -261,40 +261,40 @@ cmd_validate_quality() {
         log_info "Validating entire project..."
         python3 scripts/test_workflows/test_quality_validation.py check
     fi
-    
+
     local exit_code=$?
-    
+
     if [[ $exit_code -eq 0 ]]; then
         log_success "Quality validation passed"
     else
         log_error "Quality validation failed"
     fi
-    
+
     return $exit_code
 }
 
 # Command: Quick Analysis (combines multiple checks)
 cmd_quick_analysis() {
     local project_root="${1:-$PROJECT_ROOT}"
-    
+
     log_info "Running quick test quality analysis..."
-    
+
     # 1. Run quality check
     log_info "1/3: Running quality validation..."
     if ! cmd_quality_check "" "$project_root"; then
         log_warning "Quality check found issues"
     fi
-    
+
     echo
-    
+
     # 2. Run coverage analysis
     log_info "2/3: Running coverage analysis..."
     if ! cmd_run_coverage "$project_root"; then
         log_warning "Coverage analysis failed"
     fi
-    
+
     echo
-    
+
     # 3. Generate summary report
     log_info "3/3: Generating summary report..."
     local report_file="test_quality_summary_$(date +%Y%m%d_%H%M%S).json"
@@ -305,37 +305,37 @@ cmd_quick_analysis() {
         log_error "Report generation failed"
         return 1
     fi
-    
+
     return 0
 }
 
 # Setup function - ensure dependencies are available
 setup_environment() {
     local project_root="${1:-$PROJECT_ROOT}"
-    
+
     log_info "Setting up test creation environment..."
-    
+
     cd "$project_root"
-    
+
     # Check Python dependencies
     local required_packages=("pytest" "pytest-cov" "pytest-asyncio")
     local missing_packages=()
-    
+
     for package in "${required_packages[@]}"; do
         if ! python3 -c "import $package" 2>/dev/null; then
             missing_packages+=("$package")
         fi
     done
-    
+
     if [[ ${#missing_packages[@]} -gt 0 ]]; then
         log_warning "Missing required packages: ${missing_packages[*]}"
         log_info "Installing missing packages..."
         pip install "${missing_packages[@]}"
     fi
-    
+
     # Ensure test directories exist
     local test_dirs=("tool_router/tests/unit" "tool_router/tests/integration" "tool_router/tests/e2e")
-    
+
     for dir in "${test_dirs[@]}"; do
         if [[ ! -d "$dir" ]]; then
             log_info "Creating test directory: $dir"
@@ -344,7 +344,7 @@ setup_environment() {
             touch "$dir/__init__.py"
         fi
     done
-    
+
     log_success "Environment setup completed"
 }
 
@@ -358,7 +358,7 @@ main() {
     local output_path=""
     local project_root="$PROJECT_ROOT"
     local no_summary="false"
-    
+
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -405,19 +405,19 @@ main() {
                 ;;
         esac
     done
-    
+
     # Validate project root
     if [[ ! -d "$project_root" ]]; then
         log_error "Project root not found: $project_root"
         exit 1
     fi
-    
+
     # Ensure we're in a Python project with tool_router
     if [[ ! -d "$project_root/tool_router" ]]; then
         log_error "tool_router directory not found in project root"
         exit 1
     fi
-    
+
     # Execute command
     case $command in
         quality-check)

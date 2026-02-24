@@ -153,7 +153,7 @@ Based on the project analysis, here's the current dependency landscape:
    ```bash
    # Unpublish problematic version
    npm unpublish @forgespace/core@version --force
-   
+
    # Republish previous stable version
    npm publish @forgespace/core@previous-version --tag latest
    ```
@@ -187,17 +187,17 @@ jobs:
         run: |
           cd /Users/lucassantana/Desenvolvimento/forge-patterns
           npm run publish:npm
-      
+
       - name: Update Dependencies
         run: |
           # Update uiforge-mcp
           cd /Users/lucassantana/Desenvolvimento/uiforge-mcp
           npm install @forgespace/core@latest
-          
+
           # Update uiforge-webapp
           cd /Users/lucassantana/Desenvolvimento/uiforge-webapp
           npm install @forgespace/core@latest
-      
+
       - name: Validate Integration
         run: |
           # Test all projects

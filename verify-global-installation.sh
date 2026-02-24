@@ -48,7 +48,7 @@ test_script_in_path() {
 test_script_execution() {
     local script="$1"
     local test_args="$2"
-    
+
     if command -v "$script" &> /dev/null; then
         echo "Testing $script..."
         if [ -n "$test_args" ]; then
@@ -56,7 +56,7 @@ test_script_execution() {
         else
             "$script" --help > /dev/null 2>&1 || "$script" help > /dev/null 2>&1
         fi
-        
+
         if [ $? -eq 0 ]; then
             print_success "✅ $script executes successfully"
             return 0
@@ -134,13 +134,13 @@ print_status "5. Checking configuration files..."
 # Check Claude Code configuration
 if [ -d "$HOME/.claude" ]; then
     print_success "✅ Claude Code configuration directory exists"
-    
+
     if [ -f "$HOME/.claude/CLAUDE.md" ]; then
         print_success "✅ Main configuration file exists"
     else
         print_warning "⚠️  Main configuration file not found"
     fi
-    
+
     if [ -f "$HOME/.claude/mcp.json" ]; then
         print_success "✅ MCP configuration exists"
     else

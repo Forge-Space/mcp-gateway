@@ -151,7 +151,7 @@ cat > .claude/monitoring/dashboard_status.html << 'EOF'
                 .then(data => {
                     const grid = document.getElementById('status-grid');
                     grid.innerHTML = '';
-                    
+
                     // Gateway status
                     const gatewayCard = createStatusCard(
                         'Gateway Health',
@@ -159,7 +159,7 @@ cat > .claude/monitoring/dashboard_status.html << 'EOF'
                         data.gateway_health
                     );
                     grid.appendChild(gatewayCard);
-                    
+
                     // MCP Servers status
                     const mcpCard = createStatusCard(
                         'MCP Servers',
@@ -167,7 +167,7 @@ cat > .claude/monitoring/dashboard_status.html << 'EOF'
                         data.mcp_servers
                     );
                     grid.appendChild(mcpCard);
-                    
+
                     // Hook System status
                     const hooksCard = createStatusCard(
                         'Hook System',
@@ -175,7 +175,7 @@ cat > .claude/monitoring/dashboard_status.html << 'EOF'
                         data.hook_system
                     );
                     grid.appendChild(hooksCard);
-                    
+
                     // System Resources status
                     const systemCard = createStatusCard(
                         'System Resources',
@@ -183,7 +183,7 @@ cat > .claude/monitoring/dashboard_status.html << 'EOF'
                         data.system_resources
                     );
                     grid.appendChild(systemCard);
-                    
+
                     // Integrations status
                     const integrationsCard = createStatusCard(
                         'Integrations',
@@ -196,15 +196,15 @@ cat > .claude/monitoring/dashboard_status.html << 'EOF'
                     console.error('Error updating status:', error);
                 });
         }
-        
+
         function createStatusCard(title, status, details) {
             const card = document.createElement('div');
             card.className = `status-card status-${status}`;
-            
+
             const title = document.createElement('div');
             title.className = 'status-title';
             title.textContent = title;
-            
+
             const details = document.createElement('div');
             details.className = 'status-details';
             details.innerHTML = `
@@ -212,15 +212,15 @@ cat > .claude/monitoring/dashboard_status.html << 'EOF'
                 Last Check: ${details.timestamp}<br>
                 ${details.error ? `Error: ${details.error}` : ''}
             `;
-            
+
             card.appendChild(title);
             card.appendChild(details);
             return card;
         }
-        
+
         // Auto-refresh every 30 seconds
         setInterval(updateStatus, 30000);
-        
+
         // Initial load
         updateStatus();
     </script>

@@ -18,7 +18,7 @@ echo ""
 echo "🐍 Virtual Environment Check:"
 if [ -d ".venv" ]; then
     echo "✅ .venv directory exists"
-    
+
     # Check if activated
     if [ "$VIRTUAL_ENV" != "" ]; then
         echo "✅ Virtual environment activated: $VIRTUAL_ENV"
@@ -28,7 +28,7 @@ if [ -d ".venv" ]; then
         echo "⚠️  Virtual environment not activated"
         echo "To activate: source .venv/bin/activate"
     fi
-    
+
     # Check venv contents
     if [ -f ".venv/bin/python" ]; then
         echo "✅ Python executable exists in venv"

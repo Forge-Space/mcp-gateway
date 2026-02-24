@@ -162,8 +162,8 @@ class SimpleConfigMerger {
     try {
       const content = `# UIForge Patterns Integration Summary
 
-**Date**: ${new Date().toISOString()}  
-**Project**: forge-mcp-gateway  
+**Date**: ${new Date().toISOString()}
+**Project**: forge-mcp-gateway
 **Integration Strategy**: Hybrid - Preserve Superior Configurations
 
 ## 🎯 Integration Results

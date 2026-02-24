@@ -36,12 +36,12 @@ print_error() {
 # Function to check if BuildKit is available
 check_buildkit() {
     print_status "Checking BuildKit availability..."
-    
+
     if ! docker buildx version >/dev/null 2>&1; then
         print_error "BuildKit is not available. Please install docker-buildx-plugin."
         exit 1
     fi
-    
+
     # Check if buildx builder is running
     if ! docker buildx inspect default >/dev/null 2>&1; then
         print_status "Creating BuildKit builder..."
@@ -49,7 +49,7 @@ check_buildkit() {
     else
         print_status "BuildKit builder already exists"
     fi
-    
+
     print_success "BuildKit is ready"
 }
 
@@ -58,16 +58,16 @@ build_optimized() {
     local service="${1:-tool-router}"
     local dockerfile="${2:-Dockerfile.tool-router.optimized}"
     local target="${3:-runtime}"
-    
+
     print_status "Building optimized ${service} image..."
-    
+
     # Build arguments for optimization
     local build_args=(
         "--build-arg" "BUILDKIT_INLINE_CACHE=1"
         "--build-arg" "PYTHONOPTIMIZE=2"
         "--build-arg" "PYTHONDONTWRITEBYTECODE=1"
     )
-    
+
     # Cache configuration
     local cache_args=(
         "--cache-from" "type=registry,ref=${REGISTRY}/${PROJECT_NAME}-${service}:cache"
@@ -75,7 +75,7 @@ build_optimized() {
         "--cache-from" "type=local,src=/tmp/.buildx-cache-${service}"
         "--cache-to" "type=local,dest=/tmp/.buildx-cache-${service}"
     )
-    
+
     # Build command
     local build_cmd=(
         "buildx" "build"
@@ -89,9 +89,9 @@ build_optimized() {
         "--file" "${dockerfile}"
         "."
     )
-    
+
     print_status "Executing: docker ${build_cmd[*]}"
-    
+
     if docker "${build_cmd[@]}" --push; then
         print_success "Successfully built and pushed ${service} image"
     else
@@ -103,19 +103,19 @@ build_optimized() {
 # Function to analyze image size and layers
 analyze_image() {
     local image="${1:-${REGISTRY}/${PROJECT_NAME}-tool-router:latest}"
-    
+
     print_status "Analyzing image: ${image}"
-    
+
     # Pull image if not present
     if ! docker image inspect "${image}" >/dev/null 2>&1; then
         print_status "Pulling image for analysis..."
         docker pull "${image}"
     fi
-    
+
     # Show image size
     local size=$(docker image inspect "${image}" --format='{{.Size}}' | numfmt --to=iec)
     print_status "Image size: ${size}"
-    
+
     # Show layer information if dive is available
     if command -v dive >/dev/null 2>&1; then
         print_status "Running dive analysis..."
@@ -123,7 +123,7 @@ analyze_image() {
     else
         print_warning "dive not installed. Install with: brew install dive"
     fi
-    
+
     # Show history
     print_status "Image layers:"
     docker history "${image}" --human --no-trunc
@@ -132,16 +132,16 @@ analyze_image() {
 # Function to clean up build cache
 cleanup_cache() {
     print_status "Cleaning up BuildKit cache..."
-    
+
     # Remove old local cache
     docker buildx prune --filter type=local --force --all
-    
+
     # Remove unused build cache
     docker buildx prune --force --all
-    
+
     # Remove dangling images
     docker image prune --force
-    
+
     print_success "Cache cleanup completed"
 }
 
@@ -149,13 +149,13 @@ cleanup_cache() {
 benchmark_build() {
     local service="${1:-tool-router}"
     local dockerfile="${2:-Dockerfile.tool-router}"
-    
+
     print_status "Benchmarking build performance for ${service}..."
-    
+
     # Build without cache first
     print_status "Cold build (no cache)..."
     local start_time=$(date +%s)
-    
+
     if docker buildx build \
         --builder default \
         --no-cache \
@@ -168,11 +168,11 @@ benchmark_build() {
         print_error "Cold build failed"
         return 1
     fi
-    
+
     # Build with cache
     print_status "Warm build (with cache)..."
     start_time=$(date +%s)
-    
+
     if docker buildx build \
         --builder default \
         --file "${dockerfile}" \
@@ -180,7 +180,7 @@ benchmark_build() {
         "." >/dev/null 2>&1; then
         local warm_time=$(($(date +%s) - start_time))
         print_success "Warm build completed in ${warm_time}s"
-        
+
         # Calculate improvement
         if [ "${cold_time}" -gt 0 ]; then
             local improvement=$(( (cold_time - warm_time) * 100 / cold_time ))
@@ -190,7 +190,7 @@ benchmark_build() {
         print_error "Warm build failed"
         return 1
     fi
-    
+
     # Cleanup benchmark images
     docker rmi "benchmark-${service}:cold" "benchmark-${service}:warm" >/dev/null 2>&1 || true
 }
@@ -198,9 +198,9 @@ benchmark_build() {
 # Function to generate build report
 generate_report() {
     local report_file="docker-build-report-$(date +%Y%m%d-%H%M%S).md"
-    
+
     print_status "Generating build report: ${report_file}"
-    
+
     cat > "${report_file}" << EOF
 # Docker Build Optimization Report
 Generated: $(date)
@@ -212,14 +212,14 @@ Generated: $(date)
 
 ## Image Analysis
 EOF
-    
+
     # Analyze main images
     for service in tool-router gateway service-manager; do
         local image="${REGISTRY}/${PROJECT_NAME}-${service}:latest"
         if docker image inspect "${image}" >/dev/null 2>&1; then
             local size=$(docker image inspect "${image}" --format='{{.Size}}' | numfmt --to=iec)
             local layers=$(docker image inspect "${image}" --format='{{len .RootFS.Layers}}')
-            
+
             cat >> "${report_file}" << EOF
 ### ${service}
 - Size: ${size}
@@ -227,7 +227,7 @@ EOF
 EOF
         fi
     done
-    
+
     cat >> "${report_file}" << EOF
 
 ## Optimization Recommendations
@@ -242,14 +242,14 @@ EOF
 - Cache hit rate: Check individual build logs
 - Layer efficiency: Use dive tool for detailed analysis
 EOF
-    
+
     print_success "Report generated: ${report_file}"
 }
 
 # Main function
 main() {
     local command="${1:-help}"
-    
+
     case "${command}" in
         "build")
             check_buildkit

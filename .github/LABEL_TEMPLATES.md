@@ -183,7 +183,7 @@ Update issue and PR templates to include label guidance:
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2026-02-20  
-**Maintainer**: Forge Space Development Team  
+**Version**: 1.0.0
+**Last Updated**: 2026-02-20
+**Maintainer**: Forge Space Development Team
 **Review Required**: Every 6 months
