@@ -12,6 +12,7 @@ dependencies = [
     "mcp",
     "mcp-contextforge-gateway",
     "beautifulsoup4",
+    "cachetools>=5.0.0",
     "httpx",
     "lxml",
     "Pillow",
