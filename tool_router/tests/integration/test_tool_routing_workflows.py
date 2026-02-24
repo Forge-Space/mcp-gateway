@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from tool_router.ai.enhanced_selector import EnhancedSelector
+from tool_router.ai.enhanced_selector import EnhancedAISelector
 from tool_router.ai.feedback import FeedbackStore
 from tool_router.core.config import ToolRouterConfig
 
@@ -22,7 +22,7 @@ class TestToolRoutingWorkflows:
         feedback_store = FeedbackStore(feedback_file)
 
         # Mock AI selector
-        ai_selector = Mock(spec=EnhancedSelector)
+        ai_selector = Mock(spec=EnhancedAISelector)
         ai_selector.select_tool.return_value = {
             "selected_tool": "search_web",
             "confidence": 0.85,
@@ -61,11 +61,11 @@ class TestToolRoutingWorkflows:
         feedback_store = FeedbackStore(feedback_file)
 
         # Mock AI selector failure
-        ai_selector = Mock(spec=EnhancedSelector)
+        ai_selector = Mock(spec=EnhancedAISelector)
         ai_selector.select_tool.side_effect = Exception("AI service unavailable")
 
         # Mock keyword-based fallback
-        with patch("tool_router.ai.enhanced_selector.EnhancedSelector._select_by_keywords") as mock_keywords:
+        with patch("tool_router.ai.enhanced_selector.EnhancedAISelector._select_by_keywords") as mock_keywords:
             mock_keywords.return_value = {
                 "selected_tool": "file_reader",
                 "confidence": 0.6,
@@ -80,7 +80,7 @@ class TestToolRoutingWorkflows:
                 ai_selector.select_tool("read the configuration file")
             except Exception:
                 # Fallback to keyword selection
-                real_selector = EnhancedSelector(Mock())
+                real_selector = EnhancedAISelector(Mock())
                 selection_result = real_selector._select_by_keywords("read the configuration file")
 
         # Verify fallback worked

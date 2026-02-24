@@ -1,5 +1,6 @@
 """Tests for observability modules."""
 
+import logging
 from datetime import datetime, timedelta
 from unittest.mock import patch
 

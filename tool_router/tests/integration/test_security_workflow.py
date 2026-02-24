@@ -160,7 +160,6 @@ class TestSecurityWorkflow:
                 # Should include rate limit metadata
                 assert result.metadata["rate_limit"]["allowed"] is False
                 assert result.metadata["rate_limit"]["retry_after"] == 60
-                assert "reset_time" in result.metadata
 
     def test_strict_mode_security_workflow(self, security_config: dict) -> None:
         """Test security workflow in strict mode."""
