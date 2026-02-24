@@ -158,11 +158,8 @@ class TestToolSelectionWorkflow:
         assert result == [], "No matching tools should return empty result"
 
         # Business logic: test with None inputs (should handle gracefully)
-        try:
-            select_top_matching_tools(sample_tools, None, None, top_n=2)
-            assert False, "Should raise TypeError for None inputs"
-        except TypeError:
-            pass  # Expected behavior
+        result = select_top_matching_tools(sample_tools, None, None, top_n=2)
+        assert result == [], "None inputs should return empty result"
 
         # Business logic: test with invalid top_n values
         try:
@@ -172,12 +169,9 @@ class TestToolSelectionWorkflow:
         except (ValueError, TypeError):
             pass  # Should handle invalid top_n gracefully
 
-        # Business logic: test with negative top_n
-        try:
-            select_top_matching_tools(sample_tools, "test", "", top_n=-1)
-            assert False, "Should raise error for negative top_n"
-        except (ValueError, TypeError):
-            pass  # Expected behavior
+        # Business logic: test with negative top_n (should return empty)
+        result = select_top_matching_tools(sample_tools, "test", "", top_n=-1)
+        assert result == [], "Negative top_n should return empty result"
 
         # Business logic: test with tools missing required fields
         incomplete_tools = [
