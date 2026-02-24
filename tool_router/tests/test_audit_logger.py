@@ -247,7 +247,7 @@ class TestSecurityAuditLogger:
             logger.log_security_event(event)
 
             mock_info.assert_called_once()
-            args, kwargs = mock_info.call_args
+            args, _kwargs = mock_info.call_args
             assert "SECURITY_EVENT:" in args[0]
             assert "test-event" in args[0]
             assert "low" in args[0]
@@ -278,7 +278,7 @@ class TestSecurityAuditLogger:
             logger.log_security_event(event)
 
             mock_warning.assert_called_once()
-            args, kwargs = mock_warning.call_args
+            args, _kwargs = mock_warning.call_args
             assert "SECURITY_EVENT:" in args[0]
             assert "test-event" in args[0]
             assert "medium" in args[0]
@@ -309,7 +309,7 @@ class TestSecurityAuditLogger:
             logger.log_security_event(event)
 
             mock_error.assert_called_once()
-            args, kwargs = mock_error.call_args
+            args, _kwargs = mock_error.call_args
             assert "SECURITY_EVENT:" in args[0]
             assert "test-event" in args[0]
             assert "high" in args[0]
@@ -340,7 +340,7 @@ class TestSecurityAuditLogger:
             logger.log_security_event(event)
 
             mock_error.assert_called_once()
-            args, kwargs = mock_error.call_args
+            args, _kwargs = mock_error.call_args
             assert "SECURITY_EVENT:" in args[0]
             assert "test-event" in args[0]
             assert "critical" in args[0]

@@ -20,6 +20,8 @@ dependencies = [
     "sentry-sdk[fastapi]>=2.0.0",
     "structlog>=23.0.0",
     "psycopg2-binary>=2.9.0",
+    "redis>=5.0.0",
+    "requests>=2.31.0",
 ]
 
 [project.optional-dependencies]
@@ -160,6 +162,7 @@ ignore = [
     "PTH110",  # os.path.exists → Path.exists (style preference)
     "PLC0415", # Import outside top level (conditional imports are intentional)
     "TID252",  # Relative imports (project uses both styles)
+    "UP038",   # Use X | Y instead of Union (defer to modernize)
     "ARG001",  # Unused function argument (common in handlers/callbacks)
     "ARG002",  # Unused method argument (common in OOP/handlers)
     "EM101",   # Raw string in exception (acceptable for clarity)
@@ -174,7 +177,7 @@ ignore = [
     "S110",    # try-except-pass (intentional error suppression)
     "PLE1205", # Logging too many args (false positive with structured logging)
     "ERA001",  # Commented out code (kept for reference)
-    "RUF059",  # Unused unpacked variable (intentional destructuring)
+
     "BLE001",  # Blind exception catches (defensive error handling pattern)
     "T201",    # print() found (used in CLI scripts and debugging)
     "F841",    # Local variable assigned but never used (common pattern)

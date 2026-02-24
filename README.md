@@ -1,6 +1,10 @@
-# Forge MCP Gateway (Context Forge)
+# Forge MCP Gateway
 
-Self-hosted Forge MCP gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge). One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.
+> **AI-powered MCP tool routing hub — part of the [Forge Space](https://github.com/Forge-Space) open developer workspace.**
+
+Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge) with AI-driven optimization, predictive scaling, ML monitoring, and enterprise security. Connect any MCP server, route intelligently, manage via admin UI.
+
+**One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.**
 
 **GitHub repo description** (paste in Settings → General → Description, 350 char max):
 

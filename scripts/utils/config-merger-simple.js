@@ -2,7 +2,7 @@
 
 /**
  * Simple Configuration Merger Utility
- * 
+ *
  * A simplified version that handles the ESLint/Prettier integration
  * without complex module loading issues.
  */
@@ -35,10 +35,10 @@ class SimpleConfigMerger {
    */
   updatePrettierConfig() {
     console.log('🎨 Updating Prettier configuration...');
-    
+
     const configPath = './.prettierrc.json';
     const backupPath = this.backupConfig(configPath);
-    
+
     if (!backupPath) {
       return false;
     }
@@ -46,7 +46,7 @@ class SimpleConfigMerger {
     try {
       // Read current config
       const currentConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      
+
       // Create merged configuration with pattern reference
       const mergedConfig = {
         // Base patterns settings
@@ -56,50 +56,49 @@ class SimpleConfigMerger {
         tabWidth: 2,
         useTabs: false,
         endOfLine: 'lf',
-        
+
         // Preserve project-specific settings
-        trailingComma: currentConfig.trailingComma || "none",
-        arrowParens: currentConfig.arrowParens || "avoid",
-        
+        trailingComma: currentConfig.trailingComma || 'none',
+        arrowParens: currentConfig.arrowParens || 'avoid',
+
         // Merge overrides
         overrides: [
           {
-            "files": "*.json",
-            "options": {
-              "printWidth": 80,
-              "trailingComma": "none"
-            }
+            files: '*.json',
+            options: {
+              printWidth: 80,
+              trailingComma: 'none',
+            },
           },
           {
-            "files": ["*.yml", "*.yaml"],
-            "options": {
-              "printWidth": 80,
-              "singleQuote": false
-            }
+            files: ['*.yml', '*.yaml'],
+            options: {
+              printWidth: 80,
+              singleQuote: false,
+            },
           },
           {
-            "files": "*.md",
-            "options": {
-              "printWidth": 80,
-              "proseWrap": "always"
-            }
-          }
+            files: '*.md',
+            options: {
+              printWidth: 80,
+              proseWrap: 'always',
+            },
+          },
         ],
-        
+
         // Add pattern metadata
         _patternInfo: {
           baseConfig: 'forge-patterns/patterns/code-quality/prettier/base.config.json',
           mergedAt: new Date().toISOString(),
           project: 'forge-mcp-gateway',
-          strategy: 'hybrid-preserve-custom'
-        }
+          strategy: 'hybrid-preserve-custom',
+        },
       };
 
       // Write merged configuration
       fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2) + '\n');
       console.log('✅ Prettier configuration updated successfully');
       return true;
-
     } catch (error) {
       console.error('❌ Error updating Prettier config:', error.message);
       return false;
@@ -111,10 +110,10 @@ class SimpleConfigMerger {
    */
   updateEslintConfig() {
     console.log('🔧 Updating ESLint configuration...');
-    
+
     const configPath = './eslint.config.js';
     const backupPath = this.backupConfig(configPath);
-    
+
     if (!backupPath) {
       return false;
     }
@@ -122,7 +121,7 @@ class SimpleConfigMerger {
     try {
       // Read current config
       const currentContent = fs.readFileSync(configPath, 'utf8');
-      
+
       // Add pattern integration comment at the top
       const patternComment = `// ESLint Configuration for forge-mcp-gateway
 // Integrated with forge-patterns base configuration
@@ -146,7 +145,6 @@ class SimpleConfigMerger {
       fs.writeFileSync(configPath, patternComment + currentContent);
       console.log('✅ ESLint configuration updated with pattern integration notes');
       return true;
-
     } catch (error) {
       console.error('❌ Error updating ESLint config:', error.message);
       return false;
@@ -158,9 +156,9 @@ class SimpleConfigMerger {
    */
   createIntegrationDocs() {
     console.log('📝 Creating pattern integration documentation...');
-    
+
     const docsPath = './docs/uiforge-patterns-integration-summary.md';
-    
+
     try {
       const content = `# UIForge Patterns Integration Summary
 
@@ -260,7 +258,6 @@ The UIForge patterns integration for forge-mcp-gateway has been **successfully c
       fs.writeFileSync(docsPath, content);
       console.log('✅ Integration documentation created successfully');
       return true;
-
     } catch (error) {
       console.error('❌ Error creating integration docs:', error.message);
       return false;
@@ -272,11 +269,11 @@ The UIForge patterns integration for forge-mcp-gateway has been **successfully c
    */
   run(options = {}) {
     console.log('🚀 Starting UIForge Patterns Integration...\n');
-    
+
     const results = {
       prettier: { success: false, backup: null },
       eslint: { success: false, backup: null },
-      docs: { success: false }
+      docs: { success: false },
     };
 
     // Process Prettier configuration
@@ -300,10 +297,11 @@ The UIForge patterns integration for forge-mcp-gateway has been **successfully c
     console.log(`Prettier: ${results.prettier.success ? '✅ Success' : '❌ Failed'}`);
     console.log(`ESLint: ${results.eslint.success ? '✅ Success' : '❌ Failed'}`);
     console.log(`Documentation: ${results.docs.success ? '✅ Success' : '❌ Failed'}`);
-    
-    const overallSuccess = results.prettier.success && results.eslint.success && results.docs.success;
+
+    const overallSuccess =
+      results.prettier.success && results.eslint.success && results.docs.success;
     console.log(`\nOverall: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILED'}`);
-    
+
     if (overallSuccess) {
       console.log('\n🎉 UIForge Patterns Integration Complete!');
       console.log('📋 Next: Run tests and validate configurations work correctly');
@@ -317,7 +315,7 @@ The UIForge patterns integration for forge-mcp-gateway has been **successfully c
 function main() {
   const args = process.argv.slice(2);
   const options = {};
-  
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '--skip-prettier') {
@@ -343,16 +341,16 @@ Examples:
       process.exit(0);
     }
   }
-  
+
   const merger = new SimpleConfigMerger();
   const results = merger.run(options);
-  
+
   process.exit(results.prettier.success && results.eslint.success && results.docs.success ? 0 : 1);
 }
 
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error('❌ Unhandled error:', error);
     process.exit(1);
   });

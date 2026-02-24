@@ -59,6 +59,24 @@ n8n-logs/
 # Filesystem MCP server workspace (profile reference)
 workspace/
 
+# Claude-related files (user-specific configurations)
+.claude/
+~/.claude/
+CLAUDE.md
+CLAUDE-SETUP.md
+CLAUDE-CODE*.md
+CLAUDE-*.md
+SuperClaude_Framework/
+awesome-claude-code/
+awesome-claude-code-subagents/
+claude-code-hooks-mastery/
+claudecodeui/
+start-claude-code-ui.sh
+install-claude-code-global.sh
+setup-claude-code-phase2.sh
+verify-claude-code-phase2.sh
+CLAUDE-CODE-OPTIMIZATION-COMPLETE.md
+
 # Python / coverage
 .pytest_cache/
 __pycache__/

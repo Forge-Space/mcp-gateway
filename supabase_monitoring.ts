@@ -3,7 +3,7 @@
  * Provides comprehensive monitoring of Supabase operations across the UIForge ecosystem
  */
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Configuration interface
 interface SupabaseMonitoringConfig {
@@ -121,7 +121,7 @@ export class SupabaseMonitor {
    */
   getPerformanceMetrics(): PerformanceMetrics {
     const stats = Array.from(this.queryStats.values());
-    
+
     if (stats.length === 0) {
       return {
         totalQueries: 0,
@@ -136,7 +136,9 @@ export class SupabaseMonitor {
     const totalQueries = stats.reduce((sum, stat) => sum + stat.totalQueries, 0);
     const totalLatency = stats.reduce((sum, stat) => sum + stat.totalLatency, 0);
     const totalErrors = stats.reduce((sum, stat) => sum + stat.errorCount, 0);
-    const slowQueries = stats.filter(stat => stat.averageLatency > this.config.slowQueryThreshold);
+    const slowQueries = stats.filter(
+      (stat) => stat.averageLatency > this.config.slowQueryThreshold
+    );
 
     return {
       totalQueries,
@@ -146,17 +148,17 @@ export class SupabaseMonitor {
       topSlowQueries: stats
         .sort((a, b) => b.averageLatency - a.averageLatency)
         .slice(0, 10)
-        .map(stat => ({
+        .map((stat) => ({
           operation: stat.operation,
           table: stat.table,
           averageLatency: stat.averageLatency,
           totalQueries: stat.totalQueries,
         })),
       topErrorQueries: stats
-        .filter(stat => stat.errorCount > 0)
+        .filter((stat) => stat.errorCount > 0)
         .sort((a, b) => b.errorCount - a.errorCount)
         .slice(0, 10)
-        .map(stat => ({
+        .map((stat) => ({
           operation: stat.operation,
           table: stat.table,
           errorCount: stat.errorCount,
@@ -234,12 +236,12 @@ export class SupabaseMonitor {
    */
   private updateQueryStats(queryKey: string, duration: number, success: boolean): void {
     const existing = this.queryStats.get(queryKey);
-    
+
     if (existing) {
       existing.totalQueries++;
       existing.totalLatency += duration;
       existing.averageLatency = existing.totalLatency / existing.totalQueries;
-      
+
       if (!success) {
         existing.errorCount++;
       }
@@ -498,7 +500,7 @@ export function createMonitoredSupabaseClient(
 ): SupabaseClient {
   const monitorConfig = { url, key, ...config };
   const monitor = new SupabaseMonitor(monitorConfig);
-  
+
   // Store in global if not already set
   if (!globalMonitor) {
     globalMonitor = monitor;

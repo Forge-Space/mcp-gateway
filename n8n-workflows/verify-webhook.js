@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+const crypto = require('crypto');
 
 /**
  * Verifies GitHub webhook HMAC-SHA256 signature.
@@ -21,15 +21,10 @@ function verifyWebhook(signature, payload, secret) {
     return false;
   }
 
-  const expected =
-    "sha256=" +
-    crypto.createHmac("sha256", secret).update(payload).digest("hex");
+  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected)
-    );
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   } catch {
     return false;
   }
