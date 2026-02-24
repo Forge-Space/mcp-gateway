@@ -172,7 +172,6 @@ ignore = [
     "S110",    # try-except-pass (intentional error suppression)
     "PLE1205", # Logging too many args (false positive with structured logging)
     "ERA001",  # Commented out code (kept for reference)
-    "RUF059",  # Unused unpacked variable (intentional destructuring)
     "BLE001",  # Blind exception catches (defensive error handling pattern)
     "T201",    # print() found (used in CLI scripts and debugging)
     "F841",    # Local variable assigned but never used (common pattern)
