@@ -10,7 +10,6 @@ import httpx
 
 from tool_router.ai.prompts import PromptTemplates
 
-
 logger = logging.getLogger(__name__)
 
 

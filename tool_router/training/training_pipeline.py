@@ -18,7 +18,6 @@ from typing import Any
 from .data_extraction import ExtractedPattern, PatternCategory, PatternExtractor
 from .knowledge_base import KnowledgeBase, KnowledgeIndexer
 
-
 logger = logging.getLogger(__name__)
 
 

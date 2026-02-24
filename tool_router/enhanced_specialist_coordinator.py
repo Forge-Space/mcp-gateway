@@ -24,7 +24,6 @@ from .specialist_coordinator import (
 from .training.evaluation import EvaluationMetric, SpecialistEvaluator
 from .training.knowledge_base import KnowledgeBase, PatternCategory
 
-
 logger = logging.getLogger(__name__)
 
 

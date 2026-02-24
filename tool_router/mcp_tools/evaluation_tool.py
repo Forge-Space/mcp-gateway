@@ -12,7 +12,6 @@ from typing import Any
 from ..training.evaluation import EvaluationMetric, SpecialistEvaluator
 from ..training.knowledge_base import KnowledgeBase
 
-
 logger = logging.getLogger(__name__)
 
 

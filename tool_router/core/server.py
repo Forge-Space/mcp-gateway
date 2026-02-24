@@ -29,7 +29,6 @@ from tool_router.specialist_coordinator import (
     TaskRequest,
 )
 
-
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:

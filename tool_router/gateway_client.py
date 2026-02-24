@@ -7,7 +7,6 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-
 DEFAULT_TIMEOUT = 30
 MAX_RETRIES = 3
 RETRY_DELAY = 2

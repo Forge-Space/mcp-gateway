@@ -13,7 +13,6 @@ from typing import Any
 
 from .cache_manager import CacheManager
 
-
 logger = logging.getLogger(__name__)
 
 

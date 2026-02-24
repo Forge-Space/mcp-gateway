@@ -15,7 +15,6 @@ from dribbble_mcp.server import (
     search_dribbble,
 )
 
-
 _SHOT = {
     "title": "Dark Dashboard",
     "url": "https://dribbble.com/shots/123-dark",

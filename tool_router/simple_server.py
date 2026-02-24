@@ -3,7 +3,6 @@ import logging
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-
 logger = logging.getLogger(__name__)
 
 

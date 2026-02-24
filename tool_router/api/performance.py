@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from ..cache import cache_manager, get_cache_metrics
 from ..database.query_cache import get_query_cache
 
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])

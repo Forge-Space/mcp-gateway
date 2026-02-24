@@ -11,7 +11,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
 
-
 try:
     import redis
 
@@ -23,7 +22,6 @@ except ImportError:
 from cachetools import TTLCache
 
 from .types import CacheConfig
-
 
 logger = logging.getLogger(__name__)
 

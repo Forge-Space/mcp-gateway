@@ -10,7 +10,6 @@ from typing import Any
 
 from ..cache import cache_manager, create_ttl_cache, get_cache_metrics
 
-
 logger = logging.getLogger(__name__)
 
 

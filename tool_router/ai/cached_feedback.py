@@ -16,7 +16,6 @@ from typing import Any
 
 from cachetools import TTLCache
 
-
 logger = logging.getLogger(__name__)
 
 _FEEDBACK_FILE_ENV = "ROUTER_FEEDBACK_FILE"

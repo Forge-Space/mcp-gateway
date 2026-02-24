@@ -12,7 +12,6 @@ from sentry_sdk.integrations.redis import RedisIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.structlog import StructlogIntegration
 
-
 # Supabase monitoring integration
 try:
     from supabase import Client as SupabaseClient  # noqa: F401

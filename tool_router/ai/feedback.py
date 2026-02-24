@@ -10,7 +10,6 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 _FEEDBACK_FILE_ENV = "ROUTER_FEEDBACK_FILE"

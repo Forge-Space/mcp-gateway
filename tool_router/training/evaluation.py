@@ -19,7 +19,6 @@ from typing import Any
 
 from .knowledge_base import KnowledgeBase, PatternCategory
 
-
 logger = logging.getLogger(__name__)
 
 
