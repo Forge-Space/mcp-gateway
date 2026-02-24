@@ -1,7 +1,7 @@
 # MCP Gateway Project Overview
 
 ## Purpose
-Self-hosted MCP (Model Context Protocol) gateway — aggregates, routes, and manages multiple MCP servers through a single entry point. Includes an AI-powered tool router, service manager, and Dribbble MCP server.
+Self-hosted MCP (Model Context Protocol) gateway — the central AI tool routing hub for the Forge Space ecosystem ("The Open Full-Stack AI Workspace"). Aggregates, routes, and manages multiple MCP servers through a single entry point. Includes an AI-powered tool router, service manager, and Dribbble MCP server. Key differentiator: MCP-native composable architecture enabling multi-LLM support and custom tool chains.
 
 ## Tech Stack
 - **Language**: Python 3.11+ (primary), TypeScript (npm wrapper/entry)
