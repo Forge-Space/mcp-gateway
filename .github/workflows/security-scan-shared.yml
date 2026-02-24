@@ -28,11 +28,6 @@ on:
         required: false
         default: true
         type: boolean
-      enable-snyk:
-        description: "Enable Snyk scanning"
-        required: false
-        default: true
-        type: boolean
       enable-secrets:
         description: "Enable secret scanning"
         required: false

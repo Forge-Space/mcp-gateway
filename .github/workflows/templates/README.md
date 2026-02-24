@@ -20,12 +20,10 @@ This directory contains standardized GitHub workflow templates for UIForge proje
 ### 2. `security-scan.yml`
 **Purpose**: Comprehensive security scanning workflow
 **Includes**:
-- Snyk dependency scanning
-- Snyk code analysis
-- Snyk continuous monitoring
 - CodeQL semantic analysis
 - Trufflehog secret scanning
 - npm audit for Node.js projects
+- pip-audit for Python projects
 
 **Usage**: Use as-is or customize severity thresholds
 
@@ -53,7 +51,6 @@ This directory contains standardized GitHub workflow templates for UIForge proje
 
 2. **Configure required secrets**
    - `CODECOV_TOKEN`: Codecov upload token
-   - `SNYK_TOKEN`: Snyk API token
    - `RENOVATE_TOKEN`: Renovate GitHub token
 
 3. **Adapt to project structure**
@@ -83,7 +80,6 @@ This directory contains standardized GitHub workflow templates for UIForge proje
 | Node.js | v22 LTS | Long-term support, performance |
 | Python | 3.12 | Latest stable with good library support |
 | Codecov | v5 | Latest API and features |
-| Snyk | Latest | Best vulnerability detection |
 | Trufflehog | v3.93.3 | Latest secret scanning |
 
 ### Quality Gates
@@ -112,12 +108,6 @@ Recommended branch protection rules:
 | Dependency Updates | Weekly | Configured |
 
 ## 🔒 Security Configuration
-
-### Snyk Settings
-- **Organization**: LucasSantana-Dev
-- **Severity Threshold**: High
-- **Monitoring**: Active on main/master branches
-- **Auto-remediation**: Enabled for safe fixes
 
 ### CodeQL Settings
 - **Query Suite**: Security-extended
@@ -160,17 +150,12 @@ Recommended branch protection rules:
    - Verify coverage file paths
    - Check network connectivity
 
-2. **Snyk Action Errors**
-   - Verify SNYK_TOKEN validity
-   - Check action versions
-   - Review organization settings
-
-3. **CodeQL Timeouts**
+2. **CodeQL Timeouts**
    - Increase timeout to 30 minutes
    - Exclude test files from analysis
    - Optimize code structure
 
-4. **Renovate Failures**
+3. **Renovate Failures**
    - Check RENOVATE_TOKEN permissions
    - Verify configuration syntax
    - Review package manager compatibility
