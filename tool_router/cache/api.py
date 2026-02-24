@@ -20,7 +20,7 @@ import logging
 import time
 from dataclasses import asdict
 from datetime import datetime
-from typing import Any, Union
+from typing import Any
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,7 +29,12 @@ from pydantic import BaseModel, Field
 
 from .compliance import ComplianceManager
 from .config import CacheConfig
-from .retention import LifecycleManager, RetentionAuditor, RetentionPolicyManager, RetentionScheduler
+from .retention import (
+    LifecycleManager,
+    RetentionAuditor,
+    RetentionPolicyManager,
+    RetentionScheduler,
+)
 from .security import CacheSecurityManager
 from .types import (
     AccessControlError,
@@ -127,11 +132,11 @@ class RetentionPolicyRequest(BaseModel):
 class AuditQueryRequest(BaseModel):
     """Audit query request model."""
 
-    event_type: Union[str, None] = Field(None, description="Event type filter")
-    user_id: Union[str, None] = Field(None, description="User ID filter")
-    resource_id: Union[str, None] = Field(None, description="Resource ID filter")
-    start_time: Union[datetime, None] = Field(None, description="Start time filter")
-    end_time: Union[datetime, None] = Field(None, description="End time filter")
+    event_type: str | None = Field(None, description="Event type filter")
+    user_id: str | None = Field(None, description="User ID filter")
+    resource_id: str | None = Field(None, description="Resource ID filter")
+    start_time: datetime | None = Field(None, description="Start time filter")
+    end_time: datetime | None = Field(None, description="End time filter")
     limit: int = Field(default=100, description="Result limit")
 
 
@@ -147,7 +152,9 @@ class SecurityConfigRequest(BaseModel):
 security = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(credentials: Union[HTTPAuthorizationCredentials, None] = Depends(security)):
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+):
     """Get current user from JWT token."""
     if not credentials:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -165,7 +172,7 @@ async def get_current_user(credentials: Union[HTTPAuthorizationCredentials, None
 class CacheSecurityAPI:
     """Main FastAPI application for cache security."""
 
-    def __init__(self, config: Union[CacheConfig, None] = None):
+    def __init__(self, config: CacheConfig | None = None):
         """Initialize the API."""
         self.config = config or CacheConfig()
         self.app = FastAPI(
@@ -213,7 +220,11 @@ class CacheSecurityAPI:
         @self.app.get("/health")
         async def health_check():
             """Health check endpoint."""
-            return {"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "version": "2.4.0"}
+            return {
+                "status": "healthy",
+                "timestamp": datetime.utcnow().isoformat(),
+                "version": "2.4.0",
+            }
 
         @self.app.get("/metrics")
         async def get_metrics():
@@ -240,7 +251,9 @@ class CacheSecurityAPI:
                 result = self.security_manager.encrypt_data(request.data, request.classification)
 
                 return EncryptionResponse(
-                    encrypted_data=result.encrypted_data, encryption_id=result.operation_id, timestamp=result.timestamp
+                    encrypted_data=result.encrypted_data,
+                    encryption_id=result.operation_id,
+                    timestamp=result.timestamp,
                 )
             except EncryptionError as e:
                 raise HTTPException(status_code=400, detail=str(e))
@@ -265,11 +278,16 @@ class CacheSecurityAPI:
             """Check access permissions."""
             try:
                 result = self.security_manager.check_access(
-                    request.user_id, request.resource_id, request.required_level, request.context
+                    request.user_id,
+                    request.resource_id,
+                    request.required_level,
+                    request.context,
                 )
 
                 return AccessControlResponse(
-                    granted=result.access_granted, reason=result.reason, timestamp=result.timestamp
+                    granted=result.access_granted,
+                    reason=result.reason,
+                    timestamp=result.timestamp,
                 )
             except AccessControlError as e:
                 raise HTTPException(status_code=403, detail=str(e))
@@ -322,14 +340,18 @@ class CacheSecurityAPI:
                 request_data = asdict(request)
                 request_id = self.compliance_manager.create_data_subject_request(request_data)
 
-                return {"request_id": request_id, "status": "pending", "timestamp": datetime.utcnow()}
+                return {
+                    "request_id": request_id,
+                    "status": "pending",
+                    "timestamp": datetime.utcnow(),
+                }
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Request creation failed: {e!s}")
 
         @self.app.get("/compliance/data-subject-requests")
-        async def get_data_subject_requests(subject_id: Union[str, None] = Query(None)):
+        async def get_data_subject_requests(subject_id: str | None = Query(None)):
             """Get data subject requests."""
             try:
                 requests = self.compliance_manager.get_data_subject_requests(subject_id)
@@ -348,7 +370,11 @@ class CacheSecurityAPI:
             try:
                 result = self.compliance_manager.process_right_to_be_forgotten(subject_id)
 
-                return {"subject_id": subject_id, "result": result, "timestamp": datetime.utcnow()}
+                return {
+                    "subject_id": subject_id,
+                    "result": result,
+                    "timestamp": datetime.utcnow(),
+                }
             except ComplianceError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
@@ -370,7 +396,7 @@ class CacheSecurityAPI:
                 raise HTTPException(status_code=500, detail=f"Compliance assessment failed: {e!s}")
 
         @self.app.get("/compliance/report")
-        async def generate_compliance_report(standards: Union[list[str], None] = Query(None)):
+        async def generate_compliance_report(standards: list[str] | None = Query(None)):
             """Generate compliance report."""
             try:
                 if standards:
@@ -390,7 +416,7 @@ class CacheSecurityAPI:
 
         # Retention endpoints
         @self.app.get("/retention/rules")
-        async def get_retention_rules(classification: Union[str, None] = Query(None)):
+        async def get_retention_rules(classification: str | None = Query(None)):
             """Get retention rules."""
             try:
                 if classification:
@@ -399,9 +425,16 @@ class CacheSecurityAPI:
                 else:
                     rules = self.retention_manager.get_rules()
 
-                return {"rules": [asdict(rule) for rule in rules], "count": len(rules), "timestamp": datetime.utcnow()}
+                return {
+                    "rules": [asdict(rule) for rule in rules],
+                    "count": len(rules),
+                    "timestamp": datetime.utcnow(),
+                }
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid data classification: {classification}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid data classification: {classification}",
+                )
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to get retention rules: {e!s}")
 
@@ -423,7 +456,11 @@ class CacheSecurityAPI:
 
                 rule_id = self.retention_manager.add_rule(rule)
 
-                return {"rule_id": rule_id, "status": "created", "timestamp": datetime.utcnow()}
+                return {
+                    "rule_id": rule_id,
+                    "status": "created",
+                    "timestamp": datetime.utcnow(),
+                }
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to create retention rule: {e!s}")
 
@@ -488,14 +525,14 @@ class CacheSecurityAPI:
 api_instance = None
 
 
-def create_cache_security_api(config: Union[CacheConfig, None] = None) -> FastAPI:
+def create_cache_security_api(config: CacheConfig | None = None) -> FastAPI:
     """Create and configure the cache security API."""
     global api_instance
     api_instance = CacheSecurityAPI(config)
     return api_instance.get_app()
 
 
-def get_cache_security_api() -> Union[CacheSecurityAPI, None]:
+def get_cache_security_api() -> CacheSecurityAPI | None:
     """Get the global API instance."""
     return api_instance
 

@@ -18,12 +18,14 @@ logger.info("Environment variables: %s", dict(os.environ))
 
 try:
     import fastapi
+
     logger.info("FastAPI imported successfully: %s", fastapi.__version__)
 except ImportError as e:
     logger.warning("FastAPI import failed: %s", e)
 
 try:
     import uvicorn
+
     logger.info("Uvicorn imported successfully: %s", uvicorn.__version__)
 except ImportError as e:
     logger.warning("Uvicorn import failed: %s", e)

@@ -81,11 +81,7 @@ class ScreenshotCapture:
             page.goto(shot_url, timeout=self._timeout, wait_until="domcontentloaded")
             page.wait_for_timeout(1500)
 
-            png_bytes = (
-                page.screenshot(full_page=True, type="png")
-                if full_page
-                else self._capture_element(page)
-            )
+            png_bytes = page.screenshot(full_page=True, type="png") if full_page else self._capture_element(page)
             return base64.b64encode(png_bytes).decode("utf-8")
         finally:
             browser.close()
@@ -96,7 +92,7 @@ class ScreenshotCapture:
                 element = page.query_selector(selector)
                 if element:
                     return element.screenshot(type="png")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 logger.debug("Selector %s failed: %s", selector, exc)
                 continue
         return page.screenshot(type="png")
@@ -135,7 +131,7 @@ async def capture_shot_async(shot_url: str, timeout_ms: int = 10_000, full_page:
                     if element:
                         png_bytes = await element.screenshot(type="png")
                         return base64.b64encode(png_bytes).decode("utf-8")
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.debug("Async selector %s failed: %s", selector, exc)
                     continue
 

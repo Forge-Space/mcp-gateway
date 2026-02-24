@@ -197,7 +197,10 @@ class TestOllamaSelector:
         """Test successful multi-tool selection."""
         selector = OllamaSelector("http://localhost:11434")
 
-        tools = [{"name": "tool1", "description": "Tool 1"}, {"name": "tool2", "description": "Tool 2"}]
+        tools = [
+            {"name": "tool1", "description": "Tool 1"},
+            {"name": "tool2", "description": "Tool 2"},
+        ]
 
         with patch.object(selector, "_call_ollama") as mock_call:
             mock_call.return_value = '{"tools": ["tool1", "tool2"], "confidence": 0.8, "reasoning": "Good combination"}'
@@ -394,7 +397,9 @@ class TestEnhancedAISelector:
         }
 
         selector = EnhancedAISelector(
-            providers=providers, hardware_constraints=hardware_constraints, cost_optimization=False
+            providers=providers,
+            hardware_constraints=hardware_constraints,
+            cost_optimization=False,
         )
 
         assert selector.cost_optimization is False
@@ -480,7 +485,10 @@ class TestEnhancedAISelector:
         selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
 
         task = "test task"
-        tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
+        tools = [
+            {"name": "tool1", "description": "desc1"},
+            {"name": "tool2", "description": "desc2"},
+        ]
         context = "test context"
 
         usage = selector._estimate_token_usage(task, tools, context)
@@ -557,7 +565,10 @@ class TestEnhancedAISelector:
         """Test multi-tool selection with cost optimization."""
         selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
 
-        tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
+        tools = [
+            {"name": "tool1", "description": "desc1"},
+            {"name": "tool2", "description": "desc2"},
+        ]
 
         with patch.object(selector, "_analyze_task_complexity") as mock_analyze:
             mock_analyze.return_value = "moderate"
@@ -566,7 +577,10 @@ class TestEnhancedAISelector:
             mock_model.return_value = AIModel.LLAMA32_3B.value
 
             with patch.object(selector.providers[0], "select_tools_multi") as mock_select:
-                mock_select.return_value = {"tools": ["tool1", "tool2"], "confidence": 0.8}
+                mock_select.return_value = {
+                    "tools": ["tool1", "tool2"],
+                    "confidence": 0.8,
+                }
 
                 result = selector.select_tools_multi_with_cost_optimization("test task", tools, max_tools=2)
 
@@ -622,7 +636,10 @@ class TestEnhancedAISelector:
         """Test legacy select_tools_multi method delegates to cost-optimized version."""
         selector = EnhancedAISelector(providers=[OllamaSelector("http://localhost:11434")])
 
-        tools = [{"name": "tool1", "description": "desc1"}, {"name": "tool2", "description": "desc2"}]
+        tools = [
+            {"name": "tool1", "description": "desc1"},
+            {"name": "tool2", "description": "desc2"},
+        ]
 
         with patch.object(selector, "select_tools_multi_with_cost_optimization") as mock_optimized:
             mock_optimized.return_value = {"tools": ["tool1", "tool2"]}

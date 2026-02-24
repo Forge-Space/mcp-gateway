@@ -128,7 +128,10 @@ async def start_collection(background_tasks: BackgroundTasks, interval: int = Qu
         dashboard = get_cache_performance_dashboard()
 
         if dashboard._running:
-            return {"message": "Dashboard collection already running", "interval": dashboard._collection_interval}
+            return {
+                "message": "Dashboard collection already running",
+                "interval": dashboard._collection_interval,
+            }
 
         # Start collection in background
         background_tasks.add_task(start_dashboard_collection, interval)
@@ -206,7 +209,10 @@ async def get_current_snapshot():
         ]
 
         return DashboardSnapshotResponse(
-            timestamp=snapshot.timestamp, metrics=metrics_response, alerts=alerts_response, summary=snapshot.summary
+            timestamp=snapshot.timestamp,
+            metrics=metrics_response,
+            alerts=alerts_response,
+            summary=snapshot.summary,
         )
     except HTTPException:
         raise
@@ -253,10 +259,18 @@ async def get_historical_data(hours: int = Query(default=24, ge=1, le=168)):
                 )
 
             snapshots_response.append(
-                {"timestamp": snapshot.timestamp, "metrics": metrics_response, "summary": snapshot.summary}
+                {
+                    "timestamp": snapshot.timestamp,
+                    "metrics": metrics_response,
+                    "summary": snapshot.summary,
+                }
             )
 
-        return {"hours": hours, "snapshot_count": len(snapshots_response), "snapshots": snapshots_response}
+        return {
+            "hours": hours,
+            "snapshot_count": len(snapshots_response),
+            "snapshots": snapshots_response,
+        }
     except Exception as e:
         logger.error(f"Error getting historical data: {e}")
         raise HTTPException(status_code=500, detail="Failed to get historical data")
@@ -290,7 +304,11 @@ async def get_performance_trends_api(hours: int = Query(default=24, ge=1, le=168
                 )
             )
 
-        return {"hours": hours, "cache_count": len(trends_response), "trends": trends_response}
+        return {
+            "hours": hours,
+            "cache_count": len(trends_response),
+            "trends": trends_response,
+        }
     except Exception as e:
         logger.error(f"Error getting performance trends: {e}")
         raise HTTPException(status_code=500, detail="Failed to get performance trends")
@@ -330,7 +348,11 @@ async def get_alerts_history(limit: int = Query(default=100, ge=1, le=1000)):
             for alert in alerts
         ]
 
-        return {"limit": limit, "total_alerts": len(alerts_response), "alerts": alerts_response}
+        return {
+            "limit": limit,
+            "total_alerts": len(alerts_response),
+            "alerts": alerts_response,
+        }
     except Exception as e:
         logger.error(f"Error getting alert history: {e}")
         raise HTTPException(status_code=500, detail="Failed to get alert history")
@@ -372,7 +394,7 @@ async def get_cache_health():
         health_status = dashboard.get_cache_health_status()
 
         return {
-            "timestamp": dashboard.get_current_snapshot().timestamp if dashboard.get_current_snapshot() else None,
+            "timestamp": (dashboard.get_current_snapshot().timestamp if dashboard.get_current_snapshot() else None),
             "cache_health": health_status,
             "healthy_count": sum(1 for status in health_status.values() if status == "healthy"),
             "total_count": len(health_status),

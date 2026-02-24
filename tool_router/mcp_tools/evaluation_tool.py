@@ -25,7 +25,10 @@ class EvaluationTool:
         self.evaluator = SpecialistEvaluator(self.knowledge_base)
 
     def run_evaluation(
-        self, specialist_name: str, benchmark_suite: str | None = None, test_cases: int | None = None
+        self,
+        specialist_name: str,
+        benchmark_suite: str | None = None,
+        test_cases: int | None = None,
     ) -> dict[str, Any]:
         """Run evaluation for a specialist.
 
@@ -48,7 +51,9 @@ class EvaluationTool:
 
             # Run evaluation
             results = self.evaluator.evaluate_specialist(
-                specialist_name=specialist_name, benchmark_suite=benchmark_suite, test_cases=test_cases
+                specialist_name=specialist_name,
+                benchmark_suite=benchmark_suite,
+                test_cases=test_cases,
             )
 
             # Format results
@@ -193,7 +198,12 @@ class EvaluationTool:
             metrics = []
 
             for metric in EvaluationMetric:
-                metrics.append({"name": metric.value, "description": self._get_metric_description(metric)})
+                metrics.append(
+                    {
+                        "name": metric.value,
+                        "description": self._get_metric_description(metric),
+                    }
+                )
 
             return {
                 "metrics": metrics,
@@ -282,7 +292,11 @@ class EvaluationTool:
                     }
 
             # Sort by average score
-            sorted_specialists = sorted(comparison_data.items(), key=lambda x: x[1]["average_score"], reverse=True)
+            sorted_specialists = sorted(
+                comparison_data.items(),
+                key=lambda x: x[1]["average_score"],
+                reverse=True,
+            )
 
             return {
                 "comparison": dict(sorted_specialists),
@@ -356,7 +370,10 @@ class EvaluationTool:
                     }
                 )
 
-            return {"summary": summary, "message": "Evaluation summary retrieved successfully"}
+            return {
+                "summary": summary,
+                "message": "Evaluation summary retrieved successfully",
+            }
 
         except Exception as e:
             logger.error(f"Error getting evaluation summary: {e}")
@@ -388,9 +405,21 @@ EVALUATION_SCHEMA = {
             "items": {"type": "string"},
             "description": "List of specialist names (for compare_specialists)",
         },
-        "benchmark_suite": {"type": "string", "description": "Specific benchmark suite to use"},
-        "test_cases": {"type": "integer", "minimum": 1, "description": "Number of test cases to run"},
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "description": "Maximum number of results"},
+        "benchmark_suite": {
+            "type": "string",
+            "description": "Specific benchmark suite to use",
+        },
+        "test_cases": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of test cases to run",
+        },
+        "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Maximum number of results",
+        },
         "metric": {"type": "string", "description": "Specific metric to compare"},
     },
     "required": ["action"],
@@ -446,7 +475,10 @@ def evaluation_handler(args: dict[str, Any]) -> dict[str, Any]:
         if action == "get_summary":
             return tool.get_evaluation_summary()
 
-        return {"error": f"Unknown action: {action}", "message": "Invalid action specified"}
+        return {
+            "error": f"Unknown action: {action}",
+            "message": "Invalid action specified",
+        }
 
     except Exception as e:
         logger.error(f"Error in evaluation handler: {e}")

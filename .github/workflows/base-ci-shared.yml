@@ -39,9 +39,6 @@ on:
       CODECOV_TOKEN:
         description: 'Codecov token'
         required: false
-      SNYK_TOKEN:
-        description: 'Snyk token'
-        required: false
       GITHUB_TOKEN:
         description: 'GitHub token'
         required: false
@@ -62,7 +59,7 @@ jobs:
     with:
       python-version: ${{ inputs.python-version }}
       enable-cache: true
-      requirements-files: 'requirements.txt apps/tool-router/requirements.txt'
+      requirements-files: 'pyproject.toml'
     if: inputs.project-type == 'gateway'
 
   # Linting jobs
@@ -81,15 +78,15 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
 
       - name: Install dependencies
         run: |
-          pip install ruff black mypy
-          pip install -r requirements.txt
+          pip install -e ".[dev]"
 
       - name: Run Ruff linting
         run: |
-          ruff check apps/ src/ scripts/ --format=github
+          ruff check apps/ src/ scripts/ --output-format=github
 
       - name: Run Black formatting check
         run: |
@@ -155,12 +152,11 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
 
       - name: Install dependencies
         run: |
-          pip install pytest pytest-cov pytest-mock
-          pip install -r requirements.txt
-          pip install -r apps/tool-router/requirements.txt
+          pip install -e ".[dev]"
 
       - name: Run tests with coverage
         run: |
@@ -234,7 +230,7 @@ jobs:
       - name: Install build dependencies
         run: |
           pip install build twine
-          pip install -r requirements.txt
+          pip install -e .
 
       - name: Build package
         run: |
@@ -298,11 +294,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Snyk security scan
-        if: secrets.SNYK_TOKEN
-        uses: snyk/actions/node@master
+      - name: Run npm audit
+        run: npm audit --audit-level=high
         continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high

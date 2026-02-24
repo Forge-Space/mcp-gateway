@@ -6,8 +6,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tool_router.gateway.client import GatewayClient, HTTPGatewayClient, call_tool, get_tools
 from tool_router.core.config import GatewayConfig
+from tool_router.gateway.client import (
+    GatewayClient,
+    HTTPGatewayClient,
+    call_tool,
+    get_tools,
+)
 
 
 class TestHTTPGatewayClient:
@@ -20,7 +25,7 @@ class TestHTTPGatewayClient:
             jwt="token",
             timeout_ms=5000,
             max_retries=3,
-            retry_delay_ms=1000
+            retry_delay_ms=1000,
         )
         client = HTTPGatewayClient(config)
 
@@ -85,7 +90,7 @@ class TestHTTPGatewayClient:
             with patch("time.sleep"):  # Mock sleep to speed up test
                 mock_urlopen.side_effect = [
                     urllib.error.HTTPError(url="", msg="", hdrs="", fp=server_error),
-                    success_response
+                    success_response,
                 ]
 
                 result = client._make_request("http://test:4444/test")
@@ -105,7 +110,7 @@ class TestHTTPGatewayClient:
             with patch("time.sleep"):
                 mock_urlopen.side_effect = [
                     urllib.error.URLError("Network unreachable"),
-                    success_response
+                    success_response,
                 ]
 
                 result = client._make_request("http://test:4444/test")
@@ -125,7 +130,7 @@ class TestHTTPGatewayClient:
             with patch("time.sleep"):
                 mock_urlopen.side_effect = [
                     TimeoutError("Request timed out"),
-                    success_response
+                    success_response,
                 ]
 
                 result = client._make_request("http://test:4444/test")
@@ -150,7 +155,7 @@ class TestHTTPGatewayClient:
                 mock_urlopen.side_effect = [
                     urllib.error.HTTPError(url="", msg="", hdrs="", fp=server_error),
                     urllib.error.HTTPError(url="", msg="", hdrs="", fp=server_error),
-                    success_response
+                    success_response,
                 ]
 
                 client._make_request("http://test:4444/test")
@@ -202,7 +207,7 @@ class TestHTTPGatewayClient:
         client = HTTPGatewayClient(config)
 
         mock_response = MagicMock()
-        mock_response.read.return_value = b'invalid json'
+        mock_response.read.return_value = b"invalid json"
 
         with patch("urllib.request.urlopen", return_value=mock_response):
             with pytest.raises(ValueError, match="Invalid JSON response"):
@@ -215,7 +220,7 @@ class TestHTTPGatewayClient:
 
         mock_response_data = [
             {"name": "tool1", "description": "Test tool 1"},
-            {"name": "tool2", "description": "Test tool 2"}
+            {"name": "tool2", "description": "Test tool 2"},
         ]
 
         with patch.object(client, "_make_request", return_value=mock_response_data):
@@ -266,9 +271,9 @@ class TestHTTPGatewayClient:
             "result": {
                 "content": [
                     {"type": "text", "text": "Tool executed successfully"},
-                    {"type": "text", "text": "Additional output"}
+                    {"type": "text", "text": "Additional output"},
                 ]
-            }
+            },
         }
 
         with patch.object(client, "_make_request", return_value=mock_response):
@@ -284,7 +289,7 @@ class TestHTTPGatewayClient:
         mock_response = {
             "jsonrpc": "2.0",
             "id": 1,
-            "result": {"data": "some_binary_data", "metadata": {}}
+            "result": {"data": "some_binary_data", "metadata": {}},
         }
 
         with patch.object(client, "_make_request", return_value=mock_response):
@@ -300,7 +305,7 @@ class TestHTTPGatewayClient:
         mock_response = {
             "jsonrpc": "2.0",
             "id": 1,
-            "error": {"code": -32601, "message": "Method not found"}
+            "error": {"code": -32601, "message": "Method not found"},
         }
 
         with patch.object(client, "_make_request", return_value=mock_response):
@@ -339,7 +344,10 @@ class TestHTTPGatewayClient:
             "jsonrpc": "2.0",
             "id": 1,
             "method": "tools/call",
-            "params": {"name": "test_tool", "arguments": {"arg1": "value1", "arg2": "value2"}}
+            "params": {
+                "name": "test_tool",
+                "arguments": {"arg1": "value1", "arg2": "value2"},
+            },
         }
         assert request_data == expected_body
 

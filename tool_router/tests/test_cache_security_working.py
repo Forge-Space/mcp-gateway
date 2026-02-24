@@ -15,7 +15,15 @@ def test_cache_security_files_exist():
     cache_dir = os.path.join(os.path.dirname(__file__), "..", "cache")
 
     # Check that security files exist
-    security_files = ["security.py", "compliance.py", "retention.py", "api.py", "config.py", "types.py", "__init__.py"]
+    security_files = [
+        "security.py",
+        "compliance.py",
+        "retention.py",
+        "api.py",
+        "config.py",
+        "types.py",
+        "__init__.py",
+    ]
 
     for file_name in security_files:
         file_path = os.path.join(cache_dir, file_name)
@@ -57,7 +65,11 @@ def test_compliance_file_structure():
         content = f.read()
 
     # Check for key classes
-    expected_classes = ["ComplianceManager", "GDPRComplianceHandler", "ComplianceReporter"]
+    expected_classes = [
+        "ComplianceManager",
+        "GDPRComplianceHandler",
+        "ComplianceReporter",
+    ]
 
     for class_name in expected_classes:
         assert f"class {class_name}" in content, f"Class {class_name} not found in compliance.py"
@@ -74,7 +86,12 @@ def test_retention_file_structure():
         content = f.read()
 
     # Check for key classes
-    expected_classes = ["RetentionPolicyManager", "LifecycleManager", "RetentionScheduler", "RetentionAuditor"]
+    expected_classes = [
+        "RetentionPolicyManager",
+        "LifecycleManager",
+        "RetentionScheduler",
+        "RetentionAuditor",
+    ]
 
     for class_name in expected_classes:
         assert f"class {class_name}" in content, f"Class {class_name} not found in retention.py"

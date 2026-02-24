@@ -74,7 +74,8 @@ class SecurityAuditLogger:
 
         # Create formatter
         formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
         # Console handler
@@ -215,7 +216,12 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={"limit_type": limit_type, "current_count": current_count, "limit": limit, **details},
+            details={
+                "limit_type": limit_type,
+                "current_count": current_count,
+                "limit": limit,
+                **details,
+            },
             risk_score=0.6,
             blocked=True,
             metadata={},
@@ -318,7 +324,11 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={"required_permission": required_permission, "user_permissions": user_permissions, **details},
+            details={
+                "required_permission": required_permission,
+                "user_permissions": user_permissions,
+                **details,
+            },
             risk_score=0.5,
             blocked=True,
             metadata={},
@@ -354,7 +364,11 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={"validation_type": validation_type, "violations": violations, **details},
+            details={
+                "validation_type": validation_type,
+                "violations": violations,
+                **details,
+            },
             risk_score=risk_score,
             blocked=True,
             metadata={},
@@ -389,7 +403,12 @@ class SecurityAuditLogger:
             user_agent=None,
             request_id=request_id,
             endpoint=endpoint,
-            details={"penalty_type": penalty_type, "duration": duration, "reason": reason, **details},
+            details={
+                "penalty_type": penalty_type,
+                "duration": duration,
+                "reason": reason,
+                **details,
+            },
             risk_score=0.6,
             blocked=False,
             metadata={},

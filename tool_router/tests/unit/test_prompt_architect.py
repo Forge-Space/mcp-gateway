@@ -463,7 +463,11 @@ class TestPromptArchitect:
         prompt = "Create a function"
         task_type = TaskType.CODE_GENERATION
         requirements = [
-            Requirement(type=RequirementType.FUNCTIONALITY, description="Test requirement", priority="high")
+            Requirement(
+                type=RequirementType.FUNCTIONALITY,
+                description="Test requirement",
+                priority="high",
+            )
         ]
 
         enhanced = architect._enhance_for_quality(prompt, task_type, requirements)

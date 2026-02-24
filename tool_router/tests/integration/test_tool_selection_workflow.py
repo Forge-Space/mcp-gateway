@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from tool_router.scoring.matcher import calculate_tool_relevance_score, select_top_matching_tools
+from tool_router.scoring.matcher import (
+    calculate_tool_relevance_score,
+    select_top_matching_tools,
+)
 
 
 class TestToolSelectionWorkflow:
@@ -139,8 +142,16 @@ class TestToolSelectionWorkflow:
 
         # Test with no matching tools
         unrelated_tools = [
-            {"name": "database_connector", "description": "Connect to databases", "category": "database"},
-            {"name": "api_client", "description": "Make HTTP requests", "category": "network"},
+            {
+                "name": "database_connector",
+                "description": "Connect to databases",
+                "category": "database",
+            },
+            {
+                "name": "api_client",
+                "description": "Make HTTP requests",
+                "category": "network",
+            },
         ]
 
         result = select_top_matching_tools(unrelated_tools, "cook food", "kitchen", top_n=2)

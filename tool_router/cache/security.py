@@ -22,7 +22,7 @@ import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import Any, Union
+from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -43,18 +43,18 @@ from .types import (
 class CacheEncryption:
     """Handles encryption and decryption of cache data using Fernet symmetric encryption."""
 
-    def __init__(self, config: Union[CacheConfig, None] = None):
+    def __init__(self, config: CacheConfig | None = None):
         """Initialize encryption with configuration."""
         self.config = config or CacheConfig()
-        self._encryption_key: Union[str, None] = None
-        self._fernet: Union[Fernet, None] = None
+        self._encryption_key: str | None = None
+        self._fernet: Fernet | None = None
         self._lock = Lock()
 
         # Set encryption key if available in config
         if self.config.encryption_key:
             self.set_encryption_key(self.config.encryption_key)
 
-    def set_encryption_key(self, key: Union[str, bytes]) -> None:
+    def set_encryption_key(self, key: str | bytes) -> None:
         """Set the encryption key for Fernet encryption."""
         with self._lock:
             if isinstance(key, str):
@@ -66,11 +66,11 @@ class CacheEncryption:
             except Exception as e:
                 raise EncryptionError(f"Failed to set encryption key: {e}")
 
-    def get_encryption_key(self) -> Union[str, None]:
+    def get_encryption_key(self) -> str | None:
         """Get the current encryption key."""
         return self._encryption_key
 
-    def encrypt(self, data: Any) -> Union[bytes, None]:
+    def encrypt(self, data: Any) -> bytes | None:
         """Encrypt data using Fernet encryption."""
         if self._fernet is None:
             raise EncryptionError("Encryption key not set")
@@ -133,7 +133,7 @@ class CacheEncryption:
 class AccessControlManager:
     """Manages access control policies and permissions for cache operations."""
 
-    def __init__(self, config: Union[CacheConfig, None] = None):
+    def __init__(self, config: CacheConfig | None = None):
         """Initialize access control manager."""
         self.config = config or CacheConfig()
         self.policies: dict[str, SecurityPolicy] = {}
@@ -178,7 +178,11 @@ class AccessControlManager:
                 classification=DataClassification.CONFIDENTIAL,
                 retention_days=180,
                 encryption_required=True,
-                access_controls=[AccessLevel.READ, AccessLevel.WRITE, AccessLevel.DELETE],
+                access_controls=[
+                    AccessLevel.READ,
+                    AccessLevel.WRITE,
+                    AccessLevel.DELETE,
+                ],
                 audit_required=True,
                 consent_required=True,
                 created_at=datetime.now(),
@@ -197,7 +201,7 @@ class AccessControlManager:
             self.policies[policy_id] = policy
             return True
 
-    def get_policy(self, policy_id: str) -> Union[SecurityPolicy, None]:
+    def get_policy(self, policy_id: str) -> SecurityPolicy | None:
         """Get a security policy by ID."""
         return self.policies.get(policy_id)
 
@@ -214,7 +218,12 @@ class AccessControlManager:
             return False
 
     def create_access_request(
-        self, user_id: str, operation: AccessLevel, key: str, data_classification: DataClassification, reason: str = ""
+        self,
+        user_id: str,
+        operation: AccessLevel,
+        key: str,
+        data_classification: DataClassification,
+        reason: str = "",
     ) -> int:
         """Create an access request for a cache operation."""
         request = AccessRequest(
@@ -262,7 +271,11 @@ class AccessControlManager:
             return False
 
     def check_access(
-        self, user_id: str, operation: AccessLevel, key: str, data_classification: DataClassification
+        self,
+        user_id: str,
+        operation: AccessLevel,
+        key: str,
+        data_classification: DataClassification,
     ) -> bool:
         """Check if a user has access to perform an operation."""
         # Check if user has the required permission
@@ -302,7 +315,7 @@ class AccessControlManager:
                 return True
             return False
 
-    def get_access_requests(self, user_id: Union[str, None] = None, status: Union[str, None] = None) -> list[AccessRequest]:
+    def get_access_requests(self, user_id: str | None = None, status: str | None = None) -> list[AccessRequest]:
         """Get access requests with optional filtering."""
         requests = self.access_requests.copy()
 
@@ -332,7 +345,7 @@ class AccessControlManager:
 class GDPRComplianceManager:
     """Manages GDPR compliance features including consent management and right to be forgotten."""
 
-    def __init__(self, config: Union[CacheConfig, None] = None):
+    def __init__(self, config: CacheConfig | None = None):
         """Initialize GDPR compliance manager."""
         self.config = config or CacheConfig()
         self.consents: dict[str, ConsentRecord] = {}
@@ -398,15 +411,19 @@ class GDPRComplianceManager:
         with self._lock:
             return [consent for consent in self.consents.values() if consent.user_id == user_id]
 
-    def add_user_data(self, user_id: str, data_type: str, data: Any, timestamp: Union[datetime, None] = None) -> None:
+    def add_user_data(self, user_id: str, data_type: str, data: Any, timestamp: datetime | None = None) -> None:
         """Add user data for GDPR compliance tracking."""
         if timestamp is None:
             timestamp = datetime.now()
 
         with self._lock:
-            self.user_data[user_id][data_type] = {"data": data, "timestamp": timestamp, "last_updated": timestamp}
+            self.user_data[user_id][data_type] = {
+                "data": data,
+                "timestamp": timestamp,
+                "last_updated": timestamp,
+            }
 
-    def get_user_data(self, user_id: str, data_type: Union[str, None] = None) -> dict[str, Any]:
+    def get_user_data(self, user_id: str, data_type: str | None = None) -> dict[str, Any]:
         """Get user data for GDPR compliance."""
         with self._lock:
             if user_id not in self.user_data:
@@ -416,7 +433,7 @@ class GDPRComplianceManager:
                 return self.user_data[user_id].get(data_type, {})
             return self.user_data[user_id].copy()
 
-    def delete_user_data(self, user_id: str, data_type: Union[str, None] = None) -> bool:
+    def delete_user_data(self, user_id: str, data_type: str | None = None) -> bool:
         """Delete user data for right to be forgotten."""
         with self._lock:
             if user_id not in self.user_data:
@@ -498,7 +515,7 @@ class GDPRComplianceManager:
 
         return request_id
 
-    def get_data_subject_requests(self, user_id: Union[str, None] = None, status: Union[str, None] = None) -> list[dict[str, Any]]:
+    def get_data_subject_requests(self, user_id: str | None = None, status: str | None = None) -> list[dict[str, Any]]:
         """Get data subject requests with optional filtering."""
         requests = self.data_subject_requests.copy()
 
@@ -523,7 +540,7 @@ class GDPRComplianceManager:
 class RetentionPolicyManager:
     """Manages data retention policies and lifecycle management."""
 
-    def __init__(self, config: Union[CacheConfig, None] = None):
+    def __init__(self, config: CacheConfig | None = None):
         """Initialize retention policy manager."""
         self.config = config or CacheConfig()
         self.retention_rules: dict[str, dict[str, Any]] = {}
@@ -574,11 +591,11 @@ class RetentionPolicyManager:
             self.retention_rules[rule_id] = rule
             return True
 
-    def get_rule(self, rule_id: str) -> Union[dict[str, Any], None]:
+    def get_rule(self, rule_id: str) -> dict[str, Any] | None:
         """Get a retention rule by ID."""
         return self.retention_rules.get(rule_id)
 
-    def get_rules(self, classification: Union[DataClassification, None] = None) -> list[dict[str, Any]]:
+    def get_rules(self, classification: DataClassification | None = None) -> list[dict[str, Any]]:
         """Get all retention rules as a list, optionally filtered by classification."""
         rules = list(self.retention_rules.values())
         if classification is not None:
@@ -589,23 +606,23 @@ class RetentionPolicyManager:
         """List all retention rules."""
         return self.retention_rules.copy()
 
-    def add_rule(self, rule: Union[dict[str, Any], Any]) -> str:
+    def add_rule(self, rule: dict[str, Any] | Any) -> str:
         """Add a retention rule (accepts both dict and RetentionRule objects)."""
-        if hasattr(rule, 'rule_id') and hasattr(rule, 'data_classification'):
+        if hasattr(rule, "rule_id") and hasattr(rule, "data_classification"):
             # Handle RetentionRule object
             rule_dict = {
                 "rule_id": rule.rule_id,
                 "name": rule.name,
                 "description": rule.description,
                 "data_classification": rule.data_classification,
-                "trigger": rule.trigger.value if hasattr(rule.trigger, 'value') else rule.trigger,
-                "action": rule.action.value if hasattr(rule.action, 'value') else rule.action,
+                "trigger": (rule.trigger.value if hasattr(rule.trigger, "value") else rule.trigger),
+                "action": (rule.action.value if hasattr(rule.action, "value") else rule.action),
                 "retention_days": rule.retention_days,
-                "enabled": getattr(rule, 'enabled', True),
-                "priority": getattr(rule, 'priority', 100),
-                "created_at": getattr(rule, 'created', datetime.now()),
-                "last_modified": getattr(rule, 'last_modified', datetime.now()),
-                "conditions": getattr(rule, 'conditions', {}),
+                "enabled": getattr(rule, "enabled", True),
+                "priority": getattr(rule, "priority", 100),
+                "created_at": getattr(rule, "created", datetime.now()),
+                "last_modified": getattr(rule, "last_modified", datetime.now()),
+                "conditions": getattr(rule, "conditions", {}),
             }
             rule_id = rule_dict["rule_id"]
         else:
@@ -658,7 +675,7 @@ class RetentionPolicyManager:
 
         return expired
 
-    def add_user_data(self, user_id: str, data_type: str, data: Any, timestamp: Union[datetime, None] = None) -> None:
+    def add_user_data(self, user_id: str, data_type: str, data: Any, timestamp: datetime | None = None) -> None:
         """Add user data with timestamp for retention tracking."""
         if timestamp is None:
             timestamp = datetime.now()
@@ -704,7 +721,7 @@ class RetentionPolicyManager:
 class CacheSecurityManager:
     """Integrated security manager for cache operations."""
 
-    def __init__(self, config: Union[CacheConfig, None] = None):
+    def __init__(self, config: CacheConfig | None = None):
         """Initialize cache security manager."""
         self.config = config or CacheConfig()
 
@@ -725,8 +742,8 @@ class CacheSecurityManager:
         value: Any,
         user_id: str,
         data_classification: DataClassification,
-        ttl: Union[int, None] = None,
-        tags: Union[set[str], None] = None,
+        ttl: int | None = None,
+        tags: set[str] | None = None,
     ) -> bool:
         """Securely set a value in the cache with encryption and access control."""
         try:
@@ -791,7 +808,13 @@ class CacheSecurityManager:
 
         except Exception as e:
             self._log_audit_event(
-                "cache_error", user_id, key, "set", "error", data_classification, f"Cache set error: {e!s}"
+                "cache_error",
+                user_id,
+                key,
+                "set",
+                "error",
+                data_classification,
+                f"Cache set error: {e!s}",
             )
             return False
 
@@ -820,7 +843,15 @@ class CacheSecurityManager:
             cached_value = cache.get(key)
 
             if cached_value is None:
-                self._log_audit_event("cache_miss", user_id, key, "get", "success", data_classification, "Cache miss")
+                self._log_audit_event(
+                    "cache_miss",
+                    user_id,
+                    key,
+                    "get",
+                    "success",
+                    data_classification,
+                    "Cache miss",
+                )
                 return None
 
             # Decrypt if encrypted
@@ -833,14 +864,26 @@ class CacheSecurityManager:
 
             # Log successful operation
             self._log_audit_event(
-                "cache_access", user_id, key, "get", "success", data_classification, "Cache get operation successful"
+                "cache_access",
+                user_id,
+                key,
+                "get",
+                "success",
+                data_classification,
+                "Cache get operation successful",
             )
 
             return processed_value
 
         except Exception as e:
             self._log_audit_event(
-                "cache_error", user_id, key, "get", "error", data_classification, f"Cache get error: {e!s}"
+                "cache_error",
+                user_id,
+                key,
+                "get",
+                "error",
+                data_classification,
+                f"Cache get error: {e!s}",
             )
             return None
 
@@ -888,7 +931,13 @@ class CacheSecurityManager:
 
         except Exception as e:
             self._log_audit_event(
-                "cache_error", user_id, key, "delete", "error", data_classification, f"Cache delete error: {e!s}"
+                "cache_error",
+                user_id,
+                key,
+                "delete",
+                "error",
+                data_classification,
+                f"Cache delete error: {e!s}",
             )
             return False
 
@@ -942,7 +991,10 @@ class CacheSecurityManager:
                 self.audit_trail = self.audit_trail[-max_entries:]
 
     def get_audit_trail(
-        self, user_id: Union[str, None] = None, event_type: Union[str, None] = None, limit: Union[int, None] = None
+        self,
+        user_id: str | None = None,
+        event_type: str | None = None,
+        limit: int | None = None,
     ) -> list[AuditEntry]:
         """Get audit trail with optional filtering."""
         trail = self.audit_trail.copy()

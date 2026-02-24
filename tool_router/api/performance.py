@@ -268,7 +268,9 @@ async def get_performance_summary() -> dict[str, Any]:
                 "hit_rate": query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0),
             },
             "recommendations": _generate_performance_recommendations(
-                global_metrics.get("hit_rate", 0.0), query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0), uptime
+                global_metrics.get("hit_rate", 0.0),
+                query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0),
+                uptime,
             ),
         }
 

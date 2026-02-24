@@ -4,8 +4,17 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from tool_router.mcp_tools.evaluation_tool import EVALUATION_SCHEMA, EvaluationTool, evaluation_handler
-from tool_router.training.evaluation import BenchmarkSuite, EvaluationMetric, EvaluationResult, SpecialistEvaluator
+from tool_router.mcp_tools.evaluation_tool import (
+    EVALUATION_SCHEMA,
+    EvaluationTool,
+    evaluation_handler,
+)
+from tool_router.training.evaluation import (
+    BenchmarkSuite,
+    EvaluationMetric,
+    EvaluationResult,
+    SpecialistEvaluator,
+)
 
 
 class TestEvaluationTool:
@@ -183,14 +192,23 @@ class TestEvaluationTool:
             mock_suite1 = MagicMock()
             mock_suite1.description = "UI specialist for user interface patterns"
             mock_suite1.test_cases = ["test1", "test2"]
-            mock_suite1.metrics = [MagicMock(value="accuracy"), MagicMock(value="performance")]
+            mock_suite1.metrics = [
+                MagicMock(value="accuracy"),
+                MagicMock(value="performance"),
+            ]
 
             mock_suite2 = MagicMock()
             mock_suite2.description = "Prompt architect for prompt engineering"
             mock_suite2.test_cases = ["test3", "test4"]
-            mock_suite2.metrics = [MagicMock(value="creativity"), MagicMock(value="clarity")]
+            mock_suite2.metrics = [
+                MagicMock(value="creativity"),
+                MagicMock(value="clarity"),
+            ]
 
-            mock_suites.items.return_value = [("ui_specialist", mock_suite1), ("prompt_architect", mock_suite2)]
+            mock_suites.items.return_value = [
+                ("ui_specialist", mock_suite1),
+                ("prompt_architect", mock_suite2),
+            ]
 
             result = tool.get_available_specialists()
 
@@ -321,7 +339,13 @@ class TestEvaluationSchema:
     def test_schema_actions(self) -> None:
         """Test that all valid actions are in schema."""
         actions = EVALUATION_SCHEMA["properties"]["action"]["enum"]
-        expected_actions = ["run_evaluation", "get_history", "get_specialists", "get_metrics", "get_summary"]
+        expected_actions = [
+            "run_evaluation",
+            "get_history",
+            "get_specialists",
+            "get_metrics",
+            "get_summary",
+        ]
 
         # Business logic: all expected actions should be present
         for action in expected_actions:

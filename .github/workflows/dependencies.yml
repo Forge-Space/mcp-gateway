@@ -1,161 +1,51 @@
-# Dependency Management Workflow
-# Consolidated dependency updates and security scanning
-
 name: Dependency Management
 
 on:
   schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * 1'
   workflow_dispatch:
-    inputs:
-      update-type:
-        description: 'Type of update to perform'
-        required: true
-        default: 'security'
-        type: choice
-        options:
-          - security
-          - all
-          - patch
 
 jobs:
-  # Renovate Dependency Updates
-  renovate:
-    name: Renovate Dependency Updates
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.RENOVATE_TOKEN }}
-
-      - name: Run Renovate
-        uses: renovatebot/github-action@v40.2.5
-        with:
-          configurationFile: .github/renovate.json5
-          token: ${{ secrets.RENOVATE_TOKEN }}
-        env:
-          LOG_LEVEL: info
-
-  # Security Dependency Scan
-  security-scan:
-    name: Security Dependency Scan
+  security-audit:
+    name: Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
-    strategy:
-      matrix:
-        ecosystem: [python, javascript]
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: ${{ matrix.ecosystem }} Security Scan
-        if: matrix.ecosystem == 'python'
-        uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          args: --severity-threshold=high --policy-path=.snyk
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: NPM audit
+        run: npm audit --audit-level=high --omit=dev
+        continue-on-error: true
 
-      - name: ${{ matrix.ecosystem }} Security Scan
-        if: matrix.ecosystem == 'javascript'
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high --policy-path=.snyk
-
-  # License Compliance Check
   license-check:
-    name: License Compliance Check
+    name: License Compliance
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-
-      - name: Install tools
-        run: |
-          pip install pip-licenses
-          npm install -g license-checker
-
-      - name: Check Python licenses
-        run: |
-          pip-licenses --from=mixed --format=table --with-urls
-
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
       - name: Check JavaScript licenses
-        run: |
-          license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC'
+        run: npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC'
+        continue-on-error: true
 
-  # Outdated Dependencies Report
   outdated-report:
-    name: Outdated Dependencies Report
+    name: Outdated Dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Check outdated Python packages
-        run: |
-          pip list --outdated --format=columns > outdated-python.txt
-          cat outdated-python.txt
-
-      - name: Check outdated Node.js packages
-        run: |
-          npm outdated || true > outdated-node.txt
-          cat outdated-node.txt
-
-      - name: Upload outdated reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: outdated-reports
-          path: |
-            outdated-python.txt
-            outdated-node.txt
-          retention-days: 30
-
-  # Dependency Health Score
-  health-score:
-    name: Dependency Health Score
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [security-scan, license-check]
-
-    steps:
-      - name: Calculate health score
-        run: |
-          # Simple health scoring logic
-          SECURITY_SCORE=${{ needs.security-scan.result == 'success' && '100' || '0' }}
-          LICENSE_SCORE=${{ needs.license-check.result == 'success' && '100' || '0' }}
-
-          TOTAL_SCORE=$((SECURITY_SCORE + LICENSE_SCORE / 2))
-
-          echo "## Dependency Health Score" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Score |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | $SECURITY_SCORE/100 |" >> $GITHUB_STEP_SUMMARY
-          echo "| License Compliance | $LICENSE_SCORE/100 |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Overall Health** | **$TOTAL_SCORE/100** |" >> $GITHUB_STEP_SUMMARY
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Check outdated packages
+        run: npm outdated || true

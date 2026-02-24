@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import pytest
+from unittest.mock import Mock, patch
 
 from tool_router.security.audit_logger import SecurityAuditLogger, SecurityEvent
 
@@ -33,7 +32,7 @@ class TestSecurityAuditLogger:
             severity="high",
             user_id="user123",
             ip_address="192.168.1.1",
-            details={"reason": "Invalid credentials"}
+            details={"reason": "Invalid credentials"},
         )
 
         logger.log_security_event(event)
@@ -56,7 +55,7 @@ class TestSecurityAuditLogger:
             method="POST",
             path="/api/tools",
             user_id="user123",
-            ip_address="192.168.1.1"
+            ip_address="192.168.1.1",
         )
 
         logger.logger.info.assert_called_once()
@@ -74,7 +73,7 @@ class TestSecurityAuditLogger:
             request_id="req_123",
             reason="Rate limit exceeded",
             user_id="user123",
-            ip_address="192.168.1.1"
+            ip_address="192.168.1.1",
         )
 
         logger.logger.warning.assert_called_once()
@@ -92,7 +91,7 @@ class TestSecurityAuditLogger:
             user_id="user123",
             ip_address="192.168.1.1",
             limit_type="requests_per_minute",
-            limit_value=100
+            limit_value=100,
         )
 
         logger.logger.warning.assert_called_once()
@@ -110,7 +109,7 @@ class TestSecurityAuditLogger:
             request_id="req_123",
             prompt_content="malicious<script>alert('xss')</script>",
             user_id="user123",
-            confidence=0.95
+            confidence=0.95,
         )
 
         logger.logger.error.assert_called_once()
@@ -124,11 +123,7 @@ class TestSecurityAuditLogger:
 
         logger.logger = Mock()
 
-        logger.log_authentication_failed(
-            user_id="user123",
-            reason="Invalid password",
-            ip_address="192.168.1.1"
-        )
+        logger.log_authentication_failed(user_id="user123", reason="Invalid password", ip_address="192.168.1.1")
 
         logger.logger.warning.assert_called_once()
         call_args = logger.logger.warning.call_args[0]
@@ -145,7 +140,7 @@ class TestSecurityAuditLogger:
             user_id="user123",
             resource="/api/admin",
             reason="Insufficient permissions",
-            ip_address="192.168.1.1"
+            ip_address="192.168.1.1",
         )
 
         logger.logger.warning.assert_called_once()
@@ -163,7 +158,7 @@ class TestSecurityAuditLogger:
             field_name="tool_name",
             value="invalid_tool",
             reason="Tool not found in registry",
-            user_id="user123"
+            user_id="user123",
         )
 
         logger.logger.warning.assert_called_once()
@@ -181,7 +176,7 @@ class TestSecurityAuditLogger:
             user_id="user123",
             penalty_type="rate_limit",
             duration_seconds=300,
-            reason="Too many requests"
+            reason="Too many requests",
         )
 
         logger.logger.info.assert_called_once()
@@ -198,7 +193,7 @@ class TestSecurityAuditLogger:
         logger.log_suspicious_activity(
             user_id="user123",
             activity_pattern="rapid_tool_requests",
-            details={"request_count": 50, "time_window": "60s"}
+            details={"request_count": 50, "time_window": "60s"},
         )
 
         logger.logger.warning.assert_called_once()
@@ -214,7 +209,7 @@ class TestSecurityAuditLogger:
         logger._event_counts = {
             "authentication_failed": 5,
             "request_blocked": 3,
-            "prompt_injection_detected": 1
+            "prompt_injection_detected": 1,
         }
 
         summary = logger.get_security_summary()
@@ -231,18 +226,8 @@ class TestSecurityAuditLogger:
         logger = SecurityAuditLogger(log_file_path=str(log_file))
 
         # Test hash creation
-        hash1 = logger.create_request_hash(
-            method="POST",
-            path="/api/tools",
-            user_id="user123",
-            body="test data"
-        )
-        hash2 = logger.create_request_hash(
-            method="POST",
-            path="/api/tools",
-            user_id="user123",
-            body="test data"
-        )
+        hash1 = logger.create_request_hash(method="POST", path="/api/tools", user_id="user123", body="test data")
+        hash2 = logger.create_request_hash(method="POST", path="/api/tools", user_id="user123", body="test data")
 
         assert hash1 == hash2  # Same input should produce same hash
         assert len(hash1) == 32  # SHA256 produces 32 char hex string
@@ -253,8 +238,8 @@ class TestSecurityAuditLogger:
         logger = SecurityAuditLogger(log_file_path=str(log_file))
 
         # Mock file operations
-        with patch('builtins.open', side_effect=OSError("File too large")) as mock_open:
-            with patch('os.rename', side_effect=OSError("Cannot rename")):
+        with patch("builtins.open", side_effect=OSError("File too large")) as mock_open:
+            with patch("os.rename", side_effect=OSError("Cannot rename")):
                 # Should handle file rotation errors gracefully
                 logger.log_security_event(
                     SecurityEvent(
@@ -262,7 +247,7 @@ class TestSecurityAuditLogger:
                         severity="low",
                         user_id="user123",
                         ip_address="192.168.1.1",
-                        details={}
+                        details={},
                     )
                 )
                 # Should not raise exception
@@ -270,7 +255,6 @@ class TestSecurityAuditLogger:
     def test_concurrent_logging(self, tmp_path: Path) -> None:
         """Test concurrent logging operations."""
         import threading
-        import time
 
         log_file = tmp_path / "security.log"
         logger = SecurityAuditLogger(log_file_path=str(log_file))
@@ -286,7 +270,7 @@ class TestSecurityAuditLogger:
                         severity="low",
                         user_id=f"user{i}",
                         ip_address="192.168.1.1",
-                        details={}
+                        details={},
                     )
                 )
 
@@ -314,11 +298,12 @@ class TestSecurityAuditLogger:
             severity="medium",
             user_id="user123",
             ip_address="192.168.1.1",
-            details={"key": "value", "nested": {"inner": "data"}}
+            details={"key": "value", "nested": {"inner": "data"}},
         )
 
         # Test JSON serialization
         import json
+
         event_dict = event.__dict__
         json_str = json.dumps(event_dict)
 

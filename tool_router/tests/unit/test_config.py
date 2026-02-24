@@ -184,7 +184,7 @@ class TestAIConfig:
             ("FALSE", False),
             ("1", False),  # Should be False since not "true"
             ("0", False),  # Should be False since not "true"
-            ("", False),   # Empty string defaults to False
+            ("", False),  # Empty string defaults to False
         ]
 
         for env_value, expected in test_cases:
@@ -300,122 +300,122 @@ class TestToolRouterConfig:
 
 class TestGatewayConfigAdvanced:
     """Advanced tests for GatewayConfig."""
-    
+
     def test_url_trimming(self, monkeypatch) -> None:
         """Test that URL trailing slash is trimmed."""
         monkeypatch.setenv("GATEWAY_URL", "http://gateway:4444/")
         monkeypatch.setenv("GATEWAY_JWT", "token")
-        
+
         config = GatewayConfig.load_from_environment()
         assert config.url == "http://gateway:4444"
-    
+
     def test_missing_jwt_error(self, monkeypatch) -> None:
         """Test that missing JWT raises ValueError."""
         monkeypatch.delenv("GATEWAY_JWT", raising=False)
-        
+
         with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
             GatewayConfig.load_from_environment()
-    
+
     def test_invalid_timeout_ms_error(self, monkeypatch) -> None:
         """Test that invalid timeout_ms raises ValueError."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "invalid")
-        
+
         with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
             GatewayConfig.load_from_environment()
 
 
 class TestGatewayConfigAdvanced:
     """Advanced tests for GatewayConfig."""
-    
+
     def test_url_trimming(self, monkeypatch) -> None:
         """Test that URL trailing slash is trimmed."""
         monkeypatch.setenv("GATEWAY_URL", "http://gateway:4444/")
         monkeypatch.setenv("GATEWAY_JWT", "token")
-        
+
         config = GatewayConfig.load_from_environment()
         assert config.url == "http://gateway:4444"
-    
+
     def test_url_trimming_multiple_slashes(self, monkeypatch) -> None:
         """Test that multiple trailing slashes are trimmed."""
         monkeypatch.setenv("GATEWAY_URL", "http://gateway:4444///")
         monkeypatch.setenv("GATEWAY_JWT", "token")
-        
+
         config = GatewayConfig.load_from_environment()
         assert config.url == "http://gateway:4444"
-    
+
     def test_missing_jwt_error(self, monkeypatch) -> None:
         """Test that missing JWT raises ValueError."""
         monkeypatch.delenv("GATEWAY_JWT", raising=False)
-        
+
         with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
             GatewayConfig.load_from_environment()
-    
+
     def test_empty_jwt_error(self, monkeypatch) -> None:
         """Test that empty JWT raises ValueError."""
         monkeypatch.setenv("GATEWAY_JWT", "")
-        
+
         with pytest.raises(ValueError, match="GATEWAY_JWT environment variable is required"):
             GatewayConfig.load_from_environment()
-    
+
     def test_invalid_timeout_ms_error(self, monkeypatch) -> None:
         """Test that invalid timeout_ms raises ValueError."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "invalid")
-        
+
         with pytest.raises(ValueError, match="GATEWAY_TIMEOUT_MS must be a valid integer"):
             GatewayConfig.load_from_environment()
-    
+
     def test_invalid_max_retries_error(self, monkeypatch) -> None:
         """Test that invalid max_retries raises ValueError."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_MAX_RETRIES", "not_a_number")
-        
+
         with pytest.raises(ValueError, match="GATEWAY_MAX_RETRIES must be a valid integer"):
             GatewayConfig.load_from_environment()
-    
+
     def test_invalid_retry_delay_ms_error(self, monkeypatch) -> None:
         """Test that invalid retry_delay_ms raises ValueError."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_RETRY_DELAY_MS", "float_value")
-        
+
         with pytest.raises(ValueError, match="GATEWAY_RETRY_DELAY_MS must be a valid integer"):
             GatewayConfig.load_from_environment()
-    
+
     def test_negative_timeout_ms_error(self, monkeypatch) -> None:
         """Test that negative timeout_ms raises ValueError."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "-1000")
-        
+
         # This should pass validation (negative values are allowed at parsing level)
         config = GatewayConfig.load_from_environment()
         assert config.timeout_ms == -1000
-    
+
     def test_zero_max_retries(self, monkeypatch) -> None:
         """Test that zero max_retries is allowed."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_MAX_RETRIES", "0")
-        
+
         config = GatewayConfig.load_from_environment()
         assert config.max_retries == 0
-    
+
     def test_large_numeric_values(self, monkeypatch) -> None:
         """Test handling of large numeric values."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "999999999")
         monkeypatch.setenv("GATEWAY_MAX_RETRIES", "1000")
         monkeypatch.setenv("GATEWAY_RETRY_DELAY_MS", "60000")
-        
+
         config = GatewayConfig.load_from_environment()
         assert config.timeout_ms == 999999999
         assert config.max_retries == 1000
         assert config.retry_delay_ms == 60000
-    
+
     def test_partial_environment_config(self, monkeypatch) -> None:
         """Test loading with partial environment variables."""
         monkeypatch.setenv("GATEWAY_JWT", "token")
         # Only set JWT, others should use defaults
-        
+
         config = GatewayConfig.load_from_environment()
         assert config.url == "http://gateway:4444"  # Default
         assert config.jwt == "token"
@@ -426,44 +426,39 @@ class TestGatewayConfigAdvanced:
 
 class TestAIConfigAdvanced:
     """Advanced tests for AIConfig."""
-    
+
     def test_ai_config_with_custom_values(self) -> None:
         """Test AIConfig with custom values."""
         config = AIConfig(
             model_name="custom-model",
             temperature=0.9,
             max_tokens=2048,
-            timeout_ms=60000
+            timeout_ms=60000,
         )
-        
+
         assert config.model_name == "custom-model"
         assert config.temperature == 0.9
         assert config.max_tokens == 2048
         assert config.timeout_ms == 60000
-    
+
     def test_ai_config_edge_cases(self) -> None:
         """Test AIConfig with edge case values."""
-        config = AIConfig(
-            model_name="",
-            temperature=0.0,
-            max_tokens=1,
-            timeout_ms=1000
-        )
-        
+        config = AIConfig(model_name="", temperature=0.0, max_tokens=1, timeout_ms=1000)
+
         assert config.model_name == ""
         assert config.temperature == 0.0
         assert config.max_tokens == 1
         assert config.timeout_ms == 1000
-    
+
     def test_ai_config_high_values(self) -> None:
         """Test AIConfig with high values."""
         config = AIConfig(
             model_name="large-model",
             temperature=2.0,
             max_tokens=100000,
-            timeout_ms=300000
+            timeout_ms=300000,
         )
-        
+
         assert config.model_name == "large-model"
         assert config.temperature == 2.0
         assert config.max_tokens == 100000
@@ -472,37 +467,32 @@ class TestAIConfigAdvanced:
 
 class TestToolRouterConfigAdvanced:
     """Advanced tests for ToolRouterConfig."""
-    
+
     def test_tool_router_config_edge_cases(self) -> None:
         """Test ToolRouterConfig with edge case values."""
         gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
         ai_config = AIConfig()
-        
-        config = ToolRouterConfig(
-            gateway=gateway_config,
-            ai=ai_config,
-            max_tools_search=0,
-            default_top_n=0
-        )
-        
+
+        config = ToolRouterConfig(gateway=gateway_config, ai=ai_config, max_tools_search=0, default_top_n=0)
+
         assert config.max_tools_search == 0
         assert config.default_top_n == 0
-    
+
     def test_tool_router_config_large_values(self) -> None:
         """Test ToolRouterConfig with large values."""
         gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
         ai_config = AIConfig()
-        
+
         config = ToolRouterConfig(
             gateway=gateway_config,
             ai=ai_config,
             max_tools_search=10000,
-            default_top_n=1000
+            default_top_n=1000,
         )
-        
+
         assert config.max_tools_search == 10000
         assert config.default_top_n == 1000
-    
+
     def test_tool_router_config_from_env_complex(self, monkeypatch) -> None:
         """Test ToolRouterConfig from environment with complex values."""
         # Set all environment variables
@@ -517,22 +507,22 @@ class TestToolRouterConfigAdvanced:
         monkeypatch.setenv("AI_TIMEOUT_MS", "120000")
         monkeypatch.setenv("MAX_TOOLS_SEARCH", "50")
         monkeypatch.setenv("DEFAULT_TOP_N", "5")
-        
+
         config = ToolRouterConfig.load_from_environment()
-        
+
         # Verify GatewayConfig
         assert config.gateway.url == "https://production.example.com"
         assert config.gateway.jwt == "production-jwt-token"
         assert config.gateway.timeout_ms == 60000
         assert config.gateway.max_retries == 5
         assert config.gateway.retry_delay_ms == 5000
-        
+
         # Verify AIConfig
         assert config.ai.model_name == "gpt-4-turbo"
         assert config.ai.temperature == 0.7
         assert config.ai.max_tokens == 4096
         assert config.ai.timeout_ms == 120000
-        
+
         # Verify ToolRouterConfig
         assert config.max_tools_search == 50
         assert config.default_top_n == 5

@@ -86,7 +86,11 @@ class KnowledgeBaseTool:
             return {"error": str(e), "message": "Failed to add pattern"}
 
     def search_patterns(
-        self, query: str, category: str | None = None, limit: int = 10, min_confidence: float | None = None
+        self,
+        query: str,
+        category: str | None = None,
+        limit: int = 10,
+        min_confidence: float | None = None,
     ) -> dict[str, Any]:
         """Search for patterns in the knowledge base.
 
@@ -125,9 +129,9 @@ class KnowledgeBaseTool:
                     {
                         "id": item.id,
                         "title": item.title,
-                        "description": item.description[:100] + "..."
-                        if len(item.description) > 100
-                        else item.description,
+                        "description": (
+                            item.description[:100] + "..." if len(item.description) > 100 else item.description
+                        ),
                         "category": item.category.value,
                         "confidence": item.confidence,
                         "effectiveness": item.effectiveness,
@@ -161,7 +165,10 @@ class KnowledgeBaseTool:
             item = self.knowledge_base.get_knowledge_by_id(item_id)
 
             if not item:
-                return {"error": f"Pattern with ID {item_id} not found", "message": "Invalid pattern ID"}
+                return {
+                    "error": f"Pattern with ID {item_id} not found",
+                    "message": "Invalid pattern ID",
+                }
 
             return {
                 "id": item.id,
@@ -212,7 +219,10 @@ class KnowledgeBaseTool:
             item = self.knowledge_base.get_knowledge_by_id(item_id)
 
             if not item:
-                return {"error": f"Pattern with ID {item_id} not found", "message": "Invalid pattern ID"}
+                return {
+                    "error": f"Pattern with ID {item_id} not found",
+                    "message": "Invalid pattern ID",
+                }
 
             # Update fields if provided
             updates = {}
@@ -259,14 +269,21 @@ class KnowledgeBaseTool:
             item = self.knowledge_base.get_knowledge_by_id(item_id)
 
             if not item:
-                return {"error": f"Pattern with ID {item_id} not found", "message": "Invalid pattern ID"}
+                return {
+                    "error": f"Pattern with ID {item_id} not found",
+                    "message": "Invalid pattern ID",
+                }
 
             # Delete from knowledge base
             success = self.knowledge_base.delete_knowledge(item_id)
 
             if success:
                 logger.info(f"Deleted pattern {item_id}: {item.title}")
-                return {"item_id": item_id, "title": item.title, "message": "Pattern deleted successfully"}
+                return {
+                    "item_id": item_id,
+                    "title": item.title,
+                    "message": "Pattern deleted successfully",
+                }
             return {"error": "Delete failed", "message": "Failed to delete pattern"}
 
         except Exception as e:
@@ -303,9 +320,9 @@ class KnowledgeBaseTool:
                     {
                         "id": item.id,
                         "title": item.title,
-                        "description": item.description[:100] + "..."
-                        if len(item.description) > 100
-                        else item.description,
+                        "description": (
+                            item.description[:100] + "..." if len(item.description) > 100 else item.description
+                        ),
                         "confidence": item.confidence,
                         "effectiveness": item.effectiveness,
                         "usage_count": item.usage_count,
@@ -333,11 +350,17 @@ class KnowledgeBaseTool:
         try:
             stats = self.knowledge_base.get_statistics()
 
-            return {"statistics": stats, "message": "Knowledge base statistics retrieved successfully"}
+            return {
+                "statistics": stats,
+                "message": "Knowledge base statistics retrieved successfully",
+            }
 
         except Exception as e:
             logger.error(f"Error getting knowledge base statistics: {e}")
-            return {"error": str(e), "message": "Failed to get knowledge base statistics"}
+            return {
+                "error": str(e),
+                "message": "Failed to get knowledge base statistics",
+            }
 
     def get_categories(self) -> dict[str, Any]:
         """Get all available pattern categories.
@@ -347,7 +370,10 @@ class KnowledgeBaseTool:
         """
         try:
             categories = [
-                {"value": category.value, "name": category.value.replace("_", " ").title()}
+                {
+                    "value": category.value,
+                    "name": category.value.replace("_", " ").title(),
+                }
                 for category in PatternCategory
             ]
 
@@ -380,12 +406,30 @@ KNOWLEDGE_BASE_SCHEMA = {
             ],
             "description": "The knowledge base action to perform",
         },
-        "item_id": {"type": "integer", "description": "ID of the pattern (for get, update, delete operations)"},
-        "title": {"type": "string", "description": "Pattern title (for add, update operations)"},
-        "description": {"type": "string", "description": "Pattern description (for add, update operations)"},
-        "category": {"type": "string", "description": "Pattern category (for add, search, get_by_category operations)"},
-        "content": {"type": "string", "description": "Pattern content (for add, update operations)"},
-        "query": {"type": "string", "description": "Search query (for search_patterns operation)"},
+        "item_id": {
+            "type": "integer",
+            "description": "ID of the pattern (for get, update, delete operations)",
+        },
+        "title": {
+            "type": "string",
+            "description": "Pattern title (for add, update operations)",
+        },
+        "description": {
+            "type": "string",
+            "description": "Pattern description (for add, update operations)",
+        },
+        "category": {
+            "type": "string",
+            "description": "Pattern category (for add, search, get_by_category operations)",
+        },
+        "content": {
+            "type": "string",
+            "description": "Pattern content (for add, update operations)",
+        },
+        "query": {
+            "type": "string",
+            "description": "Search query (for search_patterns operation)",
+        },
         "confidence": {
             "type": "number",
             "minimum": 0,
@@ -398,8 +442,16 @@ KNOWLEDGE_BASE_SCHEMA = {
             "maximum": 1,
             "description": "Effectiveness score (for add, update operations)",
         },
-        "limit": {"type": "integer", "minimum": 1, "maximum": 100, "description": "Maximum number of results"},
-        "metadata": {"type": "object", "description": "Additional metadata (for add, update operations)"},
+        "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Maximum number of results",
+        },
+        "metadata": {
+            "type": "object",
+            "description": "Additional metadata (for add, update operations)",
+        },
     },
     "required": ["action"],
 }
@@ -504,7 +556,10 @@ def knowledge_base_handler(args: dict[str, Any]) -> dict[str, Any]:
         if action == "get_categories":
             return tool.get_categories()
 
-        return {"error": f"Unknown action: {action}", "message": "Invalid action specified"}
+        return {
+            "error": f"Unknown action: {action}",
+            "message": "Invalid action specified",
+        }
 
     except Exception as e:
         logger.error(f"Error in knowledge base handler: {e}")

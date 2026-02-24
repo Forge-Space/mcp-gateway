@@ -310,7 +310,11 @@ class TestSecurityMiddleware:
                 remaining=0,
                 reset_time=1234567890,
                 retry_after=60,
-                metadata={"window_type": "minute", "current_count": 61, "max_requests": 60},
+                metadata={
+                    "window_type": "minute",
+                    "current_count": 61,
+                    "max_requests": 60,
+                },
             )
 
             with patch.object(middleware.audit_logger, "log_rate_limit_exceeded") as mock_log:
@@ -614,7 +618,11 @@ class TestSecurityMiddleware:
             )
 
             mock_rate_limit.return_value = RateLimitResult(
-                allowed=True, remaining=120, reset_time=1234567890, retry_after=None, metadata={"window_type": "minute"}
+                allowed=True,
+                remaining=120,
+                reset_time=1234567890,
+                retry_after=None,
+                metadata={"window_type": "minute"},
             )
 
             result = middleware.check_request_security(context, "task", "category", "context", '{"bad": "prefs"}')
@@ -631,17 +639,30 @@ class TestSecurityMiddleware:
 
         with patch.object(middleware.input_validator, "validate_prompt") as mock_prompt:
             mock_prompt.return_value = SecurityValidationResult(
-                is_valid=True, sanitized_input="task", risk_score=0.1, violations=[], metadata={}, blocked=False
+                is_valid=True,
+                sanitized_input="task",
+                risk_score=0.1,
+                violations=[],
+                metadata={},
+                blocked=False,
             )
 
         with patch.object(middleware.input_validator, "validate_user_preferences") as mock_prefs:
             mock_prefs.return_value = SecurityValidationResult(
-                is_valid=True, sanitized_input="{}", risk_score=0.0, violations=[], metadata={}, blocked=False
+                is_valid=True,
+                sanitized_input="{}",
+                risk_score=0.0,
+                violations=[],
+                metadata={},
+                blocked=False,
             )
 
         with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
             mock_rate_limit.return_value = RateLimitResult(
-                allowed=True, remaining=50, reset_time=1234567890, metadata={"window_type": "minute"}
+                allowed=True,
+                remaining=50,
+                reset_time=1234567890,
+                metadata={"window_type": "minute"},
             )
 
             result = middleware.check_request_security(context, "task", "category", "context", "{}")
@@ -751,7 +772,11 @@ class TestSecurityMiddleware:
             )
 
             mock_rate_limit.return_value = RateLimitResult(
-                allowed=True, remaining=50, reset_time=1234567890, retry_after=None, metadata={"window_type": "minute"}
+                allowed=True,
+                remaining=50,
+                reset_time=1234567890,
+                retry_after=None,
+                metadata={"window_type": "minute"},
             )
 
             result = middleware.check_request_security(context, "high risk task", "category", "context", "{}")

@@ -96,8 +96,15 @@ class SpecialistEvaluator:
                     },
                     {
                         "input": "Create a navigation bar with dropdown menus",
-                        "context": {"framework": "react", "component_type": "navigation"},
-                        "requirements": ["responsive", "accessible", "keyboard-navigation"],
+                        "context": {
+                            "framework": "react",
+                            "component_type": "navigation",
+                        },
+                        "requirements": [
+                            "responsive",
+                            "accessible",
+                            "keyboard-navigation",
+                        ],
                     },
                 ],
                 expected_outputs=[
@@ -128,7 +135,10 @@ class SpecialistEvaluator:
                     },
                     {
                         "input": "Implement a real-time chat application",
-                        "context": {"project_type": "communication", "complexity": "high"},
+                        "context": {
+                            "project_type": "communication",
+                            "complexity": "high",
+                        },
                         "requirements": ["scalability", "real-time"],
                     },
                 ],
@@ -137,7 +147,11 @@ class SpecialistEvaluator:
                     "Clear task breakdown with visualization requirements",
                     "Comprehensive prompt covering real-time architecture",
                 ],
-                metrics=[EvaluationMetric.ACCURACY, EvaluationMetric.PRECISION, EvaluationMetric.RESPONSE_TIME],
+                metrics=[
+                    EvaluationMetric.ACCURACY,
+                    EvaluationMetric.PRECISION,
+                    EvaluationMetric.RESPONSE_TIME,
+                ],
                 category=PatternCategory.PROMPT_ENGINEERING,
             ),
             "router_specialist": BenchmarkSuite(
@@ -156,7 +170,10 @@ class SpecialistEvaluator:
                     },
                     {
                         "input": "Optimize application performance",
-                        "context": {"app_type": "web_app", "performance_issue": "slow_loading"},
+                        "context": {
+                            "app_type": "web_app",
+                            "performance_issue": "slow_loading",
+                        },
                         "available_tools": ["performance_analyzer", "code_optimizer"],
                     },
                 ],
@@ -165,7 +182,11 @@ class SpecialistEvaluator:
                     "Chosen schema_designer for e-commerce patterns",
                     "Used performance_analyzer for bottleneck identification",
                 ],
-                metrics=[EvaluationMetric.ACCURACY, EvaluationMetric.F1_SCORE, EvaluationMetric.RESPONSE_TIME],
+                metrics=[
+                    EvaluationMetric.ACCURACY,
+                    EvaluationMetric.F1_SCORE,
+                    EvaluationMetric.RESPONSE_TIME,
+                ],
                 category=PatternCategory.ARCHITECTURE,
             ),
         }
@@ -192,7 +213,10 @@ class SpecialistEvaluator:
         return results
 
     def _evaluate_metric(
-        self, specialist_type: str, metric: EvaluationMetric, benchmark_suite: BenchmarkSuite
+        self,
+        specialist_type: str,
+        metric: EvaluationMetric,
+        benchmark_suite: BenchmarkSuite,
     ) -> EvaluationResult:
         """Evaluate a specific metric for a specialist."""
 
@@ -287,7 +311,10 @@ class SpecialistEvaluator:
             value=avg_precision,
             test_cases=len(benchmark_suite.test_cases),
             passed_cases=passed_cases,
-            details={"avg_specificity": avg_precision, "patterns_evaluated": len(relevant_patterns)},
+            details={
+                "avg_specificity": avg_precision,
+                "patterns_evaluated": len(relevant_patterns),
+            },
         )
 
     def _evaluate_recall(self, specialist_type: str, benchmark_suite: BenchmarkSuite) -> EvaluationResult:

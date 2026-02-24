@@ -559,22 +559,10 @@
       "poor_documentation": 2
     },
     "most_common_issues": [
-      [
-        "false_positive",
-        167
-      ],
-      [
-        "missing_coverage",
-        23
-      ],
-      [
-        "poor_isolation",
-        5
-      ],
-      [
-        "poor_documentation",
-        2
-      ]
+      ["false_positive", 167],
+      ["missing_coverage", 23],
+      ["poor_isolation", 5],
+      ["poor_documentation", 2]
     ]
   },
   "recommendations": [

@@ -55,12 +55,36 @@ class AIModel(Enum):
     def get_hardware_requirements(cls, model: str) -> dict[str, Any]:
         """Get hardware requirements for a model."""
         requirements = {
-            cls.LLAMA32_3B.value: {"ram_gb": 4, "tokens_per_sec": 10, "hardware_tier": "n100_optimal"},
-            cls.LLAMA32_1B.value: {"ram_gb": 2, "tokens_per_sec": 20, "hardware_tier": "n100_fast"},
-            cls.QWEN_2_5_3B.value: {"ram_gb": 4, "tokens_per_sec": 10, "hardware_tier": "n100_good"},
-            cls.GEMMA2_2B.value: {"ram_gb": 2, "tokens_per_sec": 13, "hardware_tier": "n100_ultra_fast"},
-            cls.PHI_3_MINI.value: {"ram_gb": 4, "tokens_per_sec": 8, "hardware_tier": "n100_alternative"},
-            cls.TINYLLAMA.value: {"ram_gb": 1.5, "tokens_per_sec": 20, "hardware_tier": "n100_ultra_fast"},
+            cls.LLAMA32_3B.value: {
+                "ram_gb": 4,
+                "tokens_per_sec": 10,
+                "hardware_tier": "n100_optimal",
+            },
+            cls.LLAMA32_1B.value: {
+                "ram_gb": 2,
+                "tokens_per_sec": 20,
+                "hardware_tier": "n100_fast",
+            },
+            cls.QWEN_2_5_3B.value: {
+                "ram_gb": 4,
+                "tokens_per_sec": 10,
+                "hardware_tier": "n100_good",
+            },
+            cls.GEMMA2_2B.value: {
+                "ram_gb": 2,
+                "tokens_per_sec": 13,
+                "hardware_tier": "n100_ultra_fast",
+            },
+            cls.PHI_3_MINI.value: {
+                "ram_gb": 4,
+                "tokens_per_sec": 8,
+                "hardware_tier": "n100_alternative",
+            },
+            cls.TINYLLAMA.value: {
+                "ram_gb": 1.5,
+                "tokens_per_sec": 20,
+                "hardware_tier": "n100_ultra_fast",
+            },
         }
         return requirements.get(model, {"ram_gb": 8, "tokens_per_sec": 5, "hardware_tier": "unknown"})
 
@@ -106,7 +130,11 @@ class AIModel(Enum):
             return "fast"
         if model in [cls.LLAMA32_3B.value, cls.QWEN_2_5_3B.value]:
             return "balanced"
-        if model in [cls.GPT4O_MINI.value, cls.CLAUDE_HAIKU.value, cls.GEMINI_FLASH.value]:
+        if model in [
+            cls.GPT4O_MINI.value,
+            cls.CLAUDE_HAIKU.value,
+            cls.GEMINI_FLASH.value,
+        ]:
             return "premium"
         if model in [
             cls.GPT4O.value,
@@ -278,7 +306,7 @@ class OllamaSelector(BaseAISelector):
         except httpx.HTTPStatusError as e:
             logger.warning("Ollama HTTP error: %s", e)
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Ollama request failed: %s", e)
             return None
 
@@ -305,7 +333,7 @@ class OllamaSelector(BaseAISelector):
         except json.JSONDecodeError as e:
             logger.warning("Failed to parse AI response as JSON: %s", e)
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Error parsing AI response: %s", e)
             return None
         else:
@@ -345,7 +373,7 @@ class OllamaSelector(BaseAISelector):
         except json.JSONDecodeError as e:
             logger.warning("Failed to parse AI multi-tool response as JSON: %s", e)
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Error parsing AI multi-tool response: %s", e)
             return None
         else:
@@ -373,7 +401,11 @@ class CostTracker:
 
         # Update model usage stats
         if model not in self.model_usage_stats:
-            self.model_usage_stats[model] = {"usage_count": 0, "total_tokens": 0, "total_cost": 0.0}
+            self.model_usage_stats[model] = {
+                "usage_count": 0,
+                "total_tokens": 0,
+                "total_cost": 0.0,
+            }
 
         self.model_usage_stats[model]["usage_count"] += 1
         self.model_usage_stats[model]["total_tokens"] += estimated_tokens["total"]
@@ -471,7 +503,11 @@ class EnhancedAISelector:
         if user_cost_preference == "efficient":
             # Prioritize speed and low resource usage
             suitable_models.sort(
-                key=lambda x: (AIModel.get_model_tier(x[0]) == "ultra_fast", x[1]["tokens_per_sec"], -x[1]["ram_gb"])
+                key=lambda x: (
+                    AIModel.get_model_tier(x[0]) == "ultra_fast",
+                    x[1]["tokens_per_sec"],
+                    -x[1]["ram_gb"],
+                )
             )
         elif user_cost_preference == "quality":
             # Prioritize capability (but still within hardware constraints)
@@ -485,7 +521,11 @@ class EnhancedAISelector:
         else:  # "balanced"
             # Prioritize balanced performance
             suitable_models.sort(
-                key=lambda x: (AIModel.get_model_tier(x[0]) == "balanced", x[1]["tokens_per_sec"], -x[1]["ram_gb"])
+                key=lambda x: (
+                    AIModel.get_model_tier(x[0]) == "balanced",
+                    x[1]["tokens_per_sec"],
+                    -x[1]["ram_gb"],
+                )
             )
 
         return suitable_models[0][0]
@@ -674,7 +714,11 @@ class EnhancedAISelector:
         # Estimate output tokens (typically 2-3x input for generation tasks)
         output_tokens = int(total_input * 2.5)
 
-        return {"input": total_input, "output": output_tokens, "total": total_input + output_tokens}
+        return {
+            "input": total_input,
+            "output": output_tokens,
+            "total": total_input + output_tokens,
+        }
 
     def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance and cost metrics."""

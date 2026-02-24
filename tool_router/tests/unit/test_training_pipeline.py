@@ -14,7 +14,10 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from tool_router.training.data_extraction import ExtractedPattern, PatternCategory
-from tool_router.training.training_pipeline import DEFAULT_TRAINING_SOURCES, TrainingPipeline
+from tool_router.training.training_pipeline import (
+    DEFAULT_TRAINING_SOURCES,
+    TrainingPipeline,
+)
 
 
 class TestTrainingPipeline:
@@ -61,9 +64,21 @@ class TestTrainingPipeline:
         ]
 
         self.sample_data_sources = [
-            {"url": "https://example.com/react-docs", "type": "web_documentation", "category": "react_patterns"},
-            {"url": "https://example.com/accessibility", "type": "web_documentation", "category": "accessibility"},
-            {"url": "https://github.com/example/repo", "type": "github_repository", "category": "prompt_engineering"},
+            {
+                "url": "https://example.com/react-docs",
+                "type": "web_documentation",
+                "category": "react_patterns",
+            },
+            {
+                "url": "https://example.com/accessibility",
+                "type": "web_documentation",
+                "category": "accessibility",
+            },
+            {
+                "url": "https://github.com/example/repo",
+                "type": "github_repository",
+                "category": "prompt_engineering",
+            },
         ]
 
     def test_initialization(self):
@@ -94,7 +109,11 @@ class TestTrainingPipeline:
         mock_kb_instance.get_patterns_by_category.return_value = self.sample_patterns[:2]
         mock_kb_instance.get_statistics.return_value = {
             "total_items": 10,
-            "by_category": {"react_pattern": 5, "accessibility": 3, "prompt_engineering": 2},
+            "by_category": {
+                "react_pattern": 5,
+                "accessibility": 3,
+                "prompt_engineering": 2,
+            },
             "average_effectiveness": 0.8,
             "most_used": [{"id": "1", "title": "Test Pattern", "usage_count": 10}],
         }
@@ -130,7 +149,9 @@ class TestTrainingPipeline:
         """Test training pipeline with extraction errors."""
         # Mock extractor to raise exception
         with patch.object(
-            self.pipeline.extractor, "extract_from_multiple_sources", side_effect=Exception("Extraction failed")
+            self.pipeline.extractor,
+            "extract_from_multiple_sources",
+            side_effect=Exception("Extraction failed"),
         ):
             result = self.pipeline.run_training_pipeline(self.sample_data_sources)
 
@@ -141,7 +162,9 @@ class TestTrainingPipeline:
     def test_extract_patterns(self):
         """Test pattern extraction from data sources."""
         with patch.object(
-            self.pipeline.extractor, "extract_from_multiple_sources", return_value=self.sample_patterns
+            self.pipeline.extractor,
+            "extract_from_multiple_sources",
+            return_value=self.sample_patterns,
         ) as mock_extract:
             result = self.pipeline._extract_patterns(self.sample_data_sources)
 
@@ -348,14 +371,22 @@ class TestTrainingPipeline:
         # Mock knowledge base statistics
         mock_stats = {
             "total_items": 15,
-            "by_category": {"react_pattern": 8, "accessibility": 4, "prompt_engineering": 3},
+            "by_category": {
+                "react_pattern": 8,
+                "accessibility": 4,
+                "prompt_engineering": 3,
+            },
             "average_effectiveness": 0.75,
             "most_used": [{"id": "1", "title": "Test Pattern", "usage_count": 10}],
         }
         self.pipeline.knowledge_base.get_statistics.return_value = mock_stats
 
         # Mock patterns for quality assessment
-        mock_pattern = Mock(effectiveness_score=0.8, confidence_score=0.9, category=PatternCategory.REACT_PATTERN)
+        mock_pattern = Mock(
+            effectiveness_score=0.8,
+            confidence_score=0.9,
+            category=PatternCategory.REACT_PATTERN,
+        )
         self.pipeline.knowledge_base.get_patterns_by_category.return_value = [mock_pattern] * 5
 
         result = self.pipeline._evaluate_training()
@@ -380,7 +411,9 @@ class TestTrainingPipeline:
         with patch.object(self.pipeline, "_extract_patterns", return_value=self.sample_patterns) as mock_extract:
             with patch.object(self.pipeline, "_validate_patterns", return_value=self.sample_patterns) as mock_validate:
                 with patch.object(
-                    self.pipeline, "_populate_knowledge_base", return_value=["id1", "id2"]
+                    self.pipeline,
+                    "_populate_knowledge_base",
+                    return_value=["id1", "id2"],
                 ) as mock_populate:
                     with patch.object(self.pipeline, "_build_indexes") as mock_build:
                         result = self.pipeline.run_continuous_learning(self.sample_data_sources)
@@ -471,7 +504,11 @@ class TestTrainingPipeline:
 
         with patch("builtins.open", create=True) as mock_open:
             with patch("json.load", return_value=import_data) as mock_json_load:
-                with patch.object(self.pipeline.knowledge_base, "import_knowledge_base", return_value=5) as mock_import:
+                with patch.object(
+                    self.pipeline.knowledge_base,
+                    "import_knowledge_base",
+                    return_value=5,
+                ) as mock_import:
                     mock_file = Mock()
                     mock_open.return_value.__enter__.return_value = mock_file
 
@@ -496,9 +533,15 @@ class TestTrainingPipeline:
         """Test pipeline error recovery and reporting."""
         # Mock multiple components to fail
         with patch.object(
-            self.pipeline.extractor, "extract_from_multiple_sources", side_effect=Exception("Network error")
+            self.pipeline.extractor,
+            "extract_from_multiple_sources",
+            side_effect=Exception("Network error"),
         ):
-            with patch.object(self.pipeline.knowledge_base, "add_pattern", side_effect=Exception("Database error")):
+            with patch.object(
+                self.pipeline.knowledge_base,
+                "add_pattern",
+                side_effect=Exception("Database error"),
+            ):
                 result = self.pipeline.run_training_pipeline(self.sample_data_sources)
 
                 assert result["patterns_extracted"] == 0
@@ -532,7 +575,11 @@ class TestTrainingPipeline:
         with patch("tool_router.training.training_pipeline.logger") as mock_logger:
             # Test successful pipeline logging
             with patch.object(self.pipeline, "_extract_patterns", return_value=self.sample_patterns):
-                with patch.object(self.pipeline, "_validate_patterns", return_value=self.sample_patterns):
+                with patch.object(
+                    self.pipeline,
+                    "_validate_patterns",
+                    return_value=self.sample_patterns,
+                ):
                     with patch.object(self.pipeline, "_populate_knowledge_base", return_value=["id1"]):
                         with patch.object(self.pipeline, "_build_indexes"):
                             with patch.object(self.pipeline, "_train_specialists", return_value={}):

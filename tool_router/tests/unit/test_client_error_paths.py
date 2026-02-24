@@ -54,7 +54,10 @@ class TestHTTPGatewayClientErrorPaths:
         )
         client = HTTPGatewayClient(config)
 
-        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
+        with (
+            patch("urllib.request.urlopen") as mock_urlopen,
+            patch("time.sleep") as mock_sleep,
+        ):
             mock_urlopen.side_effect = urllib.error.HTTPError(
                 "http://test:4444/tools", 503, "Service Unavailable", {}, None
             )

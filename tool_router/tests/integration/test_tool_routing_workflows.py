@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from tool_router.ai.feedback import FeedbackStore
+import pytest
+
 from tool_router.ai.enhanced_selector import EnhancedSelector
+from tool_router.ai.feedback import FeedbackStore
 from tool_router.core.config import ToolRouterConfig
 
 
@@ -28,7 +29,7 @@ class TestToolRoutingWorkflows:
             "reasoning": "Task matches search pattern",
             "ai_score": 0.9,
             "keyword_score": 0.7,
-            "boost_applied": 1.2
+            "boost_applied": 1.2,
         }
 
         # Simulate user request and tool selection
@@ -40,7 +41,7 @@ class TestToolRoutingWorkflows:
             task=user_request,
             selected_tool=selection_result["selected_tool"],
             success=True,
-            confidence=selection_result["confidence"]
+            confidence=selection_result["confidence"],
         )
 
         # Verify learning occurred
@@ -64,14 +65,14 @@ class TestToolRoutingWorkflows:
         ai_selector.select_tool.side_effect = Exception("AI service unavailable")
 
         # Mock keyword-based fallback
-        with patch('tool_router.ai.enhanced_selector.EnhancedSelector._select_by_keywords') as mock_keywords:
+        with patch("tool_router.ai.enhanced_selector.EnhancedSelector._select_by_keywords") as mock_keywords:
             mock_keywords.return_value = {
                 "selected_tool": "file_reader",
                 "confidence": 0.6,
                 "reasoning": "Keyword match for read",
                 "ai_score": 0.0,
                 "keyword_score": 0.6,
-                "boost_applied": 1.0
+                "boost_applied": 1.0,
             }
 
             # Attempt selection with AI failure
@@ -91,7 +92,7 @@ class TestToolRoutingWorkflows:
             task="read the configuration file",
             selected_tool=selection_result["selected_tool"],
             success=True,
-            confidence=selection_result["confidence"]
+            confidence=selection_result["confidence"],
         )
 
     def test_multi_tool_task_coordination(self, tmp_path: Path) -> None:
@@ -107,7 +108,7 @@ class TestToolRoutingWorkflows:
             task=complex_task,
             selected_tool="code_analyzer",
             success=True,
-            confidence=0.8
+            confidence=0.8,
         )
 
         # Second tool: documentation generation
@@ -115,7 +116,7 @@ class TestToolRoutingWorkflows:
             task=complex_task,
             selected_tool="doc_generator",
             success=True,
-            confidence=0.7
+            confidence=0.7,
         )
 
         # Verify both tools have learning data
@@ -141,7 +142,7 @@ class TestToolRoutingWorkflows:
             task="process large dataset",
             selected_tool="data_processor",
             success=False,
-            confidence=0.3
+            confidence=0.3,
         )
 
         # Record retry with different tool
@@ -149,7 +150,7 @@ class TestToolRoutingWorkflows:
             task="process large dataset",
             selected_tool="batch_processor",
             success=True,
-            confidence=0.9
+            confidence=0.9,
         )
 
         # Verify learning from failure and success
@@ -178,7 +179,7 @@ class TestToolRoutingWorkflows:
         config.enabled_tools = ["search_web", "file_reader", "code_analyzer"]
         config.tool_preferences = {
             "search_operations": "search_web",
-            "file_operations": "file_reader"
+            "file_operations": "file_reader",
         }
         config.confidence_threshold = 0.7
 
@@ -188,12 +189,7 @@ class TestToolRoutingWorkflows:
 
         # Record successful selection based on config
         selected_tool = config.tool_preferences.get(task_type, "default_tool")
-        feedback_store.record(
-            task=task,
-            selected_tool=selected_tool,
-            success=True,
-            confidence=0.8
-        )
+        feedback_store.record(task=task, selected_tool=selected_tool, success=True, confidence=0.8)
 
         # Verify configuration was respected
         assert selected_tool == "search_web"
@@ -214,7 +210,7 @@ class TestToolRoutingWorkflows:
             task="generate user interface",
             selected_tool="ui_generator_v1",
             success=True,
-            confidence=0.6
+            confidence=0.6,
         )
 
         # User provides negative feedback (implicit through failure)
@@ -222,7 +218,7 @@ class TestToolRoutingWorkflows:
             task="generate user interface",
             selected_tool="ui_generator_v1",
             success=False,
-            confidence=0.4
+            confidence=0.4,
         )
 
         # System tries alternative tool
@@ -230,7 +226,7 @@ class TestToolRoutingWorkflows:
             task="generate user interface",
             selected_tool="ui_generator_v2",
             success=True,
-            confidence=0.9
+            confidence=0.9,
         )
 
         # Verify adaptive learning
@@ -257,16 +253,11 @@ class TestToolRoutingWorkflows:
             "read user configuration",
             "read system settings",
             "read environment variables",
-            "read application properties"
+            "read application properties",
         ]
 
         for task in related_tasks:
-            feedback_store.record(
-                task=task,
-                selected_tool="config_reader",
-                success=True,
-                confidence=0.8
-            )
+            feedback_store.record(task=task, selected_tool="config_reader", success=True, confidence=0.8)
 
         # Verify pattern learning
         stats = feedback_store.get_stats("config_reader")
@@ -295,7 +286,7 @@ class TestToolRoutingWorkflows:
                 task=f"process data batch {i}",
                 selected_tool="batch_processor",
                 success=True,
-                confidence=0.85
+                confidence=0.85,
             )
 
         # Verify cache effectiveness
@@ -323,13 +314,13 @@ class TestToolRoutingWorkflows:
         feedback_store = FeedbackStore(feedback_file)
 
         # Mock security check
-        with patch('tool_router.security.audit_logger.SecurityAuditLogger.log_security_event') as mock_audit:
+        with patch("tool_router.security.audit_logger.SecurityAuditLogger.log_security_event") as mock_audit:
             # Record security-sensitive operations
             feedback_store.record(
                 task="execute system command",
                 selected_tool="secure_executor",
                 success=True,
-                confidence=0.9
+                confidence=0.9,
             )
 
             # Verify security logging
@@ -354,7 +345,7 @@ class TestToolRoutingWorkflows:
             selected_tool="code_modifier",
             success=True,
             confidence=0.8,
-            context=context
+            context=context,
         )
 
         # Verify context preservation

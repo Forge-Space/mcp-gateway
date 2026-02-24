@@ -109,7 +109,11 @@ class UIStandardsCompliance:
                 "pointer_gestures",
                 "orientation",
             ],
-            AccessibilityLevel.MINIMAL: ["basic_keyboard_access", "alt_text_important", "semantic_structure"],
+            AccessibilityLevel.MINIMAL: [
+                "basic_keyboard_access",
+                "alt_text_important",
+                "semantic_structure",
+            ],
         }
 
         self.framework_best_practices = {
@@ -120,8 +124,18 @@ class UIStandardsCompliance:
                 "accessibility_attrs",
                 "error_boundaries",
             ],
-            UIFramework.VUE: ["composition_api", "template_syntax", "props_validation", "accessibility_directives"],
-            UIFramework.ANGULAR: ["standalone_components", "signals_usage", "accessibility_aria", "forms_validation"],
+            UIFramework.VUE: [
+                "composition_api",
+                "template_syntax",
+                "props_validation",
+                "accessibility_directives",
+            ],
+            UIFramework.ANGULAR: [
+                "standalone_components",
+                "signals_usage",
+                "accessibility_aria",
+                "forms_validation",
+            ],
         }
 
     def validate_component(self, component_spec: ComponentSpec, requirement: UIRequirement) -> dict[str, Any]:
@@ -557,7 +571,7 @@ class UISpecialist:
             props=user_preferences.get("props", {}),
             styling=user_preferences.get("styling", {}),
             accessibility_features=self._get_required_accessibility_features(accessibility_level),
-            responsive_breakpoints=["sm", "md", "lg", "xl"] if requirement.responsive else [],
+            responsive_breakpoints=(["sm", "md", "lg", "xl"] if requirement.responsive else []),
         )
 
         # Validate requirements

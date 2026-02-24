@@ -24,7 +24,10 @@ x-translate: &translate
 services:
   # Core Gateway Services Only
   gateway:
-    image: ghcr.io/ibm/mcp-gateway:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.tool-router
+    image: forge-mcp-gateway:latest
     container_name: forge-mcpgateway
     restart: unless-stopped
     entrypoint: ["/app/docker/entrypoint.sh"]
@@ -268,7 +271,14 @@ services:
       FORGE_MIN_SLEEP_TIME: 60
       FORGE_MEMORY_RESERVATION: 64MB
       FORGE_WAKE_TIME_TARGET: 200 # < 200ms wake time
-    command: ["python3", "-m", "mcpgateway.translate", "--connect-sse", "http://gateway:4444"]
+    command:
+      [
+        "python3",
+        "-m",
+        "mcpgateway.translate",
+        "--connect-sse",
+        "http://gateway:4444",
+      ]
     healthcheck:
       test:
         [

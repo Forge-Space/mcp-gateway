@@ -2,6 +2,20 @@
 
 All notable changes to the MCP Gateway project will be documented in this file.
 
+## [1.38.0] - 2026-02-23
+
+### n8n Automation Layer
+
+- **Self-hosted n8n** for workflow automation (Docker-isolated, localhost-only)
+- **6 automation workflows**: CI failure alerts, security advisory aggregator,
+  upstream release notifier, stale PR reminders, weekly velocity report,
+  Docker health monitor
+- **Security**: HMAC-SHA256 webhook verification, per-workflow secrets,
+  resource limits (0.5 CPU, 512MB RAM, 50 PIDs)
+- **Makefile targets**: `n8n-start`, `n8n-stop`, `n8n-logs`, `n8n-backup`,
+  `n8n-health`, `n8n-secrets`
+- **Git-tracked workflow templates** in `n8n-workflows/` for version control
+
 ## [1.37.0] - 2026-02-21
 
 ### 🐳 Docker Infrastructure Optimization & Security Hardening

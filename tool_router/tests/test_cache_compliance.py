@@ -76,7 +76,11 @@ class TestGDPRComplianceHandler:
 
     def test_consent_validation_positive(self):
         """Test positive consent validation."""
-        consent_data = {"data_types": ["email"], "purposes": ["newsletter"], "legal_basis": "consent"}
+        consent_data = {
+            "data_types": ["email"],
+            "purposes": ["newsletter"],
+            "legal_basis": "consent",
+        }
 
         subject_id = "consent_positive_user"
         self.gdpr_handler.record_consent(subject_id, consent_data)
@@ -95,7 +99,11 @@ class TestGDPRComplianceHandler:
 
     def test_consent_withdrawal(self):
         """Test consent withdrawal functionality."""
-        consent_data = {"data_types": ["personal_data"], "purposes": ["analytics"], "legal_basis": "consent"}
+        consent_data = {
+            "data_types": ["personal_data"],
+            "purposes": ["analytics"],
+            "legal_basis": "consent",
+        }
 
         subject_id = "withdrawal_test_user"
         consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
@@ -118,7 +126,11 @@ class TestGDPRComplianceHandler:
 
     def test_consent_expiration_handling(self):
         """Test consent expiration handling."""
-        consent_data = {"data_types": ["test_data"], "purposes": ["test_purpose"], "legal_basis": "consent"}
+        consent_data = {
+            "data_types": ["test_data"],
+            "purposes": ["test_purpose"],
+            "legal_basis": "consent",
+        }
 
         subject_id = "expiration_test_user"
         consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
@@ -135,9 +147,17 @@ class TestGDPRComplianceHandler:
         subject_id = "multi_consent_user"
 
         # Record multiple consents
-        consent1_data = {"data_types": ["email"], "purposes": ["newsletter"], "legal_basis": "consent"}
+        consent1_data = {
+            "data_types": ["email"],
+            "purposes": ["newsletter"],
+            "legal_basis": "consent",
+        }
 
-        consent2_data = {"data_types": ["personal_data"], "purposes": ["analytics"], "legal_basis": "consent"}
+        consent2_data = {
+            "data_types": ["personal_data"],
+            "purposes": ["analytics"],
+            "legal_basis": "consent",
+        }
 
         consent1_id = self.gdpr_handler.record_consent(subject_id, consent1_data)
         consent2_id = self.gdpr_handler.record_consent(subject_id, consent2_data)
@@ -234,7 +254,11 @@ class TestGDPRComplianceHandler:
         ]
 
         for legal_basis in legal_bases:
-            consent_data = {"data_types": ["test_data"], "purposes": ["test_purpose"], "legal_basis": legal_basis}
+            consent_data = {
+                "data_types": ["test_data"],
+                "purposes": ["test_purpose"],
+                "legal_basis": legal_basis,
+            }
 
             consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
 
@@ -473,7 +497,8 @@ class TestComplianceManager:
         """Test compliance metrics collection."""
         # Perform various compliance operations
         self.compliance_manager.record_consent(
-            "metrics_user", {"data_types": ["test"], "purposes": ["test"], "legal_basis": "consent"}
+            "metrics_user",
+            {"data_types": ["test"], "purposes": ["test"], "legal_basis": "consent"},
         )
 
         self.compliance_manager.check_consent("metrics_user", "test", "test")
@@ -529,7 +554,12 @@ class TestComplianceIntegration:
 
         # Scenario 2: Obtain consent and process data
         consent_id = self.compliance_manager.record_consent(
-            user_id, {"data_types": ["email", "name"], "purposes": ["marketing", "analytics"], "legal_basis": "consent"}
+            user_id,
+            {
+                "data_types": ["email", "name"],
+                "purposes": ["marketing", "analytics"],
+                "legal_basis": "consent",
+            },
         )
 
         has_consent = self.compliance_manager.check_consent(user_id, "email", "marketing")
@@ -627,8 +657,8 @@ class TestComplianceIntegration:
         consent_records = {}
         for user in users:
             consent_data = {
-                "data_types": ["email", "preferences"] if int(user.split("_")[1]) % 2 == 0 else ["name"],
-                "purposes": ["marketing"] if int(user.split("_")[1]) % 3 == 0 else ["analytics"],
+                "data_types": (["email", "preferences"] if int(user.split("_")[1]) % 2 == 0 else ["name"]),
+                "purposes": (["marketing"] if int(user.split("_")[1]) % 3 == 0 else ["analytics"]),
                 "legal_basis": "consent",
             }
 
@@ -678,7 +708,11 @@ class TestCompliancePerformance:
 
         consent_ids = []
         for i in range(num_consent_records):
-            consent_data = {"data_types": [f"data_type_{i}"], "purposes": [f"purpose_{i}"], "legal_basis": "consent"}
+            consent_data = {
+                "data_types": [f"data_type_{i}"],
+                "purposes": [f"purpose_{i}"],
+                "legal_basis": "consent",
+            }
 
             consent_id = self.compliance_manager.record_consent(subject_id, consent_data)
             consent_ids.append(consent_id)
@@ -706,7 +740,11 @@ class TestCompliancePerformance:
 
         def record_consent(user_id_suffix):
             try:
-                consent_data = {"data_types": ["test_data"], "purposes": ["test_purpose"], "legal_basis": "consent"}
+                consent_data = {
+                    "data_types": ["test_data"],
+                    "purposes": ["test_purpose"],
+                    "legal_basis": "consent",
+                }
 
                 consent_id = self.compliance_manager.record_consent(f"concurrent_user_{user_id_suffix}", consent_data)
                 results.put(consent_id)

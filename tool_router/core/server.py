@@ -17,9 +17,17 @@ from tool_router.core.config import ToolRouterConfig
 from tool_router.gateway.client import call_tool, get_tools
 from tool_router.observability import get_logger, get_metrics
 from tool_router.observability.metrics import TimingContext
-from tool_router.scoring.matcher import select_top_matching_tools, select_top_matching_tools_hybrid
+from tool_router.scoring.matcher import (
+    select_top_matching_tools,
+    select_top_matching_tools_hybrid,
+)
 from tool_router.security import SecurityContext, SecurityMiddleware
-from tool_router.specialist_coordinator import SpecialistCoordinator, SpecialistType, TaskCategory, TaskRequest
+from tool_router.specialist_coordinator import (
+    SpecialistCoordinator,
+    SpecialistType,
+    TaskCategory,
+    TaskRequest,
+)
 
 
 try:
@@ -43,7 +51,7 @@ _security_middleware: SecurityMiddleware | None = None
 
 def initialize_ai(config: ToolRouterConfig) -> None:
     """Initialize AI selector, specialist coordinator, feedback store, and security middleware."""
-    global _ai_selector, _enhanced_ai_selector, _specialist_coordinator, _feedback_store, _config, _security_middleware  # noqa: PLW0603
+    global _ai_selector, _enhanced_ai_selector, _specialist_coordinator, _feedback_store, _config, _security_middleware
     _config = config
     _feedback_store = FeedbackStore()
 
@@ -96,7 +104,9 @@ def initialize_ai(config: ToolRouterConfig) -> None:
 
             # Initialize specialist coordinator
             _specialist_coordinator = SpecialistCoordinator(
-                enhanced_selector=_enhanced_ai_selector, prompt_architect=prompt_architect, ui_specialist=ui_specialist
+                enhanced_selector=_enhanced_ai_selector,
+                prompt_architect=prompt_architect,
+                ui_specialist=ui_specialist,
             )
 
             logger.info(
@@ -134,7 +144,9 @@ def execute_task(task: str, context: str = "") -> str:
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
             logger.exception(
-                "Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error
+                "Unexpected error listing tools: %s: %s",
+                type(unexpected_error).__name__,
+                unexpected_error,
             )
             metrics.increment_counter("execute_task.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
@@ -161,7 +173,11 @@ def execute_task(task: str, context: str = "") -> str:
                     best_matching_tools = select_top_matching_tools(tools, task, context, top_n=1)
                     metrics.increment_counter("execute_task.keyword_only_selection")
         except Exception as selection_error:
-            logger.exception("Error picking tool: %s: %s", type(selection_error).__name__, selection_error)
+            logger.exception(
+                "Error picking tool: %s: %s",
+                type(selection_error).__name__,
+                selection_error,
+            )
             metrics.increment_counter("execute_task.errors.pick_tools")
             return f"Error picking tool: {type(selection_error).__name__}: {selection_error}"
 
@@ -184,7 +200,11 @@ def execute_task(task: str, context: str = "") -> str:
             with TimingContext("execute_task.build_arguments"):
                 tool_arguments = build_arguments(tool, task)
         except Exception as build_error:
-            logger.exception("Error building arguments: %s: %s", type(build_error).__name__, build_error)
+            logger.exception(
+                "Error building arguments: %s: %s",
+                type(build_error).__name__,
+                build_error,
+            )
             metrics.increment_counter("execute_task.errors.build_args")
             return f"Error building arguments: {type(build_error).__name__}: {build_error}"
 
@@ -229,7 +249,7 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
                 if multi_result:
                     selected_names = multi_result.get("tools", [])
                     logger.info("AI selected tools for orchestration: %s", selected_names)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning("AI multi-tool selection failed: %s", e)
 
         if not selected_names:
@@ -257,12 +277,15 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
 
             try:
                 tool_arguments = build_arguments(tool, task)
-            except Exception as build_error:  # noqa: BLE001
+            except Exception as build_error:
                 logger.warning("Error building arguments for %s: %s", tool_name, build_error)
                 results.append(f"[{tool_name}] Error building arguments: {build_error}")
                 if _feedback_store:
                     _feedback_store.record(
-                        task=task, selected_tool=tool_name, success=False, context=accumulated_context
+                        task=task,
+                        selected_tool=tool_name,
+                        success=False,
+                        context=accumulated_context,
                     )
                 continue
 
@@ -316,7 +339,9 @@ def search_tools(query: str, limit: int = 10) -> str:
             return f"Failed to list tools: {error}"
         except Exception as unexpected_error:
             logger.exception(
-                "Unexpected error listing tools: %s: %s", type(unexpected_error).__name__, unexpected_error
+                "Unexpected error listing tools: %s: %s",
+                type(unexpected_error).__name__,
+                unexpected_error,
             )
             metrics.increment_counter("search_tools.errors.unexpected")
             return f"Unexpected error listing tools: {type(unexpected_error).__name__}: {unexpected_error}"
@@ -330,7 +355,11 @@ def search_tools(query: str, limit: int = 10) -> str:
             with TimingContext("search_tools.pick_best_tools"):
                 matching_tools = select_top_matching_tools(tools, query, "", top_n=limit)
         except Exception as search_error:
-            logger.exception("Error searching tools: %s: %s", type(search_error).__name__, search_error)
+            logger.exception(
+                "Error searching tools: %s: %s",
+                type(search_error).__name__,
+                search_error,
+            )
             metrics.increment_counter("search_tools.errors.search")
             return f"Error searching tools: {type(search_error).__name__}: {search_error}"
 
@@ -398,7 +427,11 @@ def execute_specialist_task(
 
     # Perform security checks
     security_result = _security_middleware.check_request_security(
-        context=security_context, task=task, category=category, context_str=context, user_preferences=user_preferences
+        context=security_context,
+        task=task,
+        category=category,
+        context_str=context,
+        user_preferences=user_preferences,
     )
 
     if not security_result.allowed:
@@ -534,7 +567,12 @@ def get_specialist_stats() -> str:
 
 
 @mcp.tool()
-def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str = "", feedback: str = "") -> str:
+def optimize_prompt(
+    prompt: str,
+    cost_preference: str = "balanced",
+    context: str = "",
+    feedback: str = "",
+) -> str:
     """Optimize a prompt for token efficiency and effectiveness using the Prompt Architect.
 
     Cost preferences:
@@ -554,7 +592,10 @@ def optimize_prompt(prompt: str, cost_preference: str = "balanced", context: str
             task=prompt,
             category=TaskCategory.PROMPT_OPTIMIZATION,
             context=context,
-            user_preferences={"cost_preference": cost_preference, "feedback": feedback if feedback else None},
+            user_preferences={
+                "cost_preference": cost_preference,
+                "feedback": feedback if feedback else None,
+            },
             cost_optimization=True,
         )
 

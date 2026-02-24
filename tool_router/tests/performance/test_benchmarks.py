@@ -2,11 +2,11 @@
 Performance tests for MCP Gateway tool router.
 """
 
-import pytest
-import time
-import psutil
 import os
-from unittest.mock import Mock, patch
+import time
+
+import psutil
+import pytest
 
 
 class TestPerformanceBaselines:
@@ -38,8 +38,8 @@ class TestPerformanceBaselines:
 
     def test_concurrent_operations(self):
         """Test ability to handle concurrent operations."""
-        import threading
         import queue
+        import threading
 
         results = queue.Queue()
 
@@ -133,18 +133,18 @@ class TestResourceLimits:
         """Test file handle usage doesn't leak."""
         process = psutil.Process(os.getpid())
 
-        initial_handles = process.num_handles() if hasattr(process, 'num_handles') else process.num_fds()
+        initial_handles = process.num_handles() if hasattr(process, "num_handles") else process.num_fds()
 
         # Open and close some files
         for i in range(10):
-            with open(f'/tmp/test_{i}.txt', 'w') as f:
-                f.write(f'test data {i}')
+            with open(f"/tmp/test_{i}.txt", "w") as f:
+                f.write(f"test data {i}")
 
         # Clean up files
         for i in range(10):
-            os.remove(f'/tmp/test_{i}.txt')
+            os.remove(f"/tmp/test_{i}.txt")
 
-        final_handles = process.num_handles() if hasattr(process, 'num_handles') else process.num_fds()
+        final_handles = process.num_handles() if hasattr(process, "num_handles") else process.num_fds()
         handle_growth = final_handles - initial_handles
 
         # Handle count should not grow significantly

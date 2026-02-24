@@ -4,8 +4,17 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from tool_router.mcp_tools.knowledge_base_tool import KNOWLEDGE_BASE_SCHEMA, KnowledgeBaseTool, knowledge_base_handler
-from tool_router.training.knowledge_base import KnowledgeBase, KnowledgeItem, KnowledgeStatus, PatternCategory
+from tool_router.mcp_tools.knowledge_base_tool import (
+    KNOWLEDGE_BASE_SCHEMA,
+    KnowledgeBaseTool,
+    knowledge_base_handler,
+)
+from tool_router.training.knowledge_base import (
+    KnowledgeBase,
+    KnowledgeItem,
+    KnowledgeStatus,
+    PatternCategory,
+)
 
 
 class TestKnowledgeBaseTool:
@@ -50,7 +59,10 @@ class TestKnowledgeBaseTool:
         tool = KnowledgeBaseTool()
 
         result = tool.add_pattern(
-            title="Test Pattern", description="Test description", category="invalid_category", content="Test content"
+            title="Test Pattern",
+            description="Test description",
+            category="invalid_category",
+            content="Test content",
         )
 
         # Business logic: invalid category should return error with valid categories
@@ -67,7 +79,10 @@ class TestKnowledgeBaseTool:
             mock_add.side_effect = Exception("Database connection failed")
 
             result = tool.add_pattern(
-                title="Test Pattern", description="Test description", category="react_patterns", content="Test content"
+                title="Test Pattern",
+                description="Test description",
+                category="react_patterns",
+                content="Test content",
             )
 
         # Business logic: database errors should be caught and reported
@@ -83,7 +98,10 @@ class TestKnowledgeBaseTool:
             mock_add.return_value = "generated_id"
 
             result = tool.add_pattern(
-                title="Test Pattern", description="Test description", category="react_patterns", content="Test content"
+                title="Test Pattern",
+                description="Test description",
+                category="react_patterns",
+                content="Test content",
             )
 
         # Business logic: ID should be generated consistently
@@ -125,7 +143,12 @@ class TestKnowledgeBaseTool:
         with patch.object(tool.knowledge_base, "search_knowledge") as mock_search:
             mock_search.return_value = [mock_item1, mock_item2]
 
-            result = tool.search_patterns(query="react hooks", category="react_patterns", limit=10, min_confidence=0.8)
+            result = tool.search_patterns(
+                query="react hooks",
+                category="react_patterns",
+                limit=10,
+                min_confidence=0.8,
+            )
 
         # Business logic: search should return formatted results
         assert result["total_found"] == 1  # Only item1 meets confidence threshold

@@ -377,7 +377,9 @@ class RedisCache:
 
 
 def create_redis_cache(
-    config: RedisConfig | None = None, fallback_config: CacheConfig | None = None, **kwargs
+    config: RedisConfig | None = None,
+    fallback_config: CacheConfig | None = None,
+    **kwargs,
 ) -> RedisCache:
     """Create a Redis cache instance with fallback."""
     if config is None:

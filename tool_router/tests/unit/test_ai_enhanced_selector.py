@@ -7,12 +7,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tool_router.ai.enhanced_selector import (
-    AIProvider,
     AIModel,
+    AIProvider,
     BaseAISelector,
+    CostTracker,
     EnhancedAISelector,
     OllamaSelector,
-    CostTracker,
 )
 
 
@@ -97,9 +97,7 @@ def test_ollama_selector_select_tool_low_confidence() -> None:
 
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "response": '{"tool_name": "search", "confidence": 0.5}'
-    }
+    mock_response.json.return_value = {"response": '{"tool_name": "search", "confidence": 0.5}'}
 
     with patch("httpx.post", return_value=mock_response):
         result = selector.select_tool("search web", [{"name": "search", "description": "Search web"}])
@@ -203,7 +201,7 @@ def test_cost_tracker_track_selection() -> None:
     tracker.track_selection(
         model="llama3.2:3b",
         task_complexity="simple",
-        estimated_tokens={"total": 100, "input": 80, "output": 20}
+        estimated_tokens={"total": 100, "input": 80, "output": 20},
     )
 
     assert tracker.total_requests == 1
@@ -217,12 +215,12 @@ def test_cost_tracker_multiple_selections() -> None:
     tracker.track_selection(
         model="llama3.2:3b",
         task_complexity="simple",
-        estimated_tokens={"total": 100, "input": 80, "output": 20}
+        estimated_tokens={"total": 100, "input": 80, "output": 20},
     )
     tracker.track_selection(
         model="llama3.2:3b",
         task_complexity="complex",
-        estimated_tokens={"total": 200, "input": 150, "output": 50}
+        estimated_tokens={"total": 200, "input": 150, "output": 50},
     )
 
     assert tracker.total_requests == 2

@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-import pytest
+from unittest.mock import MagicMock
 
 from tool_router.specialist_coordinator import (
-    SpecialistCoordinator,
-    TaskRequest,
-    TaskCategory,
-    SpecialistType,
-    SpecialistResult,
+    AccessibilityLevel,
     ComponentType,
-    UIFramework,
     DesignSystem,
-    AccessibilityLevel
+    SpecialistCoordinator,
+    SpecialistType,
+    TaskCategory,
+    TaskRequest,
+    UIFramework,
 )
 
 
@@ -30,7 +28,7 @@ class TestSpecialistCoordinator:
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
         assert coordinator is not None
-        assert hasattr(coordinator, 'process_task')
+        assert hasattr(coordinator, "process_task")
         assert coordinator.enhanced_selector == enhanced_selector
         assert coordinator.prompt_architect == prompt_architect
         assert coordinator.ui_specialist == ui_specialist
@@ -49,7 +47,7 @@ class TestSpecialistCoordinator:
             "model_used": "gpt-3.5-turbo",
             "model_tier": "standard",
             "hardware_requirements": {"memory": "4GB"},
-            "task_complexity": "medium"
+            "task_complexity": "medium",
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
@@ -58,7 +56,10 @@ class TestSpecialistCoordinator:
             task="Find information about web development",
             category=TaskCategory.TOOL_SELECTION,
             tools=[{"name": "web_search", "description": "Search the web"}],
-            user_preferences={"cost_preference": "balanced", "max_cost_per_request": 0.10}
+            user_preferences={
+                "cost_preference": "balanced",
+                "max_cost_per_request": 0.10,
+            },
         )
 
         results = coordinator.process_task(request)
@@ -80,13 +81,8 @@ class TestSpecialistCoordinator:
             "optimized_prompt": "Find web development information",
             "task_type": "information_retrieval",
             "requirements": ["accuracy", "speed"],
-            "token_metrics": {
-                "token_reduction_percent": 25.0,
-                "cost_savings": 0.02
-            },
-            "quality_score": {
-                "overall_score": 0.92
-            }
+            "token_metrics": {"token_reduction_percent": 25.0, "cost_savings": 0.02},
+            "quality_score": {"overall_score": 0.92},
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
@@ -94,7 +90,10 @@ class TestSpecialistCoordinator:
         request = TaskRequest(
             task="Find information about web development",
             category=TaskCategory.PROMPT_OPTIMIZATION,
-            user_preferences={"cost_preference": "balanced", "feedback": "Make it more concise"}
+            user_preferences={
+                "cost_preference": "balanced",
+                "feedback": "Make it more concise",
+            },
         )
 
         results = coordinator.process_task(request)
@@ -113,16 +112,11 @@ class TestSpecialistCoordinator:
 
         # Mock the UI specialist response
         ui_specialist.generate_ui_component.return_value = {
-            "component": {
-                "name": "UserForm",
-                "token_estimate": 150
-            },
-            "validation": {
-                "compliance_score": 0.88
-            },
+            "component": {"name": "UserForm", "token_estimate": 150},
+            "validation": {"compliance_score": 0.88},
             "accessibility_compliant": True,
             "responsive_ready": True,
-            "industry_standards_compliant": True
+            "industry_standards_compliant": True,
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
@@ -131,7 +125,7 @@ class TestSpecialistCoordinator:
             task="Create a user registration form",
             category=TaskCategory.UI_GENERATION,
             user_preferences={"framework": "react", "design_system": "tailwind"},
-            cost_optimization=True
+            cost_optimization=True,
         )
 
         results = coordinator.process_task(request)
@@ -153,13 +147,13 @@ class TestSpecialistCoordinator:
             "optimized_prompt": "Generate a React form component",
             "task_type": "code_generation",
             "token_metrics": {"token_reduction_percent": 15.0},
-            "quality_score": {"overall_score": 0.89}
+            "quality_score": {"overall_score": 0.89},
         }
 
         enhanced_selector.select_tool_with_cost_optimization.return_value = {
             "tool": {"name": "react_generator"},
             "confidence": 0.91,
-            "estimated_cost": {"total_cost": 0.08}
+            "estimated_cost": {"total_cost": 0.08},
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
@@ -167,7 +161,7 @@ class TestSpecialistCoordinator:
         request = TaskRequest(
             task="Generate a React form component",
             category=TaskCategory.CODE_GENERATION,
-            context="User registration form"
+            context="User registration form",
         )
 
         results = coordinator.process_task(request)
@@ -186,24 +180,24 @@ class TestSpecialistCoordinator:
         # Mock responses
         ui_specialist.generate_ui_component.return_value = {
             "component": {"token_estimate": 200},
-            "validation": {"compliance_score": 0.85}
+            "validation": {"compliance_score": 0.85},
         }
 
         prompt_architect.optimize_prompt.return_value = {
             "optimized_prompt": "Create dashboard with charts",
-            "token_metrics": {"token_reduction_percent": 20.0}
+            "token_metrics": {"token_reduction_percent": 20.0},
         }
 
         enhanced_selector.select_tool_with_cost_optimization.return_value = {
             "tool": {"name": "dashboard_generator"},
-            "confidence": 0.87
+            "confidence": 0.87,
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         request = TaskRequest(
             task="Create a dashboard with charts and navigation",
-            category=TaskCategory.MULTI_STEP
+            category=TaskCategory.MULTI_STEP,
         )
 
         results = coordinator.process_task(request)
@@ -223,15 +217,12 @@ class TestSpecialistCoordinator:
 
         enhanced_selector.select_tool_with_cost_optimization.return_value = {
             "tool": {"name": "analyzer"},
-            "confidence": 0.75
+            "confidence": 0.75,
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
-        request = TaskRequest(
-            task="Analyze the data trends",
-            category=TaskCategory.ANALYSIS
-        )
+        request = TaskRequest(task="Analyze the data trends", category=TaskCategory.ANALYSIS)
 
         results = coordinator.process_task(request)
 
@@ -249,10 +240,7 @@ class TestSpecialistCoordinator:
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
-        request = TaskRequest(
-            task="Test task",
-            category=TaskCategory.TOOL_SELECTION
-        )
+        request = TaskRequest(task="Test task", category=TaskCategory.TOOL_SELECTION)
 
         results = coordinator.process_task(request)
 
@@ -372,7 +360,7 @@ class TestSpecialistCoordinator:
         enhanced_selector.select_tool_with_cost_optimization.return_value = {
             "tool": {"name": "test"},
             "confidence": 0.8,
-            "estimated_cost": {"total_cost": 0.05}
+            "estimated_cost": {"total_cost": 0.05},
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
@@ -421,9 +409,21 @@ class TestSpecialistCoordinator:
         ui_specialist = MagicMock()
 
         # Mock UI specialist capabilities
-        ui_specialist.get_supported_frameworks.return_value = ["react", "vue", "angular"]
-        ui_specialist.get_supported_component_types.return_value = ["form", "table", "chart"]
-        ui_specialist.get_supported_design_systems.return_value = ["tailwind", "material", "bootstrap"]
+        ui_specialist.get_supported_frameworks.return_value = [
+            "react",
+            "vue",
+            "angular",
+        ]
+        ui_specialist.get_supported_component_types.return_value = [
+            "form",
+            "table",
+            "chart",
+        ]
+        ui_specialist.get_supported_design_systems.return_value = [
+            "tailwind",
+            "material",
+            "bootstrap",
+        ]
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
@@ -451,17 +451,13 @@ class TestSpecialistCoordinator:
 
         enhanced_selector.select_tool_with_cost_optimization.return_value = {
             "tool": {"name": "test"},
-            "confidence": 0.8
+            "confidence": 0.8,
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
 
         # Test with cost optimization enabled
-        request = TaskRequest(
-            task="test",
-            category=TaskCategory.TOOL_SELECTION,
-            cost_optimization=True
-        )
+        request = TaskRequest(task="test", category=TaskCategory.TOOL_SELECTION, cost_optimization=True)
 
         coordinator.process_task(request)
 
@@ -476,7 +472,7 @@ class TestSpecialistCoordinator:
 
         enhanced_selector.select_tool_with_cost_optimization.return_value = {
             "tool": {"name": "test"},
-            "confidence": 0.8
+            "confidence": 0.8,
         }
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
@@ -484,13 +480,13 @@ class TestSpecialistCoordinator:
         user_prefs = {
             "cost_preference": "economy",
             "max_cost_per_request": 0.03,
-            "model_preference": "fast"
+            "model_preference": "fast",
         }
 
         request = TaskRequest(
             task="test",
             category=TaskCategory.TOOL_SELECTION,
-            user_preferences=user_prefs
+            user_preferences=user_prefs,
         )
 
         coordinator.process_task(request)

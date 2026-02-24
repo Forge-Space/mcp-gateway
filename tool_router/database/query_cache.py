@@ -35,7 +35,9 @@ class DatabaseQueryCache:
 
         if self.config.enabled:
             self._cache = create_ttl_cache(
-                f"{self.config.cache_key_prefix}_cache", max_size=self.config.max_size, ttl=self.config.default_ttl
+                f"{self.config.cache_key_prefix}_cache",
+                max_size=self.config.max_size,
+                ttl=self.config.default_ttl,
             )
             logger.info(
                 f"Database query cache enabled with TTL={self.config.default_ttl}s, max_size={self.config.max_size}"
@@ -76,7 +78,12 @@ class DatabaseQueryCache:
             return None
 
     def set(
-        self, query: str, result: Any, params: tuple | None = None, table: str | None = None, ttl: int | None = None
+        self,
+        query: str,
+        result: Any,
+        params: tuple | None = None,
+        table: str | None = None,
+        ttl: int | None = None,
     ) -> None:
         """Cache a query result."""
         if not self.config.enabled or not self.config.cache_reads or not self._cache:
@@ -205,7 +212,13 @@ class QueryCacheMiddleware:
         """Called before query execution - check cache."""
         return self.cache.get(query, params)
 
-    def after_execute(self, query: str, result: Any, params: tuple | None = None, ttl: int | None = None) -> None:
+    def after_execute(
+        self,
+        query: str,
+        result: Any,
+        params: tuple | None = None,
+        ttl: int | None = None,
+    ) -> None:
         """Called after query execution - cache result."""
         self.cache.set(query, result, params, ttl=ttl)
 

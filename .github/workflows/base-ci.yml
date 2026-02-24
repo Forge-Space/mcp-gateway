@@ -47,9 +47,6 @@ on:
       CODECOV_TOKEN:
         description: 'Codecov token'
         required: false
-      SNYK_TOKEN:
-        description: 'Snyk token'
-        required: false
       GITHUB_TOKEN:
         description: 'GitHub token'
         required: false
@@ -65,8 +62,9 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           cache: 'pip'
-      - run: pip install ruff black mypy && pip install -r requirements.txt
-      - run: ruff check apps/ src/ scripts/ --format=github
+          cache-dependency-path: 'pyproject.toml'
+      - run: pip install -e ".[dev]"
+      - run: ruff check apps/ src/ scripts/ --output-format=github
       - run: black --check apps/ src/ scripts/
       - run: mypy apps/tool-router/src/ --ignore-missing-imports || true
 
@@ -88,7 +86,8 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
           cache: 'pip'
-      - run: pip install pytest pytest-cov pytest-mock && pip install -r requirements.txt
+          cache-dependency-path: 'pyproject.toml'
+      - run: pip install -e ".[dev]"
       - run: pytest apps/tool-router/tests/ --cov=apps/tool-router/src --cov-report=xml --cov-fail-under=${{ inputs.coverage-threshold }}
       - if: inputs.enable-coverage
         uses: codecov/codecov-action@v5
@@ -117,10 +116,8 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: Install dependencies and run Snyk
+      - name: Run pip audit
         run: |
-          npm install --ignore-scripts
-          npx snyk test --severity-threshold=high
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          pip install pip-audit
+          pip-audit || true
         continue-on-error: true

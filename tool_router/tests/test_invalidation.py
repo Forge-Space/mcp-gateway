@@ -125,7 +125,11 @@ class TestEventInvalidationManager:
 
         # Trigger event
         count = self.event_manager.trigger_invalidation(
-            "test_event", {"cache:key1", "cache:key2"}, {"tag1"}, "test_source", {"meta": "data"}
+            "test_event",
+            {"cache:key1", "cache:key2"},
+            {"tag1"},
+            "test_source",
+            {"meta": "data"},
         )
 
         assert count == 2
@@ -270,7 +274,10 @@ class TestAdvancedInvalidationManager:
     def test_get_invalidation_summary(self):
         """Test getting invalidation summary."""
         # Mock managers
-        self.manager.tag_manager.list_tags.return_value = [Mock(invalidation_count=5), Mock(invalidation_count=3)]
+        self.manager.tag_manager.list_tags.return_value = [
+            Mock(invalidation_count=5),
+            Mock(invalidation_count=3),
+        ]
         self.manager.event_manager.get_event_history.return_value = [
             Mock(event_type="event1"),
             Mock(event_type="event2"),

@@ -35,7 +35,10 @@ services:
   # Core Gateway Services - Optimized
   gateway:
     <<: *common
-    image: ghcr.io/ibm/mcp-gateway:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.tool-router
+    image: forge-mcp-gateway:latest
     container_name: forge-mcpgateway
     entrypoint: ["/app/docker/entrypoint.sh"]
     ports:
@@ -84,7 +87,7 @@ services:
     build:
       context: ./service-manager
       dockerfile: Dockerfile
-      target: production  # Multi-stage build target
+      target: production # Multi-stage build target
     container_name: forge-service-manager
     ports:
       - "${FORGE_SERVICE_MANAGER_PORT:-9000}:9000"
@@ -247,7 +250,13 @@ services:
       FORGE_MEMORY_RESERVATION: 64MB
       FORGE_WAKE_TIME_TARGET: 200
     healthcheck:
-      test: ["CMD", "python3", "-c", "import mcpgateway.translate; import sys; sys.exit(0)"]
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import mcpgateway.translate; import sys; sys.exit(0)",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3

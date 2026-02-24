@@ -181,7 +181,11 @@ class EventInvalidationManager:
     ) -> int:
         """Trigger cache invalidation event."""
         event = InvalidationEvent(
-            event_type=event_type, cache_keys=cache_keys, tags=tags or set(), source=source, metadata=metadata or {}
+            event_type=event_type,
+            cache_keys=cache_keys,
+            tags=tags or set(),
+            source=source,
+            metadata=metadata or {},
         )
 
         with self._lock:
@@ -334,7 +338,12 @@ class AdvancedInvalidationManager:
         return self.dependency_manager.invalidate_dependents(changed_key, reason)
 
     def create_tagged_cache(
-        self, cache_name: str, key: str, value: Any, tags: set[str], ttl: int | None = None
+        self,
+        cache_name: str,
+        key: str,
+        value: Any,
+        tags: set[str],
+        ttl: int | None = None,
     ) -> bool:
         """Create a cache entry with tags."""
         cache = self.cache_manager.get_cache(cache_name)

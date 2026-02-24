@@ -164,12 +164,7 @@ class DribbbleScraper:
             img = item.select_one("img")
             image_url = ""
             if img:
-                image_url = (
-                    img.get("data-src")
-                    or img.get("src")
-                    or img.get("data-srcset", "").split(" ")[0]
-                    or ""
-                )
+                image_url = img.get("data-src") or img.get("src") or img.get("data-srcset", "").split(" ")[0] or ""
 
             designer_el = item.select_one(".display-name") or item.select_one("[class*='designer']")
             designer = designer_el.get_text(strip=True) if designer_el else ""

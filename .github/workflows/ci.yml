@@ -30,7 +30,6 @@ jobs:
       enable-coverage: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Pattern compliance validation
@@ -76,12 +75,12 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -e ".[dev]"
 
       - name: Run integration tests
         env:
@@ -104,12 +103,12 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -e ".[dev]"
 
       - name: Run performance tests
         run: |

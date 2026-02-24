@@ -1,7 +1,8 @@
 # MCP Gateway - Simplified Makefile (Phase 3: Command Simplification)
 # Reduced from 50+ targets to 12 core targets for easier onboarding
 
-.PHONY: setup start stop register status ide-setup auth lint lint-strict test deps help clean quickstart
+.PHONY: setup start stop register status ide-setup auth lint lint-strict test deps help clean quickstart \
+       n8n-start n8n-stop n8n-logs n8n-backup n8n-health n8n-secrets
 
 # Default target
 .DEFAULT_GOAL := help
@@ -181,7 +182,7 @@ help: ## Show help and examples (replaces help, help-topics, help-examples, list
 		echo "  make auth ACTION=generate|check|refresh|secrets"; \
 		echo "  make test COVERAGE=true               # Run with coverage"; \
 		echo "  make deps ACTION=check|update|hooks|install"; \
-		echo "  make help TOPIC=setup|ide|auth|services"; \
+		echo "  make help TOPIC=setup|ide|auth|services|n8n"; \
 		echo ""; \
 		echo "📚 Quick Start:"; \
 		echo "  1. make setup                    # Configure everything"; \
@@ -189,6 +190,14 @@ help: ## Show help and examples (replaces help, help-topics, help-examples, list
 		echo "  3. make register                 # Register servers"; \
 		echo "  4. make status                   # Check status"; \
 		echo "  5. make ide-setup IDE=all        # Configure IDEs"; \
+		echo ""; \
+		echo "🤖 n8n Automation:"; \
+		echo "  make n8n-start                   # Start n8n"; \
+		echo "  make n8n-stop                    # Stop n8n"; \
+		echo "  make n8n-logs                    # Tail n8n logs"; \
+		echo "  make n8n-health                  # Health check"; \
+		echo "  make n8n-backup                  # Export workflows"; \
+		echo "  make n8n-secrets                 # Generate webhook secrets"; \
 	else \
 		echo "📚 Help: $(TOPIC)"; \
 		case "$(TOPIC)" in \
@@ -228,8 +237,24 @@ help: ## Show help and examples (replaces help, help-topics, help-examples, list
 				echo ""; \
 				echo "Usage: make start|stop|register|status"; \
 				;; \
+			n8n) \
+				echo "n8n automation layer:"; \
+				echo "• Self-hosted workflow automation (Docker)"; \
+				echo "• CI failure alerts, security advisories"; \
+				echo "• Cross-repo release notifications"; \
+				echo "• Stale PR reminders, velocity reports"; \
+				echo "• Docker health monitoring"; \
+				echo ""; \
+				echo "Setup:"; \
+				echo "  1. cp .env.n8n.example .env.n8n"; \
+				echo "  2. Fill in secrets (make n8n-secrets)"; \
+				echo "  3. make n8n-start"; \
+				echo "  4. Open http://localhost:5678"; \
+				echo ""; \
+				echo "Usage: make n8n-start|n8n-stop|n8n-logs|n8n-health|n8n-backup|n8n-secrets"; \
+				;; \
 			*) \
-				echo "Topic '$(TOPIC)' not found. Available: setup, ide, auth, services"; \
+				echo "Topic '$(TOPIC)' not found. Available: setup, ide, auth, services, n8n"; \
 				;; \
 		esac; \
 	fi
@@ -243,6 +268,42 @@ clean: ## Clean up and reset (replaces reset-db, cleanup-duplicates, config-clea
 	@echo "Cleaning duplicates..."
 	./scripts/virtual-servers/cleanup-duplicates.sh 2>/dev/null || true
 	@echo "✅ Cleanup complete. Run 'make setup && make start && make register' to recreate."
+
+# === n8n Automation ===
+
+n8n-start: ## Start n8n automation service
+	@if [ ! -f .env.n8n ]; then \
+		echo "Missing .env.n8n — copy from .env.n8n.example and fill in values"; \
+		exit 1; \
+	fi
+	docker compose -f docker-compose.n8n.yml up -d
+
+n8n-stop: ## Stop n8n automation service
+	docker compose -f docker-compose.n8n.yml stop
+
+n8n-logs: ## Tail n8n container logs
+	docker logs -f forge-n8n
+
+n8n-backup: ## Export all n8n workflows to n8n-workflows/
+	docker exec forge-n8n n8n export:workflow --all \
+		--output=/home/node/.n8n/backups/workflows.json
+	docker cp forge-n8n:/home/node/.n8n/backups/workflows.json \
+		n8n-workflows/backup-$$(date +%Y%m%d).json
+	@echo "Backup saved to n8n-workflows/backup-$$(date +%Y%m%d).json"
+
+n8n-health: ## Check n8n health
+	@curl -sf http://localhost:5678/healthz > /dev/null \
+		&& echo "n8n is healthy" \
+		|| echo "n8n is not responding"
+
+n8n-secrets: ## Generate webhook secrets for .env.n8n
+	@echo "# Paste into .env.n8n:"
+	@echo "WEBHOOK_SECRET_CI_FAILURE=$$(openssl rand -hex 32)"
+	@echo "WEBHOOK_SECRET_SECURITY_ADVISORY=$$(openssl rand -hex 32)"
+	@echo "WEBHOOK_SECRET_RELEASE_NOTIFIER=$$(openssl rand -hex 32)"
+	@echo "WEBHOOK_SECRET_STALE_PR=$$(openssl rand -hex 32)"
+	@echo "WEBHOOK_SECRET_VELOCITY_REPORT=$$(openssl rand -hex 32)"
+	@echo "WEBHOOK_SECRET_DOCKER_HEALTH=$$(openssl rand -hex 32)"
 
 # === Quick Start Examples ===
 quickstart: ## Quick start for new users

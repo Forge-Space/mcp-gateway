@@ -14,7 +14,13 @@ from typing import Any
 from .ai.enhanced_selector import EnhancedAISelector
 from .ai.prompt_architect import PromptArchitect
 from .ai.ui_specialist import UISpecialist
-from .specialist_coordinator import SpecialistCoordinator, SpecialistResult, SpecialistType, TaskCategory, TaskRequest
+from .specialist_coordinator import (
+    SpecialistCoordinator,
+    SpecialistResult,
+    SpecialistType,
+    TaskCategory,
+    TaskRequest,
+)
 from .training.evaluation import EvaluationMetric, SpecialistEvaluator
 from .training.knowledge_base import KnowledgeBase, PatternCategory
 
@@ -240,7 +246,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
                 "request_category": request.category.value,
                 "request_task": request.task[:100],  # Truncate for privacy
                 "results_count": len(results),
-                "average_confidence": sum(r.confidence for r in results) / len(results) if results else 0,
+                "average_confidence": (sum(r.confidence for r in results) / len(results) if results else 0),
                 "timestamp": time.time(),
             }
 
@@ -290,7 +296,7 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
 
                 evaluation_results[specialist_name] = {
                     "metrics": {r.metric.value: r.value for r in results},
-                    "average_score": sum(r.value for r in results) / len(results) if results else 0,
+                    "average_score": (sum(r.value for r in results) / len(results) if results else 0),
                 }
 
             return evaluation_results
@@ -358,7 +364,10 @@ class EnhancedSpecialistCoordinator(SpecialistCoordinator):
                 insights["learning_summary"] = {
                     "total_requests_processed": total_requests,
                     "category_performance": {
-                        cat: {"average_confidence": sum(perfs) / len(perfs), "request_count": len(perfs)}
+                        cat: {
+                            "average_confidence": sum(perfs) / len(perfs),
+                            "request_count": len(perfs),
+                        }
                         for cat, perfs in category_performance.items()
                     },
                 }

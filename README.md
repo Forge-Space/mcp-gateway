@@ -244,6 +244,51 @@ Checks IBM/mcp-context-forge for new releases and automatically creates PRs with
 
 PRs require manual review before merge.
 
+## n8n Automation
+
+Self-hosted [n8n](https://n8n.io) workflow automation for CI alerts, security advisories, cross-repo release coordination, and monitoring. Runs in Docker alongside the gateway but in its own compose file.
+
+### Setup
+
+```bash
+cp .env.n8n.example .env.n8n
+make n8n-secrets          # generate webhook HMAC secrets
+# paste secrets into .env.n8n, configure GitHub token + Slack webhook
+make n8n-start
+# open http://localhost:5678 and import workflows from n8n-workflows/
+```
+
+### Workflows
+
+| # | Workflow | Trigger | Phase |
+|---|---------|---------|-------|
+| 1 | CI Failure Alert | GitHub webhook (workflow_run) | 1 |
+| 2 | Security Advisory Aggregator | Daily 9 AM cron | 1 |
+| 3 | Upstream Release Notifier | GitHub webhook (release) | 2 |
+| 4 | Stale PR Reminder | Daily 10 AM weekdays | 2 |
+| 5 | Weekly Velocity Report | Monday 9 AM cron | 3 |
+| 6 | Docker Health Monitor | Every 5 minutes | 3 |
+
+### Commands
+
+```
+make n8n-start     # start n8n container
+make n8n-stop      # stop n8n
+make n8n-logs      # tail logs
+make n8n-health    # health check
+make n8n-backup    # export workflows
+make n8n-secrets   # generate webhook secrets
+```
+
+### Security
+
+- Localhost-only access (`127.0.0.1:5678`)
+- HMAC-SHA256 signature verification on all GitHub webhooks
+- One unique secret per workflow
+- Resource-limited: 0.5 CPU, 512MB RAM, 50 PIDs
+- Read-only GitHub API access (no merging, no deploying)
+- n8n data excluded from git (`n8n-data/`, `n8n-logs/`)
+
 ## Development
 
 - **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)

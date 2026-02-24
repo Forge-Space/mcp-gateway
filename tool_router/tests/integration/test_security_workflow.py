@@ -20,7 +20,11 @@ class TestSecurityWorkflow:
         return {
             "enabled": True,
             "strict_mode": False,
-            "rate_limiting": {"enabled": True, "requests_per_minute": 60, "burst_size": 10},
+            "rate_limiting": {
+                "enabled": True,
+                "requests_per_minute": 60,
+                "burst_size": 10,
+            },
             "input_validation": {
                 "enabled": True,
                 "max_input_length": 1000,
@@ -46,12 +50,21 @@ class TestSecurityWorkflow:
                 with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                     # Mock successful validation
                     mock_validate.return_value = SecurityValidationResult(
-                        is_valid=True, risk_score=0.1, violations=[], sanitized_input=task, blocked=False, metadata={}
+                        is_valid=True,
+                        risk_score=0.1,
+                        violations=[],
+                        sanitized_input=task,
+                        blocked=False,
+                        metadata={},
                     )
 
                     # Mock successful rate limit check
                     mock_rate_limit.return_value = RateLimitResult(
-                        allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
+                        allowed=True,
+                        remaining=50,
+                        reset_time=1234567890,
+                        retry_after=0,
+                        metadata={},
                     )
 
                     result = middleware.check_request_security(context, task, category, context_data, "{}")
@@ -91,7 +104,11 @@ class TestSecurityWorkflow:
 
                 # Mock rate limit check
                 mock_rate_limit.return_value = RateLimitResult(
-                    allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
+                    allowed=True,
+                    remaining=50,
+                    reset_time=1234567890,
+                    retry_after=0,
+                    metadata={},
                 )
 
                 result = middleware.check_request_security(context, task, category, context_data, "{}")
@@ -117,7 +134,12 @@ class TestSecurityWorkflow:
             with patch.object(middleware.rate_limiter, "check_rate_limit") as mock_rate_limit:
                 # Mock successful validation
                 mock_validate.return_value = SecurityValidationResult(
-                    is_valid=True, risk_score=0.1, violations=[], sanitized_input=task, blocked=False, metadata={}
+                    is_valid=True,
+                    risk_score=0.1,
+                    violations=[],
+                    sanitized_input=task,
+                    blocked=False,
+                    metadata={},
                 )
 
                 # Mock rate limit exceeded
@@ -167,7 +189,11 @@ class TestSecurityWorkflow:
 
                 # Mock successful rate limit check
                 mock_rate_limit.return_value = RateLimitResult(
-                    allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
+                    allowed=True,
+                    remaining=50,
+                    reset_time=1234567890,
+                    retry_after=0,
+                    metadata={},
                 )
 
                 result = strict_middleware.check_request_security(context, task, category, context_data, "{}")
@@ -233,7 +259,11 @@ class TestSecurityWorkflow:
                 mock_validate.return_value = SecurityValidationResult(
                     is_valid=False,
                     risk_score=0.95,  # Very high risk
-                    violations=["Dangerous command detected", "API token exposed", "System operation risk"],
+                    violations=[
+                        "Dangerous command detected",
+                        "API token exposed",
+                        "System operation risk",
+                    ],
                     sanitized_input="execute '[REDACTED]' with api_token='[REDACTED]'",
                     blocked=True,
                     metadata={"blocked_patterns": ["rm -rf", "api_token"]},
@@ -241,7 +271,11 @@ class TestSecurityWorkflow:
 
                 # Mock rate limit check
                 mock_rate_limit.return_value = RateLimitResult(
-                    allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
+                    allowed=True,
+                    remaining=50,
+                    reset_time=1234567890,
+                    retry_after=0,
+                    metadata={},
                 )
 
                 result = middleware.check_request_security(context, task, category, context_data, "{}")
@@ -280,7 +314,11 @@ class TestSecurityWorkflow:
 
                     # Mock successful rate limit check
                     mock_rate_limit.return_value = RateLimitResult(
-                        allowed=True, remaining=50, reset_time=1234567890, retry_after=0, metadata={}
+                        allowed=True,
+                        remaining=50,
+                        reset_time=1234567890,
+                        retry_after=0,
+                        metadata={},
                     )
 
                     result = middleware.check_request_security(context, task, category, context_data, "{}")

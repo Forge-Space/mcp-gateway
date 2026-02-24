@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from tool_router.ai.selector import OllamaSelector
 
+
 if TYPE_CHECKING:
     from tool_router.ai.feedback import FeedbackStore
 else:
@@ -108,7 +109,7 @@ def select_top_matching_tools(
     return [tool for tool, score in scored_tools if score > 0][:top_n]
 
 
-def select_top_matching_tools_hybrid(  # noqa: PLR0913
+def select_top_matching_tools_hybrid(
     tools: list[dict[str, Any]],
     task: str,
     context: str,
@@ -146,8 +147,12 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
-                logger.info("AI selected tool: %s with confidence: %s", selected_tool_name, ai_score)
-        except Exception as e:  # noqa: BLE001
+                logger.info(
+                    "AI selected tool: %s with confidence: %s",
+                    selected_tool_name,
+                    ai_score,
+                )
+        except Exception as e:
             logger.warning("AI selection failed: %s", e)
 
     # Calculate enhanced hybrid scores
@@ -189,7 +194,7 @@ def select_top_matching_tools_hybrid(  # noqa: PLR0913
     return [tool for tool, score in hybrid_scores if score > 0][:top_n]
 
 
-def select_top_matching_tools_enhanced(  # noqa: PLR0913
+def select_top_matching_tools_enhanced(
     tools: list[dict[str, Any]],
     task: str,
     context: str,
@@ -231,8 +236,12 @@ def select_top_matching_tools_enhanced(  # noqa: PLR0913
             if ai_result:
                 selected_tool_name = ai_result.get("tool_name")
                 ai_score = ai_result.get("confidence", 0.0)
-                logger.info("Enhanced AI selected tool: %s with confidence: %s", selected_tool_name, ai_score)
-        except Exception as e:  # noqa: BLE001
+                logger.info(
+                    "Enhanced AI selected tool: %s with confidence: %s",
+                    selected_tool_name,
+                    ai_score,
+                )
+        except Exception as e:
             logger.warning("Enhanced AI selection failed: %s", e)
 
     # Calculate enhanced hybrid scores

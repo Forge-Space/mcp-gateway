@@ -1,0 +1,109 @@
+{
+  "name": "Upstream Release Notifier",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "release-published",
+        "responseMode": "onReceived",
+        "responseCode": 200
+      },
+      "name": "GitHub Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require('crypto');\nconst signature = $input.item.json.headers['x-hub-signature-256'];\nconst payload = JSON.stringify($input.item.json.body);\nconst secret = $env.WEBHOOK_SECRET_RELEASE_NOTIFIER;\n\nif (!signature || !payload || !secret) {\n  throw new Error('Missing signature, payload, or secret');\n}\n\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');\nconst valid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));\n\nif (!valid) {\n  throw new Error('Invalid webhook signature');\n}\n\nreturn $input.item;"
+      },
+      "name": "Verify Signature",
+      "type": "n8n-nodes-base.function",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.body.action}}",
+              "value2": "published"
+            }
+          ]
+        }
+      },
+      "name": "Filter Published",
+      "type": "n8n-nodes-base.if",
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Downstream repos that depend on @forgespace/core\nconst downstreamRepos = [\n  'mcp-gateway',\n  'uiforge-mcp',\n  'uiforge-webapp'\n];\n\nconst release = $input.item.json.body.release;\nconst items = downstreamRepos.map(repo => ({\n  json: {\n    repo,\n    releaseName: release.name,\n    releaseTag: release.tag_name,\n    releaseUrl: release.html_url,\n    releaseBody: release.body\n  }\n}));\n\nreturn items;"
+      },
+      "name": "Map Downstream",
+      "type": "n8n-nodes-base.function",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$env.GITHUB_ORG}}/{{$json.repo}}/issues",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.GITHUB_TOKEN}}"
+            }
+          ]
+        },
+        "body": {
+          "json": {
+            "title": "=chore: update @forgespace/core to {{$json.releaseTag}}",
+            "body": "=A new version of `@forgespace/core` has been released.\n\n**Release:** [{{$json.releaseName}}]({{$json.releaseUrl}})\n**Tag:** `{{$json.releaseTag}}`\n\n### Changes\n{{$json.releaseBody}}\n\n### Action Required\n- [ ] Review release notes for breaking changes\n- [ ] Update `@forgespace/core` dependency\n- [ ] Run full test suite\n- [ ] Verify integration",
+            "labels": ["dependencies", "upstream-release"]
+          }
+        }
+      },
+      "name": "Create Tracking Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{$env.SLACK_CHANNEL_RELEASES}}",
+        "text": "=:package: *New @forgespace/core Release: {{$json.releaseTag}}*\nTracking issues created in downstream repos.\n{{$json.releaseUrl}}"
+      },
+      "name": "Slack Notify",
+      "type": "n8n-nodes-base.slack",
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "GitHub Webhook": {
+      "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]]
+    },
+    "Verify Signature": {
+      "main": [[{ "node": "Filter Published", "type": "main", "index": 0 }]]
+    },
+    "Filter Published": {
+      "main": [[{ "node": "Map Downstream", "type": "main", "index": 0 }]]
+    },
+    "Map Downstream": {
+      "main": [
+        [{ "node": "Create Tracking Issue", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Tracking Issue": {
+      "main": [[{ "node": "Slack Notify", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "phase-2" },
+    { "name": "releases" },
+    { "name": "cross-repo" }
+  ]
+}

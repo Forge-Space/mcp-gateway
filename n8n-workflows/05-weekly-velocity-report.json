@@ -1,0 +1,80 @@
+{
+  "name": "Weekly Velocity Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * 1" }]
+        }
+      },
+      "name": "Monday 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const repos = ['forge-patterns', 'mcp-gateway', 'uiforge-mcp', 'uiforge-webapp'];\nconst since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();\nconst items = repos.map(repo => ({ json: { repo, since } }));\nreturn items;"
+      },
+      "name": "List Repos",
+      "type": "n8n-nodes-base.function",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$env.GITHUB_ORG}}/{{$json.repo}}/pulls?state=all&sort=updated&since={{$json.since}}&per_page=100",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.GITHUB_TOKEN}}"
+            }
+          ]
+        }
+      },
+      "name": "Fetch PRs",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const prs = $input.all();\nconst since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);\n\nlet opened = 0, merged = 0, closed = 0;\nlet totalMergeHours = 0;\n\nfor (const pr of prs) {\n  const created = new Date(pr.json.created_at);\n  if (created >= since) opened++;\n\n  if (pr.json.merged_at) {\n    merged++;\n    const mergeTime = new Date(pr.json.merged_at) - created;\n    totalMergeHours += mergeTime / (1000 * 60 * 60);\n  } else if (pr.json.closed_at) {\n    closed++;\n  }\n}\n\nconst avgMergeHours = merged > 0 ? Math.round(totalMergeHours / merged) : 0;\n\nreturn [{\n  json: {\n    opened,\n    merged,\n    closed,\n    avgMergeHours,\n    totalPRs: prs.length\n  }\n}];"
+      },
+      "name": "Compute Metrics",
+      "type": "n8n-nodes-base.function",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "channel": "={{$env.SLACK_CHANNEL_METRICS}}",
+        "text": "=:chart_with_upwards_trend: *Weekly Velocity Report*\n\n*PRs Opened:* {{$json.opened}}\n*PRs Merged:* {{$json.merged}}\n*PRs Closed:* {{$json.closed}}\n*Avg Merge Time:* {{$json.avgMergeHours}}h\n\n_Period: Last 7 days across all Forge Space repos_"
+      },
+      "name": "Slack Report",
+      "type": "n8n-nodes-base.slack",
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Monday 9 AM": {
+      "main": [[{ "node": "List Repos", "type": "main", "index": 0 }]]
+    },
+    "List Repos": {
+      "main": [[{ "node": "Fetch PRs", "type": "main", "index": 0 }]]
+    },
+    "Fetch PRs": {
+      "main": [[{ "node": "Compute Metrics", "type": "main", "index": 0 }]]
+    },
+    "Compute Metrics": {
+      "main": [[{ "node": "Slack Report", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "phase-3" },
+    { "name": "metrics" },
+    { "name": "scheduled" }
+  ]
+}

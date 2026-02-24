@@ -11,7 +11,10 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from tool_router.database.supabase_client import close_database_client, get_database_client
+from tool_router.database.supabase_client import (
+    close_database_client,
+    get_database_client,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -54,14 +57,17 @@ async def health_check() -> HealthResponse:
             timestamp=db_health["timestamp"],
             details={
                 "database_status": db_health["status"],
-                "connection": "connected" if db_health["database"] == "connected" else "disconnected",
+                "connection": ("connected" if db_health["database"] == "connected" else "disconnected"),
             },
         )
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return HealthResponse(
-            status="unhealthy", database="disconnected", timestamp="unknown", details={"error": str(e)}
+            status="unhealthy",
+            database="disconnected",
+            timestamp="unknown",
+            details={"error": str(e)},
         )
 
 
@@ -101,7 +107,10 @@ async def readiness_check() -> dict[str, Any]:
 
         return {
             "ready": is_ready,
-            "checks": {"database": health["status"] == "healthy", "connection": health["database"] == "connected"},
+            "checks": {
+                "database": health["status"] == "healthy",
+                "connection": health["database"] == "connected",
+            },
             "timestamp": health["timestamp"],
         }
 

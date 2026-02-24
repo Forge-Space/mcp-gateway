@@ -17,7 +17,11 @@ class TestGatewayConfig:
     def test_gateway_config_creation(self):
         """Test GatewayConfig creation with all parameters."""
         config = GatewayConfig(
-            url="https://api.example.com", jwt="test-jwt-token", timeout_ms=5000, max_retries=3, retry_delay_ms=1000
+            url="https://api.example.com",
+            jwt="test-jwt-token",
+            timeout_ms=5000,
+            max_retries=3,
+            retry_delay_ms=1000,
         )
 
         assert config.url == "https://api.example.com"
@@ -65,7 +69,9 @@ class TestGatewayConfig:
     def test_load_from_environment_missing_optional(self):
         """Test loading config when optional env vars are missing."""
         with patch.dict(
-            os.environ, {"GATEWAY_URL": "https://api.example.com", "GATEWAY_JWT": "test-token"}, clear=True
+            os.environ,
+            {"GATEWAY_URL": "https://api.example.com", "GATEWAY_JWT": "test-token"},
+            clear=True,
         ):
             config = GatewayConfig.load_from_environment()
 
@@ -124,7 +130,11 @@ class TestHTTPGatewayClient:
     def setUp(self):
         """Set up test fixtures."""
         self.config = GatewayConfig(
-            url="https://api.example.com", jwt="test-jwt-token", timeout_ms=5000, max_retries=3, retry_delay_ms=1000
+            url="https://api.example.com",
+            jwt="test-jwt-token",
+            timeout_ms=5000,
+            max_retries=3,
+            retry_delay_ms=1000,
         )
 
     def test_initialization(self):
@@ -192,7 +202,10 @@ class TestHTTPGatewayClient:
         """Test request making with 5xx HTTP error and retry."""
         client = HTTPGatewayClient(self.config)
 
-        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
+        with (
+            patch("urllib.request.urlopen") as mock_urlopen,
+            patch("time.sleep") as mock_sleep,
+        ):
             # First call fails with 500, second succeeds
             mock_error = Mock()
             mock_error.code = 500
@@ -211,7 +224,10 @@ class TestHTTPGatewayClient:
         """Test request making when max retries exceeded."""
         client = HTTPGatewayClient(self.config)
 
-        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
+        with (
+            patch("urllib.request.urlopen") as mock_urlopen,
+            patch("time.sleep") as mock_sleep,
+        ):
             # All calls fail with 500
             mock_urlopen.side_effect = Exception("Gateway server error (HTTP 500)")
 
@@ -225,7 +241,10 @@ class TestHTTPGatewayClient:
         """Test request making with network error and retry."""
         client = HTTPGatewayClient(self.config)
 
-        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
+        with (
+            patch("urllib.request.urlopen") as mock_urlopen,
+            patch("time.sleep") as mock_sleep,
+        ):
             mock_urlopen.side_effect = [
                 Exception("Network error: Connection refused"),
                 Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
@@ -241,7 +260,10 @@ class TestHTTPGatewayClient:
         """Test request making with timeout and retry."""
         client = HTTPGatewayClient(self.config)
 
-        with patch("urllib.request.urlopen") as mock_urlopen, patch("time.sleep") as mock_sleep:
+        with (
+            patch("urllib.request.urlopen") as mock_urlopen,
+            patch("time.sleep") as mock_sleep,
+        ):
             mock_urlopen.side_effect = [
                 TimeoutError("Request timeout after 5.0s"),
                 Mock(__enter__=Mock(return_value=Mock(read=Mock(return_value=b'{"result": "success"}')))),
@@ -322,7 +344,10 @@ class TestHTTPGatewayClient:
         with patch.object(client, "_make_request") as mock_request:
             mock_request.side_effect = ValueError("Gateway HTTP error 404: Not Found")
 
-            with pytest.raises(ValueError, match="Failed to fetch tools: Gateway HTTP error 404: Not Found"):
+            with pytest.raises(
+                ValueError,
+                match="Failed to fetch tools: Gateway HTTP error 404: Not Found",
+            ):
                 client.get_tools()
 
     def test_call_tool_success(self):
@@ -438,7 +463,10 @@ class TestArgsBuilder:
         """Test building arguments with common parameter name."""
         tool = {
             "inputSchema": {
-                "properties": {"query": {"type": "string"}, "limit": {"type": "integer"}},
+                "properties": {
+                    "query": {"type": "string"},
+                    "limit": {"type": "integer"},
+                },
                 "required": ["query"],
             }
         }
@@ -452,7 +480,10 @@ class TestArgsBuilder:
         """Test building arguments with first required parameter."""
         tool = {
             "inputSchema": {
-                "properties": {"custom_param": {"type": "string"}, "limit": {"type": "integer"}},
+                "properties": {
+                    "custom_param": {"type": "string"},
+                    "limit": {"type": "integer"},
+                },
                 "required": ["custom_param"],
             }
         }
@@ -466,7 +497,10 @@ class TestArgsBuilder:
         """Test building arguments when first required param is not string."""
         tool = {
             "inputSchema": {
-                "properties": {"count": {"type": "integer"}, "name": {"type": "string"}},
+                "properties": {
+                    "count": {"type": "integer"},
+                    "name": {"type": "string"},
+                },
                 "required": ["count", "name"],
             }
         }
@@ -479,7 +513,12 @@ class TestArgsBuilder:
 
     def test_build_arguments_fallback_to_task(self):
         """Test building arguments fallback to 'task' parameter."""
-        tool = {"inputSchema": {"properties": {"limit": {"type": "integer"}}, "required": []}}
+        tool = {
+            "inputSchema": {
+                "properties": {"limit": {"type": "integer"}},
+                "required": [],
+            }
+        }
         task = "fallback task"
 
         result = build_arguments(tool, task)
@@ -515,7 +554,12 @@ class TestArgsBuilder:
 
     def test_build_arguments_input_schema_alternative(self):
         """Test building arguments with input_schema (alternative field name)."""
-        tool = {"input_schema": {"properties": {"prompt": {"type": "string"}}, "required": ["prompt"]}}
+        tool = {
+            "input_schema": {
+                "properties": {"prompt": {"type": "string"}},
+                "required": ["prompt"],
+            }
+        }
         task = "test prompt"
 
         result = build_arguments(tool, task)
@@ -524,14 +568,31 @@ class TestArgsBuilder:
 
     def test_common_task_parameter_names(self):
         """Test common task parameter names list."""
-        expected_names = ["query", "q", "search", "task", "prompt", "question", "input", "text", "message", "command"]
+        expected_names = [
+            "query",
+            "q",
+            "search",
+            "task",
+            "prompt",
+            "question",
+            "input",
+            "text",
+            "message",
+            "command",
+        ]
 
         assert expected_names == COMMON_TASK_PARAMETER_NAMES
 
     def test_build_arguments_priority_order(self):
         """Test that parameter names are tried in priority order."""
         tool = {
-            "inputSchema": {"properties": {"command": {"type": "string"}, "query": {"type": "string"}}, "required": []}
+            "inputSchema": {
+                "properties": {
+                    "command": {"type": "string"},
+                    "query": {"type": "string"},
+                },
+                "required": [],
+            }
         }
         task = "test command"
 
@@ -544,9 +605,7 @@ class TestArgsBuilder:
         """Test building arguments with type inference."""
         tool = {
             "inputSchema": {
-                "properties": {
-                    "text_param": {}  # No type specified
-                },
+                "properties": {"text_param": {}},  # No type specified
                 "required": ["text_param"],
             }
         }
@@ -564,7 +623,11 @@ class TestInfrastructureIntegration:
     def test_gateway_client_with_config_integration(self):
         """Test GatewayClient integration with Config."""
         config = GatewayConfig(
-            url="https://api.example.com", jwt="test-token", timeout_ms=3000, max_retries=2, retry_delay_ms=500
+            url="https://api.example.com",
+            jwt="test-token",
+            timeout_ms=3000,
+            max_retries=2,
+            retry_delay_ms=500,
         )
         client = HTTPGatewayClient(config)
 
@@ -575,7 +638,12 @@ class TestInfrastructureIntegration:
 
     def test_gateway_client_complete_workflow(self):
         """Test GatewayClient complete workflow simulation."""
-        config = GatewayConfig(url="https://api.example.com", jwt="test-token", timeout_ms=5000, max_retries=3)
+        config = GatewayConfig(
+            url="https://api.example.com",
+            jwt="test-token",
+            timeout_ms=5000,
+            max_retries=3,
+        )
         client = HTTPGatewayClient(config)
 
         # Simulate getting tools and calling a tool
@@ -604,13 +672,23 @@ class TestInfrastructureIntegration:
         test_cases = [
             # Case 1: Common parameter name
             {
-                "tool": {"inputSchema": {"properties": {"query": {"type": "string"}}, "required": ["query"]}},
+                "tool": {
+                    "inputSchema": {
+                        "properties": {"query": {"type": "string"}},
+                        "required": ["query"],
+                    }
+                },
                 "task": "search query",
                 "expected": {"query": "search query"},
             },
             # Case 2: First required parameter
             {
-                "tool": {"inputSchema": {"properties": {"action": {"type": "string"}}, "required": ["action"]}},
+                "tool": {
+                    "inputSchema": {
+                        "properties": {"action": {"type": "string"}},
+                        "required": ["action"],
+                    }
+                },
                 "task": "perform action",
                 "expected": {"action": "perform action"},
             },

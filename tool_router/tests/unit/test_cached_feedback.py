@@ -166,7 +166,10 @@ class TestCachedFeedbackStore:
             ("create new file", "file_operations"),
             ("delete old data", "file_operations"),
             ("search for information", "search_operations"),
-            ("query the database", "search_operations"),  # Search comes before database and "query" matches search
+            (
+                "query the database",
+                "search_operations",
+            ),  # Search comes before database and "query" matches search
             ("fetch from api", "network_operations"),
             ("run system command", "system_operations"),
             ("edit the code", "code_operations"),
@@ -200,12 +203,21 @@ class TestCachedFeedbackStore:
     def test_extract_entities(self):
         """Test entity extraction from tasks."""
         test_cases = [
-            ("read /path/to/file.txt", ["/path/to/file.txt", "read"]),  # The regex is broad and matches "read"
-            ("edit 'important file'", ["important file", "edit", "important", "file"]),  # Multiple matches
+            (
+                "read /path/to/file.txt",
+                ["/path/to/file.txt", "read"],
+            ),  # The regex is broad and matches "read"
+            (
+                "edit 'important file'",
+                ["important file", "edit", "important", "file"],
+            ),  # Multiple matches
             ("visit https://example.com", ["https://example.com", "visit"]),
             ('use "quoted string" here', ["quoted string", "use"]),
             ("no entities here", []),  # No matches over 2 chars
-            ('mixed /path/file.txt and "quoted"', ["/path/file.txt", "quoted", "mixed"]),
+            (
+                'mixed /path/file.txt and "quoted"',
+                ["/path/file.txt", "quoted", "mixed"],
+            ),
         ]
 
         for task, expected_entities in test_cases:
@@ -217,7 +229,13 @@ class TestCachedFeedbackStore:
         store = CachedFeedbackStore()
 
         # Record initial feedback
-        store.record(task="test task", selected_tool="test_tool", success=True, context="test context", confidence=0.8)
+        store.record(
+            task="test task",
+            selected_tool="test_tool",
+            success=True,
+            context="test context",
+            confidence=0.8,
+        )
 
         # Verify entry was created
         assert len(store._entries) == 1

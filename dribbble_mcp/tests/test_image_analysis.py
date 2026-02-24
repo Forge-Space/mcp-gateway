@@ -107,9 +107,7 @@ class TestImageAnalyzer:
             mock_client = MagicMock()
             mock_client.__enter__ = MagicMock(return_value=mock_client)
             mock_client.__exit__ = MagicMock(return_value=False)
-            mock_client.get.side_effect = httpx.HTTPStatusError(
-                "404", request=MagicMock(), response=mock_response
-            )
+            mock_client.get.side_effect = httpx.HTTPStatusError("404", request=MagicMock(), response=mock_response)
             mock_client_cls.return_value = mock_client
 
             with pytest.raises(RuntimeError, match="Failed to download image"):

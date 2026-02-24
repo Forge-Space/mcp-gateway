@@ -9,7 +9,13 @@ from typing import Any
 
 from tool_router.ai.enhanced_selector import AIModel, EnhancedAISelector
 from tool_router.ai.prompt_architect import PromptArchitect
-from tool_router.ai.ui_specialist import AccessibilityLevel, ComponentType, DesignSystem, UIFramework, UISpecialist
+from tool_router.ai.ui_specialist import (
+    AccessibilityLevel,
+    ComponentType,
+    DesignSystem,
+    UIFramework,
+    UISpecialist,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -178,7 +184,10 @@ class SpecialistCoordinator:
 
         # Use prompt architect for optimization
         result = self.prompt_architect.optimize_prompt(
-            prompt=request.task, user_cost_preference=cost_preference, context=request.context, feedback=feedback
+            prompt=request.task,
+            user_cost_preference=cost_preference,
+            context=request.context,
+            feedback=feedback,
         )
 
         processing_time = (time.time() - start_time) * 1000
