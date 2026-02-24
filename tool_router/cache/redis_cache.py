@@ -11,7 +11,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
 
-
 try:
     import redis
 
@@ -23,7 +22,6 @@ except ImportError:
 from cachetools import TTLCache
 
 from .types import CacheConfig
-
 
 logger = logging.getLogger(__name__)
 
@@ -377,7 +375,9 @@ class RedisCache:
 
 
 def create_redis_cache(
-    config: RedisConfig | None = None, fallback_config: CacheConfig | None = None, **kwargs
+    config: RedisConfig | None = None,
+    fallback_config: CacheConfig | None = None,
+    **kwargs,
 ) -> RedisCache:
     """Create a Redis cache instance with fallback."""
     if config is None:

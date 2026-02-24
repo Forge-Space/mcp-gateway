@@ -8,21 +8,12 @@
       "author": "UIForge Contributors",
       "created_at": "2026-02-17T23:26:52.072814",
       "updated_at": "2026-02-17T23:26:52.072814",
-      "tags": [
-        "nodejs",
-        "package",
-        "mcp",
-        "uiforge"
-      ],
+      "tags": ["nodejs", "package", "mcp", "uiforge"],
       "dependencies": [],
       "compatibility": {
         "node": ">=18.0.0"
       },
-      "variables": [
-        "project-name",
-        "project-description",
-        "project-repo"
-      ],
+      "variables": ["project-name", "project-description", "project-repo"],
       "base_template": null,
       "checksum": "06b2ad948a83bb60aae98caa0cc646ea4d1897aab676a9053a33492925d7a6a8"
     },
@@ -38,12 +29,7 @@
       "author": "UIForge Contributors",
       "created_at": "2026-02-17T23:26:52.107017",
       "updated_at": "2026-02-17T23:26:52.107017",
-      "tags": [
-        "python",
-        "fastapi",
-        "pyproject",
-        "uiforge"
-      ],
+      "tags": ["python", "fastapi", "pyproject", "uiforge"],
       "dependencies": [],
       "compatibility": {
         "python": ">=3.11"
@@ -69,11 +55,7 @@
       "author": "UIForge Contributors",
       "created_at": "2026-02-17T23:26:52.116856",
       "updated_at": "2026-02-17T23:26:52.116856",
-      "tags": [
-        "typescript",
-        "tsconfig",
-        "uiforge"
-      ],
+      "tags": ["typescript", "tsconfig", "uiforge"],
       "dependencies": [],
       "compatibility": {
         "node": ">=18.0.0"

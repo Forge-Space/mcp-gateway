@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from ..cache import cache_manager, get_cache_metrics
 from ..database.query_cache import get_query_cache
 
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])
@@ -268,7 +267,9 @@ async def get_performance_summary() -> dict[str, Any]:
                 "hit_rate": query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0),
             },
             "recommendations": _generate_performance_recommendations(
-                global_metrics.get("hit_rate", 0.0), query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0), uptime
+                global_metrics.get("hit_rate", 0.0),
+                query_metrics.get("metrics", {}).get("cache_hit_rate", 0.0),
+                uptime,
             ),
         }
 

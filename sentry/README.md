@@ -58,7 +58,7 @@ docker-compose --profile production up -d
 Create projects for each UIForge application:
 
 1. **mcp-gateway** (Python)
-2. **uiforge-mcp** (Node.js) 
+2. **uiforge-mcp** (Node.js)
 3. **uiforge-webapp** (Next.js)
 4. **forge-patterns** (Development)
 

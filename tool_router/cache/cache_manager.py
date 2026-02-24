@@ -13,7 +13,6 @@ from cachetools import LRUCache, TTLCache
 from .redis_cache import RedisCache, RedisConfig, create_redis_cache
 from .types import CacheConfig, CacheMetrics
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -60,7 +59,11 @@ class CacheManager:
         return cache
 
     def create_redis_cache(
-        self, name: str, redis_config: RedisConfig | None = None, fallback_config: CacheConfig | None = None, **kwargs
+        self,
+        name: str,
+        redis_config: RedisConfig | None = None,
+        fallback_config: CacheConfig | None = None,
+        **kwargs,
     ) -> RedisCache:
         """Create a Redis cache with optional fallback configuration."""
         redis_config = redis_config or RedisConfig()
@@ -230,7 +233,11 @@ class CacheManager:
     def get_cache_info(self) -> dict[str, Any]:
         """Get information about all caches."""
         with self._lock:
-            info = {"total_caches": len(self._metrics), "global_metrics": self.get_metrics(), "cache_details": {}}
+            info = {
+                "total_caches": len(self._metrics),
+                "global_metrics": self.get_metrics(),
+                "cache_details": {},
+            }
 
             for name, cache in self._caches.items():
                 cache_info = {

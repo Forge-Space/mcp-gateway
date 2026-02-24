@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,41 +39,30 @@ async def health_check():
         "status": "healthy",
         "service": "tool-router",
         "timestamp": "2025-02-20T21:10:00Z",
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
 
 
 @app.get("/ready")
 async def readiness_check():
     """Readiness check endpoint."""
-    return {
-        "ready": True,
-        "timestamp": "2025-02-20T21:10:00Z"
-    }
+    return {"ready": True, "timestamp": "2025-02-20T21:10:00Z"}
 
 
 @app.get("/live")
 async def liveness_check():
     """Liveness check endpoint."""
-    return {
-        "alive": True,
-        "timestamp": "2025-02-20T21:10:00Z"
-    }
+    return {"alive": True, "timestamp": "2025-02-20T21:10:00Z"}
 
 
 def main() -> None:
     """Run the HTTP server."""
     import uvicorn
-    
+
     logging.basicConfig(level=logging.INFO)
     logger.info("Starting Tool Router HTTP server on port 8030")
-    
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8030,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="0.0.0.0", port=8030, log_level="info")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ from dribbble_mcp.server import (
     search_dribbble,
 )
 
-
 _SHOT = {
     "title": "Dark Dashboard",
     "url": "https://dribbble.com/shots/123-dark",
@@ -206,9 +205,7 @@ class TestScreenshotShot:
 
             screenshot_shot("https://dribbble.com/shots/123-dark", full_page=True)
 
-        mock_cap.capture_shot.assert_called_once_with(
-            "https://dribbble.com/shots/123-dark", full_page=True
-        )
+        mock_cap.capture_shot.assert_called_once_with("https://dribbble.com/shots/123-dark", full_page=True)
 
 
 class TestAnalyzeImage:

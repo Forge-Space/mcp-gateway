@@ -1,10 +1,11 @@
 """High-quality tests for tool_router/scoring/matcher.py."""
 
 import pytest
+
 from tool_router.scoring.matcher import (
-    _extract_normalized_tokens,
-    _enrich_tokens_with_synonyms,
     _calculate_substring_match_score,
+    _enrich_tokens_with_synonyms,
+    _extract_normalized_tokens,
     calculate_tool_relevance_score,
     select_top_matching_tools,
 )
@@ -19,11 +20,9 @@ def sample_tools():
             "description": "Search the web for information",
             "inputSchema": {
                 "type": "object",
-                "properties": {
-                    "query": {"type": "string"}
-                },
-                "required": ["query"]
-            }
+                "properties": {"query": {"type": "string"}},
+                "required": ["query"],
+            },
         },
         {
             "name": "file_reader",
@@ -32,10 +31,10 @@ def sample_tools():
                 "type": "object",
                 "properties": {
                     "path": {"type": "string"},
-                    "encoding": {"type": "string", "enum": ["utf-8", "latin-1"]}
+                    "encoding": {"type": "string", "enum": ["utf-8", "latin-1"]},
                 },
-                "required": ["path"]
-            }
+                "required": ["path"],
+            },
         },
         {
             "name": "database_query",
@@ -44,11 +43,11 @@ def sample_tools():
                 "type": "object",
                 "properties": {
                     "sql": {"type": "string"},
-                    "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 100},
                 },
-                "required": ["sql"]
-            }
-        }
+                "required": ["sql"],
+            },
+        },
     ]
 
 
@@ -90,7 +89,7 @@ class TestTokenExtraction:
         result = _extract_normalized_tokens(text)
 
         assert isinstance(result, set)
-        assert all(not token.endswith(('.', '!', '?')) for token in result)
+        assert all(not token.endswith((".", "!", "?")) for token in result)
 
 
 class TestTokenEnrichment:
@@ -149,8 +148,8 @@ class TestToolRelevanceScoring:
             "inputSchema": {
                 "type": "object",
                 "properties": {"query": {"type": "string"}},
-                "required": ["query"]
-            }
+                "required": ["query"],
+            },
         }
 
         score = calculate_tool_relevance_score(sample_task, sample_context, tool)
@@ -166,8 +165,8 @@ class TestToolRelevanceScoring:
             "inputSchema": {
                 "type": "object",
                 "properties": {"path": {"type": "string"}},
-                "required": ["path"]
-            }
+                "required": ["path"],
+            },
         }
 
         score = calculate_tool_relevance_score(sample_task, sample_context, tool)

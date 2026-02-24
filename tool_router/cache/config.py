@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from .redis_cache import RedisConfig
 from .types import CacheConfig, DataClassification
 
-
 logger = logging.getLogger(__name__)
 
 

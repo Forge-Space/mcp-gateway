@@ -55,7 +55,7 @@ if [ -f "$sql_file" ]; then
     else
         echo "❌ SQL missing required statements"
     fi
-    
+
     # Check for common SQL issues
     if grep -q "DROP TABLE\|DELETE FROM" "$sql_file"; then
         echo "⚠️  SQL contains destructive statements (review needed)"
@@ -75,7 +75,7 @@ if [ -f "$rag_file" ]; then
     else
         echo "❌ JSON schema missing"
     fi
-    
+
     # Check for required schema fields
     if grep -q '"action"' "$rag_file"; then
         echo "✅ Required action field present"
@@ -92,11 +92,11 @@ if [ -f "$test_file" ]; then
     # Count test classes
     test_classes=$(grep -c "class Test" "$test_file" || echo "0")
     echo "✅ Test classes: $test_classes"
-    
+
     # Count test methods
     test_methods=$(grep -c "def test_" "$test_file" || echo "0")
     echo "✅ Test methods: $test_methods"
-    
+
     # Check for async tests
     async_tests=$(grep -c "@pytest.mark.asyncio" "$test_file" || echo "0")
     echo "✅ Async tests: $async_tests"

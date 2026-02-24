@@ -16,7 +16,6 @@ from typing import Any
 
 from cachetools import TTLCache
 
-
 logger = logging.getLogger(__name__)
 
 _FEEDBACK_FILE_ENV = "ROUTER_FEEDBACK_FILE"
@@ -86,7 +85,12 @@ class CachedFeedbackStore:
     ML pipeline.
     """
 
-    def __init__(self, feedback_file: str | None = None, cache_ttl: int = 3600, cache_size: int = 1000) -> None:
+    def __init__(
+        self,
+        feedback_file: str | None = None,
+        cache_ttl: int = 3600,
+        cache_size: int = 1000,
+    ) -> None:
         self._file = Path(feedback_file or os.getenv(_FEEDBACK_FILE_ENV, _DEFAULT_FEEDBACK_FILE))
         self._entries: list[FeedbackEntry] = []
         self._stats: dict[str, ToolStats] = {}
@@ -552,7 +556,7 @@ class CachedFeedbackStore:
                 "stats": {name: asdict(s) for name, s in self._stats.items()},
             }
             self._file.write_text(json.dumps(data, indent=2))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning("Could not persist feedback: %s", exc)
 
     def _load(self) -> None:
@@ -568,7 +572,7 @@ class CachedFeedbackStore:
                 len(self._entries),
                 self._file,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning("Could not load feedback: %s", exc)
             self._entries = []
             self._stats = {}

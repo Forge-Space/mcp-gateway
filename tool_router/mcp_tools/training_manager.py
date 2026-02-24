@@ -16,7 +16,6 @@ from ..training.evaluation import SpecialistEvaluator
 from ..training.knowledge_base import KnowledgeBase
 from ..training.training_pipeline import DEFAULT_TRAINING_SOURCES, TrainingPipeline
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -54,7 +53,9 @@ class TrainingManagerTool:
         self.run_counter = 0
 
     def start_training_run(
-        self, sources: list[dict[str, Any]] | None = None, config: dict[str, Any] | None = None
+        self,
+        sources: list[dict[str, Any]] | None = None,
+        config: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a new training run.
 
@@ -77,7 +78,9 @@ class TrainingManagerTool:
             import time
 
             run = TrainingRun(
-                run_id=run_id, status=TrainingStatus.RUNNING, started_at=time.strftime("%Y-%m-%d %H:%M:%S")
+                run_id=run_id,
+                status=TrainingStatus.RUNNING,
+                started_at=time.strftime("%Y-%m-%d %H:%M:%S"),
             )
 
             self.active_runs[run_id] = run
@@ -136,7 +139,10 @@ class TrainingManagerTool:
         """
         try:
             if run_id not in self.active_runs:
-                return {"error": f"Training run {run_id} not found", "message": "Invalid run ID"}
+                return {
+                    "error": f"Training run {run_id} not found",
+                    "message": "Invalid run ID",
+                }
 
             run = self.active_runs[run_id]
 
@@ -171,7 +177,11 @@ class TrainingManagerTool:
         try:
             runs = []
             for run_id, run in self.active_runs.items():
-                run_info = {"run_id": run_id, "status": run.status.value, "started_at": run.started_at}
+                run_info = {
+                    "run_id": run_id,
+                    "status": run.status.value,
+                    "started_at": run.started_at,
+                }
 
                 if run.completed_at:
                     run_info["completed_at"] = run.completed_at
@@ -256,7 +266,10 @@ class TrainingManagerTool:
         """
         try:
             if run_id not in self.active_runs:
-                return {"error": f"Training run {run_id} not found", "message": "Invalid run ID"}
+                return {
+                    "error": f"Training run {run_id} not found",
+                    "message": "Invalid run ID",
+                }
 
             run = self.active_runs[run_id]
 
@@ -318,10 +331,20 @@ TRAINING_MANAGER_SCHEMA = {
     "properties": {
         "action": {
             "type": "string",
-            "enum": ["start_training", "get_status", "list_runs", "get_statistics", "cancel_run", "get_configuration"],
+            "enum": [
+                "start_training",
+                "get_status",
+                "list_runs",
+                "get_statistics",
+                "cancel_run",
+                "get_configuration",
+            ],
             "description": "The training management action to perform",
         },
-        "run_id": {"type": "string", "description": "ID of the training run (for status, cancel operations)"},
+        "run_id": {
+            "type": "string",
+            "description": "ID of the training run (for status, cancel operations)",
+        },
         "sources": {
             "type": "array",
             "items": {"type": "object"},
@@ -352,7 +375,10 @@ def training_manager_handler(args: dict[str, Any]) -> dict[str, Any]:
         if action == "get_status":
             run_id = args.get("run_id")
             if not run_id:
-                return {"error": "run_id is required for get_status action", "message": "Missing required parameter"}
+                return {
+                    "error": "run_id is required for get_status action",
+                    "message": "Missing required parameter",
+                }
             return manager.get_training_status(run_id)
 
         if action == "list_runs":
@@ -364,13 +390,19 @@ def training_manager_handler(args: dict[str, Any]) -> dict[str, Any]:
         if action == "cancel_run":
             run_id = args.get("run_id")
             if not run_id:
-                return {"error": "run_id is required for cancel_run action", "message": "Missing required parameter"}
+                return {
+                    "error": "run_id is required for cancel_run action",
+                    "message": "Missing required parameter",
+                }
             return manager.cancel_training_run(run_id)
 
         if action == "get_configuration":
             return manager.get_training_configuration()
 
-        return {"error": f"Unknown action: {action}", "message": "Invalid action specified"}
+        return {
+            "error": f"Unknown action: {action}",
+            "message": "Invalid action specified",
+        }
 
     except Exception as e:
         logger.error(f"Error in training manager handler: {e}")

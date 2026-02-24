@@ -22,9 +22,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "query": {"type": "string"},
-                    "max_results": {"type": "integer"}
+                    "max_results": {"type": "integer"},
                 },
-                "required": ["query"]
+                "required": ["query"],
             }
         }
         task = "find information about Python"
@@ -39,9 +39,9 @@ class TestBuildArguments:
             "input_schema": {
                 "properties": {
                     "q": {"type": "string"},
-                    "max_results": {"type": "integer"}
+                    "max_results": {"type": "integer"},
                 },
-                "required": ["q"]
+                "required": ["q"],
             }
         }
         task = "search for React components"
@@ -56,9 +56,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "task": {"type": "string"},
-                    "context": {"type": "string"}
+                    "context": {"type": "string"},
                 },
-                "required": ["task"]
+                "required": ["task"],
             }
         }
         task = "generate a button component"
@@ -73,9 +73,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "search": {"type": "string"},
-                    "limit": {"type": "integer"}
+                    "limit": {"type": "integer"},
                 },
-                "required": ["search"]
+                "required": ["search"],
             }
         }
         task = "search for documentation"
@@ -91,9 +91,9 @@ class TestBuildArguments:
                 "properties": {
                     "query": {"type": "string"},
                     "q": {"type": "string"},
-                    "limit": {"type": "integer"}
+                    "limit": {"type": "integer"},
                 },
-                "required": ["query", "q"]
+                "required": ["query", "q"],
             }
         }
         task = "test query preference"
@@ -109,9 +109,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "description": {"type": "string"},
-                    "count": {"type": "integer"}
+                    "count": {"type": "integer"},
                 },
-                "required": ["description"]
+                "required": ["description"],
             }
         }
         task = "describe the functionality"
@@ -126,9 +126,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "content": {"type": "text"},
-                    "metadata": {"type": "object"}
+                    "metadata": {"type": "object"},
                 },
-                "required": ["content"]
+                "required": ["content"],
             }
         }
         task = "process this content"
@@ -143,9 +143,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "count": {"type": "integer"},
-                    "description": {"type": "string"}
+                    "description": {"type": "string"},
                 },
-                "required": ["count", "description"]
+                "required": ["count", "description"],
             }
         }
         task = "process 5 items"
@@ -161,9 +161,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "count": {"type": "integer"},
-                    "metadata": {"type": "object"}
+                    "metadata": {"type": "object"},
                 },
-                "required": ["count"]
+                "required": ["count"],
             }
         }
         task = "process data"
@@ -192,12 +192,7 @@ class TestBuildArguments:
 
     def test_build_arguments_empty_properties(self):
         """Test building arguments when schema has no properties."""
-        tool = {
-            "inputSchema": {
-                "properties": {},
-                "required": []
-            }
-        }
+        tool = {"inputSchema": {"properties": {}, "required": []}}
         task = "simple task"
 
         result = build_arguments(tool, task)
@@ -210,9 +205,9 @@ class TestBuildArguments:
             "inputSchema": {
                 "properties": {
                     "query": {"type": "string"},
-                    "limit": {"type": "integer"}
+                    "limit": {"type": "integer"},
                 },
-                "required": []
+                "required": [],
             }
         }
         task = "search query"
@@ -227,9 +222,9 @@ class TestBuildArguments:
             "input_schema": {
                 "properties": {
                     "query": {"type": "string"},
-                    "limit": {"type": "integer"}
+                    "limit": {"type": "integer"},
                 },
-                "required": ["query"]
+                "required": ["query"],
             }
         }
         task = "search query"
@@ -246,9 +241,9 @@ class TestBuildArguments:
                     "query": {"type": "string"},
                     "max_results": {"type": "integer", "default": 10},
                     "filters": {"type": "object"},
-                    "sort": {"type": "string"}
+                    "sort": {"type": "string"},
                 },
-                "required": ["query"]
+                "required": ["query"],
             }
         }
         task = "find React components"
@@ -263,7 +258,7 @@ class TestBuildArguments:
         tool = {
             "inputSchema": {
                 "properties": {"query": {"type": "string"}},
-                "required": ["query"]
+                "required": ["query"],
             }
         }
 
@@ -275,7 +270,7 @@ class TestBuildArguments:
         tool = {
             "inputSchema": {
                 "properties": {"query": {"type": "string"}},
-                "required": ["query"]
+                "required": ["query"],
             }
         }
 

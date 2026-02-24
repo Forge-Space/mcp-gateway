@@ -21,6 +21,7 @@ from tool_router.training.knowledge_base import KnowledgeBase
 @dataclass
 class QueryAnalysis:
     """Results of query analysis"""
+
     intent: str  # explicit_fact, implicit_fact, interpretable_rationale, hidden_rationale
     entities: list[str]
     keywords: list[str]
@@ -32,6 +33,7 @@ class QueryAnalysis:
 @dataclass
 class RetrievalResult:
     """Single retrieval result with metadata"""
+
     item_id: int
     title: str
     content: str
@@ -49,6 +51,7 @@ class RetrievalResult:
 @dataclass
 class RetrievalContext:
     """Context for retrieval operations"""
+
     query: str
     query_analysis: QueryAnalysis
     agent_type: str
@@ -94,7 +97,7 @@ class RAGManagerTool:
             keywords=keywords,
             agent_type=agent_type,
             complexity=complexity,
-            confidence=confidence
+            confidence=confidence,
         )
 
     def _classify_intent(self, query: str, agent_type: str) -> str:
@@ -141,10 +144,17 @@ class RAGManagerTool:
 
         # React patterns
         react_patterns = [
-            r"\bReact\.", r"\buseState\.", r"\buseEffect\.",
-            r"\bButton\.", r"\bInput\.", r"\bForm\.",
-            r"\bComponent\.", r"\bHook\.",
-            r"\bTailwind\.", r"\bMaterial-UI\.", r"\bChakra-UI\."
+            r"\bReact\.",
+            r"\buseState\.",
+            r"\buseEffect\.",
+            r"\bButton\.",
+            r"\bInput\.",
+            r"\bForm\.",
+            r"\bComponent\.",
+            r"\bHook\.",
+            r"\bTailwind\.",
+            r"\bMaterial-UI\.",
+            r"\bChakra-UI\.",
         ]
 
         for pattern in react_patterns:
@@ -157,7 +167,22 @@ class RAGManagerTool:
     def _extract_keywords(self, query: str) -> list[str]:
         """Extract keywords from query"""
         # Simple keyword extraction
-        stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by"}
+        stop_words = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+        }
         words = re.findall(r"\b\w+\b", query.lower())
         return [word for word in words if word not in stop_words and len(word) > 2]
 
@@ -194,10 +219,7 @@ class RAGManagerTool:
 
         return min(confidence, 1.0)
 
-    async def _retrieve_knowledge_multi_strategy(
-        self,
-        context: RetrievalContext
-    ) -> list[RetrievalResult]:
+    async def _retrieve_knowledge_multi_strategy(self, context: RetrievalContext) -> list[RetrievalResult]:
         """Retrieve knowledge using multiple strategies"""
         results = []
 
@@ -222,7 +244,7 @@ class RAGManagerTool:
         unique_results = self._deduplicate_results(results)
         ranked_results = self._rank_results(unique_results, context)
 
-        return ranked_results[:context.max_results]
+        return ranked_results[: context.max_results]
 
     async def _retrieve_by_category(self, context: RetrievalContext) -> list[RetrievalResult]:
         """Retrieve knowledge by category"""
@@ -238,7 +260,7 @@ class RAGManagerTool:
                         item_id=item.id,
                         title=item.title,
                         content=item.content,
-                        category=item.category.value if hasattr(item.category, "value") else str(item.category),
+                        category=(item.category.value if hasattr(item.category, "value") else str(item.category)),
                         confidence=item.confidence_score,
                         effectiveness=item.effectiveness_score,
                         relevance_score=0.8,  # Base relevance for category match
@@ -246,14 +268,15 @@ class RAGManagerTool:
                         freshness_score=getattr(item, "freshness_score", 1.0),
                         agent_specific=getattr(item, "agent_specific", False),
                         agent_types=getattr(item, "agent_types", []),
-                        agent_type=context.agent_type
+                        agent_type=context.agent_type,
                     )
                     results.append(result)
 
             return results
         except Exception as e:
-            print(f'Error in _retrieve_by_category: {e}')
+            print(f"Error in _retrieve_by_category: {e}")
             import traceback
+
             traceback.print_exc()
             return []
 
@@ -269,7 +292,7 @@ class RAGManagerTool:
                     item_id=item.id,
                     title=item.title,
                     content=item.content,
-                    category=item.category.value if hasattr(item.category, "value") else str(item.category),
+                    category=(item.category.value if hasattr(item.category, "value") else str(item.category)),
                     confidence=item.confidence_score,
                     effectiveness=getattr(item, "effectiveness_score", 0.7),
                     relevance_score=0.7,  # Base relevance for FTS
@@ -277,7 +300,7 @@ class RAGManagerTool:
                     freshness_score=getattr(item, "freshness_score", 1.0),
                     agent_specific=getattr(item, "agent_specific", False),
                     agent_types=getattr(item, "agent_types", []),
-                    agent_type=context.agent_type
+                    agent_type=context.agent_type,
                 )
                 results.append(result)
 
@@ -290,13 +313,16 @@ class RAGManagerTool:
         try:
             # Get items marked as agent-specific
             cursor = self.conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM knowledge_items
                 WHERE agent_specific = 1 AND (
                     agent_types LIKE ? OR
                     agent_types IS NULL
                 )
-            """, (f"%{context.agent_type}%",))
+            """,
+                (f"%{context.agent_type}%",),
+            )
 
             rows = cursor.fetchall()
             results = []
@@ -312,13 +338,13 @@ class RAGManagerTool:
                     content=row[4],  # content
                     category=row[1],  # category
                     confidence=row[7],  # confidence_score
-                    effectiveness=row[22] if len(row) > 22 else 0.8,  # effectiveness_score
+                    effectiveness=(row[22] if len(row) > 22 else 0.8),  # effectiveness_score
                     relevance_score=0.9,  # High relevance for agent-specific
                     source_type=row[20] if len(row) > 20 else "manual",  # source_type
-                    freshness_score=row[21] if len(row) > 21 else 1.0,  # freshness_score
-                    agent_specific=bool(row[18]) if len(row) > 18 else False,  # agent_specific
+                    freshness_score=(row[21] if len(row) > 21 else 1.0),  # freshness_score
+                    agent_specific=(bool(row[18]) if len(row) > 18 else False),  # agent_specific
                     agent_types=agent_types,
-                    agent_type=context.agent_type
+                    agent_type=context.agent_type,
                 )
                 results.append(result)
 
@@ -377,29 +403,25 @@ class RAGManagerTool:
                 final_score += 0.2
 
             # Boost for high confidence and effectiveness
-            final_score += (result.confidence * 0.1)
-            final_score += (result.effectiveness * 0.1)
+            final_score += result.confidence * 0.1
+            final_score += result.effectiveness * 0.1
 
             # Boost for freshness
-            final_score += (result.freshness_score * 0.05)
+            final_score += result.freshness_score * 0.05
 
             # Boost for keyword matches
             query_keywords = set(context.query_analysis.keywords)
             content_words = set(result.content.lower().split())
             keyword_matches = len(query_keywords.intersection(content_words))
             if keyword_matches > 0:
-                final_score += (keyword_matches * 0.02)
+                final_score += keyword_matches * 0.02
 
             result.relevance_score = min(final_score, 1.0)
 
         # Sort by relevance score (descending)
         return sorted(results, key=lambda x: x.relevance_score, reverse=True)
 
-    async def _inject_context(
-        self,
-        ranked_results: list[RetrievalResult],
-        context: RetrievalContext
-    ) -> dict[str, Any]:
+    async def _inject_context(self, ranked_results: list[RetrievalResult], context: RetrievalContext) -> dict[str, Any]:
         """Inject retrieved knowledge into context for generation"""
         # Select results that fit within context length limit
         selected_results = []
@@ -413,33 +435,34 @@ class RAGManagerTool:
                 break
 
         # Build context structure
-        context_data = {
-            "patterns": [],
-            "examples": []
-        }
+        context_data = {"patterns": [], "examples": []}
 
         # Add patterns
         for result in selected_results:
-            context_data["patterns"].append({
-                "title": result.title,
-                "content": result.content,
-                "confidence": result.confidence,
-                "effectiveness": result.effectiveness,
-                "source": result.source_type,
-                "category": result.category,
-                "relevance_score": result.relevance_score
-            })
+            context_data["patterns"].append(
+                {
+                    "title": result.title,
+                    "content": result.content,
+                    "confidence": result.confidence,
+                    "effectiveness": result.effectiveness,
+                    "source": result.source_type,
+                    "category": result.category,
+                    "relevance_score": result.relevance_score,
+                }
+            )
 
         # Add examples if available (simplified for now)
         for result in selected_results[:3]:  # Top 3 results
             # Extract code examples from content if present
             code_examples = self._extract_code_examples(result.content)
             for example in code_examples:
-                context_data["examples"].append({
-                    "code": example,
-                    "description": f"Example from {result.title}",
-                    "source": result.source_type
-                })
+                context_data["examples"].append(
+                    {
+                        "code": example,
+                        "description": f"Example from {result.title}",
+                        "source": result.source_type,
+                    }
+                )
 
         return context_data
 
@@ -451,7 +474,7 @@ class RAGManagerTool:
             r"`([^`\n]+)`",
             r"(?:const|let|var|function)\s+\w+\s*=\s*([^;{]+)",
             r"(?:class|interface)\s+\w+\s*(?:extends\s+\w+\s*)?\{[^}]*\}",
-            r"(?:import|export)\s+.*?from\s+['\"][^'\"]+['\"];"
+            r"(?:import|export)\s+.*?from\s+['\"][^'\"]+['\"];",
         ]
 
         examples = []
@@ -466,7 +489,7 @@ class RAGManagerTool:
         query: str,
         agent_type: str,
         context_data: dict[str, Any],
-        performance_data: dict[str, Any]
+        performance_data: dict[str, Any],
     ) -> None:
         """Update performance metrics for continuous learning"""
         try:
@@ -477,27 +500,30 @@ class RAGManagerTool:
 
             # Update or create performance record
             cursor = self.conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO agent_performance
                 (agent_type, query_pattern, retrieval_strategy, performance_metrics,
                  avg_latency, success_rate, user_satisfaction, knowledge_utilization,
                  cache_hit_rate, relevance_score, total_queries, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))
-            """, (
-                agent_type,
-                self._generate_query_pattern(query),
-                context_data.get("metadata", {}).get("retrieval_strategy", "hybrid"),
-                json.dumps(performance_data),
-                latency,
-                1.0 if performance_data.get("success", True) else 0.0,
-                user_feedback.get("satisfaction", 0.5),
-                0.8,  # Knowledge utilization estimate
-                1.0 if cache_hit else 0.0,
-                context_data.get("metadata", {}).get("relevance_score", 0.8),
-                1,
-                datetime.UTC,
-                datetime.UTC
-            ))
+            """,
+                (
+                    agent_type,
+                    self._generate_query_pattern(query),
+                    context_data.get("metadata", {}).get("retrieval_strategy", "hybrid"),
+                    json.dumps(performance_data),
+                    latency,
+                    1.0 if performance_data.get("success", True) else 0.0,
+                    user_feedback.get("satisfaction", 0.5),
+                    0.8,  # Knowledge utilization estimate
+                    1.0 if cache_hit else 0.0,
+                    context_data.get("metadata", {}).get("relevance_score", 0.8),
+                    1,
+                    datetime.UTC,
+                    datetime.UTC,
+                ),
+            )
 
             self.conn.commit()
         except Exception:
@@ -506,7 +532,22 @@ class RAGManagerTool:
     def _generate_query_pattern(self, query: str) -> str:
         """Generate a normalized query pattern for tracking"""
         # Remove common words and normalize
-        stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by"}
+        stop_words = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+        }
         words = re.findall(r"\b\w+\b", query.lower())
         normalized_words = [word for word in words if word not in stop_words]
 
@@ -516,11 +557,14 @@ class RAGManagerTool:
         """Check cache for existing results"""
         try:
             cursor = self.conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT retrieved_items, query_hash, timestamp, hit_count, ttl, cache_level
                 FROM retrieval_cache
                 WHERE cache_key = ? AND timestamp > datetime("now", "-ttl seconds")
-            """, (cache_key,))
+            """,
+                (cache_key,),
+            )
 
             row = cursor.fetchone()
             if row:
@@ -530,7 +574,7 @@ class RAGManagerTool:
                     "timestamp": row["timestamp"],
                     "hit_count": row["hit_count"],
                     "ttl": row["ttl"],
-                    "cache_level": row["cache_level"]
+                    "cache_level": row["cache_level"],
                 }
             return None
         except Exception:
@@ -541,26 +585,29 @@ class RAGManagerTool:
         cache_key: str,
         retrieved_items: list[int],
         ttl: int = 3600,
-        cache_level: str = "memory"
+        cache_level: str = "memory",
     ) -> None:
         """Set cache entry"""
         try:
             cursor = self.conn.cursor()
             query_hash = hashlib.sha256(cache_key.encode()).hexdigest()
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO retrieval_cache
                 (cache_key, retrieved_items, query_hash, timestamp, hit_count, ttl,
                  cache_level, size_bytes, created_at, updated_at)
                 VALUES (?, ?, ?, datetime("now"), 1, ?, ?, ?, datetime("now"), datetime("now"))
-            """, (
-                cache_key,
-                json.dumps(retrieved_items),
-                query_hash,
-                ttl,
-                cache_level,
-                len(json.dumps(retrieved_items))
-            ))
+            """,
+                (
+                    cache_key,
+                    json.dumps(retrieved_items),
+                    query_hash,
+                    ttl,
+                    cache_level,
+                    len(json.dumps(retrieved_items)),
+                ),
+            )
 
             self.conn.commit()
         except Exception:
@@ -590,7 +637,7 @@ class RAGManagerTool:
             return {
                 "success": False,
                 "error": "An error occurred",
-                "details": f"RAG Manager {action} failed"
+                "details": f"RAG Manager {action} failed",
             }
 
     async def _handle_analyze_query(self, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -608,8 +655,8 @@ class RAGManagerTool:
                 "keywords": analysis.keywords,
                 "agent_type": analysis.agent_type,
                 "complexity": analysis.complexity,
-                "confidence": analysis.confidence
-            }
+                "confidence": analysis.confidence,
+            },
         }
 
     async def _handle_retrieve_knowledge(self, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -626,7 +673,7 @@ class RAGManagerTool:
             retrieval_strategy=retrieval_strategy,
             max_results=max_results,
             context_length=4000,
-            filters={}
+            filters={},
         )
 
         # Check cache first
@@ -640,19 +687,21 @@ class RAGManagerTool:
             for item_id in item_ids:
                 item = self.knowledge_base.get_pattern(item_id)
                 if item:
-                    results.append(RetrievalResult(
-                        item_id=item.id,
-                        title=item.title,
-                        content=item.content,
-                        category=item.category,
-                        confidence=item.confidence_score,
-                        effectiveness=item.effectiveness_score,
-                        relevance_score=0.8,  # Cached relevance
-                        source_type=item.source_type or "manual",
-                        freshness_score=1.0,
-                        agent_specific=item.agent_specific or False,
-                        agent_types=[]
-                    ))
+                    results.append(
+                        RetrievalResult(
+                            item_id=item.id,
+                            title=item.title,
+                            content=item.content,
+                            category=item.category,
+                            confidence=item.confidence_score,
+                            effectiveness=item.effectiveness_score,
+                            relevance_score=0.8,  # Cached relevance
+                            source_type=item.source_type or "manual",
+                            freshness_score=1.0,
+                            agent_specific=item.agent_specific or False,
+                            agent_types=[],
+                        )
+                    )
 
             return {
                 "success": True,
@@ -660,8 +709,8 @@ class RAGManagerTool:
                     "results": [self._result_to_dict(result) for result in results],
                     "cache_hit": True,
                     "retrieval_strategy": retrieval_strategy,
-                    "total_results": len(results)
-                }
+                    "total_results": len(results),
+                },
             }
 
         # Perform retrieval
@@ -678,8 +727,8 @@ class RAGManagerTool:
                 "results": [self._result_to_dict(result) for result in results],
                 "cache_hit": False,
                 "retrieval_strategy": retrieval_strategy,
-                "total_results": len(results)
-            }
+                "total_results": len(results),
+            },
         }
 
     async def _handle_rank_results(self, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -701,7 +750,7 @@ class RAGManagerTool:
                 source_type=result_data["source_type"],
                 freshness_score=result_data["freshness_score"],
                 agent_specific=result_data["agent_specific"],
-                agent_types=result_data["agent_types"]
+                agent_types=result_data["agent_types"],
             )
             results.append(result)
 
@@ -714,13 +763,13 @@ class RAGManagerTool:
                 keywords=query_analysis_data.get("keywords", []),
                 agent_type=query_analysis_data.get("agent_type", "ui_specialist"),
                 complexity=query_analysis_data.get("complexity", "simple"),
-                confidence=query_analysis_data.get("confidence", 0.5)
+                confidence=query_analysis_data.get("confidence", 0.5),
             ),
             agent_type=query_analysis_data.get("agent_type", "ui_specialist"),
             retrieval_strategy="hybrid",
             max_results=10,
             context_length=4000,
-            filters={}
+            filters={},
         )
 
         ranked_results = self._rank_results(results, context)
@@ -730,8 +779,8 @@ class RAGManagerTool:
             "data": {
                 "results": [self._result_to_dict(result) for result in ranked_results],
                 "ranking_strategy": "multi_factor",
-                "total_results": len(ranked_results)
-            }
+                "total_results": len(ranked_results),
+            },
         }
 
     async def _handle_inject_context(self, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -754,7 +803,7 @@ class RAGManagerTool:
                 source_type=result_data["source_type"],
                 freshness_score=result_data["freshness_score"],
                 agent_specific=result_data["agent_specific"],
-                agent_types=result_data["agent_types"]
+                agent_types=result_data["agent_types"],
             )
             ranked_results.append(result)
 
@@ -765,7 +814,7 @@ class RAGManagerTool:
             retrieval_strategy="hybrid",
             max_results=10,
             context_length=context_length,
-            filters={}
+            filters={},
         )
 
         context_data = await self._inject_context(ranked_results, context)
@@ -776,8 +825,8 @@ class RAGManagerTool:
                 "context": context_data,
                 "context_length": len(str(context_data)),
                 "items_included": len(context_data["patterns"]),
-                "examples_included": len(context_data["examples"])
-            }
+                "examples_included": len(context_data["examples"]),
+            },
         }
 
     async def _handle_get_cache_stats(self, _arguments: dict[str, Any]) -> dict[str, Any]:
@@ -801,7 +850,7 @@ class RAGManagerTool:
                     "entries": row["entries"],
                     "avg_hits": row["avg_hits"],
                     "total_hits": row["total_hits"],
-                    "avg_ttl": row["avg_ttl"]
+                    "avg_ttl": row["avg_ttl"],
                 }
 
             # Get overall cache performance
@@ -820,14 +869,14 @@ class RAGManagerTool:
                     "by_level": stats,
                     "total_entries": overall["total_entries"],
                     "total_hits": overall["total_hits"],
-                    "avg_hit_rate": overall["avg_hit_rate"]
-                }
+                    "avg_hit_rate": overall["avg_hit_rate"],
+                },
             }
         except Exception:
             return {
                 "success": False,
                 "error": "An error occurred",
-                "details": "Cache statistics retrieval failed"
+                "details": "Cache statistics retrieval failed",
             }
 
     async def _handle_optimize_performance(self, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -838,7 +887,8 @@ class RAGManagerTool:
         try:
             # Get performance data for the agent
             cursor = self.conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT AVG(avg_latency) as current_latency,
                        AVG(success_rate) as current_success_rate,
                        AVG(user_satisfaction) as current_satisfaction,
@@ -846,21 +896,23 @@ class RAGManagerTool:
                 FROM agent_performance
                 WHERE agent_type = ?
                 GROUP BY agent_type
-            """, (agent_type,))
+            """,
+                (agent_type,),
+            )
 
             row = cursor.fetchone()
 
             if not row:
                 return {
                     "success": False,
-                    "error": "No performance data available for optimization"
+                    "error": "No performance data available for optimization",
                 }
 
             current_metrics = {
                 "latency": row["current_latency"],
                 "success_rate": row["current_success_rate"],
                 "satisfaction": row["current_satisfaction"],
-                "cache_hit_rate": row["current_cache_hit_rate"]
+                "cache_hit_rate": row["current_cache_hit_rate"],
             }
 
             # Generate optimization recommendations
@@ -887,14 +939,14 @@ class RAGManagerTool:
                     "current_metrics": current_metrics,
                     "recommendations": recommendations,
                     "optimization_target": performance_target,
-                    "agent_type": agent_type
-                }
+                    "agent_type": agent_type,
+                },
             }
         except Exception:
             return {
                 "success": False,
                 "error": "An error occurred",
-                "details": "Performance optimization analysis failed"
+                "details": "Performance optimization analysis failed",
             }
 
     def _result_to_dict(self, result: RetrievalResult) -> dict[str, Any]:
@@ -910,7 +962,7 @@ class RAGManagerTool:
             "source_type": result.source_type,
             "freshness_score": result.freshness_score,
             "agent_specific": result.agent_specific,
-            "agent_types": result.agent_types
+            "agent_types": result.agent_types,
         }
 
 
@@ -921,50 +973,54 @@ RAG_MANAGER_SCHEMA = {
         "action": {
             "type": "string",
             "enum": [
-                "analyze_query", "retrieve_knowledge", "rank_results",
-                "inject_context", "get_cache_stats", "optimize_performance"
+                "analyze_query",
+                "retrieve_knowledge",
+                "rank_results",
+                "inject_context",
+                "get_cache_stats",
+                "optimize_performance",
             ],
-            "description": "The RAG operation to perform"
+            "description": "The RAG operation to perform",
         },
         "query": {
             "type": "string",
-            "description": "The query to analyze or retrieve knowledge for"
+            "description": "The query to analyze or retrieve knowledge for",
         },
         "agent_type": {
             "type": "string",
             "enum": ["ui_specialist", "prompt_architect", "router_specialist"],
             "default": "ui_specialist",
-            "description": "The type of specialist agent"
+            "description": "The type of specialist agent",
         },
         "retrieval_strategy": {
             "type": "string",
             "enum": ["hybrid", "category", "fulltext", "vector", "agent_specific"],
             "default": "hybrid",
-            "description": "The retrieval strategy to use"
+            "description": "The retrieval strategy to use",
         },
         "max_results": {
             "type": "integer",
             "default": 10,
             "minimum": 1,
             "maximum": 50,
-            "description": "Maximum number of results to retrieve"
+            "description": "Maximum number of results to retrieve",
         },
         "context_length": {
             "type": "integer",
             "default": 4000,
             "minimum": 1000,
             "maximum": 8000,
-            "description": "Maximum context length in tokens"
+            "description": "Maximum context length in tokens",
         },
         "performance_target": {
             "type": "string",
             "enum": ["latency", "success_rate", "satisfaction", "cache_hit_rate"],
             "default": "latency",
-            "description": "Performance optimization target"
-        }
+            "description": "Performance optimization target",
+        },
     },
     "required": ["action"],
-    "description": "RAG Manager tool for specialist AI agents"
+    "description": "RAG Manager tool for specialist AI agents",
 }
 
 # Global instance

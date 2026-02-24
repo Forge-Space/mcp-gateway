@@ -41,9 +41,9 @@ jobs:
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
         with:
           args: >
-            scan 
-            --all 
-            --verbose 
+            scan
+            --all
+            --verbose
             --exit-code-on-secrets=1
 
       - name: Upload GitGuardian results to GitHub Security
@@ -89,8 +89,8 @@ jobs:
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
         with:
           args: >
-            monitor 
-            --all 
+            monitor
+            --all
             --verbose
 
   workflow-summary:

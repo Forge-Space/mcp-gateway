@@ -113,7 +113,6 @@ class ConfigMerger {
 
       console.warn(`⚠️  Unable to parse config file: ${fullPath}`);
       return {};
-
     } catch (error) {
       console.error(`❌ Error loading config ${filePath}:`, error.message);
       return {};
@@ -149,7 +148,10 @@ class ConfigMerger {
     const currentConfig = this.loadJsConfig('./eslint.config.js');
 
     // Load base patterns ESLint config
-    const basePatternsPath = path.join(this.patternsPath, 'patterns/code-quality/eslint/base.config.js');
+    const basePatternsPath = path.join(
+      this.patternsPath,
+      'patterns/code-quality/eslint/base.config.js'
+    );
     const baseConfig = this.loadJsConfig(basePatternsPath);
 
     // Create merged configuration
@@ -159,8 +161,8 @@ class ConfigMerger {
       _patternInfo: {
         baseConfig: 'forge-patterns/patterns/code-quality/eslint/base.config.js',
         mergedAt: new Date().toISOString(),
-        project: 'forge-mcp-gateway'
-      }
+        project: 'forge-mcp-gateway',
+      },
     };
 
     return mergedConfig;
@@ -176,26 +178,26 @@ class ConfigMerger {
     const currentConfig = this.loadJsonConfig('./.prettierrc.json');
 
     // Load base patterns Prettier config
-    const basePatternsPath = path.join(this.patternsPath, 'patterns/code-quality/prettier/base.config.json');
+    const basePatternsPath = path.join(
+      this.patternsPath,
+      'patterns/code-quality/prettier/base.config.json'
+    );
     const baseConfig = this.loadJsonConfig(basePatternsPath);
 
     // Create merged configuration with project-specific overrides
     const mergedConfig = {
       ...baseConfig,
       // Preserve project-specific settings
-      trailingComma: currentConfig.trailingComma || "none",
-      arrowParens: currentConfig.arrowParens || "avoid",
+      trailingComma: currentConfig.trailingComma || 'none',
+      arrowParens: currentConfig.arrowParens || 'avoid',
       // Merge overrides
-      overrides: [
-        ...(baseConfig.overrides || []),
-        ...(currentConfig.overrides || [])
-      ],
+      overrides: [...(baseConfig.overrides || []), ...(currentConfig.overrides || [])],
       // Add pattern reference
       _patternInfo: {
         baseConfig: 'forge-patterns/patterns/code-quality/prettier/base.config.json',
         mergedAt: new Date().toISOString(),
-        project: 'forge-mcp-gateway'
-      }
+        project: 'forge-mcp-gateway',
+      },
     };
 
     return mergedConfig;
@@ -229,7 +231,7 @@ class ConfigMerger {
 
     if (issues.length > 0) {
       console.warn(`⚠️  ${type} validation issues:`);
-      issues.forEach(issue => console.warn(`  - ${issue}`));
+      issues.forEach((issue) => console.warn(`  - ${issue}`));
       return false;
     }
 
@@ -303,7 +305,7 @@ export default ${JSON.stringify(eslintConfig, null, 2)};
 
     const results = {
       eslint: { success: false, backup: null },
-      prettier: { success: false, backup: null }
+      prettier: { success: false, backup: null },
     };
 
     // Process ESLint configuration
@@ -336,7 +338,11 @@ export default ${JSON.stringify(eslintConfig, null, 2)};
       // Validate
       if (this.validateConfig(prettierConfig, 'prettier')) {
         // Write merged config
-        results.prettier.success = this.writeConfig(prettierConfig, './.prettierrc.json', 'prettier');
+        results.prettier.success = this.writeConfig(
+          prettierConfig,
+          './.prettierrc.json',
+          'prettier'
+        );
       }
     }
 
@@ -400,7 +406,7 @@ Examples:
 
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error('❌ Unhandled error:', error);
     process.exit(1);
   });

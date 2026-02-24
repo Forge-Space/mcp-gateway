@@ -10,7 +10,6 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 _FEEDBACK_FILE_ENV = "ROUTER_FEEDBACK_FILE"
@@ -441,7 +440,7 @@ class FeedbackStore:
                 "stats": {name: asdict(s) for name, s in self._stats.items()},
             }
             self._file.write_text(json.dumps(data, indent=2))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning("Could not persist feedback: %s", exc)
 
     def _load(self) -> None:
@@ -457,7 +456,7 @@ class FeedbackStore:
                 len(self._entries),
                 self._file,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning("Could not load feedback: %s", exc)
             self._entries = []
             self._stats = {}

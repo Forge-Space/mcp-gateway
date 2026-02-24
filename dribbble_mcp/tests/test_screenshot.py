@@ -77,9 +77,7 @@ class TestScreenshotCapture:
         mock_page.screenshot.assert_called_once_with(full_page=True, type="png")
         assert isinstance(result, str)
 
-    def test_capture_falls_back_to_page_screenshot_when_no_element(
-        self, capture: ScreenshotCapture
-    ) -> None:
+    def test_capture_falls_back_to_page_screenshot_when_no_element(self, capture: ScreenshotCapture) -> None:
         mock_page = MagicMock()
         mock_page.query_selector.return_value = None
         mock_page.screenshot.return_value = _FAKE_PNG

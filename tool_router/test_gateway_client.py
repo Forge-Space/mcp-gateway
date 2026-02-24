@@ -9,7 +9,10 @@ from tool_router.gateway_client import call_tool, get_tools
 
 
 def test_get_tools_raises_when_gateway_jwt_unset() -> None:
-    with patch.dict("os.environ", {}, clear=True), pytest.raises(ValueError, match="GATEWAY_JWT"):
+    with (
+        patch.dict("os.environ", {}, clear=True),
+        pytest.raises(ValueError, match="GATEWAY_JWT"),
+    ):
         get_tools()
 
 
@@ -52,7 +55,10 @@ def test_get_tools_returns_empty_for_unknown_shape() -> None:
 
 
 def test_call_tool_raises_when_gateway_jwt_unset() -> None:
-    with patch.dict("os.environ", {}, clear=True), pytest.raises(ValueError, match="GATEWAY_JWT"):
+    with (
+        patch.dict("os.environ", {}, clear=True),
+        pytest.raises(ValueError, match="GATEWAY_JWT"),
+    ):
         call_tool("foo", {})
 
 

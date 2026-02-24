@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.n8n.example
 
 # Database (SQLite local files)
 data/*.db
@@ -46,6 +47,10 @@ venv/
 # Docker local overrides
 docker-compose.override.yml
 .docker/
+
+# n8n automation (runtime data, not config)
+n8n-data/
+n8n-logs/
 
 # Backup and cache
 *.bak

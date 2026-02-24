@@ -13,7 +13,6 @@ from .cache_manager import CacheManager
 from .redis_cache import RedisCache
 from .types import CacheMetrics
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -392,7 +391,10 @@ class CachePerformanceDashboard:
 
         # Create snapshot
         snapshot = CachePerformanceSnapshot(
-            timestamp=time.time(), metrics=metrics, alerts=all_alerts, summary=self._calculate_summary(metrics)
+            timestamp=time.time(),
+            metrics=metrics,
+            alerts=all_alerts,
+            summary=self._calculate_summary(metrics),
         )
 
         # Store in history

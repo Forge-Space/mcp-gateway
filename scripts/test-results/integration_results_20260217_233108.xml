@@ -5,7 +5,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -19,13 +19,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -40,7 +40,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107b66310&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -51,7 +51,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107b66310&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -68,7 +68,7 @@ self = &lt;docker.api.client.APIClient object at 0x107a7ef70&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -91,7 +91,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -105,7 +105,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -123,7 +123,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -156,7 +156,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -170,13 +170,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -191,7 +191,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107d3fbe0&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -202,7 +202,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107d3fbe0&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -219,7 +219,7 @@ self = &lt;docker.api.client.APIClient object at 0x107d3f130&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -242,7 +242,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -256,7 +256,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -274,7 +274,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -307,7 +307,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -321,13 +321,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -342,7 +342,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107dae6a0&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -353,7 +353,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107dae6a0&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -370,7 +370,7 @@ self = &lt;docker.api.client.APIClient object at 0x107daef70&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -393,7 +393,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -407,7 +407,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -425,7 +425,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -458,7 +458,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -472,13 +472,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -493,7 +493,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107df1670&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -504,7 +504,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107df1670&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -521,7 +521,7 @@ self = &lt;docker.api.client.APIClient object at 0x107df1f40&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -544,7 +544,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -558,7 +558,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -576,7 +576,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -609,7 +609,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -623,13 +623,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -644,7 +644,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107e46160&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -655,7 +655,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107e46160&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -672,7 +672,7 @@ self = &lt;docker.api.client.APIClient object at 0x107e46c70&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -695,7 +695,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -709,7 +709,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -727,7 +727,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -760,7 +760,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -774,13 +774,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -795,7 +795,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107d63670&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -806,7 +806,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107d63670&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -823,7 +823,7 @@ self = &lt;docker.api.client.APIClient object at 0x107d63f40&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -846,7 +846,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -860,7 +860,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -878,7 +878,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -911,7 +911,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -925,13 +925,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -946,7 +946,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107e57f40&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -957,7 +957,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107e57f40&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -974,7 +974,7 @@ self = &lt;docker.api.client.APIClient object at 0x107e57820&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -997,7 +997,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -1011,7 +1011,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -1029,7 +1029,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -1062,7 +1062,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -1076,13 +1076,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -1097,7 +1097,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107e5fbe0&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -1108,7 +1108,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107e5fbe0&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -1125,7 +1125,7 @@ self = &lt;docker.api.client.APIClient object at 0x107e5f280&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -1148,7 +1148,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -1162,7 +1162,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -1180,7 +1180,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(
@@ -1213,7 +1213,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -1227,13 +1227,13 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
 &gt;           conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
             )
 
-../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610: 
+../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:610:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/requests/adapters.py:466: in get_connection_with_tls_context
     conn = self.poolmanager.connection_from_host(
@@ -1248,7 +1248,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107d63490&gt;, request_co
     ) -&gt; HTTPConnectionPool:
         """
         Get a :class:`urllib3.connectionpool.ConnectionPool` based on the request context.
-    
+
         ``request_context`` must at least contain the ``scheme`` key and its
         value must be a key in ``key_fn_by_scheme`` instance variable.
         """
@@ -1259,7 +1259,7 @@ self = &lt;urllib3.poolmanager.PoolManager object at 0x107d63490&gt;, request_co
                 DeprecationWarning,
             )
             request_context.pop("strict")
-    
+
         scheme = request_context["scheme"].lower()
         pool_key_constructor = self.key_fn_by_scheme.get(scheme)
         if not pool_key_constructor:
@@ -1276,7 +1276,7 @@ self = &lt;docker.api.client.APIClient object at 0x107d63e20&gt;
         try:
 &gt;           return self.version(api_version=False)["ApiVersion"]
 
-../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214: 
+../../../Library/Python/3.9/lib/python/site-packages/docker/api/client.py:214:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/api/daemon.py:181: in version
     return self._result(self._get(url), json=True)
@@ -1299,7 +1299,7 @@ proxies = OrderedDict()
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
         """Sends PreparedRequest object. Returns Response object.
-    
+
         :param request: The :class:`PreparedRequest &lt;PreparedRequest&gt;` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
@@ -1313,7 +1313,7 @@ proxies = OrderedDict()
         :param proxies: (optional) The proxies dictionary to apply to the request.
         :rtype: requests.Response
         """
-    
+
         try:
             conn = self.get_connection_with_tls_context(
                 request, verify, proxies=proxies, cert=cert
@@ -1331,7 +1331,7 @@ During handling of the above exception, another exception occurred:
         """Create a real Docker client for integration testing."""
 &gt;       return docker.from_env()
 
-tests/test_integration_sleep_wake.py:29: 
+tests/test_integration_sleep_wake.py:29:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Library/Python/3.9/lib/python/site-packages/docker/client.py:96: in from_env
     return cls(

@@ -20,7 +20,7 @@ def test_create_tool_selection_prompt_basic() -> None:
     """Test basic tool selection prompt creation."""
     task = "search the web"
     tool_list = "search: Search the web\nfetch: Get URL"
-    
+
     prompt = PromptTemplates.create_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -28,7 +28,7 @@ def test_create_tool_selection_prompt_basic() -> None:
         similar_tools=None,
         enhanced=False,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "tool_name" in prompt
@@ -41,7 +41,7 @@ def test_create_tool_selection_prompt_with_context() -> None:
     task = "search the web"
     tool_list = "search: Search the web"
     context = "Looking for recent news"
-    
+
     prompt = PromptTemplates.create_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -49,7 +49,7 @@ def test_create_tool_selection_prompt_with_context() -> None:
         similar_tools=None,
         enhanced=False,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert context in prompt
@@ -61,7 +61,7 @@ def test_create_tool_selection_prompt_with_similar_tools() -> None:
     task = "search the web"
     tool_list = "search: Search the web"
     similar_tools = ["web_search", "find"]
-    
+
     prompt = PromptTemplates.create_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -69,7 +69,7 @@ def test_create_tool_selection_prompt_with_similar_tools() -> None:
         similar_tools=similar_tools,
         enhanced=False,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "web_search" in prompt
@@ -81,7 +81,7 @@ def test_create_tool_selection_prompt_enhanced() -> None:
     """Test enhanced tool selection prompt creation."""
     task = "search the web"
     tool_list = "search: Search the web"
-    
+
     prompt = PromptTemplates.create_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -89,7 +89,7 @@ def test_create_tool_selection_prompt_enhanced() -> None:
         similar_tools=None,
         enhanced=True,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "context_factors" in prompt
@@ -103,7 +103,7 @@ def test_create_tool_selection_prompt_with_all_options() -> None:
     tool_list = "search: Search the web"
     context = "Looking for recent news"
     similar_tools = ["web_search"]
-    
+
     prompt = PromptTemplates.create_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -111,7 +111,7 @@ def test_create_tool_selection_prompt_with_all_options() -> None:
         similar_tools=similar_tools,
         enhanced=True,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert context in prompt
@@ -124,7 +124,7 @@ def test_create_multi_tool_selection_prompt_basic() -> None:
     """Test basic multi-tool selection prompt creation."""
     task = "analyze data and create report"
     tool_list = "analyze: Analyze data\nreport: Create report"
-    
+
     prompt = PromptTemplates.create_multi_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -132,7 +132,7 @@ def test_create_multi_tool_selection_prompt_basic() -> None:
         max_tools=3,
         enhanced=False,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "tools" in prompt
@@ -146,7 +146,7 @@ def test_create_multi_tool_selection_prompt_with_context() -> None:
     task = "analyze data and create report"
     tool_list = "analyze: Analyze data\nreport: Create report"
     context = "Sales data analysis"
-    
+
     prompt = PromptTemplates.create_multi_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -154,7 +154,7 @@ def test_create_multi_tool_selection_prompt_with_context() -> None:
         max_tools=2,
         enhanced=False,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert context in prompt
@@ -165,7 +165,7 @@ def test_create_multi_tool_selection_prompt_enhanced() -> None:
     """Test enhanced multi-tool selection prompt creation."""
     task = "analyze data and create report"
     tool_list = "analyze: Analyze data\nreport: Create report"
-    
+
     prompt = PromptTemplates.create_multi_tool_selection_prompt(
         task=task,
         tool_list=tool_list,
@@ -173,7 +173,7 @@ def test_create_multi_tool_selection_prompt_enhanced() -> None:
         max_tools=3,
         enhanced=True,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "## Workflow Considerations" in prompt
@@ -183,7 +183,7 @@ def test_create_context_aware_prompt_basic() -> None:
     """Test basic context-aware prompt creation."""
     task = "search the web"
     tool_list = "search: Search the web"
-    
+
     prompt = PromptTemplates.create_context_aware_prompt(
         task=task,
         tool_list=tool_list,
@@ -191,7 +191,7 @@ def test_create_context_aware_prompt_basic() -> None:
         history=None,
         similar_tools=None,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "## Current Context" not in prompt
@@ -203,7 +203,7 @@ def test_create_context_aware_prompt_with_context() -> None:
     task = "search the web"
     tool_list = "search: Search the web"
     context = "Looking for recent news"
-    
+
     prompt = PromptTemplates.create_context_aware_prompt(
         task=task,
         tool_list=tool_list,
@@ -211,7 +211,7 @@ def test_create_context_aware_prompt_with_context() -> None:
         history=None,
         similar_tools=None,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert context in prompt
@@ -226,7 +226,7 @@ def test_create_context_aware_prompt_with_history() -> None:
         {"task": "find information", "tool": "search", "success": True},
         {"task": "get data", "tool": "fetch", "success": False},
     ]
-    
+
     prompt = PromptTemplates.create_context_aware_prompt(
         task=task,
         tool_list=tool_list,
@@ -234,7 +234,7 @@ def test_create_context_aware_prompt_with_history() -> None:
         history=history,
         similar_tools=None,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "find information" in prompt
@@ -247,7 +247,7 @@ def test_create_context_aware_prompt_with_similar_tools() -> None:
     task = "search the web"
     tool_list = "search: Search the web"
     similar_tools = ["web_search", "find"]
-    
+
     prompt = PromptTemplates.create_context_aware_prompt(
         task=task,
         tool_list=tool_list,
@@ -255,7 +255,7 @@ def test_create_context_aware_prompt_with_similar_tools() -> None:
         history=None,
         similar_tools=similar_tools,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "web_search" in prompt
@@ -270,7 +270,7 @@ def test_create_context_aware_prompt_with_all_options() -> None:
     context = "Looking for recent news"
     history = [{"task": "find info", "tool": "search", "success": True}]
     similar_tools = ["web_search"]
-    
+
     prompt = PromptTemplates.create_context_aware_prompt(
         task=task,
         tool_list=tool_list,
@@ -278,7 +278,7 @@ def test_create_context_aware_prompt_with_all_options() -> None:
         history=history,
         similar_tools=similar_tools,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert context in prompt
@@ -293,14 +293,14 @@ def test_create_nlp_enhanced_prompt_basic() -> None:
     """Test basic NLP-enhanced prompt creation."""
     task = "search the web"
     tool_list = "search: Search the web"
-    
+
     prompt = PromptTemplates.create_nlp_enhanced_prompt(
         task=task,
         tool_list=tool_list,
         context="",
         intent_hints=None,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "## Linguistic Analysis" in prompt
@@ -315,14 +315,14 @@ def test_create_nlp_enhanced_prompt_with_context() -> None:
     task = "search the web"
     tool_list = "search: Search the web"
     context = "Looking for recent news"
-    
+
     prompt = PromptTemplates.create_nlp_enhanced_prompt(
         task=task,
         tool_list=tool_list,
         context=context,
         intent_hints=None,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert context in prompt
@@ -334,14 +334,14 @@ def test_create_nlp_enhanced_prompt_with_intent_hints() -> None:
     task = "search the web"
     tool_list = "search: Search the web"
     intent_hints = ["information retrieval", "web search"]
-    
+
     prompt = PromptTemplates.create_nlp_enhanced_prompt(
         task=task,
         tool_list=tool_list,
         context="",
         intent_hints=intent_hints,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert "information retrieval" in prompt
@@ -355,14 +355,14 @@ def test_create_nlp_enhanced_prompt_with_all_options() -> None:
     tool_list = "search: Search the web"
     context = "Looking for recent news"
     intent_hints = ["information retrieval", "web search"]
-    
+
     prompt = PromptTemplates.create_nlp_enhanced_prompt(
         task=task,
         tool_list=tool_list,
         context=context,
         intent_hints=intent_hints,
     )
-    
+
     assert task in prompt
     assert tool_list in prompt
     assert context in prompt

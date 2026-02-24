@@ -25,10 +25,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from threading import Lock
-from typing import Any, Union
+from typing import Any
 
 from .config import CacheConfig
-from .types import CacheEntryMetadata, DataClassification, RetentionError, SecurityMetrics
+from .types import (
+    CacheEntryMetadata,
+    DataClassification,
+    RetentionError,
+    SecurityMetrics,
+)
 
 
 class RetentionAction(Enum):
@@ -90,8 +95,8 @@ class LifecycleStage:
     name: str
     description: str
     duration_days: int
-    next_stage: Union[str, None] = None
-    action: Union[RetentionAction, None] = None
+    next_stage: str | None = None
+    action: RetentionAction | None = None
     conditions: dict[str, Any] = field(default_factory=dict)
 
 
@@ -197,7 +202,7 @@ class RetentionPolicyManager:
                 return True
             return False
 
-    def get_rules(self, classification: Union[DataClassification, None] = None) -> list[RetentionRule]:
+    def get_rules(self, classification: DataClassification | None = None) -> list[RetentionRule]:
         """Get retention rules, optionally filtered by classification."""
         with self._lock:
             rules = list(self._rules.values())
@@ -205,7 +210,7 @@ class RetentionPolicyManager:
                 rules = [r for r in rules if r.data_classification == classification]
             return sorted(rules, key=lambda r: r.priority, reverse=True)
 
-    def evaluate_retention(self, metadata: CacheEntryMetadata) -> Union[RetentionRule, None]:
+    def evaluate_retention(self, metadata: CacheEntryMetadata) -> RetentionRule | None:
         """Evaluate which retention rule applies to cache entry."""
         applicable_rules = []
 
@@ -251,7 +256,10 @@ class RetentionPolicyManager:
         return False
 
     def apply_retention_action(
-        self, key: str, metadata: CacheEntryMetadata, cache_delete_func: Callable[[str], bool]
+        self,
+        key: str,
+        metadata: CacheEntryMetadata,
+        cache_delete_func: Callable[[str], bool],
     ) -> RetentionResult:
         """Apply retention action to a cache entry."""
         rule = self.evaluate_retention(metadata)
@@ -364,7 +372,7 @@ class LifecycleManager:
 
         return stage.stage_id
 
-    def get_current_stage(self, metadata: CacheEntryMetadata) -> Union[LifecycleStage, None]:
+    def get_current_stage(self, metadata: CacheEntryMetadata) -> LifecycleStage | None:
         """Determine current lifecycle stage for cache entry."""
         age_days = (datetime.utcnow() - metadata.created).days
 
@@ -382,7 +390,7 @@ class LifecycleManager:
 
             return current_stage
 
-    def get_next_stage(self, current_stage_id: str) -> Union[LifecycleStage, None]:
+    def get_next_stage(self, current_stage_id: str) -> LifecycleStage | None:
         """Get the next stage in the lifecycle."""
         with self._lock:
             if current_stage_id in self._stages:
@@ -414,7 +422,7 @@ class RetentionScheduler:
         self._lock = Lock()
         self._running = False
         self._scheduler_thread: threading.Thread | None = None
-        self._cleanup_interval = getattr(config, 'retention_cleanup_interval_hours', 24) * 3600  # Convert to seconds
+        self._cleanup_interval = getattr(config, "retention_cleanup_interval_hours", 24) * 3600  # Convert to seconds
 
         # Setup logging
         self.logger = logging.getLogger(__name__)
@@ -512,7 +520,10 @@ class RetentionAuditor:
             base_score = (enabled_count / len(rules)) * 100
 
             # Deduct points for missing classifications
-            required_classifications = [DataClassification.SENSITIVE, DataClassification.CONFIDENTIAL]
+            required_classifications = [
+                DataClassification.SENSITIVE,
+                DataClassification.CONFIDENTIAL,
+            ]
             for classification in required_classifications:
                 if classification.value not in classification_counts:
                     base_score -= 20

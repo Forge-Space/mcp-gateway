@@ -18,7 +18,6 @@ from typing import Any
 from .data_extraction import ExtractedPattern, PatternCategory, PatternExtractor
 from .knowledge_base import KnowledgeBase, KnowledgeIndexer
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -103,7 +102,7 @@ class TrainingPipeline:
 
         for i, source in enumerate(data_sources):
             try:
-                logger.info(f"Extracting from source {i+1}/{len(data_sources)}: {source.get('url', 'Unknown')}")
+                logger.info(f"Extracting from source {i + 1}/{len(data_sources)}: {source.get('url', 'Unknown')}")
 
                 patterns = self.extractor.extract_from_multiple_sources([source])
                 all_patterns.extend(patterns)
@@ -152,13 +151,25 @@ class TrainingPipeline:
 
         if pattern.category == PatternCategory.ACCESSIBILITY:
             # Accessibility patterns should mention specific guidelines
-            accessibility_keywords = ["wcag", "aria", "accessible", "screen reader", "keyboard"]
+            accessibility_keywords = [
+                "wcag",
+                "aria",
+                "accessible",
+                "screen reader",
+                "keyboard",
+            ]
             content = f"{pattern.title} {pattern.description}".lower()
             return any(keyword in content for keyword in accessibility_keywords)
 
         if pattern.category == PatternCategory.PROMPT_ENGINEERING:
             # Prompt engineering patterns should have specific techniques
-            prompt_keywords = ["chain-of-thought", "cot", "reflection", "few-shot", "zero-shot"]
+            prompt_keywords = [
+                "chain-of-thought",
+                "cot",
+                "reflection",
+                "few-shot",
+                "zero-shot",
+            ]
             content = f"{pattern.title} {pattern.description}".lower()
             return any(keyword in content for keyword in prompt_keywords)
 
@@ -232,7 +243,11 @@ class TrainingPipeline:
                     "patterns_count": len(category_patterns),
                     "avg_effectiveness": sum(p.effectiveness_score for p in category_patterns) / len(category_patterns),
                     "top_patterns": [
-                        {"title": p.title, "effectiveness": p.effectiveness_score, "usage_count": p.usage_count}
+                        {
+                            "title": p.title,
+                            "effectiveness": p.effectiveness_score,
+                            "usage_count": p.usage_count,
+                        }
                         for p in category_patterns[:5]
                     ],
                 }
@@ -384,20 +399,44 @@ class TrainingPipeline:
 # Training data sources configuration
 DEFAULT_TRAINING_SOURCES = [
     # React Best Practices
-    {"url": "https://react.dev/reference/rules", "type": "web_documentation", "category": "react_patterns"},
+    {
+        "url": "https://react.dev/reference/rules",
+        "type": "web_documentation",
+        "category": "react_patterns",
+    },
     {
         "url": "https://medium.com/@regondaakhil/react-best-practices-and-patterns-for-2024-f5cdf8e132f1",
         "type": "web_documentation",
         "category": "react_patterns",
     },
     # Design Systems
-    {"url": "https://carbondesignsystem.com/", "type": "web_documentation", "category": "design_systems"},
-    {"url": "https://www.lightningdesignsystem.com/", "type": "web_documentation", "category": "design_systems"},
+    {
+        "url": "https://carbondesignsystem.com/",
+        "type": "web_documentation",
+        "category": "design_systems",
+    },
+    {
+        "url": "https://www.lightningdesignsystem.com/",
+        "type": "web_documentation",
+        "category": "design_systems",
+    },
     # Accessibility
-    {"url": "https://www.w3.org/WAI/WCAG21/quickref/", "type": "web_documentation", "category": "accessibility"},
+    {
+        "url": "https://www.w3.org/WAI/WCAG21/quickref/",
+        "type": "web_documentation",
+        "category": "accessibility",
+    },
     # GitHub Repositories
-    {"url": "https://github.com/facebook/react", "type": "github_repository", "category": "react_patterns"},
-    {"url": "https://github.com/microsoft/fluentui", "type": "github_repository", "category": "design_systems"},
+    {
+        "url": "https://github.com/facebook/react",
+        "type": "github_repository",
+        "category": "react_patterns",
+    },
+    {
+        "url": "https://github.com/microsoft/fluentui",
+        "type": "github_repository",
+        "category": "design_systems",
+    },
     # Prompt Engineering
     {
         "url": "https://www.anthropic.com/research/building-effective-agents",

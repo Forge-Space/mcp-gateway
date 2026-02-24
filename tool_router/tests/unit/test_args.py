@@ -1,5 +1,9 @@
 """Unit tests for tool_router/args.py module."""
 
+from __future__ import annotations
+
+from typing import Any
+
 from tool_router.args import build_arguments
 from tool_router.args.builder import COMMON_TASK_PARAMETER_NAMES
 
@@ -19,11 +23,8 @@ def test_build_arguments_basic() -> None:
     tool = {
         "inputSchema": {
             "type": "object",
-            "properties": {
-                "query": {"type": "string"},
-                "limit": {"type": "number"}
-            },
-            "required": ["query"]
+            "properties": {"query": {"type": "string"}, "limit": {"type": "number"}},
+            "required": ["query"],
         }
     }
 
@@ -40,11 +41,8 @@ def test_build_arguments_with_task_param() -> None:
     tool = {
         "inputSchema": {
             "type": "object",
-            "properties": {
-                "task": {"type": "string"},
-                "path": {"type": "string"}
-            },
-            "required": ["task"]
+            "properties": {"task": {"type": "string"}, "path": {"type": "string"}},
+            "required": ["task"],
         }
     }
 
@@ -59,11 +57,8 @@ def test_build_arguments_with_query_param() -> None:
     tool = {
         "inputSchema": {
             "type": "object",
-            "properties": {
-                "query": {"type": "string"},
-                "filters": {"type": "object"}
-            },
-            "required": ["query"]
+            "properties": {"query": {"type": "string"}, "filters": {"type": "object"}},
+            "required": ["query"],
         }
     }
 
@@ -78,11 +73,8 @@ def test_build_arguments_no_string_params() -> None:
     tool = {
         "inputSchema": {
             "type": "object",
-            "properties": {
-                "count": {"type": "number"},
-                "enabled": {"type": "boolean"}
-            },
-            "required": ["count"]
+            "properties": {"count": {"type": "number"}, "enabled": {"type": "boolean"}},
+            "required": ["count"],
         }
     }
 
@@ -95,7 +87,7 @@ def test_build_arguments_no_string_params() -> None:
 def test_build_arguments_empty_properties() -> None:
     """Test build_arguments with empty tool properties."""
     task = "simple task"
-    tool = {}
+    tool: dict[str, Any] = {}
 
     result = build_arguments(tool, task)
 
@@ -112,9 +104,9 @@ def test_build_arguments_multiple_string_params() -> None:
             "properties": {
                 "query": {"type": "string"},
                 "filter": {"type": "string"},
-                "sort": {"type": "string"}
+                "sort": {"type": "string"},
             },
-            "required": ["query", "filter"]
+            "required": ["query", "filter"],
         }
     }
 
@@ -140,9 +132,9 @@ def test_build_arguments_case_sensitivity() -> None:
             "type": "object",
             "properties": {
                 "Task": {"type": "string"},  # Capital T
-                "query": {"type": "string"}  # lowercase
+                "query": {"type": "string"},  # lowercase
             },
-            "required": ["Task"]
+            "required": ["Task"],
         }
     }
 
@@ -158,10 +150,8 @@ def test_build_arguments_with_input_schema_alt() -> None:
     tool = {
         "input_schema": {
             "type": "object",
-            "properties": {
-                "prompt": {"type": "string"}
-            },
-            "required": ["prompt"]
+            "properties": {"prompt": {"type": "string"}},
+            "required": ["prompt"],
         }
     }
 

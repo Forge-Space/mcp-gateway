@@ -1,5 +1,7 @@
 """Metrics collection for tool router performance monitoring."""
 
+from __future__ import annotations
+
 import functools
 import time
 from dataclasses import dataclass, field

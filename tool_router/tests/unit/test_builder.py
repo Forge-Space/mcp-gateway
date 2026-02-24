@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from tool_router.args.builder import build_arguments
 
 
@@ -24,10 +26,10 @@ def test_build_arguments_uses_first_required() -> None:
 
 
 def test_build_arguments_falls_back_to_task() -> None:
-    tool = {"inputSchema": {"properties": {}}}
+    tool: dict[str, Any] = {"inputSchema": {"properties": {}}}
     assert build_arguments(tool, "do something") == {"task": "do something"}
 
 
 def test_build_arguments_accepts_input_schema_snake_case() -> None:
-    tool = {"input_schema": {"properties": {"query": {}}}}
+    tool: dict[str, Any] = {"input_schema": {"properties": {"query": {}}}}
     assert build_arguments(tool, "hello") == {"query": "hello"}

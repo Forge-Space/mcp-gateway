@@ -213,7 +213,7 @@ docker-compose -f docker-compose.yml up -d
 
 ---
 
-**Last Updated**: 2026-02-18  
-**Version**: 1.0.0  
-**Next Review**: After first production deployment  
+**Last Updated**: 2026-02-18
+**Version**: 1.0.0
+**Next Review**: After first production deployment
 **Maintained By**: Lucas Santana (@LucasSantana-Dev)

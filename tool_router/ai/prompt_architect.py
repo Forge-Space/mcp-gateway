@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -185,7 +184,10 @@ class TaskAnalyzer:
         for req in functional_reqs:
             requirements.append(
                 Requirement(
-                    type=RequirementType.FUNCTIONALITY, description=req, priority="high", constraints=constraints
+                    type=RequirementType.FUNCTIONALITY,
+                    description=req,
+                    priority="high",
+                    constraints=constraints,
                 )
             )
 
@@ -212,7 +214,16 @@ class TaskAnalyzer:
             )
 
         # Extract maintainability requirements
-        if any(keyword in prompt_lower for keyword in ["maintainable", "clean", "readable", "organized", "structured"]):
+        if any(
+            keyword in prompt_lower
+            for keyword in [
+                "maintainable",
+                "clean",
+                "readable",
+                "organized",
+                "structured",
+            ]
+        ):
             requirements.append(
                 Requirement(
                     type=RequirementType.MAINTAINABILITY,
@@ -243,13 +254,25 @@ class TaskAnalyzer:
         import re
 
         # Language/framework constraints
-        if re.search(r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b", prompt, re.IGNORECASE):
-            matches = re.findall(r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b", prompt, re.IGNORECASE)
+        if re.search(
+            r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b",
+            prompt,
+            re.IGNORECASE,
+        ):
+            matches = re.findall(
+                r"\b(javascript|typescript|python|java|go|rust|cpp|c\+\+)\b",
+                prompt,
+                re.IGNORECASE,
+            )
             constraints.extend([f"Use {match}" for match in matches])
 
         # Technology constraints
         if re.search(r"\b(react|vue|angular|node|express|flask|django)\b", prompt, re.IGNORECASE):
-            matches = re.findall(r"\b(react|vue|angular|node|express|flask|django)\b", prompt, re.IGNORECASE)
+            matches = re.findall(
+                r"\b(react|vue|angular|node|express|flask|django)\b",
+                prompt,
+                re.IGNORECASE,
+            )
             constraints.extend([f"Use {match}" for match in matches])
 
         # Version constraints
@@ -257,8 +280,16 @@ class TaskAnalyzer:
         constraints.extend(version_matches)
 
         # Style constraints
-        if re.search(r"\b(modern|clean|simple|minimal|enterprise|production)\b", prompt, re.IGNORECASE):
-            matches = re.findall(r"\b(modern|clean|simple|minimal|enterprise|production)\b", prompt, re.IGNORECASE)
+        if re.search(
+            r"\b(modern|clean|simple|minimal|enterprise|production)\b",
+            prompt,
+            re.IGNORECASE,
+        ):
+            matches = re.findall(
+                r"\b(modern|clean|simple|minimal|enterprise|production)\b",
+                prompt,
+                re.IGNORECASE,
+            )
             constraints.extend([f"{match.capitalize()} style" for match in matches])
 
         return constraints
@@ -281,14 +312,18 @@ class TaskAnalyzer:
 
         # "Implement X with Y" pattern
         implement_patterns = re.findall(
-            r"implement\s+(\w+(?:\s+\w+)*)\s+(?:with|using|for)\s+(\w+(?:\s+\w+)*)", prompt, re.IGNORECASE
+            r"implement\s+(\w+(?:\s+\w+)*)\s+(?:with|using|for)\s+(\w+(?:\s+\w+)*)",
+            prompt,
+            re.IGNORECASE,
         )
         for subject, feature in implement_patterns:
             requirements.append(f"Implement {subject} with {feature}")
 
         # "Support X functionality" pattern
         support_patterns = re.findall(
-            r"support\s+(\w+(?:\s+\w+)*)\s+(?:functionality|feature|capability)", prompt, re.IGNORECASE
+            r"support\s+(\w+(?:\s+\w+)*)\s+(?:functionality|feature|capability)",
+            prompt,
+            re.IGNORECASE,
         )
         for feature in support_patterns:
             requirements.append(f"Support {feature} functionality")
@@ -685,7 +720,13 @@ class PromptArchitect:
     def _calculate_context_preservation(self, prompt: str) -> float:
         """Calculate how well context is preserved."""
         # Check for context preservation indicators
-        context_indicators = ["remember", "keep in mind", "based on", "considering", "given"]
+        context_indicators = [
+            "remember",
+            "keep in mind",
+            "based on",
+            "considering",
+            "given",
+        ]
         context_count = sum(1 for indicator in context_indicators if indicator in prompt.lower())
 
         return min(context_count * 0.2, 1.0)

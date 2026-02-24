@@ -4,38 +4,36 @@ Integrates Sentry with Supabase and shared logging table
 """
 
 import os
-import uuid
-import asyncio
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
 from contextlib import asynccontextmanager
+from typing import Any
 
 import structlog
-from sentry_sdk import configure_scope, add_breadcrumb, capture_exception, capture_message
+from sentry_sdk import add_breadcrumb, capture_exception, configure_scope
 from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.structlog import StructlogIntegration
-
 from shared_logger import (
-    SharedLogger, SharedLoggerConfig, LogLevel, create_correlation_id,
-    get_or_create_correlation_id, add_correlation_to_headers
+    SharedLogger,
+    SharedLoggerConfig,
+    create_correlation_id,
+    get_or_create_correlation_id,
 )
 
 # Global logger instance
-shared_logger: Optional[SharedLogger] = None
+shared_logger: SharedLogger | None = None
 
 
 def init_sentry(
     dsn: str,
     environment: str = "development",
-    release: Optional[str] = None,
+    release: str | None = None,
     sample_rate: float = 0.1,
     enable_supabase: bool = True,
-    supabase_url: Optional[str] = None,
-    supabase_key: Optional[str] = None,
+    supabase_url: str | None = None,
+    supabase_key: str | None = None,
     service_name: str = "mcp-gateway",
-    service_version: Optional[str] = None,
+    service_version: str | None = None,
 ) -> bool:
     """
     Initialize Sentry with Supabase integration and shared logging
@@ -74,6 +72,7 @@ def init_sentry(
 
         # Initialize Sentry
         import sentry_sdk
+
         sentry_sdk.init(
             dsn=dsn,
             integrations=integrations,
@@ -109,8 +108,12 @@ def init_sentry(
         )
 
         logger = structlog.get_logger()
-        logger.info("Sentry initialized successfully", service_name=service_name, environment=environment)
-        
+        logger.info(
+            "Sentry initialized successfully",
+            service_name=service_name,
+            environment=environment,
+        )
+
         return True
 
     except Exception as e:
@@ -118,7 +121,7 @@ def init_sentry(
         return False
 
 
-def before_send_filter(event: Dict[str, Any], hint: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def before_send_filter(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any] | None:
     """Filter events before sending to Sentry"""
     # Remove sensitive environment variables
     if "extra" in event and "environment" in event["extra"]:
@@ -139,7 +142,7 @@ def before_send_filter(event: Dict[str, Any], hint: Dict[str, Any]) -> Optional[
     return event
 
 
-def before_send_transaction_filter(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def before_send_transaction_filter(event: dict[str, Any]) -> dict[str, Any] | None:
     """Filter transactions before sending to Sentry"""
     # Skip health check transactions
     if "transaction" in event:
@@ -176,18 +179,19 @@ def should_skip_transaction(transaction_name: str) -> bool:
     return any(path in transaction_name for path in skip_paths)
 
 
-def add_service_context(logger, method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
+def add_service_context(logger, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     """Add service context to all log entries"""
     event_dict["service_name"] = "mcp-gateway"
     event_dict["service_version"] = os.getenv("SERVICE_VERSION", "unknown")
     return event_dict
 
 
-def add_correlation_context(logger, method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
+def add_correlation_context(logger, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     """Add correlation context to log entries"""
     # Try to get correlation ID from current scope
     try:
         from sentry_sdk import get_current_span
+
         span = get_current_span()
         if span and span.trace_id:
             event_dict["trace_id"] = span.trace_id
@@ -200,23 +204,25 @@ def add_correlation_context(logger, method_name: str, event_dict: Dict[str, Any]
 
 def add_supabase_context(
     operation: str,
-    table: Optional[str] = None,
-    query: Optional[str] = None,
-    user_id: Optional[str] = None,
+    table: str | None = None,
+    query: str | None = None,
+    user_id: str | None = None,
 ) -> None:
     """Add Supabase-specific context to Sentry"""
     configure_scope(
-        lambda scope: scope.set_tag("database.operation", operation)
-        .set_tag("database.provider", "supabase")
-        .set_tag("database.type", "postgresql")
-        .set_context(
-            "supabase",
-            {
-                "operation": operation,
-                "table": table,
-                "user_id": user_id,
-                "error_type": "database_error" if query else None,
-            },
+        lambda scope: (
+            scope.set_tag("database.operation", operation)
+            .set_tag("database.provider", "supabase")
+            .set_tag("database.type", "postgresql")
+            .set_context(
+                "supabase",
+                {
+                    "operation": operation,
+                    "table": table,
+                    "user_id": user_id,
+                    "error_type": "database_error" if query else None,
+                },
+            )
         )
     )
 
@@ -231,20 +237,22 @@ def add_supabase_context(
 def capture_supabase_error(
     error: Exception,
     operation: str,
-    table: Optional[str] = None,
-    query: Optional[str] = None,
+    table: str | None = None,
+    query: str | None = None,
 ) -> None:
     """Capture Supabase-specific errors with rich context"""
     add_supabase_context(operation, table, query)
-    
+
     configure_scope(
-        lambda scope: scope.set_tag("database.error", True)
-        .set_context("supabase_error", {
-            "operation": operation,
-            "table": table,
-            "error_type": error.__class__.__name__,
-            "error_message": str(error),
-        })
+        lambda scope: scope.set_tag("database.error", True).set_context(
+            "supabase_error",
+            {
+                "operation": operation,
+                "table": table,
+                "error_type": error.__class__.__name__,
+                "error_message": str(error),
+            },
+        )
     )
 
     capture_exception(error)
@@ -257,21 +265,28 @@ def sanitize_query(query: str) -> str:
 
     # Remove email addresses
     import re
-    sanitized = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', query)
+
+    sanitized = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]", query)
 
     # Remove API keys and tokens
-    sanitized = re.sub(r'[A-Za-z0-9]{20,}', '[REDACTED]', sanitized)
+    sanitized = re.sub(r"[A-Za-z0-9]{20,}", "[REDACTED]", sanitized)
 
     # Remove password patterns
-    sanitized = re.sub(r"password\s*=\s*'[^']*'", "password='[REDACTED]'", sanitized, flags=re.IGNORECASE)
+    sanitized = re.sub(
+        r"password\s*=\s*'[^']*'",
+        "password='[REDACTED]'",
+        sanitized,
+        flags=re.IGNORECASE,
+    )
 
     return sanitized
 
 
-def create_supabase_span(operation: str, table: Optional[str] = None) -> Any:
+def create_supabase_span(operation: str, table: str | None = None) -> Any:
     """Create a Sentry span for Supabase operations"""
     try:
         from sentry_sdk import start_span
+
         span_name = f"supabase.{operation}"
         full_span_name = f"{span_name}.{table}" if table else span_name
         return start_span(full_span_name)
@@ -282,8 +297,8 @@ def create_supabase_span(operation: str, table: Optional[str] = None) -> Any:
 async def monitor_mcp_request(
     tool_name: str,
     success: bool,
-    duration: Optional[float] = None,
-    context: Optional[Dict[str, Any]] = None,
+    duration: float | None = None,
+    context: dict[str, Any] | None = None,
 ) -> None:
     """Monitor MCP tool execution"""
     if shared_logger:
@@ -291,14 +306,19 @@ async def monitor_mcp_request(
 
     # Also send to Sentry
     configure_scope(
-        lambda scope: scope.set_tag("mcp.tool_name", tool_name)
-        .set_tag("mcp.success", success)
-        .set_context("mcp", {
-            "tool_name": tool_name,
-            "success": success,
-            "duration_ms": duration,
-            **(context or {}),
-        })
+        lambda scope: (
+            scope.set_tag("mcp.tool_name", tool_name)
+            .set_tag("mcp.success", success)
+            .set_context(
+                "mcp",
+                {
+                    "tool_name": tool_name,
+                    "success": success,
+                    "duration_ms": duration,
+                    **(context or {}),
+                },
+            )
+        )
     )
 
     level = "info" if success else "error"
@@ -318,20 +338,25 @@ async def monitor_mcp_request(
 async def monitor_service_lifecycle(
     event: str,
     success: bool,
-    context: Optional[Dict[str, Any]] = None,
+    context: dict[str, Any] | None = None,
 ) -> None:
     """Monitor service lifecycle events"""
     if shared_logger:
         await shared_logger.info(f"Service lifecycle: {event}", context)
 
     configure_scope(
-        lambda scope: scope.set_tag("service.event", event)
-        .set_tag("service.success", success)
-        .set_context("service_lifecycle", {
-            "event": event,
-            "success": success,
-            **(context or {}),
-        })
+        lambda scope: (
+            scope.set_tag("service.event", event)
+            .set_tag("service.success", success)
+            .set_context(
+                "service_lifecycle",
+                {
+                    "event": event,
+                    "success": success,
+                    **(context or {}),
+                },
+            )
+        )
     )
 
     level = "info" if success else "error"
@@ -348,7 +373,7 @@ async def monitor_service_lifecycle(
 
 
 @asynccontextmanager
-async def correlation_context(correlation_id: Optional[str] = None):
+async def correlation_context(correlation_id: str | None = None):
     """Context manager for correlation ID tracking"""
     if not correlation_id:
         correlation_id = create_correlation_id()
@@ -385,8 +410,8 @@ async def log_api_request(
     method: str,
     endpoint: str,
     status_code: int,
-    duration: Optional[float] = None,
-    context: Optional[Dict[str, Any]] = None,
+    duration: float | None = None,
+    context: dict[str, Any] | None = None,
 ) -> None:
     """Log API request to shared logger"""
     if shared_logger:
@@ -397,8 +422,8 @@ async def log_database_operation(
     operation: str,
     table: str,
     success: bool,
-    duration: Optional[float] = None,
-    context: Optional[Dict[str, Any]] = None,
+    duration: float | None = None,
+    context: dict[str, Any] | None = None,
 ) -> None:
     """Log database operation to shared logger"""
     if shared_logger:
@@ -409,7 +434,7 @@ async def log_user_activity(
     user_id: str,
     session_id: str,
     action: str,
-    context: Optional[Dict[str, Any]] = None,
+    context: dict[str, Any] | None = None,
 ) -> None:
     """Log user activity to shared logger"""
     if shared_logger:
@@ -417,6 +442,6 @@ async def log_user_activity(
 
 
 # Export the shared logger
-def get_shared_logger_instance() -> Optional[SharedLogger]:
+def get_shared_logger_instance() -> SharedLogger | None:
     """Get the shared logger instance"""
     return shared_logger

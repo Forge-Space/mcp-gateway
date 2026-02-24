@@ -7,7 +7,7 @@ mock_container = &lt;Mock name='mock.containers.get()' id='4492502352'&gt;
         # Setup - mock container error
         mock_container.pause.side_effect = Exception("Docker error")
         service_manager.docker_client.containers.get.return_value = mock_container
-    
+
         # Mock system resources
         with patch.object(service_manager.resource_monitor, 'get_system_resources') as mock_resources:
             mock_resources.return_value = {
@@ -17,11 +17,11 @@ mock_container = &lt;Mock name='mock.containers.get()' id='4492502352'&gt;
                 "memory_used_gb": 4.0,
                 "memory_total_gb": 12.0
             }
-    
+
             # Execute &amp; Verify
             with pytest.raises(Exception) as exc_info:
                 await service_manager.sleep_service("test-service")
-    
+
 &gt;           assert "Failed to sleep service" in str(exc_info.value)
 E           AssertionError: assert 'Failed to sleep service' in ''
 E            +  where '' = str(HTTPException(status_code=500, detail='Failed to sleep service test-service: Docker error'))
@@ -37,7 +37,7 @@ mock_container = &lt;Mock name='mock.containers.get()' id='4492503216'&gt;
         service_manager.service_status["test-service"].status = "sleeping"
         service_manager.service_status["test-service"].sleep_start_time = time.time() - 300  # 5 minutes ago
         service_manager.docker_client.containers.get.return_value = mock_container
-    
+
         # Execute
 &gt;       result = await service_manager.wake_service("test-service")
 E       AttributeError: 'ServiceManager' object has no attribute 'wake_service'
@@ -49,7 +49,7 @@ tests/test_sleep_wake.py:255: AttributeError</failure></testcase><testcase class
         """Test wake when service is not sleeping."""
         # Setup - service is already running
         service_manager.service_status["test-service"].status = "running"
-    
+
         # Execute
 &gt;       result = await service_manager.wake_service("test-service")
 E       AttributeError: 'ServiceManager' object has no attribute 'wake_service'
@@ -64,11 +64,11 @@ mock_container = &lt;Mock name='mock.containers.get()' id='4492452720'&gt;
         service_manager.service_status["test-service"].status = "sleeping"
         mock_container.unpause.side_effect = Exception("Docker error")
         service_manager.docker_client.containers.get.return_value = mock_container
-    
+
         # Execute &amp; Verify
         with pytest.raises(Exception) as exc_info:
             await service_manager.wake_service("test-service")
-    
+
 &gt;       assert "Failed to wake service" in str(exc_info.value)
 E       assert 'Failed to wake service' in "'ServiceManager' object has no attribute 'wake_service'"
 E        +  where "'ServiceManager' object has no attribute 'wake_service'" = str(AttributeError("'ServiceManager' object has no attribute 'wake_service'"))
@@ -82,9 +82,9 @@ tests/test_sleep_wake.py:291: AssertionError</failure></testcase><testcase class
         metrics = service_manager.performance_metrics["test-service"]
         metrics.total_requests = 50
         metrics.wake_times.extend([100, 150, 200])  # Recent wake times
-    
+
         result = service_manager.predict_service_wake_need("test-service")
-    
+
         assert 0.0 &lt;= result &lt;= 1.0
 &gt;       assert result &gt; 0.5  # Should be moderately likely due to usage
 E       assert 0.325 &gt; 0.5
@@ -96,12 +96,12 @@ tests/test_sleep_wake.py:343: AssertionError</failure></testcase><testcase class
         """Test wake request API endpoint."""
         from fastapi.testclient import TestClient
         from service_manager import app
-    
+
         # Setup
         app.dependency_overrides[lambda: service_manager] = lambda: service_manager
 &gt;       client = TestClient(app)
 
-tests/test_sleep_wake.py:422: 
+tests/test_sleep_wake.py:422:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = &lt;starlette.testclient.TestClient object at 0x10bcbd910&gt;, app = &lt;fastapi.applications.FastAPI object at 0x10bb43d00&gt;, base_url = 'http://testserver', raise_server_exceptions = True
@@ -155,12 +155,12 @@ E       TypeError: __init__() got an unexpected keyword argument 'app'
         """Test service metrics API endpoint."""
         from fastapi.testclient import TestClient
         from service_manager import app
-    
+
         # Setup
         app.dependency_overrides[lambda: service_manager] = lambda: service_manager
 &gt;       client = TestClient(app)
 
-tests/test_sleep_wake.py:441: 
+tests/test_sleep_wake.py:441:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = &lt;starlette.testclient.TestClient object at 0x10beb0a90&gt;, app = &lt;fastapi.applications.FastAPI object at 0x10bb43d00&gt;, base_url = 'http://testserver', raise_server_exceptions = True

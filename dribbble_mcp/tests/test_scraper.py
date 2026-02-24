@@ -13,7 +13,6 @@ from dribbble_mcp.scraper import (
     _parse_count,
 )
 
-
 SEARCH_HTML = """
 <html><body>
 <ul>

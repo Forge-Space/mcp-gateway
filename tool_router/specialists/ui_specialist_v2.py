@@ -17,7 +17,6 @@ from typing import Any
 from ..training.data_extraction import PatternCategory
 from ..training.knowledge_base import KnowledgeBase, PatternCategory
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -28,7 +27,10 @@ class EnhancedUISpecialist:
         """Initialize the enhanced UI specialist."""
         self.knowledge_base = knowledge_base or KnowledgeBase()
         self.framework_preferences = {
-            "react": {"priority": 1.0, "patterns": ["hooks", "functional", "typescript"]},
+            "react": {
+                "priority": 1.0,
+                "patterns": ["hooks", "functional", "typescript"],
+            },
             "vue": {"priority": 0.8, "patterns": ["composition", "typescript"]},
             "angular": {"priority": 0.7, "patterns": ["standalone", "typescript"]},
             "svelte": {"priority": 0.6, "patterns": ["modern", "typescript"]},
@@ -92,7 +94,7 @@ class EnhancedUISpecialist:
         # Search for framework-specific patterns
         framework_patterns = self.knowledge_base.search_knowledge(
             f"{framework} {component_type}",
-            PatternCategory.REACT_PATTERN if framework == "react" else PatternCategory.UI_COMPONENT,
+            (PatternCategory.REACT_PATTERN if framework == "react" else PatternCategory.UI_COMPONENT),
             limit=10,
         )
 
@@ -462,24 +464,59 @@ export class {component_type.title()}Component {{
 </style>"""
 
         base_props = [
-            {"name": "children", "type": "ReactNode", "required": False, "description": "Child components"},
-            {"name": "id", "type": "string", "required": False, "description": "Unique identifier"},
+            {
+                "name": "children",
+                "type": "ReactNode",
+                "required": False,
+                "description": "Child components",
+            },
+            {
+                "name": "id",
+                "type": "string",
+                "required": False,
+                "description": "Unique identifier",
+            },
         ]
 
         # Add component-specific props based on patterns
         if component_type == "button":
             base_props.extend(
                 [
-                    {"name": "variant", "type": "string", "required": False, "description": "Button variant style"},
-                    {"name": "size", "type": "string", "required": False, "description": "Button size"},
-                    {"name": "disabled", "type": "boolean", "required": False, "description": "Disable the button"},
+                    {
+                        "name": "variant",
+                        "type": "string",
+                        "required": False,
+                        "description": "Button variant style",
+                    },
+                    {
+                        "name": "size",
+                        "type": "string",
+                        "required": False,
+                        "description": "Button size",
+                    },
+                    {
+                        "name": "disabled",
+                        "type": "boolean",
+                        "required": False,
+                        "description": "Disable the button",
+                    },
                 ]
             )
         elif component_type == "form":
             base_props.extend(
                 [
-                    {"name": "onSubmit", "type": "function", "required": True, "description": "Form submit handler"},
-                    {"name": "loading", "type": "boolean", "required": False, "description": "Loading state"},
+                    {
+                        "name": "onSubmit",
+                        "type": "function",
+                        "required": True,
+                        "description": "Form submit handler",
+                    },
+                    {
+                        "name": "loading",
+                        "type": "boolean",
+                        "required": False,
+                        "description": "Loading state",
+                    },
                 ]
             )
 
@@ -563,13 +600,17 @@ export class {component_type.title()}Component {{
     def _add_button_accessibility(self, code: str) -> str:
         """Add accessibility attributes to button code."""
         # Add proper ARIA attributes and keyboard support
-        return code.replace("className={cn(", 'aria-label={props["aria-label"]}\n          className={cn(')
+        return code.replace(
+            "className={cn(",
+            'aria-label={props["aria-label"]}\n          className={cn(',
+        )
 
     def _add_form_accessibility(self, code: str) -> str:
         """Add accessibility attributes to form code."""
         # Add form validation and error handling
         return code.replace(
-            'placeholder="Enter your email"', 'placeholder="Enter your email"\n          aria-label="Email address"'
+            'placeholder="Enter your email"',
+            'placeholder="Enter your email"\n          aria-label="Email address"',
         )
 
     def _add_input_accessibility(self, code: str) -> str:
@@ -614,9 +655,9 @@ export interface {component_name}Props {{
 
         for prop in props:
             if prop.get("required", False):
-                types += f'\n  {prop["name"]}: {prop["type"]};'
+                types += f"\n  {prop['name']}: {prop['type']};"
             else:
-                types += f'\n  {prop["name"]}?: {prop["type"]};'
+                types += f"\n  {prop['name']}?: {prop['type']};"
 
         types += "\n}"
 
@@ -677,7 +718,12 @@ export default {component_type.title()};""",
 
     def validate_component(self, component: dict[str, Any]) -> dict[str, Any]:
         """Validate generated component for quality and completeness."""
-        validation_result = {"valid": True, "issues": [], "recommendations": [], "score": 0.0}
+        validation_result = {
+            "valid": True,
+            "issues": [],
+            "recommendations": [],
+            "score": 0.0,
+        }
 
         # Check required fields
         required_fields = ["type", "framework", "code", "props"]
@@ -691,7 +737,11 @@ export default {component_type.title()};""",
             code = component["code"]
 
             # Check for accessibility
-            if "aria-" not in code and component.get("type") in ["button", "form", "input"]:
+            if "aria-" not in code and component.get("type") in [
+                "button",
+                "form",
+                "input",
+            ]:
                 validation_result["issues"].append("Missing accessibility attributes")
                 validation_result["recommendations"].append("Add ARIA attributes for better accessibility")
 

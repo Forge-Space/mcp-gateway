@@ -909,22 +909,10 @@
       "poor_documentation": 28
     },
     "most_common_issues": [
-      [
-        "false_positive",
-        114
-      ],
-      [
-        "missing_coverage",
-        37
-      ],
-      [
-        "poor_documentation",
-        28
-      ],
-      [
-        "poor_isolation",
-        10
-      ]
+      ["false_positive", 114],
+      ["missing_coverage", 37],
+      ["poor_documentation", 28],
+      ["poor_isolation", 10]
     ]
   },
   "recommendations": [

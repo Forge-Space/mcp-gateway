@@ -136,8 +136,8 @@ result = orchestrator.create_tests(Path("tool_router/scoring/matcher.py"), "unit
 from scripts.test_workflows.test_creation_skills import TestSkillOrchestrator
 skill_orchestrator = TestSkillOrchestrator()
 result = skill_orchestrator.generate_comprehensive_tests(
-    "function_name", 
-    function_code, 
+    "function_name",
+    function_code,
     {"type": "mcp_tools"}
 )
 ```

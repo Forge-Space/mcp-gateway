@@ -45,7 +45,7 @@ Copy the appropriate environment template for each project:
 # For mcp-gateway
 cp .env.sentry.example .env.local
 
-# For uiforge-mcp  
+# For uiforge-mcp
 cp .env.sentry.example .env.local
 
 # For uiforge-webapp

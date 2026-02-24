@@ -11,7 +11,6 @@ from dribbble_mcp.image_analysis import ImageAnalyzer
 from dribbble_mcp.scraper import DribbbleScraper
 from dribbble_mcp.screenshot import ScreenshotCapture
 
-
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError as exc:

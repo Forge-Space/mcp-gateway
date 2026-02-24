@@ -180,19 +180,19 @@ echo "🔄 Updating all dependent projects..."
 for project in "${PROJECTS[@]}"; do
     echo "🔄 Updating $project..."
     cd "$project"
-    
+
     # Update core dependency
     npm install @forgespace/core@latest
-    
+
     # Update lockfile
     npm install
-    
+
     # Validate build
     npm run build
-    
+
     # Run tests
     npm test
-    
+
     echo "✅ $project updated successfully"
 done
 

@@ -19,12 +19,18 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r tool_router/requirements.txt
           pip install pre-commit
+          npm install --ignore-scripts
 
       - name: Run pre-commit checks
         run: |
@@ -41,10 +47,12 @@ jobs:
           fetch-depth: 0
 
       - name: Validate release branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           # Check if branch follows naming convention
-          if [[ ! "${{ github.head_ref }}" =~ ^release/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ Release branch must follow pattern: release/vX.Y.Z"
+          if [[ ! "$HEAD_REF" =~ ^release/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release branch must follow pattern: release/vX.Y.Z"
             exit 1
           fi
 
@@ -52,11 +60,11 @@ jobs:
           git fetch origin main
           MAIN_BEHIND=$(git rev-list --count HEAD..origin/main)
           if [ "$MAIN_BEHIND" -gt 0 ]; then
-            echo "❌ Main branch is $MAIN_BEHIND commits behind. Please sync first."
+            echo "Main branch is $MAIN_BEHIND commits behind. Please sync first."
             exit 1
           fi
 
-          echo "✅ Release branch validation passed"
+          echo "Release branch validation passed"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -82,7 +90,7 @@ jobs:
         run: |
           # Check for breaking changes in configuration or API
           if git diff --name-only origin/main...HEAD | grep -E "(tool_router/core/|tool_router/ai/|pyproject\.toml|requirements\.txt)"; then
-            echo "⚠️  Potential breaking changes detected in core files"
+            echo "Potential breaking changes detected in core files"
             echo "Please review carefully before merging"
           fi
 
@@ -97,19 +105,18 @@ jobs:
         run: |
           # Check if README is updated
           if git diff --name-only origin/main...HEAD | grep -E "(README\.md|CHANGELOG\.md|docs/)"; then
-            echo "✅ Documentation changes detected"
+            echo "Documentation changes detected"
           else
-            echo "ℹ️  No documentation changes - consider updating README or CHANGELOG"
+            echo "No documentation changes - consider updating README or CHANGELOG"
           fi
 
       - name: Check API documentation
         run: |
           if [ -f "docs/api/" ]; then
-            echo "✅ API documentation directory exists"
-            # Validate that API docs are complete
+            echo "API documentation directory exists"
             find docs/api/ -name "*.md" | head -5
           else
-            echo "ℹ️  Consider adding API documentation"
+            echo "Consider adding API documentation"
           fi
 
   # Performance and load testing
@@ -129,15 +136,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r tool_router/requirements.txt
+          pip install psutil
 
       - name: Run performance tests
         run: |
-          # Run basic performance benchmarks
           cd tool_router && python -m pytest tests/performance/ -v || echo "No performance tests found"
 
       - name: Memory usage check
         run: |
-          # Check for memory leaks in critical components
           cd tool_router && python -c "
           import psutil
           import os

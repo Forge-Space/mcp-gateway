@@ -8,7 +8,6 @@ from typing import Any
 
 import httpx
 
-
 logger = logging.getLogger(__name__)
 
 _MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
@@ -67,7 +66,7 @@ class ImageAnalyzer:
             RuntimeError: If Pillow is not installed or analysis fails.
         """
         try:
-            from PIL import Image  # noqa: PLC0415
+            from PIL import Image
         except ImportError as exc:
             msg = "Pillow is required: pip install Pillow"
             raise RuntimeError(msg) from exc

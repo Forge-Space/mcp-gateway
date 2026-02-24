@@ -281,7 +281,11 @@ class KnowledgeBase:
                     SET user_ratings = ?, updated_at = ?
                     WHERE id = ?
                 """,
-                    (json.dumps(item.user_ratings), item.updated_at.isoformat(), item_id),
+                    (
+                        json.dumps(item.user_ratings),
+                        item.updated_at.isoformat(),
+                        item_id,
+                    ),
                 )
 
     def get_statistics(self) -> dict[str, Any]:
