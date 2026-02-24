@@ -362,17 +362,16 @@ class TrainingPipeline:
 
     def export_training_data(self, export_path: Path) -> None:
         """Export training data for backup or analysis."""
+        kb_export_path = export_path.parent / "knowledge_base_export.json"
+        self.knowledge_base.export_knowledge(kb_export_path)
+
         export_data = {
             "training_statistics": self.training_stats,
-            "knowledge_base_export": export_path / "knowledge_base_export.json",
+            "knowledge_base_export": str(kb_export_path),
             "training_report": self.get_training_report(),
             "export_timestamp": datetime.now().isoformat(),
         }
 
-        # Export knowledge base
-        self.knowledge_base.export_knowledge_base(export_data["knowledge_base_export"])
-
-        # Export training data
         with export_path.open("w", encoding="utf-8") as f:
             json.dump(export_data, f, indent=2, ensure_ascii=False)
 
