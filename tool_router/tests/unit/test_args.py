@@ -1,5 +1,9 @@
 """Unit tests for tool_router/args.py module."""
 
+from __future__ import annotations
+
+from typing import Any
+
 from tool_router.args import build_arguments
 from tool_router.args.builder import COMMON_TASK_PARAMETER_NAMES
 
@@ -83,7 +87,7 @@ def test_build_arguments_no_string_params() -> None:
 def test_build_arguments_empty_properties() -> None:
     """Test build_arguments with empty tool properties."""
     task = "simple task"
-    tool = {}
+    tool: dict[str, Any] = {}
 
     result = build_arguments(tool, task)
 

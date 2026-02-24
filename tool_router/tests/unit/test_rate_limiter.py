@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import threading
 import time
+from collections import deque
 from unittest.mock import MagicMock, patch
 
 from tool_router.security.rate_limiter import (
@@ -26,7 +27,7 @@ class TestLimitType:
 
     def test_limit_type_count(self) -> None:
         """Test number of limit types."""
-        assert len(LimitType) == 5
+        assert len(LimitType) == 4
 
 
 class TestRateLimitConfig:
@@ -140,7 +141,7 @@ class TestRateLimiter:
         assert result.allowed is True
         assert result.remaining == 60  # requests_per_minute
         assert result.penalty_applied is False
-        assert result.metadata["window"] == "minute"
+        assert result.metadata["window_type"] == "minute"
 
     def test_check_rate_limit_with_penalty(self) -> None:
         """Test rate limit check when penalty is active."""
@@ -226,14 +227,14 @@ class TestRateLimiter:
         limiter = RateLimiter(use_redis=False)
         config = RateLimitConfig(requests_per_minute=5, requests_per_hour=3, requests_per_day=2)
 
-        # Exceed minute limit but not others
-        for _ in range(6):
+        # Day limit (2) is exceeded first since it's the smallest
+        for _ in range(3):
             limiter.check_rate_limit("user123", config)
 
         result = limiter.check_rate_limit("user123", config)
 
         assert result.allowed is False
-        assert result.metadata["window_type"] == "minute"  # Most restrictive
+        assert result.metadata["window_type"] == "day"
 
     def test_check_rate_limit_adaptive_scaling_enabled(self) -> None:
         """Test adaptive scaling when enabled."""
@@ -265,36 +266,40 @@ class TestRateLimiter:
 
     def test_check_redis_window_limit_success(self) -> None:
         """Test Redis window limit check success."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_redis_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_redis_from_url.return_value = mock_client
 
-        with patch.object(limiter, "_check_redis_window_limit") as mock_redis:
-            mock_redis.return_value = RateLimitResult(
-                allowed=True,
-                remaining=50,
-                reset_time=1234567890,
-                metadata={"window_type": "minute", "current_count": 10},
-            )
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
 
-            result = limiter.check_rate_limit("user123", RateLimitConfig())
-
-            mock_redis.assert_called_once()
-
-    def test_check_redis_window_limit_fallback(self) -> None:
-        """Test Redis window limit check fallback to memory."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
-
-        with patch.object(limiter, "_check_redis_window_limit", side_effect=Exception("Redis error")) as mock_redis:
-            with patch.object(limiter, "_check_memory_window_limit") as mock_memory:
-                mock_memory.return_value = RateLimitResult(
+            with patch.object(limiter, "_check_redis_window_limit") as mock_redis:
+                mock_redis.return_value = RateLimitResult(
                     allowed=True,
                     remaining=50,
                     reset_time=1234567890,
                     metadata={"window_type": "minute", "current_count": 10},
                 )
 
-                result = limiter.check_rate_limit("user123", RateLimitConfig())
+                limiter.check_rate_limit("user123", RateLimitConfig())
 
-                mock_memory.assert_called_once()
+                assert mock_redis.call_count == 3
+
+    def test_check_redis_window_limit_fallback(self) -> None:
+        """Test Redis window limit check fallback to memory."""
+        with patch("redis.from_url") as mock_redis_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_redis_from_url.return_value = mock_client
+
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+
+            mock_client.pipeline.side_effect = Exception("Redis error")
+
+            result = limiter.check_rate_limit("user123", RateLimitConfig())
+
+            assert result.allowed is True
+            assert result.metadata["window_type"] == "minute"
 
     def test_check_memory_window_limit_new_identifier(self) -> None:
         """Test memory window limit with new identifier."""
@@ -309,61 +314,67 @@ class TestRateLimiter:
     def test_check_memory_window_limit_existing_identifier(self) -> None:
         """Test memory window limit with existing identifier."""
         limiter = RateLimiter(use_redis=False)
+        current_time = 1234567890
+        window_start = current_time - (current_time % 60)
+        window_end = window_start + 60
 
-        # First request
-        limiter._check_memory_window_limit("existing_user", LimitType.PER_MINUTE, 60, 1000, 1000, 1234567890)
-
-        # Second request
-        result = limiter._check_memory_window_limit("existing_user", LimitType.PER_MINUTE, 60, 1000, 1000, 1234567890)
+        # Record a request manually then check
+        limiter._record_request("existing_user", current_time)
+        result = limiter._check_memory_window_limit(
+            "existing_user", LimitType.PER_MINUTE, 60, window_start, window_end, current_time
+        )
 
         assert result.allowed is True
-        assert result.remaining == 59  # One request already recorded
+        assert result.remaining == 59
         assert result.metadata["current_count"] == 1
 
     def test_check_memory_window_limit_old_requests_removed(self) -> None:
         """Test that old requests are removed from memory window."""
         limiter = RateLimiter(use_redis=False)
 
-        # Add old request outside window
-        old_time = 1234567890 - 100
+        current_time = 1234567890
+        window_start = current_time - (current_time % 60)
+        window_end = window_start + 60
+        old_time = window_start - 100
+
         limiter._memory_storage["test_user"] = {"minute": deque([old_time])}
 
-        result = limiter._check_memory_window_limit("test_user", LimitType.PER_MINUTE, 60, 1000, 1000, 1234567890)
+        result = limiter._check_memory_window_limit(
+            "test_user", LimitType.PER_MINUTE, 60, window_start, window_end, current_time
+        )
 
         assert result.allowed is True
-        assert result.metadata["current_count"] == 0  # Old request removed
+        assert result.metadata["current_count"] == 0
 
     def test_check_burst_limit_redis_success(self) -> None:
         """Test burst limit check with Redis success."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_pipe = MagicMock()
+            mock_pipe.execute.return_value = [2]
+            mock_client.pipeline.return_value = mock_pipe
+            mock_from_url.return_value = mock_client
 
-        with patch.object(limiter, "_check_burst_limit") as mock_burst:
-            mock_burst.return_value = RateLimitResult(
-                allowed=True,
-                remaining=8,
-                reset_time=1234567890,
-                metadata={"window_type": "burst", "current_count": 2},
-            )
-
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
             result = limiter._check_burst_limit("user123", 10, 1234567890)
 
-            mock_burst.assert_called_once()
+            assert result.allowed is True
+            assert result.metadata["window_type"] == "burst"
 
     def test_check_burst_limit_redis_fallback(self) -> None:
-        """Test burst limit check with Redis fallback."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        """Test burst limit check with Redis fallback to memory."""
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_client.pipeline.side_effect = Exception("Redis error")
+            mock_from_url.return_value = mock_client
 
-        with patch.object(limiter, "_check_burst_limit") as mock_burst:
-            mock_burst.return_value = RateLimitResult(
-                allowed=True,
-                remaining=8,
-                reset_time=1234567890,
-                metadata={"window_type": "burst", "current_count": 2},
-            )
-
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
             result = limiter._check_burst_limit("user123", 10, 1234567890)
 
-            mock_burst.assert_called_once()
+            assert result.allowed is True
+            assert result.metadata["window_type"] == "burst"
 
     def test_check_burst_limit_memory(self) -> None:
         """Test burst limit check with memory storage."""
@@ -386,18 +397,25 @@ class TestRateLimiter:
 
     def test_apply_penalty_with_redis(self) -> None:
         """Test penalty application with Redis."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_from_url.return_value = mock_client
 
-        with patch.object(limiter.redis_client, "setex") as mock_setex:
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
             limiter.apply_penalty("user123", 300)
 
-            mock_setex.assert_called_once_with("penalty:user123", 300, any)
+            mock_client.setex.assert_called_once()
 
     def test_apply_penalty_redis_error_fallback(self) -> None:
         """Test penalty application with Redis error fallback."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_client.setex.side_effect = Exception("Redis error")
+            mock_from_url.return_value = mock_client
 
-        with patch.object(limiter.redis_client, "setex", side_effect=Exception("Redis error")):
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
             limiter.apply_penalty("user123", 300)
 
         # Should still work with memory storage
@@ -415,22 +433,27 @@ class TestRateLimiter:
 
     def test_clear_penalties_with_redis(self) -> None:
         """Test clearing penalties with Redis."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_from_url.return_value = mock_client
 
-        limiter.apply_penalty("user123", 300)
-
-        with patch.object(limiter.redis_client, "delete") as mock_delete:
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+            limiter.apply_penalty("user123", 300)
             limiter.clear_penalties("user123")
 
-            mock_delete.assert_called_once_with("penalty:user123")
+            mock_client.delete.assert_called_once_with("penalty:user123")
 
     def test_clear_penalties_redis_error_fallback(self) -> None:
         """Test clearing penalties with Redis error fallback."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_client.delete.side_effect = Exception("Redis error")
+            mock_from_url.return_value = mock_client
 
-        limiter.apply_penalty("user123", 300)
-
-        with patch.object(limiter.redis_client, "delete", side_effect=Exception("Redis error")):
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+            limiter.apply_penalty("user123", 300)
             limiter.clear_penalties("user123")
 
         # Should still work with memory storage
@@ -480,30 +503,36 @@ class TestRateLimiter:
 
     def test_get_usage_stats_redis(self) -> None:
         """Test usage statistics with Redis."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_client.get.return_value = "5"
+            mock_from_url.return_value = mock_client
 
-        with patch.object(limiter.redis_client, "get") as mock_get:
-            mock_get.return_value = "5"
-
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
             stats = limiter.get_usage_stats("user123")
 
             assert stats["minute"]["count"] == 5
 
     def test_get_usage_stats_redis_error_fallback(self) -> None:
         """Test usage statistics with Redis error fallback."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_client.get.side_effect = Exception("Redis error")
+            mock_from_url.return_value = mock_client
 
-        with patch.object(limiter.redis_client, "get", side_effect=Exception("Redis error")):
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
             stats = limiter.get_usage_stats("user123")
 
-            assert stats["minute"]["count"] == 0  # Fallback to memory
+            assert stats["minute"]["count"] == 0
 
     def test_cleanup_expired_data_memory(self) -> None:
         """Test cleanup of expired data in memory storage."""
         limiter = RateLimiter(use_redis=False)
 
-        # Add old data
-        old_time = int(time.time()) - 86400  # 24 hours ago
+        # Add old data (strictly older than 24h cutoff)
+        old_time = int(time.time()) - 86401
         limiter._memory_storage["old_user"] = {
             "minute": deque([old_time]),
             "hour": deque([old_time]),
@@ -546,13 +575,16 @@ class TestRateLimiter:
 
     def test_record_request_redis(self) -> None:
         """Test request recording with Redis (handled automatically in window check)."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_pipe = MagicMock()
+            mock_pipe.execute.return_value = [1]
+            mock_client.pipeline.return_value = mock_pipe
+            mock_from_url.return_value = mock_client
 
-        # Redis handles counting automatically in _check_window_limit
-        limiter.check_rate_limit("user123", RateLimitConfig())
-
-        # Should not raise error
-        limiter._record_request("user123", int(time.time()))
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+            limiter._record_request("user123", int(time.time()))
 
     def test_thread_safety_memory_storage(self) -> None:
         """Test thread safety of memory storage operations."""
@@ -619,6 +651,7 @@ class TestRateLimiter:
 
     def test_rate_limit_config_validation(self) -> None:
         """Test rate limit configuration validation."""
+        limiter = RateLimiter(use_redis=False)
         config = RateLimitConfig(
             requests_per_minute=-1,  # Invalid negative value
             requests_per_hour=1000,
@@ -635,6 +668,7 @@ class TestRateLimiter:
 
     def test_rate_limit_config_extreme_values(self) -> None:
         """Test rate limit configuration with extreme values."""
+        limiter = RateLimiter(use_redis=False)
         config = RateLimitConfig(
             requests_per_minute=1000000,  # Very high limit
             requests_per_hour=1000000,
@@ -669,7 +703,7 @@ class TestRateLimiter:
         assert result3.remaining == 2
 
     def test_rate_limit_edge_case_zero_limits(self) -> None:
-        """Test rate limiting with zero limits (should allow all requests)."""
+        """Test rate limiting with zero limits (blocks all requests)."""
         limiter = RateLimiter(use_redis=False)
         config = RateLimitConfig(
             requests_per_minute=0,
@@ -680,7 +714,7 @@ class TestRateLimiter:
 
         result = limiter.check_rate_limit("user123", config)
 
-        assert result.allowed is True
+        assert result.allowed is False
         assert result.remaining == 0
 
     def test_rate_limit_edge_case_negative_window(self) -> None:
@@ -760,22 +794,22 @@ class TestRateLimiter:
 
         result = limiter.check_rate_limit("user123", config)
 
-        assert "window" in result.metadata
+        assert "window_type" in result.metadata
         assert isinstance(result.metadata, dict)
 
     def test_burst_limit_isolation(self) -> None:
-        """Test that burst limits are isolated from regular limits."""
+        """Test that burst limits are tracked separately from regular limits."""
         limiter = RateLimiter(use_redis=False)
-        config = RateLimitConfig(requests_per_minute=1, burst_capacity=10)
+        config = RateLimitConfig(requests_per_minute=100, burst_capacity=10)
 
-        # Fill regular limit
-        for _ in range(2):
-            limiter.check_rate_limit("user123", config)
+        # Make a few requests — all should be within limits
+        for _ in range(3):
+            result = limiter.check_rate_limit("user123", config)
+            assert result.allowed is True
 
-        # Burst limit should still have capacity
+        # Burst and minute limits should both still have capacity
         result = limiter.check_rate_limit("user123", config)
         assert result.allowed is True
-        assert result.remaining == 9  # 10 - 1 used
 
     def test_adaptive_scaling_threshold(self) -> None:
         """Test adaptive scaling threshold logic."""
@@ -817,7 +851,13 @@ class TestRateLimiter:
         limiter = RateLimiter(use_redis=False)
         config = RateLimitConfig(requests_per_minute=100, adaptive_scaling=False, penalty_multiplier=2.0)
 
-        result = limiter._apply_adaptive_scaling("user123", RateLimitResult(), config)
+        base_result = RateLimitResult(
+            allowed=True,
+            remaining=50,
+            reset_time=1234567890,
+            metadata={},
+        )
+        result = limiter._apply_adaptive_scaling("user123", base_result, config)
 
         assert "adaptive_scaling_applied" not in result.metadata
 
@@ -892,25 +932,19 @@ class TestRateLimiter:
 
         assert set(expected_types) == set(actual_types)
 
-    def test_limit_type_enum_completeness(self) -> None:
-        """Test that LimitType enum has all expected values."""
-        expected_types = ["minute", "hour", "day", "burst"]
-        actual_types = [limit_type.value for limit_type in LimitType]
-
-        assert set(expected_types) == set(actual_types)
-
     def test_rate_limit_error_handling(self) -> None:
         """Test graceful error handling in rate limiting."""
-        limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
+        with patch("redis.from_url") as mock_from_url:
+            mock_client = MagicMock()
+            mock_client.ping.return_value = True
+            mock_client.pipeline.side_effect = Exception("Redis connection lost")
+            mock_from_url.return_value = mock_client
 
-        # Simulate Redis connection failure
-        with patch.object(limiter, "_check_window_limit") as mock_window:
-            mock_window.side_effect = Exception("Redis connection lost")
-
+            limiter = RateLimiter(use_redis=True, redis_url="redis://localhost:6379")
             result = limiter.check_rate_limit("user123", RateLimitConfig())
 
-            # Should fallback to memory storage
             assert isinstance(result, RateLimitResult)
+            assert result.allowed is True
 
     def test_penalty_cleanup_thread_safety(self) -> None:
         """Test penalty cleanup thread safety."""

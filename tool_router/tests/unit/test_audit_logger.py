@@ -596,10 +596,12 @@ class TestSecurityAuditLogger:
         # Verify formatter is applied
         for handler in logger.logger.handlers:
             assert isinstance(handler.formatter, logging.Formatter)
-            assert "%(asctime)s" in handler.formatter._fmt
-            assert "%(name)s" in handler.formatter._fmt
-            assert "%(levelname)s" in handler.formatter._fmt
-            assert "%(message)s" in handler.formatter._fmt
+            fmt = handler.formatter._fmt
+            assert fmt is not None
+            assert "%(asctime)s" in fmt
+            assert "%(name)s" in fmt
+            assert "%(levelname)s" in fmt
+            assert "%(message)s" in fmt
 
     def test_event_id_generation(self) -> None:
         """Test that event IDs are unique UUIDs."""
