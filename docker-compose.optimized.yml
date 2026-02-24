@@ -35,7 +35,10 @@ services:
   # Core Gateway Services - Optimized
   gateway:
     <<: *common
-    image: ghcr.io/ibm/mcp-gateway:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.tool-router
+    image: forge-mcp-gateway:latest
     container_name: forge-mcpgateway
     entrypoint: ["/app/docker/entrypoint.sh"]
     ports:

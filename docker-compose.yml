@@ -24,7 +24,10 @@ x-translate: &translate
 services:
   # Core Gateway Services Only
   gateway:
-    image: ghcr.io/ibm/mcp-gateway:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.tool-router
+    image: forge-mcp-gateway:latest
     container_name: forge-mcpgateway
     restart: unless-stopped
     entrypoint: ["/app/docker/entrypoint.sh"]
