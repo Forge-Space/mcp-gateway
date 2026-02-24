@@ -556,7 +556,7 @@ class TestComponentGenerator:
 
         # Business logic: tokens should be estimated based on word count
         assert tokens > 0
-        assert isinstance(tokens, (int, float))
+        assert isinstance(tokens, int | float)
 
     def test_generate_all_component_types(self) -> None:
         """Test generation of all supported component types."""

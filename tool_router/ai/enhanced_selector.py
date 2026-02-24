@@ -325,7 +325,7 @@ class OllamaSelector(BaseAISelector):
                 return None
 
             confidence = result["confidence"]
-            if not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1:
+            if not isinstance(confidence, int | float) or not 0 <= confidence <= 1:
                 logger.warning("Invalid confidence value: %s", confidence)
                 return None
 
@@ -358,7 +358,7 @@ class OllamaSelector(BaseAISelector):
                 return None
 
             confidence = result["confidence"]
-            if not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1:
+            if not isinstance(confidence, int | float) or not 0 <= confidence <= 1:
                 logger.warning("Invalid confidence value in multi-tool response: %s", confidence)
                 return None
 

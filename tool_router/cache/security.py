@@ -80,7 +80,7 @@ class CacheEncryption:
 
         try:
             # Serialize data to JSON for consistent encryption
-            if isinstance(data, (dict, list, tuple)):
+            if isinstance(data, dict | list | tuple):
                 serialized = json.dumps(data, sort_keys=True).encode()
             elif isinstance(data, str):
                 serialized = data.encode()

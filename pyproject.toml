@@ -247,6 +247,12 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "ANN",     # Don't require type hints in tests
     "SIM117",  # Allow nested with statements in tests
 ]
+"tool_router/test_server.py" = [
+    "N802",    # BaseHTTPRequestHandler overrides require do_GET naming
+]
+"tool_router/simple_server.py" = [
+    "N802",    # BaseHTTPRequestHandler overrides require do_GET naming
+]
 "tool_router/server.py" = [
     "PLR0911", # Allow more return statements in main routing function
     "E501",    # Allow long lines in docstrings
