@@ -71,7 +71,9 @@ class TestHealthCheckResult:
 
     def test_create_result(self) -> None:
         comp = ComponentHealth(
-            name="test", status=HealthStatus.HEALTHY, message="OK",
+            name="test",
+            status=HealthStatus.HEALTHY,
+            message="OK",
         )
         result = HealthCheckResult(
             status=HealthStatus.HEALTHY,
@@ -84,11 +86,14 @@ class TestHealthCheckResult:
 
     def test_to_dict(self) -> None:
         comp = ComponentHealth(
-            name="gw", status=HealthStatus.HEALTHY, message="OK",
+            name="gw",
+            status=HealthStatus.HEALTHY,
+            message="OK",
             latency_ms=10.0,
         )
         result = HealthCheckResult(
-            status=HealthStatus.HEALTHY, components=[comp],
+            status=HealthStatus.HEALTHY,
+            components=[comp],
             timestamp=time.time(),
         )
         d = result.to_dict()
@@ -128,8 +133,13 @@ class TestStructuredFormatter:
     def test_format_record(self) -> None:
         fmt = StructuredFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="",
-            lineno=0, msg="hello", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         output = fmt.format(record)
         assert "hello" in output
@@ -137,9 +147,13 @@ class TestStructuredFormatter:
     def test_format_includes_structured_data(self) -> None:
         fmt = StructuredFormatter()
         record = logging.LogRecord(
-            name="test.module", level=logging.WARNING,
-            pathname="test.py", lineno=42, msg="warn msg",
-            args=(), exc_info=None,
+            name="test.module",
+            level=logging.WARNING,
+            pathname="test.py",
+            lineno=42,
+            msg="warn msg",
+            args=(),
+            exc_info=None,
         )
         output = fmt.format(record)
         assert "warn msg" in output
@@ -255,6 +269,7 @@ class TestMetricsCollector:
 
     def test_concurrent_recording(self) -> None:
         import threading
+
         mc = MetricsCollector()
 
         def record(tid: int) -> None:

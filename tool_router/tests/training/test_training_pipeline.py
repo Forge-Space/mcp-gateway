@@ -397,6 +397,7 @@ class TestTrainingPipeline:
             assert "quality_metrics" in results
             assert "coverage" in results
             from tool_router.training.data_extraction import PatternCategory as PatCat
+
             expected_total = 5 * len(PatCat)
             assert results["quality_metrics"]["total_patterns"] == expected_total
             assert results["quality_metrics"]["avg_confidence"] == 0.8
