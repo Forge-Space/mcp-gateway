@@ -1,10 +1,12 @@
 """Tests for enhanced matcher functions."""
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from tool_router.scoring.matcher import (
-    select_top_matching_tools_hybrid,
     select_top_matching_tools_enhanced,
+    select_top_matching_tools_hybrid,
 )
 
 
@@ -232,7 +234,7 @@ class TestEnhancedSelection:
 
         assert result == []
 
-    @patch('tool_router.scoring.matcher.logger')
+    @patch("tool_router.scoring.matcher.logger")
     def test_select_top_matching_tools_enhanced_ai_exception(self, mock_logger, sample_tools):
         """Test enhanced selection when AI raises exception."""
         mock_ai_selector = Mock()

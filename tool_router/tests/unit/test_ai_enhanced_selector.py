@@ -7,12 +7,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tool_router.ai.enhanced_selector import (
-    AIProvider,
     AIModel,
+    AIProvider,
     BaseAISelector,
+    CostTracker,
     EnhancedAISelector,
     OllamaSelector,
-    CostTracker,
 )
 
 

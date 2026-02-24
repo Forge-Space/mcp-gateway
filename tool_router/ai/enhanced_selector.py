@@ -278,7 +278,7 @@ class OllamaSelector(BaseAISelector):
         except httpx.HTTPStatusError as e:
             logger.warning("Ollama HTTP error: %s", e)
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Ollama request failed: %s", e)
             return None
 
@@ -305,7 +305,7 @@ class OllamaSelector(BaseAISelector):
         except json.JSONDecodeError as e:
             logger.warning("Failed to parse AI response as JSON: %s", e)
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Error parsing AI response: %s", e)
             return None
         else:
@@ -345,7 +345,7 @@ class OllamaSelector(BaseAISelector):
         except json.JSONDecodeError as e:
             logger.warning("Failed to parse AI multi-tool response as JSON: %s", e)
             return None
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.warning("Error parsing AI multi-tool response: %s", e)
             return None
         else:

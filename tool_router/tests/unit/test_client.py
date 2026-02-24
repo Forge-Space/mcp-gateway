@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from tool_router.gateway.client import GatewayClient, HTTPGatewayClient, call_tool, get_tools
 from tool_router.core.config import GatewayConfig
+from tool_router.gateway.client import GatewayClient, HTTPGatewayClient, call_tool, get_tools
 
 
 class TestHTTPGatewayClient:
@@ -202,7 +202,7 @@ class TestHTTPGatewayClient:
         client = HTTPGatewayClient(config)
 
         mock_response = MagicMock()
-        mock_response.read.return_value = b'invalid json'
+        mock_response.read.return_value = b"invalid json"
 
         with patch("urllib.request.urlopen", return_value=mock_response):
             with pytest.raises(ValueError, match="Invalid JSON response"):

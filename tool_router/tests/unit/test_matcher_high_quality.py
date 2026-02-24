@@ -1,10 +1,11 @@
 """High-quality tests for tool_router/scoring/matcher.py."""
 
 import pytest
+
 from tool_router.scoring.matcher import (
-    _extract_normalized_tokens,
-    _enrich_tokens_with_synonyms,
     _calculate_substring_match_score,
+    _enrich_tokens_with_synonyms,
+    _extract_normalized_tokens,
     calculate_tool_relevance_score,
     select_top_matching_tools,
 )
@@ -90,7 +91,7 @@ class TestTokenExtraction:
         result = _extract_normalized_tokens(text)
 
         assert isinstance(result, set)
-        assert all(not token.endswith(('.', '!', '?')) for token in result)
+        assert all(not token.endswith((".", "!", "?")) for token in result)
 
 
 class TestTokenEnrichment:

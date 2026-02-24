@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
-from tool_router.mcp_tools.rag_manager import rag_manager_tool, RAGManagerTool
+import pytest
+
+from tool_router.mcp_tools.rag_manager import RAGManagerTool, rag_manager_tool
 
 
 class TestRAGManager:
@@ -21,51 +21,51 @@ class TestRAGManager:
     async def test_analyze_query(self):
         """Test query analysis functionality."""
         result = await rag_manager_tool._handle_analyze_query({
-            'query': 'How to create responsive React components',
-            'agent_type': 'ui_specialist'
+            "query": "How to create responsive React components",
+            "agent_type": "ui_specialist"
         })
 
-        assert result['success'] is True
-        assert 'data' in result
-        assert 'intent' in result['data']
-        assert 'keywords' in result['data']
-        assert 'confidence' in result['data']
-        assert result['data']['intent'] in ['explicit_fact', 'implicit_fact', 'interpretable_rationale', 'hidden_rationale']
+        assert result["success"] is True
+        assert "data" in result
+        assert "intent" in result["data"]
+        assert "keywords" in result["data"]
+        assert "confidence" in result["data"]
+        assert result["data"]["intent"] in ["explicit_fact", "implicit_fact", "interpretable_rationale", "hidden_rationale"]
 
     @pytest.mark.asyncio
     async def test_retrieve_knowledge(self):
         """Test knowledge retrieval functionality."""
         result = await rag_manager_tool._handle_retrieve_knowledge({
-            'query': 'React hooks patterns',
-            'agent_type': 'ui_specialist',
-            'retrieval_strategy': 'hybrid',
-            'max_results': 3,
-            'context_length': 4000
+            "query": "React hooks patterns",
+            "agent_type": "ui_specialist",
+            "retrieval_strategy": "hybrid",
+            "max_results": 3,
+            "context_length": 4000
         })
 
-        assert result['success'] is True
-        assert 'data' in result
-        assert 'results' in result['data']
-        assert 'total_results' in result['data']
-        assert 'retrieval_strategy' in result['data']
-        assert isinstance(result['data']['results'], list)
+        assert result["success"] is True
+        assert "data" in result
+        assert "results" in result["data"]
+        assert "total_results" in result["data"]
+        assert "retrieval_strategy" in result["data"]
+        assert isinstance(result["data"]["results"], list)
 
     @pytest.mark.asyncio
     async def test_retrieve_knowledge_with_different_strategies(self):
         """Test knowledge retrieval with different strategies."""
-        strategies = ['hybrid', 'category', 'fulltext', 'vector', 'agent_specific']
+        strategies = ["hybrid", "category", "fulltext", "vector", "agent_specific"]
 
         for strategy in strategies:
             result = await rag_manager_tool._handle_retrieve_knowledge({
-                'query': 'React components',
-                'agent_type': 'ui_specialist',
-                'retrieval_strategy': strategy,
-                'max_results': 2,
-                'context_length': 2000
+                "query": "React components",
+                "agent_type": "ui_specialist",
+                "retrieval_strategy": strategy,
+                "max_results": 2,
+                "context_length": 2000
             })
 
-            assert result['success'] is True
-            assert result['data']['retrieval_strategy'] == strategy
+            assert result["success"] is True
+            assert result["data"]["retrieval_strategy"] == strategy
 
     @pytest.mark.asyncio
     async def test_rank_results(self):
@@ -73,107 +73,107 @@ class TestRAGManager:
         # Mock results
         mock_results = [
             {
-                'item_id': 'test_1',
-                'title': 'Test Result 1',
-                'content': 'Test content 1',
-                'category': 'react_pattern',
-                'confidence': 0.9,
-                'effectiveness': 0.8,
-                'relevance_score': 0.7,
-                'source_type': 'manual',
-                'freshness_score': 1.0,
-                'agent_specific': False,
-                'agent_types': []
+                "item_id": "test_1",
+                "title": "Test Result 1",
+                "content": "Test content 1",
+                "category": "react_pattern",
+                "confidence": 0.9,
+                "effectiveness": 0.8,
+                "relevance_score": 0.7,
+                "source_type": "manual",
+                "freshness_score": 1.0,
+                "agent_specific": False,
+                "agent_types": []
             },
             {
-                'item_id': 'test_2',
-                'title': 'Test Result 2',
-                'content': 'Test content 2',
-                'category': 'ui_component',
-                'confidence': 0.8,
-                'effectiveness': 0.7,
-                'relevance_score': 0.6,
-                'source_type': 'manual',
-                'freshness_score': 0.9,
-                'agent_specific': True,
-                'agent_types': ['ui_specialist']
+                "item_id": "test_2",
+                "title": "Test Result 2",
+                "content": "Test content 2",
+                "category": "ui_component",
+                "confidence": 0.8,
+                "effectiveness": 0.7,
+                "relevance_score": 0.6,
+                "source_type": "manual",
+                "freshness_score": 0.9,
+                "agent_specific": True,
+                "agent_types": ["ui_specialist"]
             }
         ]
 
         mock_analysis = {
-            'intent': 'implicit_fact',
-            'entities': ['React'],
-            'keywords': ['how', 'create', 'react', 'components'],
-            'agent_type': 'ui_specialist',
-            'complexity': 'moderate',
-            'confidence': 0.9
+            "intent": "implicit_fact",
+            "entities": ["React"],
+            "keywords": ["how", "create", "react", "components"],
+            "agent_type": "ui_specialist",
+            "complexity": "moderate",
+            "confidence": 0.9
         }
 
         result = await rag_manager_tool._handle_rank_results({
-            'results': mock_results,
-            'query_analysis_data': mock_analysis,
-            'agent_type': 'ui_specialist'
+            "results": mock_results,
+            "query_analysis_data": mock_analysis,
+            "agent_type": "ui_specialist"
         })
 
-        assert result['success'] is True
-        assert 'data' in result
-        assert 'results' in result['data']
-        assert result['data']['ranking_strategy'] == 'multi_factor'
-        assert len(result['data']['results']) == 2
+        assert result["success"] is True
+        assert "data" in result
+        assert "results" in result["data"]
+        assert result["data"]["ranking_strategy"] == "multi_factor"
+        assert len(result["data"]["results"]) == 2
 
     @pytest.mark.asyncio
     async def test_inject_context(self):
         """Test context injection functionality."""
         mock_results = [
             {
-                'item_id': 'test_1',
-                'title': 'Test Result 1',
-                'content': 'Test content 1',
-                'category': 'react_pattern',
-                'confidence': 0.9,
-                'effectiveness': 0.8,
-                'relevance_score': 0.7,
-                'source_type': 'manual',
-                'freshness_score': 1.0,
-                'agent_specific': False,
-                'agent_types': []
+                "item_id": "test_1",
+                "title": "Test Result 1",
+                "content": "Test content 1",
+                "category": "react_pattern",
+                "confidence": 0.9,
+                "effectiveness": 0.8,
+                "relevance_score": 0.7,
+                "source_type": "manual",
+                "freshness_score": 1.0,
+                "agent_specific": False,
+                "agent_types": []
             }
         ]
 
         result = await rag_manager_tool._handle_inject_context({
-            'ranked_results': mock_results,
-            'agent_type': 'ui_specialist',
-            'context_length': 4000
+            "ranked_results": mock_results,
+            "agent_type": "ui_specialist",
+            "context_length": 4000
         })
 
-        assert result['success'] is True
-        assert 'data' in result
-        assert 'context' in result['data']
-        assert 'context_length' in result['data']
-        assert 'items_included' in result['data']
-        assert 'examples_included' in result['data']
+        assert result["success"] is True
+        assert "data" in result
+        assert "context" in result["data"]
+        assert "context_length" in result["data"]
+        assert "items_included" in result["data"]
+        assert "examples_included" in result["data"]
 
     @pytest.mark.asyncio
     async def test_get_cache_stats(self):
         """Test cache statistics functionality."""
         result = await rag_manager_tool._handle_get_cache_stats({})
 
-        assert result['success'] is True
-        assert 'data' in result
+        assert result["success"] is True
+        assert "data" in result
 
     @pytest.mark.asyncio
     async def test_optimize_performance(self):
         """Test performance optimization functionality."""
         # Test the case where no performance data is available
         result = await rag_manager_tool._handle_optimize_performance({
-            'agent_type': 'ui_specialist',
-            'performance_target': 'latency'
+            "agent_type": "ui_specialist",
+            "performance_target": "latency"
         })
 
         # Should return success: False when no data is available
-        assert result['success'] is False
-        assert 'error' in result
-        assert 'No performance data available' in result['error']
+        assert result["success"] is False
+        assert "error" in result
+        assert "No performance data available" in result["error"]
 
     @pytest.mark.asyncio
     async def test_multi_strategy_retrieval(self):
@@ -183,52 +183,52 @@ class TestRAGManager:
 
         # Step 1: Analyze query
         analysis = await rag_manager_tool._handle_analyze_query({
-            'query': query,
-            'agent_type': 'ui_specialist'
+            "query": query,
+            "agent_type": "ui_specialist"
         })
-        assert analysis['success'] is True
+        assert analysis["success"] is True
 
         # Step 2: Retrieve knowledge
         retrieval = await rag_manager_tool._handle_retrieve_knowledge({
-            'query': query,
-            'agent_type': 'ui_specialist',
-            'retrieval_strategy': 'hybrid',
-            'max_results': 5,
-            'context_length': 4000
+            "query": query,
+            "agent_type": "ui_specialist",
+            "retrieval_strategy": "hybrid",
+            "max_results": 5,
+            "context_length": 4000
         })
-        assert retrieval['success'] is True
-        assert retrieval['data']['total_results'] > 0
+        assert retrieval["success"] is True
+        assert retrieval["data"]["total_results"] > 0
 
         # Step 3: Rank results
         ranking = await rag_manager_tool._handle_rank_results({
-            'results': retrieval['data']['results'],
-            'query_analysis_data': analysis['data'],
-            'agent_type': 'ui_specialist'
+            "results": retrieval["data"]["results"],
+            "query_analysis_data": analysis["data"],
+            "agent_type": "ui_specialist"
         })
-        assert ranking['success'] is True
+        assert ranking["success"] is True
 
         # Step 4: Inject context
         context = await rag_manager_tool._handle_inject_context({
-            'ranked_results': ranking['data']['results'],
-            'agent_type': 'ui_specialist',
-            'context_length': 4000
+            "ranked_results": ranking["data"]["results"],
+            "agent_type": "ui_specialist",
+            "context_length": 4000
         })
-        assert context['success'] is True
+        assert context["success"] is True
 
     @pytest.mark.asyncio
     async def test_error_handling(self):
         """Test error handling in RAG Manager."""
         # Test with invalid strategy
         result = await rag_manager_tool._handle_retrieve_knowledge({
-            'query': 'React hooks',
-            'agent_type': 'ui_specialist',
-            'retrieval_strategy': 'invalid_strategy',
-            'max_results': 3,
-            'context_length': 4000
+            "query": "React hooks",
+            "agent_type": "ui_specialist",
+            "retrieval_strategy": "invalid_strategy",
+            "max_results": 3,
+            "context_length": 4000
         })
 
         # Should still succeed but with fallback
-        assert result['success'] is True
+        assert result["success"] is True
 
     @pytest.mark.asyncio
     async def test_performance_targets(self):
@@ -238,8 +238,8 @@ class TestRAGManager:
         # Test query analysis performance
         start_time = time.time()
         analysis = await rag_manager_tool._handle_analyze_query({
-            'query': 'React components',
-            'agent_type': 'ui_specialist'
+            "query": "React components",
+            "agent_type": "ui_specialist"
         })
         analysis_time = time.time() - start_time
         assert analysis_time < 0.1  # <100ms target
@@ -247,11 +247,11 @@ class TestRAGManager:
         # Test retrieval performance
         start_time = time.time()
         retrieval = await rag_manager_tool._handle_retrieve_knowledge({
-            'query': 'React hooks patterns',
-            'agent_type': 'ui_specialist',
-            'retrieval_strategy': 'hybrid',
-            'max_results': 3,
-            'context_length': 4000
+            "query": "React hooks patterns",
+            "agent_type": "ui_specialist",
+            "retrieval_strategy": "hybrid",
+            "max_results": 3,
+            "context_length": 4000
         })
         retrieval_time = time.time() - start_time
         assert retrieval_time < 0.5  # <500ms target
@@ -305,7 +305,7 @@ class RAGTool:
                     }
                 ],
                 "cache_hit": False,
-                "retrieval_strategy": arguments.get('retrieval_strategy', 'hybrid'),
+                "retrieval_strategy": arguments.get("retrieval_strategy", "hybrid"),
                 "total_results": 1
             }
         }
@@ -315,9 +315,9 @@ class RAGTool:
         return {
             "success": True,
             "data": {
-                "results": arguments['results'],
+                "results": arguments["results"],
                 "ranking_strategy": "multi_factor",
-                "total_results": len(arguments['results'])
+                "total_results": len(arguments["results"])
             }
         }
 

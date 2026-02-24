@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
-from pathlib import Path
-
-import pytest
 
 from tool_router.security.audit_logger import (
     SecurityAuditLogger,
@@ -59,7 +55,7 @@ class TestSecurityEvent:
 
     def test_security_event_creation(self):
         """Test SecurityEvent creation with all fields."""
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         event = SecurityEvent(
             event_id="test-event-123",
             timestamp=timestamp,
@@ -94,7 +90,7 @@ class TestSecurityEvent:
 
     def test_security_event_minimal(self):
         """Test SecurityEvent creation with minimal required fields."""
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         event = SecurityEvent(
             event_id="minimal-event",
             timestamp=timestamp,
@@ -128,7 +124,7 @@ class TestSecurityEvent:
 
     def test_security_event_asdict(self):
         """Test SecurityEvent conversion to dict."""
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         event = SecurityEvent(
             event_id="test-event",
             timestamp=timestamp,
@@ -229,7 +225,7 @@ class TestSecurityAuditLogger:
         """Test logging a low severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         event = SecurityEvent(
             event_id="test-event",
             timestamp=timestamp,
@@ -247,7 +243,7 @@ class TestSecurityAuditLogger:
             metadata={}
         )
 
-        with patch.object(logger.logger, 'info') as mock_info:
+        with patch.object(logger.logger, "info") as mock_info:
             logger.log_security_event(event)
 
             mock_info.assert_called_once()
@@ -260,7 +256,7 @@ class TestSecurityAuditLogger:
         """Test logging a medium severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         event = SecurityEvent(
             event_id="test-event",
             timestamp=timestamp,
@@ -278,7 +274,7 @@ class TestSecurityAuditLogger:
             metadata={}
         )
 
-        with patch.object(logger.logger, 'warning') as mock_warning:
+        with patch.object(logger.logger, "warning") as mock_warning:
             logger.log_security_event(event)
 
             mock_warning.assert_called_once()
@@ -291,7 +287,7 @@ class TestSecurityAuditLogger:
         """Test logging a high severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         event = SecurityEvent(
             event_id="test-event",
             timestamp=timestamp,
@@ -309,7 +305,7 @@ class TestSecurityAuditLogger:
             metadata={}
         )
 
-        with patch.object(logger.logger, 'error') as mock_error:
+        with patch.object(logger.logger, "error") as mock_error:
             logger.log_security_event(event)
 
             mock_error.assert_called_once()
@@ -322,7 +318,7 @@ class TestSecurityAuditLogger:
         """Test logging a critical severity security event."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         event = SecurityEvent(
             event_id="test-event",
             timestamp=timestamp,
@@ -340,7 +336,7 @@ class TestSecurityAuditLogger:
             metadata={}
         )
 
-        with patch.object(logger.logger, 'error') as mock_error:
+        with patch.object(logger.logger, "error") as mock_error:
             logger.log_security_event(event)
 
             mock_error.assert_called_once()
@@ -353,7 +349,7 @@ class TestSecurityAuditLogger:
         """Test logging a received request."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        with patch.object(logger, 'log_security_event') as mock_log:
+        with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_request_received(
                 user_id="user123",
                 session_id="session456",
@@ -387,7 +383,7 @@ class TestSecurityAuditLogger:
         """Test logging a received request with minimal data."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        with patch.object(logger, 'log_security_event') as mock_log:
+        with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_request_received(
                 user_id=None,
                 session_id=None,
@@ -420,7 +416,7 @@ class TestSecurityAuditLogger:
         """Test logging a blocked request with high risk score."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        with patch.object(logger, 'log_security_event') as mock_log:
+        with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_request_blocked(
                 user_id="user123",
                 session_id="session456",
@@ -456,7 +452,7 @@ class TestSecurityAuditLogger:
         """Test logging a blocked request with medium risk score."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        with patch.object(logger, 'log_security_event') as mock_log:
+        with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_request_blocked(
                 user_id="user123",
                 session_id="session456",
@@ -484,7 +480,7 @@ class TestSecurityAuditLogger:
         """Test logging a blocked request with minimal data."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        with patch.object(logger, 'log_security_event') as mock_log:
+        with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_request_blocked(
                 user_id=None,
                 session_id=None,
@@ -512,7 +508,7 @@ class TestSecurityAuditLogger:
         """Test logging a rate limit exceeded event."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        with patch.object(logger, 'log_security_event') as mock_log:
+        with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_rate_limit_exceeded(
                 user_id="user123",
                 session_id="session456",
@@ -549,7 +545,7 @@ class TestSecurityAuditLogger:
         """Test logging a rate limit exceeded event with minimal data."""
         logger = SecurityAuditLogger(enable_console=False)
 
-        with patch.object(logger, 'log_security_event') as mock_log:
+        with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_rate_limit_exceeded(
                 user_id=None,
                 session_id=None,

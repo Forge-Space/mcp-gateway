@@ -5,8 +5,7 @@ from typing import Any
 
 class PromptTemplates:
     """Enhanced prompt templates for AI tool selection."""
-    
-    # Enhanced single-tool selection template with better NLP
+
     TOOL_SELECTION_TEMPLATE = """You are an expert tool selection assistant for an MCP (Model Context Protocol) gateway.
 Your role is to analyze user intent and select the most appropriate tool from the available options.
 
@@ -40,7 +39,6 @@ Respond with valid JSON only, no additional text:
   "intent_analysis": "<key actions and objects identified in the task>"
 }}"""
 
-    # Enhanced multi-tool selection template
     MULTI_TOOL_SELECTION_TEMPLATE = """You are an expert workflow orchestration assistant for an MCP (Model Context Protocol) gateway.
 Your role is to analyze complex tasks and select a sequence of tools that work together effectively.
 
@@ -74,7 +72,6 @@ Respond with valid JSON only, no additional text:
   "dependencies": "<any dependencies between the tools>"
 }}"""
 
-    # Context-aware enhancement template
     CONTEXT_ENHANCED_TEMPLATE = """You are an intelligent tool selection assistant with contextual awareness for MCP (Model Context Protocol) gateway.
 Your role is to understand the user's intent, consider the conversation context, and select the optimal tool.
 
@@ -127,32 +124,23 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Context\n{context}"
-        
+
         history_section = ""
         if similar_tools:
-<<<<<<< Updated upstream
-            history_section = f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
-        
-        if enhanced:
-            template = cls.CONTEXT_ENHANCED_TEMPLATE
-        else:
-            template = cls.TOOL_SELECTION_TEMPLATE
-        
-=======
             history_section = (
-                f"\n\n## Similar Successful Tools\nPreviously successful for similar tasks: {', '.join(similar_tools)}"
+                f"\n\n## Similar Successful Tools\n"
+                f"Previously successful for similar tasks: {', '.join(similar_tools)}"
             )
 
         template = cls.CONTEXT_ENHANCED_TEMPLATE if enhanced else cls.TOOL_SELECTION_TEMPLATE
 
->>>>>>> Stashed changes
         return template.format(
             task=task,
             tool_list=tool_list,
             context_section=context_section,
             history_section=history_section,
         )
-    
+
     @classmethod
     def create_multi_tool_selection_prompt(
         cls,
@@ -166,18 +154,17 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Context\n{context}"
-        
+
         if enhanced:
-            # Add workflow analysis section
             context_section += "\n\n## Workflow Considerations\nConsider the logical flow and dependencies between tools."
-        
+
         return cls.MULTI_TOOL_SELECTION_TEMPLATE.format(
             task=task,
             tool_list=tool_list,
             context_section=context_section,
             max_tools=max_tools,
         )
-    
+
     @classmethod
     def create_context_aware_prompt(
         cls,
@@ -191,25 +178,29 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Current Context\n{context}"
-        
+
         history_section = ""
         if history:
             history_items = []
-            for i, item in enumerate(history[-5:], 1):  # Last 5 interactions
-                history_items.append(f"{i}. Task: '{item.get('task', 'Unknown')}' -> Tool: '{item.get('tool', 'None')}' (Success: {item.get('success', 'Unknown')})")
-            history_section = f"\n\n## Recent History\n" + "\n".join(history_items)
-        
+            for i, item in enumerate(history[-5:], 1):
+                history_items.append(
+                    f"{i}. Task: '{item.get('task', 'Unknown')}' -> "
+                    f"Tool: '{item.get('tool', 'None')}' "
+                    f"(Success: {item.get('success', 'Unknown')})"
+                )
+            history_section = "\n\n## Recent History\n" + "\n".join(history_items)
+
         similar_tools_section = ""
         if similar_tools:
             similar_tools_section = f"\n\n## Similar Successful Tools\n{', '.join(similar_tools)}"
-        
+
         return cls.CONTEXT_ENHANCED_TEMPLATE.format(
             task=task,
             tool_list=tool_list,
             context_section=context_section,
             history_section=history_section + similar_tools_section,
         )
-    
+
     @classmethod
     def create_nlp_enhanced_prompt(
         cls,
@@ -222,12 +213,11 @@ Respond with valid JSON only, no additional text:
         context_section = ""
         if context:
             context_section = f"\n\n## Context\n{context}"
-        
+
         hints_section = ""
         if intent_hints:
             hints_section = f"\n\n## Intent Hints\nConsider these aspects: {', '.join(intent_hints)}"
-        
-        # Enhanced template with NLP focus
+
         template = """You are an advanced NLP-powered tool selection assistant for MCP (Model Context Protocol) gateway.
 Your role is to perform deep semantic analysis of user requests and select the most appropriate tool.
 
@@ -263,7 +253,7 @@ Respond with valid JSON only, no additional text:
   "key_entities": "<main entities identified>",
   "semantic_score": <0.0-1.0>
 }}"""
-        
+
         return template.format(
             task=task,
             tool_list=tool_list,

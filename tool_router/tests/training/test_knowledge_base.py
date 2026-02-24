@@ -2,19 +2,16 @@
 
 import json
 import tempfile
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone, timedelta
 
-import pytest
-
+from tool_router.training.data_extraction import ExtractedPattern, PatternCategory
 from tool_router.training.knowledge_base import (
-    KnowledgeStatus,
-    KnowledgeItem,
     KnowledgeBase,
     KnowledgeIndexer,
+    KnowledgeItem,
+    KnowledgeStatus,
 )
-from tool_router.training.data_extraction import ExtractedPattern, PatternCategory
 
 
 class TestKnowledgeStatus:
@@ -28,7 +25,7 @@ class TestKnowledgeStatus:
             "deprecated",
             "archived"
         }
-        
+
         actual_statuses = {status.value for status in KnowledgeStatus}
         assert actual_statuses == expected_statuses
 
@@ -45,7 +42,7 @@ class TestKnowledgeItem:
             description="Test description",
             content="Test content"
         )
-        
+
         assert item.id == "test-1"
         assert item.category == PatternCategory.UI_COMPONENT
         assert item.title == "Test Item"
@@ -64,9 +61,9 @@ class TestKnowledgeItem:
 
     def test_knowledge_item_creation_full(self):
         """Test creating KnowledgeItem with all fields."""
-        created_time = datetime.now(timezone.utc)
+        created_time = datetime.now(UTC)
         updated_time = created_time + timedelta(days=1)
-        
+
         item = KnowledgeItem(
             id="test-2",
             category=PatternCategory.REACT_PATTERN,
@@ -88,7 +85,7 @@ class TestKnowledgeItem:
                 "source": "test_source"
             }
         )
-        
+
         assert item.id == "test-2"
         assert item.category == PatternCategory.REACT_PATTERN
         assert item.title == "Test Item Full"
@@ -116,7 +113,7 @@ class TestKnowledgeItem:
             created_at="2023-01-01T12:00:00+00:00",
             updated_at="2023-01-02T12:00:00+00:00"
         )
-        
+
         assert isinstance(item.created_at, datetime)
         assert isinstance(item.updated_at, datetime)
         assert item.created_at.year == 2023
@@ -138,7 +135,7 @@ class TestKnowledgeItem:
             user_ratings=[]
         )
         assert item.average_rating == 0.0
-        
+
         # With ratings
         item_with_ratings = KnowledgeItem(
             id="test-5",
@@ -162,7 +159,7 @@ class TestKnowledgeItem:
             usage_count=50,  # 50/100 = 0.5
             confidence_score=0.8
         )
-        
+
         # rating_score = 0.9 * 0.6 = 0.54
         # usage_score = 0.5 * 0.3 = 0.15
         # confidence_score = 0.8 * 0.1 = 0.08
@@ -182,7 +179,7 @@ class TestKnowledgeItem:
             usage_count=25,
             confidence_score=0.9
         )
-        
+
         # rating_score = 0.0 * 0.6 = 0.0
         # usage_score = 0.25 * 0.3 = 0.075
         # confidence_score = 0.9 * 0.1 = 0.09
@@ -202,7 +199,7 @@ class TestKnowledgeItem:
             usage_count=150,  # Should be capped at 100
             confidence_score=0.7
         )
-        
+
         # rating_score = 1.0 * 0.6 = 0.6
         # usage_score = 1.0 * 0.3 = 0.3 (capped)
         # confidence_score = 0.7 * 0.1 = 0.07
@@ -233,7 +230,7 @@ class TestKnowledgeBase:
     def test_initialization_without_path(self):
         """Test knowledge base initialization without path."""
         kb = KnowledgeBase()
-        
+
         # Should create default path
         assert kb.db_path is not None
         assert kb.db_path.name == "knowledge_base.db"
@@ -248,12 +245,12 @@ class TestKnowledgeBase:
             confidence_score=0.8,
             tags=["react", "hooks"]
         )
-        
+
         item_id = self.knowledge_base.add_pattern(pattern)
-        
+
         assert isinstance(item_id, str)
         assert len(item_id) == 16  # SHA256 hash truncated
-        
+
         # Verify item was added
         retrieved = self.knowledge_base.get_knowledge_item(item_id)
         assert retrieved is not None
@@ -269,11 +266,11 @@ class TestKnowledgeBase:
             description="Test component description",
             content="Test component content"
         )
-        
+
         item_id = self.knowledge_base.add_knowledge_item(item)
-        
+
         assert item_id == "test-item"
-        
+
         # Verify item was added
         retrieved = self.knowledge_base.get_knowledge_item(item_id)
         assert retrieved is not None
@@ -303,15 +300,15 @@ class TestKnowledgeBase:
             content="Button component for UI",
             tags=["ui", "component", "button"]
         )
-        
+
         self.knowledge_base.add_knowledge_item(item1)
         self.knowledge_base.add_knowledge_item(item2)
-        
+
         # Search by query
         results = self.knowledge_base.search_knowledge("react")
         assert len(results) == 1
         assert results[0].id == "item-1"
-        
+
         # Search with category filter
         results = self.knowledge_base.search_knowledge("component", PatternCategory.UI_COMPONENT)
         assert len(results) == 1
@@ -326,9 +323,9 @@ class TestKnowledgeBase:
             description="Test pattern",
             content="Test content"
         )
-        
+
         self.knowledge_base.add_knowledge_item(item)
-        
+
         results = self.knowledge_base.search_patterns("react")
         assert len(results) == 1
         assert results[0].id == "item-1"
@@ -357,14 +354,14 @@ class TestKnowledgeBase:
             description="Test",
             content="Test"
         )
-        
+
         self.knowledge_base.add_knowledge_item(item1)
         self.knowledge_base.add_knowledge_item(item2)
         self.knowledge_base.add_knowledge_item(item3)
-        
+
         react_patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.REACT_PATTERN)
         ui_patterns = self.knowledge_base.get_patterns_by_category(PatternCategory.UI_COMPONENT)
-        
+
         assert len(react_patterns) == 2
         assert len(ui_patterns) == 1
         assert all(item.category == PatternCategory.REACT_PATTERN for item in react_patterns)
@@ -391,12 +388,12 @@ class TestKnowledgeBase:
             user_ratings=[2.0, 3.0],  # Low rating
             usage_count=5
         )
-        
+
         self.knowledge_base.add_knowledge_item(item1)
         self.knowledge_base.add_knowledge_item(item2)
-        
+
         top_patterns = self.knowledge_base.get_top_patterns(limit=2)
-        
+
         assert len(top_patterns) == 2
         # Should be ordered by effectiveness score (high first)
         assert top_patterns[0].id == "item-1"
@@ -412,12 +409,12 @@ class TestKnowledgeBase:
             content="Test",
             usage_count=5
         )
-        
+
         self.knowledge_base.add_knowledge_item(item)
-        
+
         # Update usage count
         self.knowledge_base.update_usage_count("item-1")
-        
+
         # Verify count was incremented
         updated_item = self.knowledge_base.get_knowledge_item("item-1")
         assert updated_item.usage_count == 6
@@ -432,12 +429,12 @@ class TestKnowledgeBase:
             content="Test",
             user_ratings=[4.0]
         )
-        
+
         self.knowledge_base.add_knowledge_item(item)
-        
+
         # Add rating
         self.knowledge_base.add_user_rating("item-1", 5.0)
-        
+
         # Verify rating was added
         updated_item = self.knowledge_base.get_knowledge_item("item-1")
         assert 5.0 in updated_item.user_ratings
@@ -464,12 +461,12 @@ class TestKnowledgeBase:
             user_ratings=[3.0],
             usage_count=5
         )
-        
+
         self.knowledge_base.add_knowledge_item(item1)
         self.knowledge_base.add_knowledge_item(item2)
-        
+
         stats = self.knowledge_base.get_statistics()
-        
+
         assert stats["total_items"] == 2
         assert "react_pattern" in stats["by_category"]
         assert "ui_component" in stats["by_category"]
@@ -490,18 +487,18 @@ class TestKnowledgeBase:
             content="Test content",
             tags=["test"]
         )
-        
+
         self.knowledge_base.add_knowledge_item(item)
-        
+
         export_path = Path(self.temp_dir) / "export.json"
         self.knowledge_base.export_knowledge(export_path)
-        
+
         assert export_path.exists()
-        
+
         # Verify exported content
         with export_path.open("r") as f:
             exported_data = json.load(f)
-        
+
         assert len(exported_data) == 1
         assert exported_data[0]["id"] == "item-1"
         assert exported_data[0]["title"] == "Test Item"
@@ -523,16 +520,16 @@ class TestKnowledgeBase:
                 "metadata": {"imported": True}
             }
         ]
-        
+
         import_path = Path(self.temp_dir) / "import.json"
         with import_path.open("w") as f:
             json.dump(import_data, f)
-        
+
         # Import knowledge
         imported_count = self.knowledge_base.import_knowledge(import_path)
-        
+
         assert imported_count == 1
-        
+
         # Verify imported item
         imported_item = self.knowledge_base.get_knowledge_item("imported-1")
         assert imported_item is not None
@@ -558,16 +555,16 @@ class TestKnowledgeBase:
                 "content": "Valid content"
             }
         ]
-        
+
         import_path = Path(self.temp_dir) / "import.json"
         with import_path.open("w") as f:
             json.dump(import_data, f)
-        
+
         # Import knowledge (should skip invalid item)
         imported_count = self.knowledge_base.import_knowledge(import_path)
-        
+
         assert imported_count == 1  # Only valid item imported
-        
+
         # Verify valid item was imported
         valid_item = self.knowledge_base.get_knowledge_item("valid-1")
         assert valid_item is not None
@@ -582,12 +579,12 @@ class TestKnowledgeBase:
             description="State management hook",
             confidence_score=0.8
         )
-        
+
         item_id = self.knowledge_base._generate_item_id(pattern)
-        
+
         assert isinstance(item_id, str)
         assert len(item_id) == 16  # SHA256 hash truncated
-        
+
         # Same pattern should generate same ID
         item_id2 = self.knowledge_base._generate_item_id(pattern)
         assert item_id == item_id2
@@ -609,12 +606,12 @@ class TestKnowledgeBase:
             "2023-01-01T12:00:00+00:00",  # created_at
             "2023-01-02T12:00:00+00:00",  # updated_at
             10,  # usage_count
-            '[4.0, 5.0]',  # user_ratings (JSON)
+            "[4.0, 5.0]",  # user_ratings (JSON)
             '{"key": "value"}'  # metadata (JSON)
         )
-        
+
         item = self.knowledge_base._row_to_knowledge_item(row)
-        
+
         assert item.id == "test-id"
         assert item.category == PatternCategory.REACT_PATTERN
         assert item.title == "Test Title"
@@ -640,7 +637,7 @@ class TestKnowledgeIndexer:
         self.temp_dir = tempfile.mkdtemp()
         self.db_path = Path(self.temp_dir) / "knowledge.db"
         self.knowledge_base = KnowledgeBase(self.db_path)
-        
+
         # Add test items
         self.item1 = KnowledgeItem(
             id="item-1",
@@ -658,10 +655,10 @@ class TestKnowledgeIndexer:
             content="Button component for UI",
             tags=["ui", "component", "button"]
         )
-        
+
         self.knowledge_base.add_knowledge_item(self.item1)
         self.knowledge_base.add_knowledge_item(self.item2)
-        
+
         self.indexer = KnowledgeIndexer(self.knowledge_base)
 
     def teardown_method(self):
@@ -682,7 +679,7 @@ class TestKnowledgeIndexer:
         assert len(self.indexer.category_index) > 0
         assert len(self.indexer.tag_index) > 0
         assert len(self.indexer.keyword_index) > 0
-        
+
         # Check that our test items were indexed
         assert PatternCategory.REACT_PATTERN in self.indexer.category_index
         assert "item-1" in self.indexer.category_index[PatternCategory.REACT_PATTERN]
@@ -694,12 +691,12 @@ class TestKnowledgeIndexer:
         # Find by single tag
         results = self.indexer.find_by_tags(["react"])
         assert "item-1" in results
-        
+
         # Find by multiple tags
         results = self.indexer.find_by_tags(["react", "ui"])
         assert "item-1" in results
         assert "item-2" in results
-        
+
         # Find by non-existent tag
         results = self.indexer.find_by_tags(["nonexistent"])
         assert len(results) == 0
@@ -708,10 +705,10 @@ class TestKnowledgeIndexer:
         """Test finding items by category."""
         results = self.indexer.find_by_category(PatternCategory.REACT_PATTERN)
         assert "item-1" in results
-        
+
         results = self.indexer.find_by_category(PatternCategory.UI_COMPONENT)
         assert "item-2" in results
-        
+
         results = self.indexer.find_by_category(PatternCategory.ACCESSIBILITY)
         assert len(results) == 0
 
@@ -720,12 +717,12 @@ class TestKnowledgeIndexer:
         # Find by single keyword
         results = self.indexer.find_by_keywords(["hook"])
         assert "item-1" in results
-        
+
         # Find by multiple keywords
         results = self.indexer.find_by_keywords(["react", "button"])
         assert "item-1" in results
         assert "item-2" in results
-        
+
         # Find by non-existent keyword
         results = self.indexer.find_by_keywords(["nonexistent"])
         assert len(results) == 0
@@ -733,10 +730,10 @@ class TestKnowledgeIndexer:
     def test_get_related_items(self):
         """Test getting related items."""
         related = self.indexer.get_related_items("item-1")
-        
+
         # Should find item-2 (shares no tags, but this is expected behavior)
         assert isinstance(related, list)
-        
+
         # Test with non-existent item
         related = self.indexer.get_related_items("nonexistent")
         assert related == []
@@ -752,14 +749,14 @@ class TestKnowledgeIndexer:
             content="React content",
             tags=["react", "hooks"]  # Shares tags with item-1
         )
-        
+
         self.knowledge_base.add_knowledge_item(item3)
-        
+
         # Rebuild indexer to include new item
         self.indexer = KnowledgeIndexer(self.knowledge_base)
-        
+
         related = self.indexer.get_related_items("item-1")
-        
+
         # Should find item-3 (shares tags)
         assert "item-3" in related
 
@@ -774,9 +771,9 @@ class TestKnowledgeIndexer:
             content="Test content",
             tags=[]
         )
-        
+
         self.knowledge_base.add_knowledge_item(item4)
-        
+
         related = self.indexer.get_related_items("item-4")
         assert related == []
 
@@ -788,11 +785,11 @@ class TestKnowledgeBaseIntegration:
         """Test end-to-end knowledge base workflow."""
         temp_dir = tempfile.mkdtemp()
         db_path = Path(temp_dir) / "knowledge.db"
-        
+
         try:
             # Create knowledge base
             kb = KnowledgeBase(db_path)
-            
+
             # Add patterns
             patterns = [
                 ExtractedPattern(
@@ -812,47 +809,47 @@ class TestKnowledgeBaseIntegration:
                     tags=["ui", "component", "button"]
                 )
             ]
-            
+
             item_ids = []
             for pattern in patterns:
                 item_id = kb.add_pattern(pattern)
                 item_ids.append(item_id)
-            
+
             # Search knowledge base
             react_results = kb.search_knowledge("react")
             ui_results = kb.search_knowledge("button")
-            
+
             assert len(react_results) == 1
             assert len(ui_results) == 1
-            
+
             # Get statistics
             stats = kb.get_statistics()
             assert stats["total_items"] == 2
             assert "react_pattern" in stats["by_category"]
             assert "ui_component" in stats["by_category"]
-            
+
             # Create indexer
             indexer = KnowledgeIndexer(kb)
-            
+
             # Test indexer functionality
             react_items = indexer.find_by_category(PatternCategory.REACT_PATTERN)
             assert len(react_items) == 1
-            
+
             # Export and import
             export_path = Path(temp_dir) / "export.json"
             kb.export_knowledge(export_path)
-            
+
             # Clear and re-import
             new_kb = KnowledgeBase(db_path)
             imported_count = new_kb.import_knowledge(export_path)
-            
+
             assert imported_count == 2
-            
+
             # Verify data integrity
             for item_id in item_ids:
                 item = new_kb.get_knowledge_item(item_id)
                 assert item is not None
-            
+
         finally:
             import shutil
             shutil.rmtree(temp_dir)
@@ -861,10 +858,10 @@ class TestKnowledgeBaseIntegration:
         """Test concurrent access simulation."""
         temp_dir = tempfile.mkdtemp()
         db_path = Path(temp_dir) / "knowledge.db"
-        
+
         try:
             kb = KnowledgeBase(db_path)
-            
+
             # Add multiple items
             for i in range(10):
                 item = KnowledgeItem(
@@ -875,23 +872,23 @@ class TestKnowledgeBaseIntegration:
                     content=f"Test content {i}"
                 )
                 kb.add_knowledge_item(item)
-            
+
             # Simulate concurrent searches
             search_results_1 = kb.search_knowledge("react")
             search_results_2 = kb.search_knowledge("pattern")
-            
+
             # Results should be consistent
             assert len(search_results_1) == 10
             assert len(search_results_2) == 10
-            
+
             # Update usage counts
             for i in range(5):
                 kb.update_usage_count(f"item-{i}")
-            
+
             # Verify updates
             updated_item = kb.get_knowledge_item("item-0")
             assert updated_item.usage_count == 6
-            
+
         finally:
             import shutil
             shutil.rmtree(temp_dir)
@@ -900,10 +897,10 @@ class TestKnowledgeBaseIntegration:
         """Test performance with large dataset."""
         temp_dir = tempfile.mkdtemp()
         db_path = Path(temp_dir) / "knowledge.db"
-        
+
         try:
             kb = KnowledgeBase(db_path)
-            
+
             # Add many items
             start_time = datetime.now()
             for i in range(100):
@@ -916,28 +913,28 @@ class TestKnowledgeBaseIntegration:
                     tags=[f"tag-{j}" for j in range(3)]
                 )
                 kb.add_knowledge_item(item)
-            
+
             add_time = (datetime.now() - start_time).total_seconds()
-            
+
             # Should complete reasonably quickly
             assert add_time < 5.0  # 5 seconds max for 100 items
-            
+
             # Test search performance
             start_time = datetime.now()
             results = kb.search_knowledge("react", limit=50)
             search_time = (datetime.now() - start_time).total_seconds()
-            
+
             assert search_time < 1.0  # 1 second max for search
             assert len(results) == 50
-            
+
             # Test statistics performance
             start_time = datetime.now()
             stats = kb.get_statistics()
             stats_time = (datetime.now() - start_time).total_seconds()
-            
+
             assert stats_time < 0.5  # 0.5 seconds max for statistics
             assert stats["total_items"] == 100
-            
+
         finally:
             import shutil
             shutil.rmtree(temp_dir)
@@ -949,10 +946,10 @@ class TestDefaultTrainingSources:
     def test_default_training_sources_structure(self):
         """Test that default training sources have required structure."""
         from tool_router.training.training_pipeline import DEFAULT_TRAINING_SOURCES
-        
+
         assert isinstance(DEFAULT_TRAINING_SOURCES, list)
         assert len(DEFAULT_TRAINING_SOURCES) > 0
-        
+
         for source in DEFAULT_TRAINING_SOURCES:
             assert "url" in source
             assert "type" in source
@@ -963,16 +960,16 @@ class TestDefaultTrainingSources:
     def test_default_training_sources_categories(self):
         """Test that default sources cover expected categories."""
         from tool_router.training.training_pipeline import DEFAULT_TRAINING_SOURCES
-        
+
         categories = {source["category"] for source in DEFAULT_TRAINING_SOURCES}
-        
+
         expected_categories = [
             "react_patterns",
-            "design_systems", 
+            "design_systems",
             "accessibility",
             "prompt_engineering"
         ]
-        
+
         for category in expected_categories:
             assert category in categories, f"Missing category: {category}"
 

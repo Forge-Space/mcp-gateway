@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-import pytest
-
 from tool_router.ai.prompt_architect import (
-    TaskType,
-    RequirementType,
-    Requirement,
-    QualityScore,
-    TaskAnalyzer,
-    TokenOptimizer,
-    PromptRefiner,
     PromptArchitect,
+    PromptRefiner,
+    QualityScore,
+    Requirement,
+    RequirementType,
+    TaskAnalyzer,
+    TaskType,
+    TokenOptimizer,
 )
 
 
@@ -116,7 +114,7 @@ class TestTaskAnalyzer:
         """Test TaskAnalyzer initialization."""
         analyzer = TaskAnalyzer()
 
-        assert hasattr(analyzer, 'task_keywords')
+        assert hasattr(analyzer, "task_keywords")
         assert TaskType.CODE_GENERATION in analyzer.task_keywords
         assert TaskType.CODE_REFACTORING in analyzer.task_keywords
         assert TaskType.CODE_DEBUGGING in analyzer.task_keywords
@@ -337,8 +335,8 @@ class TestTokenOptimizer:
         """Test TokenOptimizer initialization."""
         optimizer = TokenOptimizer()
 
-        assert hasattr(optimizer, 'common_phrases')
-        assert hasattr(optimizer, 'technical_replacements')
+        assert hasattr(optimizer, "common_phrases")
+        assert hasattr(optimizer, "technical_replacements")
         assert "please" in optimizer.common_phrases
         assert "application" in optimizer.technical_replacements
 
@@ -405,7 +403,7 @@ class TestPromptRefiner:
         """Test PromptRefiner initialization."""
         refiner = PromptRefiner()
 
-        assert hasattr(refiner, 'refinement_strategies')
+        assert hasattr(refiner, "refinement_strategies")
         assert "add_context" in refiner.refinement_strategies
         assert "clarify_requirements" in refiner.refinement_strategies
 
@@ -440,7 +438,7 @@ class TestPromptRefiner:
         refined = refiner.refine_prompt(prompt, feedback, TaskType.CODE_GENERATION)
 
         # Should be shorter (limited to 10 essential lines)
-        assert len(refined.split('\n')) <= 10
+        assert len(refined.split("\n")) <= 10
 
     def test_refine_prompt_vague_feedback(self):
         """Test refining prompt with vague feedback."""
@@ -504,7 +502,7 @@ Deploy it"""
         shortened = refiner._shorten_prompt(prompt)
 
         # Should keep essential lines, limit to 10
-        lines = shortened.split('\n')
+        lines = shortened.split("\n")
         assert len(lines) <= 10
         assert "Create a component" in lines
         assert "Make it work properly" in lines
@@ -528,10 +526,10 @@ class TestPromptArchitect:
         """Test PromptArchitect initialization."""
         architect = PromptArchitect()
 
-        assert hasattr(architect, 'task_analyzer')
-        assert hasattr(architect, 'token_optimizer')
-        assert hasattr(architect, 'prompt_refiner')
-        assert hasattr(architect, '_prompt_cache')
+        assert hasattr(architect, "task_analyzer")
+        assert hasattr(architect, "token_optimizer")
+        assert hasattr(architect, "prompt_refiner")
+        assert hasattr(architect, "_prompt_cache")
         assert isinstance(architect.task_analyzer, TaskAnalyzer)
         assert isinstance(architect.token_optimizer, TokenOptimizer)
         assert isinstance(architect.prompt_refiner, PromptRefiner)

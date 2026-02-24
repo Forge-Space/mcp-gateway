@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-import json
-import html
-from unittest.mock import MagicMock, patch
-import pytest
+from unittest.mock import patch
 
-from tool_router.security.input_validator import (
-    InputValidator,
-    SecurityValidationResult,
-    ValidationLevel,
-    RiskLevel
-)
+from tool_router.security.input_validator import InputValidator, RiskLevel, SecurityValidationResult, ValidationLevel
 
 
 class TestValidationLevel:
@@ -99,10 +91,10 @@ class TestInputValidator:
         validator = InputValidator()
 
         assert validator.validation_level == ValidationLevel.STANDARD
-        assert hasattr(validator, 'suspicious_patterns')
-        assert hasattr(validator, 'compiled_patterns')
-        assert hasattr(validator, 'html_allowed_tags')
-        assert hasattr(validator, 'html_allowed_attributes')
+        assert hasattr(validator, "suspicious_patterns")
+        assert hasattr(validator, "compiled_patterns")
+        assert hasattr(validator, "html_allowed_tags")
+        assert hasattr(validator, "html_allowed_attributes")
 
     def test_initialization_permissive(self) -> None:
         """Test InputValidator initialization with permissive level."""
@@ -126,15 +118,15 @@ class TestInputValidator:
 
         # Check for specific pattern types
         pattern_strings = [pattern.pattern for pattern in validator.compiled_patterns]
-        assert any('ignore' in pattern.lower() for pattern in pattern_strings)
-        assert any('script' in pattern.lower() for pattern in pattern_strings)
-        assert any('password' in pattern.lower() for pattern in pattern_strings)
+        assert any("ignore" in pattern.lower() for pattern in pattern_strings)
+        assert any("script" in pattern.lower() for pattern in pattern_strings)
+        assert any("password" in pattern.lower() for pattern in pattern_strings)
 
     def test_init_html_sanitizer(self) -> None:
         """Test HTML sanitizer initialization."""
         validator = InputValidator()
 
-        assert validator.html_allowed_tags == ['p', 'br', 'strong', 'em', 'code', 'pre']
+        assert validator.html_allowed_tags == ["p", "br", "strong", "em", "code", "pre"]
         assert validator.html_allowed_attributes == {}
 
     def test_validate_prompt_clean_input(self) -> None:
@@ -148,7 +140,7 @@ class TestInputValidator:
         assert result.risk_score == 0.0
         assert result.violations == []
         assert result.blocked is False
-        assert 'pattern_matches' in result.metadata
+        assert "pattern_matches" in result.metadata
 
     def test_validate_prompt_too_long(self) -> None:
         """Test validating a prompt that's too long."""
@@ -172,8 +164,8 @@ class TestInputValidator:
         assert result.risk_score > 0.0
         assert len(result.violations) > 0
         assert any("suspicious pattern" in violation.lower() for violation in result.violations)
-        assert 'pattern_matches' in result.metadata
-        assert len(result.metadata['pattern_matches']) > 0
+        assert "pattern_matches" in result.metadata
+        assert len(result.metadata["pattern_matches"]) > 0
 
     def test_validate_prompt_multiple_patterns(self) -> None:
         """Test validating a prompt with multiple suspicious patterns."""
@@ -185,7 +177,7 @@ class TestInputValidator:
 
         assert result.risk_score > 0.2  # Should accumulate risk from multiple patterns
         assert len(result.violations) >= 2
-        assert len(result.metadata['pattern_matches']) >= 2
+        assert len(result.metadata["pattern_matches"]) >= 2
 
     def test_validate_prompt_encoding_issue(self) -> None:
         """Test validating a prompt with encoding issues."""
@@ -226,7 +218,7 @@ class TestInputValidator:
         """Test validating a prompt with context."""
         validator = InputValidator()
 
-        with patch.object(validator, 'validate_context') as mock_context:
+        with patch.object(validator, "validate_context") as mock_context:
             mock_context.return_value = SecurityValidationResult(
                 is_valid=True,
                 sanitized_input="clean context",
@@ -238,7 +230,7 @@ class TestInputValidator:
             result = validator.validate_prompt("Hello", "some context")
 
             mock_context.assert_called_once_with("some context")
-            assert 'context_validation' in result.metadata
+            assert "context_validation" in result.metadata
             assert result.risk_score >= 0.05  # Should include context risk
 
     def test_validate_prompt_high_risk_blocked(self) -> None:
@@ -278,9 +270,9 @@ class TestInputValidator:
         assert result.is_valid is True
         assert result.risk_score == 0.0
         assert result.violations == []
-        assert 'parsed_keys' in result.metadata
-        assert 'theme' in result.metadata['parsed_keys']
-        assert 'language' in result.metadata['parsed_keys']
+        assert "parsed_keys" in result.metadata
+        assert "theme" in result.metadata["parsed_keys"]
+        assert "language" in result.metadata["parsed_keys"]
 
     def test_validate_user_preferences_invalid_json(self) -> None:
         """Test validating invalid user preferences JSON."""
@@ -293,7 +285,7 @@ class TestInputValidator:
         assert result.risk_score > 0.0
         assert len(result.violations) > 0
         assert result.sanitized_input == "{}"
-        assert 'json_error' in result.metadata
+        assert "json_error" in result.metadata
 
     def test_validate_user_preferences_invalid_structure(self) -> None:
         """Test validating preferences with invalid structure."""
@@ -411,7 +403,7 @@ class TestInputValidator:
         """Test HTML sanitization fallback on error."""
         validator = InputValidator()
 
-        with patch('bleach.clean', side_effect=Exception("Bleach error")):
+        with patch("bleach.clean", side_effect=Exception("Bleach error")):
             html_text = "Text with <script>alert('xss')</script>"
 
             result = validator._sanitize_html(html_text)
@@ -491,18 +483,18 @@ class TestInputValidator:
         summary = validator.get_security_summary()
 
         assert isinstance(summary, dict)
-        assert 'validation_level' in summary
-        assert 'patterns_count' in summary
-        assert 'html_sanitization' in summary
-        assert 'max_prompt_length' in summary
-        assert 'max_context_length' in summary
-        assert 'risk_thresholds' in summary
+        assert "validation_level" in summary
+        assert "patterns_count" in summary
+        assert "html_sanitization" in summary
+        assert "max_prompt_length" in summary
+        assert "max_context_length" in summary
+        assert "risk_thresholds" in summary
 
-        assert summary['validation_level'] == ValidationLevel.STANDARD.value
-        assert summary['patterns_count'] > 0
-        assert summary['html_sanitization'] is True
-        assert summary['max_prompt_length'] == 10000
-        assert summary['max_context_length'] == 5000
+        assert summary["validation_level"] == ValidationLevel.STANDARD.value
+        assert summary["patterns_count"] > 0
+        assert summary["html_sanitization"] is True
+        assert summary["max_prompt_length"] == 10000
+        assert summary["max_context_length"] == 5000
 
     def test_get_security_summary_permissive(self) -> None:
         """Test security summary with permissive level."""
@@ -510,7 +502,7 @@ class TestInputValidator:
 
         summary = validator.get_security_summary()
 
-        assert summary['validation_level'] == ValidationLevel.PERMISSIVE.value
+        assert summary["validation_level"] == ValidationLevel.PERMISSIVE.value
 
     def test_get_security_summary_strict(self) -> None:
         """Test security summary with strict level."""
@@ -518,7 +510,7 @@ class TestInputValidator:
 
         summary = validator.get_security_summary()
 
-        assert summary['validation_level'] == ValidationLevel.STRICT.value
+        assert summary["validation_level"] == ValidationLevel.STRICT.value
 
     def test_validate_prompt_risk_score_calculation(self) -> None:
         """Test risk score calculation for various scenarios."""

@@ -3,24 +3,16 @@
 import pytest
 
 from tool_router.ai.ui_specialist import (
-    UIFramework,
-    DesignSystem,
-    ComponentType,
     AccessibilityLevel,
-    UIRequirement,
-    ComponentSpec,
-    UIStandardsCompliance,
     ComponentGenerator,
+    ComponentSpec,
+    ComponentType,
+    DesignSystem,
+    UIFramework,
+    UIRequirement,
     UISpecialist,
+    UIStandardsCompliance,
 )
-
-
-
-
-
-
-
-
 
 
 class TestUIRequirement:
@@ -92,8 +84,8 @@ class TestUIStandardsCompliance:
         """Test UIStandardsCompliance initialization."""
         compliance = UIStandardsCompliance()
 
-        assert hasattr(compliance, 'wcag_guidelines')
-        assert hasattr(compliance, 'framework_best_practices')
+        assert hasattr(compliance, "wcag_guidelines")
+        assert hasattr(compliance, "framework_best_practices")
         assert AccessibilityLevel.AA in compliance.wcag_guidelines
         assert AccessibilityLevel.AAA in compliance.wcag_guidelines
         assert AccessibilityLevel.MINIMAL in compliance.wcag_guidelines
@@ -451,7 +443,7 @@ class TestComponentGenerator:
         """Test ComponentGenerator initialization."""
         generator = ComponentGenerator()
 
-        assert hasattr(generator, 'templates')
+        assert hasattr(generator, "templates")
         assert ComponentType.FORM in generator.templates
         assert ComponentType.TABLE in generator.templates
         assert ComponentType.CHART in generator.templates
@@ -553,8 +545,8 @@ class TestComponentGenerator:
         assert "ContactForm" in template
         assert "import React" in template
         assert "useForm" in template
-        assert "role=\"form\"" in template
-        assert "className=\"form-container\"" in template
+        assert 'role="form"' in template
+        assert 'className="form-container"' in template
 
     def test_generate_form_template_non_react(self):
         """Test form template generation for non-React framework."""
@@ -604,8 +596,8 @@ class TestComponentGenerator:
         template = generator._generate_table_template(requirement, spec)
 
         assert "DataTable" in template
-        assert "role=\"region\"" in template
-        assert "aria-label=\"Data table\"" in template
+        assert 'role="region"' in template
+        assert 'aria-label="Data table"' in template
         assert "<table" in template
         assert "<thead>" in template
         assert "<tbody>" in template
@@ -633,8 +625,8 @@ class TestComponentGenerator:
         template = generator._generate_chart_template(requirement, spec)
 
         assert "SalesChart" in template
-        assert "role=\"img\"" in template
-        assert "aria-label=\"Data visualization\"" in template
+        assert 'role="img"' in template
+        assert 'aria-label="Data visualization"' in template
 
     def test_generate_modal_template(self):
         """Test modal template generation."""
@@ -659,8 +651,8 @@ class TestComponentGenerator:
         template = generator._generate_modal_template(requirement, spec)
 
         assert "ConfirmDialog" in template
-        assert "role=\"dialog\"" in template
-        assert "aria-modal=\"true\"" in template
+        assert 'role="dialog"' in template
+        assert 'aria-modal="true"' in template
 
     def test_generate_navigation_template(self):
         """Test navigation template generation."""
@@ -685,8 +677,8 @@ class TestComponentGenerator:
         template = generator._generate_navigation_template(requirement, spec)
 
         assert "MainMenu" in template
-        assert "role=\"navigation\"" in template
-        assert "aria-label=\"Main navigation\"" in template
+        assert 'role="navigation"' in template
+        assert 'aria-label="Main navigation"' in template
         assert "<nav " in template
 
     def test_generate_card_template(self):
@@ -712,7 +704,7 @@ class TestComponentGenerator:
         template = generator._generate_card_template(requirement, spec)
 
         assert "ProfileCard" in template
-        assert "role=\"article\"" in template
+        assert 'role="article"' in template
 
 
 class TestUISpecialist:
@@ -722,9 +714,9 @@ class TestUISpecialist:
         """Test UISpecialist initialization."""
         specialist = UISpecialist()
 
-        assert hasattr(specialist, 'compliance_checker')
-        assert hasattr(specialist, 'component_generator')
-        assert hasattr(specialist, '_component_cache')
+        assert hasattr(specialist, "compliance_checker")
+        assert hasattr(specialist, "component_generator")
+        assert hasattr(specialist, "_component_cache")
         assert isinstance(specialist._component_cache, dict)
 
     def test_generate_ui_component_basic(self):
@@ -890,8 +882,8 @@ class TestComponentGeneratorAdditional:
         template = generator._generate_button_template(requirement, spec)
 
         assert "SubmitButton" in template
-        assert "type=\"button\"" in template
-        assert "aria-label=\"SubmitButton\"" in template
+        assert 'type="button"' in template
+        assert 'aria-label="SubmitButton"' in template
 
     def test_generate_input_template(self):
         """Test input template generation."""
@@ -916,8 +908,8 @@ class TestComponentGeneratorAdditional:
         template = generator._generate_input_template(requirement, spec)
 
         assert "EmailInput" in template
-        assert "type=\"text\"" in template
-        assert "aria-label=\"EmailInput\"" in template
+        assert 'type="text"' in template
+        assert 'aria-label="EmailInput"' in template
 
     def test_generate_layout_template(self):
         """Test layout template generation."""
@@ -969,7 +961,7 @@ class TestComponentGeneratorAdditional:
         template = generator._generate_dashboard_template(requirement, spec)
 
         assert "AnalyticsDashboard" in template
-        assert "role=\"main\"" in template
+        assert 'role="main"' in template
         assert "dashboard-grid" in template
 
     def test_generate_landing_template(self):
@@ -1022,7 +1014,7 @@ class TestComponentGeneratorAdditional:
         template = generator._generate_auth_template(requirement, spec)
 
         assert "LoginForm" in template
-        assert "role=\"main\"" in template
+        assert 'role="main"' in template
         assert "auth-form" in template
 
     def test_generate_settings_template(self):
@@ -1048,7 +1040,7 @@ class TestComponentGeneratorAdditional:
         template = generator._generate_settings_template(requirement, spec)
 
         assert "UserSettings" in template
-        assert "role=\"main\"" in template
+        assert 'role="main"' in template
         assert "settings-form" in template
 
     def test_apply_framework_enhancements_react(self):
@@ -1196,7 +1188,7 @@ class TestComponentGeneratorAdditional:
 
 class TestComponentGeneratorAdvanced:
     """Test advanced ComponentGenerator functionality."""
-    
+
     def test_generate_component_all_types(self) -> None:
         """Test component generation for all component types."""
         generator = ComponentGenerator()
@@ -1206,7 +1198,7 @@ class TestComponentGeneratorAdvanced:
             design_system=DesignSystem.MATERIAL_DESIGN,
             accessibility_level=AccessibilityLevel.AA
         )
-        
+
         # Test each component type
         for component_type in ComponentType:
             if component_type in generator.templates:
@@ -1218,7 +1210,7 @@ class TestComponentGeneratorAdvanced:
                     accessibility_features=[],
                     responsive_breakpoints=[]
                 )
-                
+
                 result = generator.generate_component(requirement, spec)
                 assert isinstance(result, dict)
                 assert "component_code" in result
@@ -1227,7 +1219,7 @@ class TestComponentGeneratorAdvanced:
 
 class TestComponentGeneratorAdvanced:
     """Test advanced ComponentGenerator functionality."""
-    
+
     def test_generate_component_all_types(self) -> None:
         """Test component generation for all component types."""
         generator = ComponentGenerator()
@@ -1237,7 +1229,7 @@ class TestComponentGeneratorAdvanced:
             design_system=DesignSystem.MATERIAL_DESIGN,
             accessibility_level=AccessibilityLevel.AA
         )
-        
+
         # Test each component type
         for component_type in ComponentType:
             if component_type in generator.templates:
@@ -1249,12 +1241,12 @@ class TestComponentGeneratorAdvanced:
                     accessibility_features=[],
                     responsive_breakpoints=[]
                 )
-                
+
                 result = generator.generate_component(requirement, spec)
                 assert isinstance(result, dict)
                 assert "component_code" in result
                 assert "token_estimate" in result
-    
+
     def test_generate_component_vue_framework(self) -> None:
         """Test component generation for Vue framework."""
         generator = ComponentGenerator()
@@ -1272,7 +1264,7 @@ class TestComponentGeneratorAdvanced:
             accessibility_features=[],
             responsive_breakpoints=[]
         )
-        
+
         result = generator.generate_component(requirement, spec)
         assert isinstance(result, dict)
         assert "component_code" in result

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from tool_router.ai.feedback import FeedbackStore
+import pytest
+
 from tool_router.ai.enhanced_selector import EnhancedSelector
+from tool_router.ai.feedback import FeedbackStore
 from tool_router.core.config import ToolRouterConfig
 
 
@@ -64,7 +65,7 @@ class TestToolRoutingWorkflows:
         ai_selector.select_tool.side_effect = Exception("AI service unavailable")
 
         # Mock keyword-based fallback
-        with patch('tool_router.ai.enhanced_selector.EnhancedSelector._select_by_keywords') as mock_keywords:
+        with patch("tool_router.ai.enhanced_selector.EnhancedSelector._select_by_keywords") as mock_keywords:
             mock_keywords.return_value = {
                 "selected_tool": "file_reader",
                 "confidence": 0.6,
@@ -323,7 +324,7 @@ class TestToolRoutingWorkflows:
         feedback_store = FeedbackStore(feedback_file)
 
         # Mock security check
-        with patch('tool_router.security.audit_logger.SecurityAuditLogger.log_security_event') as mock_audit:
+        with patch("tool_router.security.audit_logger.SecurityAuditLogger.log_security_event") as mock_audit:
             # Record security-sensitive operations
             feedback_store.record(
                 task="execute system command",

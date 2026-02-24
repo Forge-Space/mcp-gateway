@@ -43,7 +43,7 @@ _security_middleware: SecurityMiddleware | None = None
 
 def initialize_ai(config: ToolRouterConfig) -> None:
     """Initialize AI selector, specialist coordinator, feedback store, and security middleware."""
-    global _ai_selector, _enhanced_ai_selector, _specialist_coordinator, _feedback_store, _config, _security_middleware  # noqa: PLW0603
+    global _ai_selector, _enhanced_ai_selector, _specialist_coordinator, _feedback_store, _config, _security_middleware
     _config = config
     _feedback_store = FeedbackStore()
 
@@ -229,7 +229,7 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
                 if multi_result:
                     selected_names = multi_result.get("tools", [])
                     logger.info("AI selected tools for orchestration: %s", selected_names)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.warning("AI multi-tool selection failed: %s", e)
 
         if not selected_names:
@@ -257,7 +257,7 @@ def execute_tasks(task: str, context: str = "", max_tools: int = 3) -> str:
 
             try:
                 tool_arguments = build_arguments(tool, task)
-            except Exception as build_error:  # noqa: BLE001
+            except Exception as build_error:
                 logger.warning("Error building arguments for %s: %s", tool_name, build_error)
                 results.append(f"[{tool_name}] Error building arguments: {build_error}")
                 if _feedback_store:

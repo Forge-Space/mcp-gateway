@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import pytest
+from unittest.mock import Mock, patch
 
 from tool_router.security.audit_logger import SecurityAuditLogger, SecurityEvent
 
@@ -253,8 +252,8 @@ class TestSecurityAuditLogger:
         logger = SecurityAuditLogger(log_file_path=str(log_file))
 
         # Mock file operations
-        with patch('builtins.open', side_effect=OSError("File too large")) as mock_open:
-            with patch('os.rename', side_effect=OSError("Cannot rename")):
+        with patch("builtins.open", side_effect=OSError("File too large")) as mock_open:
+            with patch("os.rename", side_effect=OSError("Cannot rename")):
                 # Should handle file rotation errors gracefully
                 logger.log_security_event(
                     SecurityEvent(
@@ -270,7 +269,6 @@ class TestSecurityAuditLogger:
     def test_concurrent_logging(self, tmp_path: Path) -> None:
         """Test concurrent logging operations."""
         import threading
-        import time
 
         log_file = tmp_path / "security.log"
         logger = SecurityAuditLogger(log_file_path=str(log_file))

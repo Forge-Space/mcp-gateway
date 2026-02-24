@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-import pytest
+from unittest.mock import MagicMock
 
 from tool_router.specialist_coordinator import (
-    SpecialistCoordinator,
-    TaskRequest,
-    TaskCategory,
-    SpecialistType,
-    SpecialistResult,
+    AccessibilityLevel,
     ComponentType,
-    UIFramework,
     DesignSystem,
-    AccessibilityLevel
+    SpecialistCoordinator,
+    SpecialistType,
+    TaskCategory,
+    TaskRequest,
+    UIFramework,
 )
 
 
@@ -30,7 +28,7 @@ class TestSpecialistCoordinator:
 
         coordinator = SpecialistCoordinator(enhanced_selector, prompt_architect, ui_specialist)
         assert coordinator is not None
-        assert hasattr(coordinator, 'process_task')
+        assert hasattr(coordinator, "process_task")
         assert coordinator.enhanced_selector == enhanced_selector
         assert coordinator.prompt_architect == prompt_architect
         assert coordinator.ui_specialist == ui_specialist

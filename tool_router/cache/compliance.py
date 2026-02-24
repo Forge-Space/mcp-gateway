@@ -21,7 +21,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from threading import Lock
-from typing import Any, Union
+from typing import Any
 
 from .config import CacheConfig
 from .types import AuditEntry, ComplianceError, ComplianceStandard, ConsentRecord, SecurityMetrics
@@ -74,9 +74,9 @@ class DataSubjectRequest:
     status: str
     created: datetime
     due_date: datetime
-    completed: Union[datetime, None] = None
+    completed: datetime | None = None
     notes: str = ""
-    processed_by: Union[str, None] = None
+    processed_by: str | None = None
 
 
 @dataclass
@@ -171,7 +171,7 @@ class GDPRComplianceHandler:
 
         return request_id
 
-    def get_data_subject_requests(self, subject_id: Union[str, None] = None) -> list[DataSubjectRequest]:
+    def get_data_subject_requests(self, subject_id: str | None = None) -> list[DataSubjectRequest]:
         """Get data subject requests, optionally filtered by subject."""
         with self._lock:
             requests = list(self._data_subject_requests.values())
@@ -316,7 +316,7 @@ class ComplianceReporter:
 class ComplianceManager:
     """Main compliance management interface."""
 
-    def __init__(self, config: Union[CacheConfig, None]):
+    def __init__(self, config: CacheConfig | None):
         """Initialize compliance manager."""
         self.config = config or CacheConfig()
         self._lock = Lock()
@@ -413,7 +413,7 @@ class ComplianceManager:
         except Exception as e:
             raise ComplianceError(f"Failed to assess compliance: {e!s}")
 
-    def generate_compliance_report(self, standards: Union[list[ComplianceStandard], None]) -> ComplianceReport:
+    def generate_compliance_report(self, standards: list[ComplianceStandard] | None) -> ComplianceReport:
         """Generate compliance report."""
         try:
             if standards is None:
@@ -435,7 +435,7 @@ class ComplianceManager:
         with self._lock:
             return SecurityMetrics(**asdict(self._metrics))
 
-    def get_data_subject_requests(self, subject_id: Union[str, None] = None) -> list[DataSubjectRequest]:
+    def get_data_subject_requests(self, subject_id: str | None = None) -> list[DataSubjectRequest]:
         """Get data subject requests."""
         return self._gdpr_handler.get_data_subject_requests(subject_id)
 

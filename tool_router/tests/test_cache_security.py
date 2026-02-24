@@ -17,33 +17,38 @@ Test Coverage Goals:
 - Security validation
 """
 
-import pytest
-import time
-import json
-import secrets
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
-from threading import Lock
-from cryptography.fernet import Fernet, InvalidToken
+import os
 
 # Import the cache security modules
 import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import time
+from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
 
+import pytest
+from cryptography.fernet import Fernet
+
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from cache.compliance import ComplianceManager
 from cache.config import CacheConfig, load_config_from_env
-from cache.types import (
-    DataClassification, AccessLevel, ComplianceStandard, SecurityPolicy,
-    AccessRequest, AuditEntry, ConsentRecord, CacheEntryMetadata, SecurityMetrics,
-    CacheOperationResult, CacheSecurityError, EncryptionError,
-    AccessControlError, ComplianceError, RetentionError, AuditError
-)
 from cache.security import (
-    CacheEncryption, AccessControlManager, GDPRComplianceManager,
-    RetentionPolicyManager, CacheSecurityManager
+    AccessControlManager,
+    CacheEncryption,
+    CacheSecurityManager,
+    GDPRComplianceManager,
+    RetentionPolicyManager,
 )
-from cache.compliance import ComplianceManager, GDPRComplianceHandler
-from cache.retention import RetentionPolicyManager as RetentionPolicyManagerMain, LifecycleManager
+from cache.types import (
+    AccessLevel,
+    AccessRequest,
+    CacheEntryMetadata,
+    CacheSecurityError,
+    ComplianceStandard,
+    DataClassification,
+    EncryptionError,
+)
 
 
 class TestCacheConfig:
@@ -94,10 +99,10 @@ class TestCacheConfig:
         """Test loading configuration from environment."""
         # Mock environment variables
         env_vars = {
-            'CACHE_ENCRYPTION_ENABLED': 'true',
-            'CACHE_AUDIT_ENABLED': 'false',
-            'CACHE_RETENTION_DAYS_SENSITIVE': '60',
-            'CACHE_RETENTION_DAYS_CONFIDENTIAL': '30'
+            "CACHE_ENCRYPTION_ENABLED": "true",
+            "CACHE_AUDIT_ENABLED": "false",
+            "CACHE_RETENTION_DAYS_SENSITIVE": "60",
+            "CACHE_RETENTION_DAYS_CONFIDENTIAL": "30"
         }
 
         with patch.dict(os.environ, env_vars):
@@ -362,9 +367,9 @@ class TestGDPRComplianceManager:
     def test_consent_recording(self):
         """Test consent recording and retrieval."""
         consent_data = {
-            'data_types': ['personal_data', 'analytics_data'],
-            'purposes': ['marketing', 'analytics'],
-            'legal_basis': 'consent'
+            "data_types": ["personal_data", "analytics_data"],
+            "purposes": ["marketing", "analytics"],
+            "legal_basis": "consent"
         }
 
         consent_id = self.gdpr_manager.record_consent("subject_123", consent_data)
@@ -380,9 +385,9 @@ class TestGDPRComplianceManager:
     def test_consent_withdrawal(self):
         """Test consent withdrawal."""
         consent_data = {
-            'data_types': ['personal_data'],
-            'purposes': ['marketing'],
-            'legal_basis': 'consent'
+            "data_types": ["personal_data"],
+            "purposes": ["marketing"],
+            "legal_basis": "consent"
         }
 
         consent_id = self.gdpr_manager.record_consent("subject_456", consent_data)
@@ -404,9 +409,9 @@ class TestGDPRComplianceManager:
     def test_consent_expiration(self):
         """Test consent expiration."""
         consent_data = {
-            'data_types': ['personal_data'],
-            'purposes': ['analytics'],
-            'legal_basis': 'consent'
+            "data_types": ["personal_data"],
+            "purposes": ["analytics"],
+            "legal_basis": "consent"
         }
 
         consent_id = self.gdpr_manager.record_consent("subject_789", consent_data)
@@ -426,19 +431,19 @@ class TestGDPRComplianceManager:
         """Test GDPR right to be forgotten."""
         result = self.gdpr_manager.process_right_to_be_forgotten("subject_999")
 
-        assert 'subject_id' in result
-        assert result['subject_id'] == "subject_999"
-        assert 'processed_at' in result
-        assert 'records_deleted' in result
-        assert 'cache_entries_cleared' in result
+        assert "subject_id" in result
+        assert result["subject_id"] == "subject_999"
+        assert "processed_at" in result
+        assert "records_deleted" in result
+        assert "cache_entries_cleared" in result
 
     def test_data_subject_requests(self):
         """Test data subject request management."""
         request_data = {
-            'request_type': 'access',
-            'subject_id': 'subject_111',
-            'subject_contact': 'user@example.com',
-            'description': 'Request for data access'
+            "request_type": "access",
+            "subject_id": "subject_111",
+            "subject_contact": "user@example.com",
+            "description": "Request for data access"
         }
 
         request_id = self.gdpr_manager.create_data_subject_request(request_data)
@@ -476,7 +481,7 @@ class TestRetentionPolicyManager:
 
     def test_add_custom_retention_rule(self):
         """Test adding custom retention rules."""
-        from cache.retention import RetentionRule, RetentionAction, RetentionTrigger
+        from cache.retention import RetentionAction, RetentionRule, RetentionTrigger
 
         custom_rule = RetentionRule(
             rule_id="custom_rule_1",
@@ -556,7 +561,7 @@ class TestRetentionPolicyManager:
         initial_days = initial_rule.retention_days
 
         # Update rule
-        updates = {'retention_days': 120, 'enabled': False}
+        updates = {"retention_days": 120, "enabled": False}
         success = self.retention_manager.update_rule(initial_rule.rule_id, updates)
 
         assert success is True
@@ -572,7 +577,7 @@ class TestRetentionPolicyManager:
     def test_retention_rule_deletion(self):
         """Test deleting retention rules."""
         # Add a test rule
-        from cache.retention import RetentionRule, RetentionAction, RetentionTrigger
+        from cache.retention import RetentionAction, RetentionRule, RetentionTrigger
 
         test_rule = RetentionRule(
             rule_id="test_delete_rule",
@@ -731,9 +736,9 @@ class TestComplianceManager:
     def test_consent_management_integration(self):
         """Test consent management through compliance manager."""
         consent_data = {
-            'data_types': ['email', 'name'],
-            'purposes': ['communication'],
-            'legal_basis': 'consent'
+            "data_types": ["email", "name"],
+            "purposes": ["communication"],
+            "legal_basis": "consent"
         }
 
         consent_id = self.compliance_manager.record_consent("user_123", consent_data)
@@ -758,10 +763,10 @@ class TestComplianceManager:
     def test_data_subject_request_integration(self):
         """Test data subject request handling."""
         request_data = {
-            'request_type': 'erasure',
-            'subject_id': 'user_456',
-            'subject_contact': 'user@example.com',
-            'description': 'Request data deletion'
+            "request_type": "erasure",
+            "subject_id": "user_456",
+            "subject_contact": "user@example.com",
+            "description": "Request data deletion"
         }
 
         request_id = self.compliance_manager.create_data_subject_request(request_data)
@@ -800,9 +805,9 @@ class TestComplianceManager:
         """Test compliance metrics collection."""
         # Perform some compliance operations
         self.compliance_manager.record_consent("metrics_user", {
-            'data_types': ['test'],
-            'purposes': ['test'],
-            'legal_basis': 'consent'
+            "data_types": ["test"],
+            "purposes": ["test"],
+            "legal_basis": "consent"
         })
 
         metrics = self.compliance_manager.get_metrics()
@@ -825,9 +830,9 @@ class TestIntegrationScenarios:
         """Test complete end-to-end security workflow."""
         # Step 1: Record consent for data processing
         consent_id = self.compliance_manager.record_consent("integration_user", {
-            'data_types': ['personal_data'],
-            'purposes': ['analytics'],
-            'legal_basis': 'consent'
+            "data_types": ["personal_data"],
+            "purposes": ["analytics"],
+            "legal_basis": "consent"
         })
 
         # Step 2: Encrypt sensitive data
@@ -878,9 +883,9 @@ class TestIntegrationScenarios:
 
         # Scenario 2: Process data with consent
         consent_id = self.compliance_manager.record_consent("consent_user", {
-            'data_types': ['personal_data'],
-            'purposes': ['marketing'],
-            'legal_basis': 'consent'
+            "data_types": ["personal_data"],
+            "purposes": ["marketing"],
+            "legal_basis": "consent"
         })
 
         has_consent = self.compliance_manager.check_consent(
@@ -1056,7 +1061,7 @@ class TestPerformanceAndScalability:
         import sys
 
         # Get initial memory usage
-        initial_objects = len(gc.get_objects()) if 'gc' in sys.modules else 0
+        initial_objects = len(gc.get_objects()) if "gc" in sys.modules else 0
 
         # Create and encrypt many items
         encrypted_items = []
@@ -1070,7 +1075,7 @@ class TestPerformanceAndScalability:
             self.security_manager.decrypt_data(item.encrypted_data, item.operation_id)
 
         # Memory usage should be reasonable
-        final_objects = len(gc.get_objects()) if 'gc' in sys.modules else 0
+        final_objects = len(gc.get_objects()) if "gc" in sys.modules else 0
         object_increase = final_objects - initial_objects
 
         # Should not create excessive objects (adjust threshold as needed)

@@ -252,7 +252,7 @@ class RAGManagerTool:
 
             return results
         except Exception as e:
-            print(f'Error in _retrieve_by_category: {e}')
+            print(f"Error in _retrieve_by_category: {e}")
             import traceback
             traceback.print_exc()
             return []
