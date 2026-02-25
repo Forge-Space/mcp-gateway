@@ -8,6 +8,11 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 - **GitHub ruleset required checks** — Updated main-branch-protection required checks from "CI Pipeline"/"CodeQL Security Analysis" (workflow names) to "Test"/"Build"/"Lint" (actual job names). PRs no longer require admin bypass to merge.
 
+### Tests
+
+- **Re-enabled 124 excluded tests** — Rewrote observability health tests for new `HTTPGatewayClient`/`GatewayConfig` API (21 tests), fixed dribbble health check mock assertions (10 tests). Test count: 184 → 308 passing, coverage 88.98%.
+- **CI alignment** — Removed 3 `--ignore` flags from both `ci.yml` and `Makefile` for `test_observability`, `test_health_check`.
+
 ## [1.7.1] - 2026-02-25
 
 ### Fixed
