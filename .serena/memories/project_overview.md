@@ -53,7 +53,11 @@ mcp-gateway/
 - **Upstream dependency**: @forgespace/core (forge-patterns)
 
 ## Coverage & CI
-- 93.58% test coverage, 288 tests passing
-- 342 pre-existing infra tests excluded via conftest.py (Redis, Sentry, RAG, cache, dashboard)
+- 88.98% test coverage (gate: 80%), 267 tests passing
+- Infrastructure modules excluded via `[tool.coverage.run] omit` (directory wildcards)
+- Test exclusions via `--ignore` flags in Makefile and ci.yml (aligned)
+- pyproject.toml `addopts` is single source of truth for pytest flags — NEVER use `--override-ini`
 - 4-job CI pipeline: lint → test → build → security
+- Release pipeline: `release-automation.yml` → `make test` → pyproject.toml addopts
 - `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to stage
+- PR #64 (2026-02-25): Fixed coverage collection by removing `--override-ini`
