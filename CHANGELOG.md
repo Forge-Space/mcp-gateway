@@ -2,7 +2,7 @@
 
 All notable changes to the MCP Gateway project will be documented in this file.
 
-## [Unreleased]
+## [1.7.1] - 2026-02-25
 
 ### Fixed
 
