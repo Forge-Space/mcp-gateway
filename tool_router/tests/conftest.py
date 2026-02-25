@@ -10,7 +10,7 @@ import os
 _dir = os.path.dirname(__file__)
 
 collect_ignore_glob = [
-    "test_cache_*.py",
+    "test_cache_security*.py",
     "test_redis_cache.py",
     "test_dashboard.py",
     "test_invalidation.py",

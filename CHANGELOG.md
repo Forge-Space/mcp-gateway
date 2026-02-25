@@ -7,11 +7,15 @@ All notable changes to the MCP Gateway project will be documented in this file.
 ### Fixed
 
 - **GitHub ruleset required checks** — Updated main-branch-protection required checks from "CI Pipeline"/"CodeQL Security Analysis" (workflow names) to "Test"/"Build"/"Lint" (actual job names). PRs no longer require admin bypass to merge.
+- **Cache compliance module bugs** — Fixed wrong field names in `compliance.py` (`next_assessed` → `next_assessment`, `entry_id` → `event_id`), added `generate_compliance_report()` default argument, fixed `assess_compliance()` type validation, added input validation to `record_consent()` and `create_data_subject_request()`.
+- **ConsentRecord dataclass** — Extended with fields required by both compliance and security modules (`data_types`, `purposes`, `granted`, `user_id`, `ip_address`, `retention_days`, `expired()` method).
+- **SecurityMetrics dataclass** — Added missing fields (`compliance_violations`, `total_compliance_checks`, `encryption_errors`, `audit_failures`).
 
 ### Tests
 
 - **Re-enabled 124 excluded tests** — Rewrote observability health tests for new `HTTPGatewayClient`/`GatewayConfig` API (21 tests), fixed dribbble health check mock assertions (10 tests). Test count: 184 → 308 passing, coverage 88.98%.
 - **CI alignment** — Removed 3 `--ignore` flags from both `ci.yml` and `Makefile` for `test_observability`, `test_health_check`.
+- **Re-enabled 41 cache tests** — Fixed broken imports in `test_cache_basic.py` (replaced `sys.path.insert` + stdlib `types` collision with proper `tool_router.cache.*` package imports), fixed `test_cache_compliance.py` (aligned with actual `ConsentRecord`/`ComplianceAssessment` dataclass fields). Removed `test_cache_basic.py` and `test_cache_compliance.py` from CI and conftest ignore lists. Test count: 308 → 349 passing.
 
 ## [1.7.1] - 2026-02-25
 

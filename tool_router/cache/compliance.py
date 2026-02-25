@@ -198,15 +198,14 @@ class GDPRComplianceHandler:
 
         # Log the erasure request
         audit_entry = AuditEntry(
-            entry_id=secrets.token_hex(16),
+            event_id=secrets.token_hex(16),
             event_type="data_erasure",
             user_id="system",
             resource_id=subject_id,
-            details=f"GDPR right to be forgotten processed for {subject_id}",
+            details={"description": f"GDPR right to be forgotten processed for {subject_id}"},
             timestamp=datetime.utcnow(),
             ip_address="127.0.0.1",
             user_agent="compliance_system",
-            success=True,
         )
 
         # In a real implementation, this would trigger actual data deletion
@@ -261,7 +260,7 @@ class ComplianceReporter:
             findings=findings,
             recommendations=recommendations,
             last_assessed=datetime.utcnow(),
-            next_assessed=datetime.utcnow() + timedelta(days=90),
+            next_assessment=datetime.utcnow() + timedelta(days=90),
             assessor="compliance_system",
         )
 
@@ -346,45 +345,50 @@ class ComplianceManager:
 
     def record_consent(self, subject_id: str, consent_data: dict[str, Any]) -> str:
         """Record consent for data processing."""
+        if not subject_id or not consent_data:
+            raise ComplianceError("Subject ID and consent data are required")
         try:
             consent_id = self._gdpr_handler.record_consent(subject_id, consent_data)
 
-            # Update metrics
             with self._lock:
                 self._metrics.audit_entries += 1
+                self._metrics.total_compliance_checks += 1
 
             return consent_id
 
+        except ComplianceError:
+            raise
         except Exception as e:
             raise ComplianceError(f"Failed to record consent: {e!s}")
 
     def check_consent(self, subject_id: str, data_type: str, purpose: str) -> bool:
         """Check if valid consent exists."""
-        try:
-            has_consent = self._gdpr_handler.check_consent(subject_id, data_type, purpose)
+        has_consent = self._gdpr_handler.check_consent(subject_id, data_type, purpose)
 
-            # Update metrics
-            with self._lock:
-                self._metrics.audit_entries += 1
-                if not has_consent:
-                    self._metrics.compliance_violations += 1
+        with self._lock:
+            self._metrics.audit_entries += 1
+            self._metrics.total_compliance_checks += 1
+            if not has_consent:
+                self._metrics.compliance_violations += 1
 
-            return has_consent
-
-        except Exception as e:
-            raise ComplianceError(f"Failed to check consent: {e!s}")
+        return has_consent
 
     def create_data_subject_request(self, request_data: dict[str, Any]) -> str:
         """Create a new data subject request."""
+        required = ["request_type", "subject_id", "subject_contact", "description"]
+        if not all(k in request_data for k in required):
+            raise ComplianceError(f"Missing required fields: {required}")
         try:
             request_id = self._gdpr_handler.create_data_subject_request(request_data)
 
-            # Update metrics
             with self._lock:
                 self._metrics.audit_entries += 1
+                self._metrics.total_compliance_checks += 1
 
             return request_id
 
+        except ComplianceError:
+            raise
         except Exception as e:
             raise ComplianceError(f"Failed to create data subject request: {e!s}")
 
@@ -402,24 +406,22 @@ class ComplianceManager:
         except Exception as e:
             raise ComplianceError(f"Failed to process right to be forgotten: {e!s}")
 
-    def assess_compliance(self, standard: ComplianceStandard) -> ComplianceAssessment:
+    def assess_compliance(self, standard: ComplianceStandard | str) -> ComplianceAssessment:
         """Assess compliance for a specific standard."""
-        try:
-            if standard == ComplianceStandard.GDPR:
-                assessment = self._reporter.assess_gdpr_compliance()
-            else:
-                raise ComplianceError(f"Compliance assessment for {standard.value} not implemented")
+        if not isinstance(standard, ComplianceStandard):
+            raise TypeError(f"Invalid compliance standard: {standard}")
 
-            # Update metrics
-            with self._lock:
-                self._metrics.audit_entries += 1
+        if standard == ComplianceStandard.GDPR:
+            assessment = self._reporter.assess_gdpr_compliance()
+        else:
+            raise ComplianceError(f"Compliance assessment for {standard.value} not implemented")
 
-            return assessment
+        with self._lock:
+            self._metrics.audit_entries += 1
 
-        except Exception as e:
-            raise ComplianceError(f"Failed to assess compliance: {e!s}")
+        return assessment
 
-    def generate_compliance_report(self, standards: list[ComplianceStandard] | None) -> ComplianceReport:
+    def generate_compliance_report(self, standards: list[ComplianceStandard] | None = None) -> ComplianceReport:
         """Generate compliance report."""
         try:
             if standards is None:

@@ -147,14 +147,31 @@ class ConsentRecord:
     """GDPR consent record."""
 
     consent_id: str
-    subject_id: str
-    purpose: str
-    legal_basis: str
-    consent_given: bool
-    timestamp: datetime
+    subject_id: str = ""
+    purpose: str = ""
+    legal_basis: str = "consent"
+    consent_given: bool = True
+    timestamp: datetime | None = None
     expires_at: datetime | None = None
     withdrawn_at: datetime | None = None
     processing_purposes: list[str] | None = None
+    data_types: list[str] | None = None
+    purposes: list[str] | None = None
+    granted: bool = True
+    user_id: str | None = None
+    ip_address: str | None = None
+    user_agent: str | None = None
+    retention_days: int | None = None
+    withdrawal_timestamp: datetime | None = None
+    withdrawal_reason: str | None = None
+
+    def expired(self) -> bool:
+        """Check if consent has expired."""
+        if self.expires_at is None:
+            return False
+        from datetime import UTC
+
+        return datetime.now(UTC) > self.expires_at
 
 
 @dataclass
@@ -169,6 +186,10 @@ class SecurityMetrics:
     consent_records: int = 0
     data_breaches: int = 0
     security_violations: int = 0
+    compliance_violations: int = 0
+    total_compliance_checks: int = 0
+    encryption_errors: int = 0
+    audit_failures: int = 0
     last_updated: datetime | None = None
 
 
