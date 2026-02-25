@@ -2,6 +2,13 @@
 
 All notable changes to the MCP Gateway project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **CI: Restore coverage collection in test pipeline** — `--override-ini="addopts=-v --tb=short"` in Makefile and ci.yml was silently replacing pyproject.toml addopts, stripping all `--cov` flags. Coverage now flows through all three entry points (`make test`, `ci.yml`, `release-automation.yml`), reporting 88.98% against the 80% gate.
+- **Coverage omit list aligned with ignored tests** — Extended `[tool.coverage.run] omit` to exclude source files whose tests are in the `--ignore` list (cache, observability, gateway, scoring, training, infrastructure AI modules). Prevents false-low coverage from untested infrastructure code.
+
 ## [1.38.0] - 2026-02-23
 
 ### n8n Automation Layer

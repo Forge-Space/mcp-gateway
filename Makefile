@@ -134,7 +134,6 @@ test: ## Run tests (replaces test, test-coverage)
 		--ignore=tool_router/tests/test_cache_basic.py \
 		--ignore=tool_router/tests/test_cache_compliance.py \
 		--ignore=dribbble_mcp/tests/test_health_check.py \
-		--override-ini="addopts=-v --tb=short" \
 		--timeout=30 --maxfail=10
 
 deps: ## Dependency management (replaces deps-check, deps-update, pre-commit-install)
