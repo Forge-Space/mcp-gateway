@@ -39,12 +39,6 @@ jobs:
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
-        with:
-          args: >
-            scan 
-            --all 
-            --verbose 
-            --exit-code-on-secrets=1
 
       - name: Upload GitGuardian results to GitHub Security
         if: always() && hashFiles('.gitguardian/reports/sarif.json') != ''
@@ -87,11 +81,6 @@ jobs:
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
-        with:
-          args: >
-            monitor 
-            --all 
-            --verbose
 
   workflow-summary:
     name: GitGuardian Summary
