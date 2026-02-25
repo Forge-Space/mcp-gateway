@@ -131,7 +131,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          twine upload dist/*
+          twine upload dist/* --skip-existing
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
