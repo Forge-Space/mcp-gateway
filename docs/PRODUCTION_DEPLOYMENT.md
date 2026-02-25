@@ -65,10 +65,10 @@ Edit `.env.production` with your production values:
 # SECURITY CONFIGURATION
 # =============================================================================
 # Generate secure values using: make generate-secrets
-JWT_SECRET=your-super-secure-jwt-secret-key-here-at-least-32-chars
-POSTGRES_PASSWORD=your-secure-postgres-password
-REDIS_PASSWORD=your-secure-redis-password
-GRAFANA_PASSWORD=your-secure-grafana-password
+JWT_SECRET={{JWT_SECRET}}
+POSTGRES_PASSWORD={{POSTGRES_PASSWORD}}
+REDIS_PASSWORD={{REDIS_PASSWORD}}
+GRAFANA_PASSWORD={{GRAFANA_PASSWORD}}
 
 # =============================================================================
 # DATABASE CONFIGURATION
@@ -234,9 +234,10 @@ services:
       start_period: 40s
     security_opt:
       - no-new-privileges:true
-      - user: "1000:1000"
-      - read_only:true
-      - tmpfs:/tmp:noexec,nosuid,size=100m
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
 
   service-manager:
     build:
@@ -277,9 +278,10 @@ services:
       restart_policy: unless-stopped
     security_opt:
       - no-new-privileges:true
-      - user: "1001:1001"
-      - read_only:true
-      - tmpfs:/tmp:noexec,nosuid,size=50m
+    user: "1001:1001"
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
 
   tool-router:
     build:
@@ -320,9 +322,10 @@ services:
       restart_policy: unless-stopped
     security_opt:
       - no-new-privileges:true
-      - user: "1002:1002"
-      - read_only:true
-      - tmpfs:/tmp:noexec,nosuid,size=50m
+    user: "1002:1002"
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
 
 networks:
   forge-mcp-network:
@@ -561,7 +564,7 @@ scrape_configs:
 
 ```bash
 # Import dashboard configuration
-curl -X POST http://admin:admin@localhost:3001/api/dashboards/db \
+curl -X POST http://{{GRAFANA_ADMIN_USER}}:{{GRAFANA_ADMIN_PASSWORD}}@localhost:3001/api/dashboards/db \
   -H "Content-Type: application/json" \
   -d @grafana-dashboard.json
 ```
