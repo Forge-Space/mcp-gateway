@@ -51,3 +51,9 @@ mcp-gateway/
 - **Python package**: mcp-gateway (setuptools)
 - **npm package**: npx wrapper entry point
 - **Upstream dependency**: @forgespace/core (forge-patterns)
+
+## Coverage & CI
+- 93.58% test coverage, 288 tests passing
+- 342 pre-existing infra tests excluded via conftest.py (Redis, Sentry, RAG, cache, dashboard)
+- 4-job CI pipeline: lint → test → build → security
+- `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to stage
