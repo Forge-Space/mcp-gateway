@@ -10,6 +10,7 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Coverage omit list aligned with ignored tests** — Extended `[tool.coverage.run] omit` to exclude source files whose tests are in the `--ignore` list (cache, observability, gateway, scoring, training, infrastructure AI modules). Prevents false-low coverage from untested infrastructure code.
 - **Release pipeline Docker test** — Added `load: true` to `docker/build-push-action` so Buildx exports the image to the local daemon for the subsequent smoke test.
 - **PyPI package rename** — Renamed from `mcp-gateway` (taken) to `forge-mcp-gateway` to enable automated PyPI publishing.
+- **Release permissions** — Added `contents: write` to release job, replaced deprecated `actions/create-release@v1` with `softprops/action-gh-release@v2`, fixed repository dispatch target.
 
 ## [1.38.0] - 2026-02-23
 
