@@ -123,8 +123,9 @@ RATE_LIMIT_PER_MINUTE=100
 sudo apt update && sudo apt upgrade -y
 
 # Install Docker if not present
-curl -fsSL https://get.docker.com -o get-docker.sh | sh
-sudo usermod -aG docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
 
 # Install Docker Compose
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -215,12 +216,6 @@ services:
         reservations:
           cpus: "0.1"
           memory: 256M
-      memswap_limit: 768M
-      ulimits:
-        nofile:
-          soft: 1024
-          hard: 2048
-      restart_policy: unless-stopped
     logging:
       driver: json-file
       options:
@@ -270,12 +265,6 @@ services:
         reservations:
           cpus: "0.05"
           memory: 64M
-      memswap_limit: 192M
-      ulimits:
-        nofile:
-          soft: 1024
-          hard: 2048
-      restart_policy: unless-stopped
     security_opt:
       - no-new-privileges:true
     user: "1001:1001"
@@ -314,12 +303,6 @@ services:
         reservations:
           cpus: "0.05"
           memory: 64M
-      memswap_limit: 192M
-      ulimits:
-        nofile:
-          soft: 1024
-          hard: 2048
-      restart_policy: unless-stopped
     security_opt:
       - no-new-privileges:true
     user: "1002:1002"
@@ -509,13 +492,11 @@ echo "Creating backup: $BACKUP_FILE"
 
 # Create backup
 docker run --rm \
-  -v /opt/forge-mcp-gateway:/backup \
+  -v /opt/forge-mcp-gateway:/source:ro \
   -v $BACKUP_DIR:/backup \
   alpine:latest \
   tar czf /backup/forge-mcp-gateway-backup-$TIMESTAMP.tar.gz \
-  /opt/forge-mcp-gateway/data \
-  /opt/forge-mcp-gateway/config \
-  /opt/forge-mcp-gateway/.env.production
+  -C /source data config .env.production
 
 echo "Backup completed: $BACKUP_FILE"
 EOF
@@ -534,7 +515,6 @@ All services expose health check endpoints:
 | Gateway | `GET /health` | Overall system health |
 | Service Manager | `GET /health` | Service management health |
 | Tool Router | `GET /health` | Tool routing health |
-| Translate | `GET /health` | Translation service health |
 
 ### Monitoring Stack
 
@@ -555,9 +535,9 @@ scrape_configs:
         - 'localhost:8001'
     metrics_path: '/metrics'
     relabel_configs:
-      - source_labels: true
-      - target_label: 'job'
-      - replacement: 'forge-mcp-gateway'
+      - source_labels: [__address__]
+        target_label: job
+        replacement: forge-mcp-gateway
 ```
 
 #### Grafana Dashboard
@@ -697,9 +677,9 @@ tar xzf /opt/forge-mcp-gateway/backups/forge-mcp-gateway-backup-*.tar.gz -C /opt
 #### Configuration Recovery
 
 ```bash
-# Reset configuration
-git checkout HEAD -- .env.production
+# Reset configuration from template
 cp .env.example .env.production
+chmod 600 .env.production
 
 # Regenerate secrets
 make generate-secrets
@@ -773,18 +753,21 @@ sqlite3 /opt/forge-mcp-gateway/data/mcp.db ".schema" | head -10
 ### Regular Maintenance Tasks
 
 #### Daily
+
 - Check service health status
 - Review logs for errors
 - Monitor resource usage
 - Verify backup completion
 
 #### Weekly
+
 - Update container images
 - Review security patches
 - Clean up old logs
 - Test backup restoration
 
 #### Monthly
+
 - Update application code
 - Review and rotate secrets
 - Performance tuning
