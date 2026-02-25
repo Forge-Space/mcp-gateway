@@ -47,7 +47,7 @@ mcp-gateway/
 
 ## Package Info
 - **Name**: mcp-gateway
-- **Version**: 1.7.0
+- **Version**: 1.7.1
 - **Python package**: mcp-gateway (setuptools)
 - **npm package**: npx wrapper entry point
 - **Upstream dependency**: @forgespace/core (forge-patterns)
@@ -61,3 +61,7 @@ mcp-gateway/
 - Release pipeline: `release-automation.yml` → `make test` → pyproject.toml addopts
 - `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to stage
 - PR #64 (2026-02-25): Fixed coverage collection by removing `--override-ini`
+- PR #68 (2026-02-25): Release v1.7.1 — CI/CD pipeline fixes
+- v1.7.1 released: tag + GitHub Release created via automated pipeline
+- Known: repository-dispatch step needs PAT for cross-repo (Forge-Space/core), GitGuardian API key expired
+- Required checks mismatch: "CI Pipeline"/"CodeQL Security Analysis" don't match actual job names

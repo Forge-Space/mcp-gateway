@@ -33,6 +33,8 @@ apps/                 # Legacy structure (DO NOT reference in CI)
 - `GITHUB_TOKEN= gh ...` required (env var overrides keyring)
 - `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to commit changes
 - GitGuardian workflow: `.github/workflows/gitguardian.yml` — `GITGUARDIAN_API_KEY` secret may be invalid (check secret first if scan fails)
+- Main branch required checks: "Test", "Build", "Lint" (must match CI job `name:` fields exactly)
+- GitGuardian `GITGUARDIAN_API_KEY` secret is expired — scan fails but is not a required check
 - Main branch ruleset has no bypass actors by default — temporarily add via API for urgent merges
 
 ## Documentation Governance
