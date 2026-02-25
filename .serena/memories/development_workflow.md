@@ -18,6 +18,12 @@ Configured via `.pre-commit-config.yaml` — runs on `git commit` automatically.
 - Coverage reports: XML + HTML + terminal
 - Branch protection: main is protected, PRs required
 
+## Documentation Governance
+- No task-specific docs in repo root or docs/ (*_COMPLETE.md, STATUS_*.md, PHASE*.md, etc.)
+- 44 obsolete task reports deleted (2026-02-24, PR #61)
+- Task info belongs in: commit messages, CHANGELOG, PR descriptions, or memory files
+- .gitignore updated with `.windsurf/plans/`, `.claude/plans/` guards
+
 ## Cross-Project Integration
 - Depends on @forgespace/core (forge-patterns)
 - Patterns synced via `npm run integrate:mcp-gateway` (from forge-patterns)
