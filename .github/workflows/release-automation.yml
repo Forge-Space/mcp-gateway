@@ -73,6 +73,7 @@ jobs:
           context: .
           file: Dockerfile.tool-router
           push: false
+          load: true
           tags: mcp-gateway:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
