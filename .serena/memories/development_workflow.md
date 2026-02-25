@@ -6,9 +6,9 @@ Feature branch → Release branch PR → Main PR → Automated deploy
 ## Before Committing
 1. `ruff check tool_router/ --fix` (auto-fix lint)
 2. `ruff format tool_router/` (format)
-3. `make test COVERAGE=true` (tests with coverage >=80%)
+3. `make test` (runs 267+ tests with CI-aligned ignores, no coverage gate)
 4. `make lint-strict` (all linters, no fallbacks)
-5. Conventional commit message
+5. Conventional commit message (feat, fix, refactor, chore, docs, style, ci, test)
 
 ## Pre-commit Hooks
 Configured via `.pre-commit-config.yaml` — runs on `git commit` automatically.
