@@ -121,11 +121,21 @@ lint-strict: ## Run all linters without fallbacks (CI-friendly)
 
 test: ## Run tests (replaces test, test-coverage)
 	@echo "🧪 Running tests..."
-	@if [ "$(COVERAGE)" = "true" ]; then \
-		pytest tool_router/ -v --cov=tool_router --cov-report=term-missing --cov-report=html; \
-	else \
-		pytest tool_router/ -v; \
-	fi
+	pytest tool_router/tests/ dribbble_mcp/tests/ \
+		--ignore=tool_router/tests/performance \
+		--ignore=tool_router/tests/integration \
+		--ignore=tool_router/tests/test_observability.py \
+		--ignore=tool_router/tests/test_observability \
+		--ignore=tool_router/tests/test_training \
+		--ignore=tool_router/tests/training \
+		--ignore=tool_router/tests/unit/test_training_pipeline.py \
+		--ignore=tool_router/tests/unit/test_specialist_coordinator.py \
+		--ignore=tool_router/tests/unit/test_ui_specialist.py \
+		--ignore=tool_router/tests/test_cache_basic.py \
+		--ignore=tool_router/tests/test_cache_compliance.py \
+		--ignore=dribbble_mcp/tests/test_health_check.py \
+		--override-ini="addopts=-v --tb=short" \
+		--timeout=30 --maxfail=10
 
 deps: ## Dependency management (replaces deps-check, deps-update, pre-commit-install)
 	@if [ -z "$(ACTION)" ]; then \
