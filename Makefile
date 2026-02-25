@@ -124,8 +124,6 @@ test: ## Run tests (replaces test, test-coverage)
 	pytest tool_router/tests/ dribbble_mcp/tests/ \
 		--ignore=tool_router/tests/performance \
 		--ignore=tool_router/tests/integration \
-		--ignore=tool_router/tests/test_observability.py \
-		--ignore=tool_router/tests/test_observability \
 		--ignore=tool_router/tests/test_training \
 		--ignore=tool_router/tests/training \
 		--ignore=tool_router/tests/unit/test_training_pipeline.py \
@@ -133,7 +131,6 @@ test: ## Run tests (replaces test, test-coverage)
 		--ignore=tool_router/tests/unit/test_ui_specialist.py \
 		--ignore=tool_router/tests/test_cache_basic.py \
 		--ignore=tool_router/tests/test_cache_compliance.py \
-		--ignore=dribbble_mcp/tests/test_health_check.py \
 		--timeout=30 --maxfail=10
 
 deps: ## Dependency management (replaces deps-check, deps-update, pre-commit-install)

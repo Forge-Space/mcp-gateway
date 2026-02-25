@@ -75,6 +75,7 @@ class TestHealthCheck:
                 capture_output=True,
                 text=True,
                 timeout=5,
+                check=False,
             )
 
     @patch("urllib.request.urlopen")
@@ -161,5 +162,6 @@ class TestHealthCheck:
                 capture_output=True,
                 text=True,
                 timeout=5,
+                check=False,
             )
             mock_exit.assert_called_once_with(0)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
 from tool_router.observability.health import (
     ComponentHealth,
@@ -12,314 +12,260 @@ from tool_router.observability.health import (
 )
 
 
-class TestHealthCheck:
-    """Test cases for HealthCheck functionality."""
-
-    def test_health_check_initialization(self) -> None:
-        """Test HealthCheck initialization."""
-        health_check = HealthCheck()
-
-        assert health_check is not None
-        assert hasattr(health_check, "check_gateway_connection")
-        assert hasattr(health_check, "check_configuration")
-        assert hasattr(health_check, "check_all")
-
-    def test_check_gateway_connection_success(self) -> None:
-        """Test successful gateway connection check."""
-        health_check = HealthCheck()
-
-        # Mock successful connection
-        with patch("tool_router.observability.health.requests.get") as mock_get:
-            mock_response = Mock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"status": "healthy"}
-            mock_get.return_value = mock_response
-
-            result = health_check.check_gateway_connection()
-
-            assert isinstance(result, HealthCheckResult)
-            assert result.status == HealthStatus.HEALTHY
-            assert result.component == "gateway_connection"
-            assert result.message == "Gateway connection successful"
-
-    def test_check_gateway_connection_failure(self) -> None:
-        """Test failed gateway connection check."""
-        health_check = HealthCheck()
-
-        # Mock failed connection
-        with patch("tool_router.observability.health.requests.get") as mock_get:
-            mock_get.side_effect = Exception("Connection failed")
-
-            result = health_check.check_gateway_connection()
-
-            assert isinstance(result, HealthCheckResult)
-            assert result.status == HealthStatus.UNHEALTHY
-            assert result.component == "gateway_connection"
-            assert "Connection failed" in result.message
-
-    def test_check_configuration_valid(self) -> None:
-        """Test valid configuration check."""
-        health_check = HealthCheck()
-
-        # Mock valid configuration
-        with patch("tool_router.observability.health.ToolRouterConfig.load_from_environment") as mock_load:
-            mock_config = Mock()
-            mock_config.is_valid.return_value = True
-            mock_load.return_value = mock_config
-
-            result = health_check.check_configuration()
-
-            assert isinstance(result, HealthCheckResult)
-            assert result.status == HealthStatus.HEALTHY
-            assert result.component == "configuration"
-            assert result.message == "Configuration is valid"
-
-    def test_check_configuration_invalid(self) -> None:
-        """Test invalid configuration check."""
-        health_check = HealthCheck()
-
-        # Mock invalid configuration
-        with patch("tool_router.observability.health.ToolRouterConfig.load_from_environment") as mock_load:
-            mock_config = Mock()
-            mock_config.is_valid.return_value = False
-            mock_config.validation_errors = ["Missing API key", "Invalid port"]
-            mock_load.return_value = mock_config
-
-            result = health_check.check_configuration()
-
-            assert isinstance(result, HealthCheckResult)
-            assert result.status == HealthStatus.UNHEALTHY
-            assert result.component == "configuration"
-            assert "Missing API key" in result.message
-
-    def test_check_all_healthy(self) -> None:
-        """Test overall health check when all components are healthy."""
-        health_check = HealthCheck()
-
-        # Mock all checks as healthy
-        with (
-            patch.object(health_check, "check_gateway_connection") as mock_gateway,
-            patch.object(health_check, "check_configuration") as mock_config,
-        ):
-            mock_gateway.return_value = HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="gateway_connection",
-                message="Gateway connection successful",
-            )
-            mock_config.return_value = HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="configuration",
-                message="Configuration is valid",
-            )
-
-            result = health_check.check_all()
-
-            assert isinstance(result, ComponentHealth)
-            assert result.status == HealthStatus.HEALTHY
-            assert len(result.components) == 2
-            assert all(comp.status == HealthStatus.HEALTHY for comp in result.components)
-
-    def test_check_all_degraded(self) -> None:
-        """Test overall health check when some components are degraded."""
-        health_check = HealthCheck()
-
-        # Mock mixed health status
-        with (
-            patch.object(health_check, "check_gateway_connection") as mock_gateway,
-            patch.object(health_check, "check_configuration") as mock_config,
-        ):
-            mock_gateway.return_value = HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="gateway_connection",
-                message="Gateway connection successful",
-            )
-            mock_config.return_value = HealthCheckResult(
-                status=HealthStatus.DEGRADED,
-                component="configuration",
-                message="Configuration has warnings",
-            )
-
-            result = health_check.check_all()
-
-            assert isinstance(result, ComponentHealth)
-            assert result.status == HealthStatus.DEGRADED
-            assert len(result.components) == 2
-
-    def test_check_readiness(self) -> None:
-        """Test readiness check."""
-        health_check = HealthCheck()
-
-        # Mock readiness check
-        with patch.object(health_check, "check_all") as mock_check_all:
-            mock_component_health = Mock(spec=ComponentHealth)
-            mock_component_health.status = HealthStatus.HEALTHY
-            mock_component_health.is_ready.return_value = True
-            mock_check_all.return_value = mock_component_health
-
-            result = health_check.check_readiness()
-
-            assert result is True
-
-    def test_check_liveness(self) -> None:
-        """Test liveness check."""
-        health_check = HealthCheck()
-
-        # Mock liveness check
-        with patch.object(health_check, "check_all") as mock_check_all:
-            mock_component_health = Mock(spec=ComponentHealth)
-            mock_component_health.status = HealthStatus.HEALTHY
-            mock_component_health.is_alive.return_value = True
-            mock_check_all.return_value = mock_component_health
-
-            result = health_check.check_liveness()
-
-            assert result is True
-
-    def test_health_check_result_to_dict(self) -> None:
-        """Test HealthCheckResult serialization."""
-        result = HealthCheckResult(
-            status=HealthStatus.HEALTHY,
-            component="test_component",
-            message="Test message",
-            details={"key": "value"},
-        )
-
-        result_dict = result.to_dict()
-
-        assert isinstance(result_dict, dict)
-        assert result_dict["status"] == "healthy"
-        assert result_dict["component"] == "test_component"
-        assert result_dict["message"] == "Test message"
-        assert result_dict["details"]["key"] == "value"
-
-    def test_component_health_properties(self) -> None:
-        """Test ComponentHealth properties."""
-        components = [
-            HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="gateway",
-                message="Gateway healthy",
-            ),
-            HealthCheckResult(
-                status=HealthStatus.DEGRADED,
-                component="database",
-                message="Database slow",
-            ),
-        ]
-
-        component_health = ComponentHealth(status=HealthStatus.DEGRADED, components=components)
-
-        assert component_health.status == HealthStatus.DEGRADED
-        assert len(component_health.components) == 2
-        assert component_health.is_ready() is True  # Degraded but ready
-        assert component_health.is_alive() is True  # Degraded but alive
+class TestHealthStatus:
+    """Test HealthStatus enum."""
 
     def test_health_status_values(self) -> None:
-        """Test HealthStatus enum values."""
         assert HealthStatus.HEALTHY.value == "healthy"
         assert HealthStatus.DEGRADED.value == "degraded"
         assert HealthStatus.UNHEALTHY.value == "unhealthy"
 
-    def test_component_health_all_healthy(self) -> None:
-        """Test ComponentHealth with all healthy components."""
+
+class TestComponentHealth:
+    """Test ComponentHealth dataclass."""
+
+    def test_component_health_creation(self) -> None:
+        comp = ComponentHealth(
+            name="gateway",
+            status=HealthStatus.HEALTHY,
+            message="OK",
+            latency_ms=50.0,
+            metadata={"tool_count": 5},
+        )
+        assert comp.name == "gateway"
+        assert comp.status == HealthStatus.HEALTHY
+        assert comp.message == "OK"
+        assert comp.latency_ms == 50.0
+        assert comp.metadata == {"tool_count": 5}
+
+    def test_component_health_defaults(self) -> None:
+        comp = ComponentHealth(name="test", status=HealthStatus.HEALTHY)
+        assert comp.message is None
+        assert comp.latency_ms is None
+        assert comp.metadata is None
+
+
+class TestHealthCheckResult:
+    """Test HealthCheckResult dataclass."""
+
+    def test_result_creation(self) -> None:
         components = [
-            HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="gateway",
-                message="Gateway healthy",
-            ),
-            HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="database",
-                message="Database healthy",
-            ),
+            ComponentHealth(name="gateway", status=HealthStatus.HEALTHY, message="OK"),
+            ComponentHealth(name="config", status=HealthStatus.HEALTHY, message="OK"),
         ]
+        result = HealthCheckResult(status=HealthStatus.HEALTHY, components=components, timestamp=1234567890.0)
+        assert result.status == HealthStatus.HEALTHY
+        assert len(result.components) == 2
+        assert result.version == "1.0.0"
 
-        component_health = ComponentHealth(status=HealthStatus.HEALTHY, components=components)
-
-        assert component_health.status == HealthStatus.HEALTHY
-        assert component_health.is_ready() is True
-        assert component_health.is_alive() is True
-
-    def test_component_health_unhealthy(self) -> None:
-        """Test ComponentHealth with unhealthy components."""
+    def test_result_to_dict(self) -> None:
         components = [
-            HealthCheckResult(
+            ComponentHealth(
+                name="gateway",
                 status=HealthStatus.HEALTHY,
-                component="gateway",
-                message="Gateway healthy",
-            ),
-            HealthCheckResult(
-                status=HealthStatus.UNHEALTHY,
-                component="database",
-                message="Database down",
-            ),
+                message="OK",
+                latency_ms=50.0,
+                metadata={"tool_count": 5},
+            )
         ]
+        result = HealthCheckResult(status=HealthStatus.HEALTHY, components=components, timestamp=1234567890.0)
+        d = result.to_dict()
+        assert d["status"] == "healthy"
+        assert d["timestamp"] == 1234567890.0
+        assert d["version"] == "1.0.0"
+        assert len(d["components"]) == 1
+        assert d["components"][0]["name"] == "gateway"
+        assert d["components"][0]["status"] == "healthy"
+        assert d["components"][0]["latency_ms"] == 50.0
 
-        component_health = ComponentHealth(status=HealthStatus.UNHEALTHY, components=components)
 
-        assert component_health.status == HealthStatus.UNHEALTHY
-        assert component_health.is_ready() is False
-        assert component_health.is_alive() is False
+class TestHealthCheck:
+    """Test HealthCheck coordinator."""
 
-    def test_health_check_with_timeout(self) -> None:
-        """Test health check with timeout handling."""
-        health_check = HealthCheck()
+    def test_initialization_with_config(self) -> None:
+        from tool_router.core.config import GatewayConfig
 
-        # Mock timeout
-        with patch("tool_router.observability.health.requests.get") as mock_get:
-            mock_get.side_effect = TimeoutError("Request timed out")
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+        assert hc.config.url == "http://localhost:4444"
+        assert hc.config.jwt == "test-token"
 
-            result = health_check.check_gateway_connection()
+    def test_initialization_default_config(self) -> None:
+        hc = HealthCheck()
+        assert hc.config is not None
+
+    def test_check_gateway_connection_success(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.get_tools.return_value = [{"name": "tool1"}, {"name": "tool2"}]
+            mock_client_cls.return_value = mock_client
+
+            result = hc.check_gateway_connection()
+
+            assert isinstance(result, ComponentHealth)
+            assert result.status == HealthStatus.HEALTHY
+            assert result.name == "gateway"
+            assert result.metadata["tool_count"] == 2
+
+    def test_check_gateway_connection_no_tools(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.get_tools.return_value = []
+            mock_client_cls.return_value = mock_client
+
+            result = hc.check_gateway_connection()
+
+            assert result.status == HealthStatus.DEGRADED
+            assert "no tools" in result.message.lower()
+
+    def test_check_gateway_connection_value_error(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_cls:
+            mock_client_cls.side_effect = ValueError("Bad config")
+
+            result = hc.check_gateway_connection()
+
+            assert result.status == HealthStatus.UNHEALTHY
+            assert "Bad config" in result.message
+
+    def test_check_gateway_connection_os_error(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        with patch("tool_router.observability.health.HTTPGatewayClient") as mock_client_cls:
+            mock_client_cls.side_effect = OSError("Connection refused")
+
+            result = hc.check_gateway_connection()
+
+            assert result.status == HealthStatus.UNHEALTHY
+            assert "Connection refused" in result.message
+
+    def test_check_configuration_valid(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        result = hc.check_configuration()
+
+        assert result.status == HealthStatus.HEALTHY
+        assert result.name == "configuration"
+
+    def test_check_configuration_no_url(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        result = hc.check_configuration()
+
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "URL" in result.message
+
+    def test_check_configuration_no_jwt(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="")
+        hc = HealthCheck(config=config)
+
+        result = hc.check_configuration()
+
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "JWT" in result.message
+
+    def test_check_all_healthy(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        with (
+            patch.object(hc, "check_configuration") as mock_config,
+            patch.object(hc, "check_gateway_connection") as mock_gw,
+        ):
+            mock_config.return_value = ComponentHealth(name="configuration", status=HealthStatus.HEALTHY, message="OK")
+            mock_gw.return_value = ComponentHealth(name="gateway", status=HealthStatus.HEALTHY, message="OK")
+
+            result = hc.check_all()
 
             assert isinstance(result, HealthCheckResult)
-            assert result.status == HealthStatus.UNHEALTHY
-            assert "timed out" in result.message.lower()
-
-    def test_health_check_metrics_collection(self) -> None:
-        """Test health check metrics collection."""
-        health_check = HealthCheck()
-
-        # Mock metrics collection
-        with patch.object(health_check, "check_gateway_connection") as mock_gateway:
-            mock_result = HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="gateway_connection",
-                message="Gateway connection successful",
-                metrics={"response_time_ms": 150, "status_code": 200},
-            )
-            mock_gateway.return_value = mock_result
-
-            result = health_check.check_gateway_connection()
-
-            assert result.metrics is not None
-            assert result.metrics["response_time_ms"] == 150
-            assert result.metrics["status_code"] == 200
-
-    def test_health_check_component_dependency(self) -> None:
-        """Test health check with component dependencies."""
-        health_check = HealthCheck()
-
-        # Mock dependent component checks
-        with (
-            patch.object(health_check, "check_gateway_connection") as mock_gateway,
-            patch.object(health_check, "check_configuration") as mock_config,
-        ):
-            # Gateway healthy, config unhealthy
-            mock_gateway.return_value = HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                component="gateway_connection",
-                message="Gateway connection successful",
-            )
-            mock_config.return_value = HealthCheckResult(
-                status=HealthStatus.UNHEALTHY,
-                component="configuration",
-                message="Configuration invalid",
-            )
-
-            result = health_check.check_all()
-
-            assert result.status == HealthStatus.UNHEALTHY
+            assert result.status == HealthStatus.HEALTHY
             assert len(result.components) == 2
-            assert result.components[0].status == HealthStatus.HEALTHY
-            assert result.components[1].status == HealthStatus.UNHEALTHY
+
+    def test_check_all_degraded(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        with (
+            patch.object(hc, "check_configuration") as mock_config,
+            patch.object(hc, "check_gateway_connection") as mock_gw,
+        ):
+            mock_config.return_value = ComponentHealth(name="configuration", status=HealthStatus.HEALTHY, message="OK")
+            mock_gw.return_value = ComponentHealth(name="gateway", status=HealthStatus.DEGRADED, message="No tools")
+
+            result = hc.check_all()
+
+            assert result.status == HealthStatus.DEGRADED
+
+    def test_check_all_unhealthy(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+
+        with (
+            patch.object(hc, "check_configuration") as mock_config,
+            patch.object(hc, "check_gateway_connection") as mock_gw,
+        ):
+            mock_config.return_value = ComponentHealth(
+                name="configuration", status=HealthStatus.UNHEALTHY, message="Bad"
+            )
+            mock_gw.return_value = ComponentHealth(name="gateway", status=HealthStatus.HEALTHY, message="OK")
+
+            result = hc.check_all()
+
+            assert result.status == HealthStatus.UNHEALTHY
+
+    def test_check_readiness_healthy(self) -> None:
+        hc = HealthCheck()
+        with patch.object(hc, "check_all") as mock_all:
+            mock_all.return_value = HealthCheckResult(status=HealthStatus.HEALTHY, components=[], timestamp=0.0)
+            assert hc.check_readiness() is True
+
+    def test_check_readiness_unhealthy(self) -> None:
+        hc = HealthCheck()
+        with patch.object(hc, "check_all") as mock_all:
+            mock_all.return_value = HealthCheckResult(status=HealthStatus.UNHEALTHY, components=[], timestamp=0.0)
+            assert hc.check_readiness() is False
+
+    def test_check_liveness_healthy(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="test-token")
+        hc = HealthCheck(config=config)
+        assert hc.check_liveness() is True
+
+    def test_check_liveness_no_jwt(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="")
+        hc = HealthCheck(config=config)
+        assert hc.check_liveness() is False
