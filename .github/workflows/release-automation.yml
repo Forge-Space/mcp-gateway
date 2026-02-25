@@ -158,7 +158,7 @@ jobs:
 
             ### 🔧 Installation
             ```bash
-            pip install mcp-gateway==${{ steps.version.outputs.version }}
+            pip install forge-mcp-gateway==${{ steps.version.outputs.version }}
             ```
 
             ### 📋 Verification
@@ -178,6 +178,6 @@ jobs:
             {
               "repository": "mcp-gateway",
               "version": "${{ steps.version.outputs.version }}",
-              "package": "mcp-gateway",
+              "package": "forge-mcp-gateway",
               "platform": "pypi"
             }
