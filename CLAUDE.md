@@ -30,6 +30,7 @@ apps/                 # Legacy structure (DO NOT reference in CI)
 
 - Authoritative workflow: `.github/workflows/ci.yml` (4 jobs: Lint, Test, Build, Security)
 - `GITHUB_TOKEN= gh ...` required (env var overrides keyring)
+- `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to commit changes
 
 ## Documentation Governance
 - NEVER create task-specific docs in repo root or docs/ (e.g., *_COMPLETE.md, *_SUMMARY.md, STATUS_*.md, PHASE*.md, *_REPORT.md, *_CHECKLIST.md)
