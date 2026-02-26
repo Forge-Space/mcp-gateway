@@ -94,8 +94,8 @@ class TestCachePerformanceCollector:
 
     def test_collect_metrics_memory_cache(self):
         """Test collecting metrics from memory cache."""
-        # Setup mock cache
-        self.mock_cache.__len__.return_value = 50
+        # Setup mock cache (__len__ needs to be set on the type for len() to work)
+        type(self.mock_cache).__len__ = lambda self: 50
         self.mock_cache.maxsize = 100
 
         # Setup metrics
@@ -177,27 +177,29 @@ class TestCacheAlertManager:
 
     def test_high_miss_rate_alert(self):
         """Test high miss rate alert detection."""
-        # Create metrics with high miss rate
+        # miss_rate computed from raw values: (misses/total)*100 must be >80
+        # hit_rate read from field: must be >=50 to avoid low_hit_rate alert
         metrics = CachePerformanceMetrics(
             timestamp=time.time(),
             cache_name="test_cache",
             backend_type="memory",
-            hits=20,
-            misses=80,
+            hits=15,
+            misses=85,
             total_requests=100,
+            hit_rate=51.0,
         )
 
-        # Check for alerts
         alerts = self.alert_manager.check_alerts(metrics)
 
         assert len(alerts) == 1
         assert alerts[0].alert_type == "high_miss_rate"
         assert alerts[0].severity == "warning"
-        assert "High miss rate: 80.0%" in alerts[0].message
+        assert "High miss rate: 85.0%" in alerts[0].message
 
     def test_low_hit_rate_alert(self):
         """Test low hit rate alert detection."""
-        # Create metrics with low hit rate
+        # hit_rate field must be set explicitly (not auto-computed)
+        # miss_rate=70% is <=80 threshold, so only low_hit_rate triggers
         metrics = CachePerformanceMetrics(
             timestamp=time.time(),
             cache_name="test_cache",
@@ -205,9 +207,9 @@ class TestCacheAlertManager:
             hits=30,
             misses=70,
             total_requests=100,
+            hit_rate=30.0,
         )
 
-        # Check for alerts
         alerts = self.alert_manager.check_alerts(metrics)
 
         assert len(alerts) == 1
@@ -217,7 +219,7 @@ class TestCacheAlertManager:
 
     def test_redis_connection_alert(self):
         """Test Redis connection alert."""
-        # Create metrics with Redis disconnected
+        # Set hit_rate>=50 to avoid low_hit_rate alert, miss_rate<=80 to avoid high_miss_rate
         metrics = CachePerformanceMetrics(
             timestamp=time.time(),
             cache_name="redis_cache",
@@ -225,10 +227,10 @@ class TestCacheAlertManager:
             hits=50,
             misses=50,
             total_requests=100,
+            hit_rate=50.0,
             redis_connected=False,
         )
 
-        # Check for alerts
         alerts = self.alert_manager.check_alerts(metrics)
 
         assert len(alerts) == 1
@@ -238,21 +240,22 @@ class TestCacheAlertManager:
 
     def test_alert_resolution(self):
         """Test alert resolution."""
-        # Create metrics with high miss rate
+        # Trigger high_miss_rate (miss_rate>80, hit_rate>=50 to avoid low_hit_rate)
         metrics_high = CachePerformanceMetrics(
             timestamp=time.time(),
             cache_name="test_cache",
             backend_type="memory",
-            hits=20,
-            misses=80,
+            hits=15,
+            misses=85,
             total_requests=100,
+            hit_rate=51.0,
         )
 
-        # Check for alerts (should trigger)
         alerts = self.alert_manager.check_alerts(metrics_high)
         assert len(alerts) == 1
+        assert alerts[0].alert_type == "high_miss_rate"
 
-        # Create metrics with normal miss rate
+        # Resolve: miss_rate<=80, hit_rate>=50
         metrics_normal = CachePerformanceMetrics(
             timestamp=time.time() + 1,
             cache_name="test_cache",
@@ -260,33 +263,31 @@ class TestCacheAlertManager:
             hits=80,
             misses=20,
             total_requests=100,
+            hit_rate=80.0,
         )
 
-        # Check for alerts (should resolve)
         alerts = self.alert_manager.check_alerts(metrics_normal)
         assert len(alerts) == 0
 
-        # Verify alert is resolved
         alert = self.alert_manager._alerts["high_miss_rate_test_cache"]
         assert alert.resolved
         assert alert.resolved_at is not None
 
     def test_active_alerts(self):
         """Test getting active alerts."""
-        # Create metrics with alert
+        # Trigger only high_miss_rate (miss_rate>80, hit_rate>=50)
         metrics = CachePerformanceMetrics(
             timestamp=time.time(),
             cache_name="test_cache",
             backend_type="memory",
-            hits=20,
-            misses=80,
+            hits=15,
+            misses=85,
             total_requests=100,
+            hit_rate=51.0,
         )
 
-        # Check for alerts
         self.alert_manager.check_alerts(metrics)
 
-        # Get active alerts
         active_alerts = self.alert_manager.get_active_alerts()
         assert len(active_alerts) == 1
         assert active_alerts[0].alert_type == "high_miss_rate"
@@ -391,11 +392,10 @@ class TestGlobalFunctions:
     @patch("tool_router.cache.dashboard._cache_performance_dashboard")
     def test_get_cache_performance_dashboard(self, mock_global):
         """Test getting global dashboard."""
-        mock_dashboard = Mock()
-        mock_global.return_value = mock_dashboard
-
+        # When patched, the module variable IS the mock (not None),
+        # so get_cache_performance_dashboard() returns it directly
         result = get_cache_performance_dashboard()
-        assert result is mock_dashboard
+        assert result is mock_global
 
     @patch("tool_router.cache.dashboard.get_cache_performance_dashboard")
     def test_start_dashboard_collection(self, mock_get_dashboard):

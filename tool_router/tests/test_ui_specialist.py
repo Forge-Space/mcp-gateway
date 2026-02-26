@@ -1254,7 +1254,7 @@ class TestComponentGeneratorAdvanced:
         requirement = UIRequirement(
             component_type=ComponentType.FORM,
             framework=UIFramework.VUE,
-            design_system=DesignSystem.VUE_UI,
+            design_system=DesignSystem.CUSTOM,
             accessibility_level=AccessibilityLevel.AA,
         )
         spec = ComponentSpec(

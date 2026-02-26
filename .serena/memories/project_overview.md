@@ -53,7 +53,7 @@ mcp-gateway/
 - **Upstream dependency**: @forgespace/core (forge-patterns)
 
 ## Coverage & CI
-- 88.98% test coverage (gate: 80%), 267 tests passing
+- 88.98% test coverage (gate: 80%), 308 tests passing
 - Infrastructure modules excluded via `[tool.coverage.run] omit` (directory wildcards)
 - Test exclusions via `--ignore` flags in Makefile and ci.yml (aligned)
 - pyproject.toml `addopts` is single source of truth for pytest flags — NEVER use `--override-ini`
@@ -62,6 +62,10 @@ mcp-gateway/
 - `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to stage
 - PR #64 (2026-02-25): Fixed coverage collection by removing `--override-ini`
 - PR #68 (2026-02-25): Release v1.7.1 — CI/CD pipeline fixes
+- PR #70 (2026-02-25): Test restoration — rewrote observability health tests for HTTPGatewayClient/GatewayConfig API (21 tests), fixed dribbble health check assertions (10 tests), removed 3 --ignore flags from ci.yml/Makefile
+- PR #71 (2026-02-25): CHANGELOG update for PR #70
 - v1.7.1 released: tag + GitHub Release created via automated pipeline
+- Current state: 0 open PRs, CI green, main branch clean
+- Remaining excluded tests: cache tests, specialist_coordinator, ui_specialist, training_pipeline, integration, performance
 - Known: repository-dispatch step needs PAT for cross-repo (Forge-Space/core), GitGuardian API key expired
 - Required checks mismatch: "CI Pipeline"/"CodeQL Security Analysis" don't match actual job names

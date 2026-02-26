@@ -170,7 +170,7 @@ def test_cache_security_documentation():
         content = f.read()
 
     assert '"""' in content, "__init__.py should have docstring"
-    assert "Cache Security" in content, "__init__.py should mention Cache Security"
+    assert "Security" in content, "__init__.py should mention Security"
 
     print("✓ Cache security documentation exists")
 

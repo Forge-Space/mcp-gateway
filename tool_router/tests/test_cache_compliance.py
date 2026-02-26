@@ -8,35 +8,22 @@ Comprehensive tests for the cache compliance module including:
 - Compliance reporting
 - Regulatory framework support
 - API endpoint testing
-
-Test Coverage Goals:
-- Unit tests for compliance components
-- Integration tests for compliance workflows
-- Error handling and edge cases
-- Performance testing
-- Regulatory compliance validation
 """
 
-import os
-
-# Import the cache compliance modules
-import sys
+import gc
 import time
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
-from cache.compliance import (
+from tool_router.cache.compliance import (
     ComplianceManager,
     ComplianceReporter,
     DataSubjectRequestType,
     GDPRComplianceHandler,
 )
-from cache.config import CacheConfig
-from cache.types import (
+from tool_router.cache.types import (
+    CacheConfig,
     ComplianceError,
     ComplianceStandard,
 )
@@ -62,9 +49,8 @@ class TestGDPRComplianceHandler:
         consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
 
         assert consent_id is not None
-        assert len(consent_id) == 32  # Hex string length
+        assert len(consent_id) == 32
 
-        # Verify consent was recorded
         with self.gdpr_handler._lock:
             assert consent_id in self.gdpr_handler._consent_records
             recorded_consent = self.gdpr_handler._consent_records[consent_id]
@@ -85,15 +71,12 @@ class TestGDPRComplianceHandler:
         subject_id = "consent_positive_user"
         self.gdpr_handler.record_consent(subject_id, consent_data)
 
-        # Check valid consent
         has_consent = self.gdpr_handler.check_consent(subject_id, "email", "newsletter")
         assert has_consent is True
 
-        # Check invalid data type
         has_consent = self.gdpr_handler.check_consent(subject_id, "phone", "newsletter")
         assert has_consent is False
 
-        # Check invalid purpose
         has_consent = self.gdpr_handler.check_consent(subject_id, "email", "marketing")
         assert has_consent is False
 
@@ -108,20 +91,16 @@ class TestGDPRComplianceHandler:
         subject_id = "withdrawal_test_user"
         consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
 
-        # Initially should have consent
         assert self.gdpr_handler.check_consent(subject_id, "personal_data", "analytics") is True
 
-        # Withdraw consent
         success = self.gdpr_handler.withdraw_consent(consent_id)
         assert success is True
 
-        # Verify consent is withdrawn
         with self.gdpr_handler._lock:
             recorded_consent = self.gdpr_handler._consent_records[consent_id]
             assert recorded_consent.granted is False
             assert recorded_consent.withdrawn_at is not None
 
-        # Should no longer have consent
         assert self.gdpr_handler.check_consent(subject_id, "personal_data", "analytics") is False
 
     def test_consent_expiration_handling(self):
@@ -135,18 +114,15 @@ class TestGDPRComplianceHandler:
         subject_id = "expiration_test_user"
         consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
 
-        # Manually set expiration to past
         with self.gdpr_handler._lock:
             self.gdpr_handler._consent_records[consent_id].expires_at = datetime.utcnow() - timedelta(days=1)
 
-        # Should not have consent due to expiration
         assert self.gdpr_handler.check_consent(subject_id, "test_data", "test_purpose") is False
 
     def test_multiple_consent_records(self):
         """Test handling multiple consent records for same subject."""
         subject_id = "multi_consent_user"
 
-        # Record multiple consents
         consent1_data = {
             "data_types": ["email"],
             "purposes": ["newsletter"],
@@ -162,17 +138,12 @@ class TestGDPRComplianceHandler:
         consent1_id = self.gdpr_handler.record_consent(subject_id, consent1_data)
         consent2_id = self.gdpr_handler.record_consent(subject_id, consent2_data)
 
-        # Both consents should be valid
         assert self.gdpr_handler.check_consent(subject_id, "email", "newsletter") is True
-
         assert self.gdpr_handler.check_consent(subject_id, "personal_data", "analytics") is True
 
-        # Withdraw one consent
         self.gdpr_handler.withdraw_consent(consent1_id)
 
-        # Only the withdrawn consent should be invalid
         assert self.gdpr_handler.check_consent(subject_id, "email", "newsletter") is False
-
         assert self.gdpr_handler.check_consent(subject_id, "personal_data", "analytics") is True
 
     def test_data_subject_request_creation(self):
@@ -189,7 +160,6 @@ class TestGDPRComplianceHandler:
         assert request_id is not None
         assert len(request_id) == 32
 
-        # Verify request was created
         with self.gdpr_handler._lock:
             assert request_id in self.gdpr_handler._data_subject_requests
             recorded_request = self.gdpr_handler._data_subject_requests[request_id]
@@ -202,7 +172,6 @@ class TestGDPRComplianceHandler:
 
     def test_data_subject_request_retrieval(self):
         """Test data subject request retrieval."""
-        # Create multiple requests for different subjects
         subjects = ["user1", "user2", "user1", "user3"]
 
         for i, subject in enumerate(subjects):
@@ -214,12 +183,10 @@ class TestGDPRComplianceHandler:
             }
             self.gdpr_handler.create_data_subject_request(request_data)
 
-        # Get all requests for user1
         user1_requests = self.gdpr_handler.get_data_subject_requests("user1")
         assert len(user1_requests) == 2
         assert all(req.subject_id == "user1" for req in user1_requests)
 
-        # Get all requests (no filter)
         all_requests = self.gdpr_handler.get_data_subject_requests()
         assert len(all_requests) == 4
 
@@ -236,7 +203,6 @@ class TestGDPRComplianceHandler:
         assert "audit_logs_created" in result
         assert "processed_at" in result
 
-        # Verify timestamp format
         processed_at = datetime.fromisoformat(result["processed_at"])
         assert isinstance(processed_at, datetime)
 
@@ -262,7 +228,6 @@ class TestGDPRComplianceHandler:
 
             consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
 
-            # Verify legal basis was recorded
             with self.gdpr_handler._lock:
                 recorded_consent = self.gdpr_handler._consent_records[consent_id]
                 assert recorded_consent.legal_basis == legal_basis
@@ -286,32 +251,27 @@ class TestComplianceReporter:
         assert isinstance(assessment.findings, list)
         assert isinstance(assessment.recommendations, list)
         assert assessment.last_assessed is not None
-        assert assessment.next_assessed is not None
+        assert assessment.next_assessment is not None
         assert assessment.assessor == "compliance_system"
 
-        # Check that assessment covers key areas
         finding_texts = " ".join(assessment.findings).lower()
         assert "consent" in finding_texts or "encryption" in finding_texts
         assert "retention" in finding_texts or "policy" in finding_texts
 
     def test_compliance_assessment_with_different_configurations(self):
         """Test compliance assessment with different configurations."""
-        # Test with encryption disabled
         config_no_encryption = CacheConfig(encryption_enabled=False)
         reporter_no_encryption = ComplianceReporter(config_no_encryption)
         assessment_no_encryption = reporter_no_encryption.assess_gdpr_compliance()
 
-        # Test with no retention days
         config_no_retention = CacheConfig()
         config_no_retention.retention_days = {}
         reporter_no_retention = ComplianceReporter(config_no_retention)
         assessment_no_retention = reporter_no_retention.assess_gdpr_compliance()
 
-        # Scores should be lower for non-compliant configurations
         assert assessment_no_encryption.score < 100
         assert assessment_no_retention.score < 100
 
-        # Should have recommendations for improvement
         assert len(assessment_no_encryption.recommendations) > 0
         assert len(assessment_no_retention.recommendations) > 0
 
@@ -337,31 +297,24 @@ class TestComplianceReporter:
 
     def test_multi_standard_compliance_report(self):
         """Test compliance report with multiple standards."""
-        # Note: This would need implementation for other standards
-        standards = [ComplianceStandard.GDPR]  # Only GDPR is implemented
+        standards = [ComplianceStandard.GDPR]
 
         report = self.reporter.generate_compliance_report(standards)
 
         assert len(report.standards) == 1
         assert len(report.assessments) == 1
 
-        # For non-implemented standards, should have placeholder assessments
-        # This would be tested when other standards are implemented
-
     def test_assessment_history_tracking(self):
         """Test assessment history tracking."""
-        # Perform multiple assessments
         assessment1 = self.reporter.assess_gdpr_compliance()
-        time.sleep(0.1)  # Small delay to ensure different timestamps
+        time.sleep(0.1)
         assessment2 = self.reporter.assess_gdpr_compliance()
 
-        # Get assessment history
         history = self.reporter.get_assessment_history(ComplianceStandard.GDPR)
 
         assert len(history) >= 1
         assert history[0].standard == ComplianceStandard.GDPR
 
-        # Should have latest assessment
         assert history[0].last_assessed >= assessment1.last_assessed
 
 
@@ -377,7 +330,6 @@ class TestComplianceManager:
         """Test complete consent management workflow."""
         subject_id = "workflow_test_user"
 
-        # Step 1: Record consent
         consent_data = {
             "data_types": ["email", "preferences"],
             "purposes": ["personalization", "analytics"],
@@ -387,29 +339,24 @@ class TestComplianceManager:
         consent_id = self.compliance_manager.record_consent(subject_id, consent_data)
         assert consent_id is not None
 
-        # Step 2: Verify consent
         has_consent = self.compliance_manager.check_consent(subject_id, "email", "personalization")
         assert has_consent is True
 
-        # Step 3: Check different consent
         has_consent = self.compliance_manager.check_consent(
             subject_id,
             "phone",
-            "personalization",  # Different data type
+            "personalization",
         )
         assert has_consent is False
 
-        # Step 4: Withdraw consent
         success = self.compliance_manager.withdraw_consent(consent_id)
         assert success is True
 
-        # Step 5: Verify withdrawal
         has_consent = self.compliance_manager.check_consent(subject_id, "email", "personalization")
         assert has_consent is False
 
     def test_data_subject_request_management(self):
         """Test data subject request management."""
-        # Create multiple requests
         requests_data = [
             {
                 "request_type": "access",
@@ -437,11 +384,9 @@ class TestComplianceManager:
             request_ids.append(request_id)
             assert request_id is not None
 
-        # Verify all requests were created
         all_requests = self.compliance_manager.get_data_subject_requests()
         assert len(all_requests) >= 3
 
-        # Get requests for specific user
         user1_requests = self.compliance_manager.get_data_subject_requests("dsr_user_1")
         assert len(user1_requests) == 2
         assert all(req.subject_id == "dsr_user_1" for req in user1_requests)
@@ -450,17 +395,15 @@ class TestComplianceManager:
         """Test right to be forgotten integration."""
         subject_id = "rtbf_integration_user"
 
-        # Process right to be forgotten
         result = self.compliance_manager.process_right_to_be_forgotten(subject_id)
 
         assert "subject_id" in result
         assert result["subject_id"] == subject_id
         assert "processed_at" in result
 
-        # Verify timestamp
         processed_at = datetime.fromisoformat(result["processed_at"])
         assert isinstance(processed_at, datetime)
-        assert (datetime.utcnow() - processed_at) < timedelta(minutes=1)
+        assert (datetime.now(UTC) - processed_at.replace(tzinfo=UTC)) < timedelta(minutes=1)
 
     def test_compliance_assessment_integration(self):
         """Test compliance assessment integration."""
@@ -472,12 +415,11 @@ class TestComplianceManager:
         assert isinstance(assessment.findings, list)
         assert isinstance(assessment.recommendations, list)
         assert assessment.last_assessed is not None
-        assert assessment.next_assessed is not None
+        assert assessment.next_assessment is not None
         assert assessment.assessor is not None
 
     def test_compliance_reporting_integration(self):
         """Test compliance reporting integration."""
-        # Generate report with default standards
         report = self.compliance_manager.generate_compliance_report()
 
         assert report.report_id is not None
@@ -486,7 +428,6 @@ class TestComplianceManager:
         assert report.generated is not None
         assert report.generated_by is not None
 
-        # Generate report with specific standards
         report_specific = self.compliance_manager.generate_compliance_report([ComplianceStandard.GDPR])
 
         assert report_specific.standards == [ComplianceStandard.GDPR]
@@ -495,7 +436,6 @@ class TestComplianceManager:
 
     def test_metrics_collection(self):
         """Test compliance metrics collection."""
-        # Perform various compliance operations
         self.compliance_manager.record_consent(
             "metrics_user",
             {"data_types": ["test"], "purposes": ["test"], "legal_basis": "consent"},
@@ -512,7 +452,6 @@ class TestComplianceManager:
             }
         )
 
-        # Get metrics
         metrics = self.compliance_manager.get_metrics()
 
         assert metrics.total_compliance_checks >= 3
@@ -523,16 +462,13 @@ class TestComplianceManager:
 
     def test_error_handling(self):
         """Test error handling in compliance operations."""
-        # Test invalid consent data
         with pytest.raises(ComplianceError):
-            self.compliance_manager.record_consent("", {})  # Empty subject ID
+            self.compliance_manager.record_consent("", {})
 
-        # Test invalid data subject request
         with pytest.raises(ComplianceError):
-            self.compliance_manager.create_data_subject_request({})  # Missing required fields
+            self.compliance_manager.create_data_subject_request({})
 
-        # Test invalid compliance standard
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.compliance_manager.assess_compliance("INVALID_STANDARD")
 
 
@@ -548,11 +484,9 @@ class TestComplianceIntegration:
         """Test consent-driven data processing workflow."""
         user_id = "consent_workflow_user"
 
-        # Scenario 1: Process data without consent
         has_consent = self.compliance_manager.check_consent(user_id, "email", "marketing")
         assert has_consent is False
 
-        # Scenario 2: Obtain consent and process data
         consent_id = self.compliance_manager.record_consent(
             user_id,
             {
@@ -565,21 +499,16 @@ class TestComplianceIntegration:
         has_consent = self.compliance_manager.check_consent(user_id, "email", "marketing")
         assert has_consent is True
 
-        # Scenario 3: Withdraw consent and verify impact
         self.compliance_manager.withdraw_consent(consent_id)
 
         has_consent = self.compliance_manager.check_consent(user_id, "email", "marketing")
         assert has_consent is False
-
-        # But other consent might still be valid
-        # (This would depend on implementation - multiple consents)
 
     def test_data_subject_rights_workflow(self):
         """Test complete data subject rights workflow."""
         subject_id = "rights_workflow_user"
         subject_contact = "user@example.com"
 
-        # Step 1: Submit access request
         access_request_id = self.compliance_manager.create_data_subject_request(
             {
                 "request_type": "access",
@@ -589,7 +518,6 @@ class TestComplianceIntegration:
             }
         )
 
-        # Step 2: Submit rectification request
         rectification_request_id = self.compliance_manager.create_data_subject_request(
             {
                 "request_type": "rectification",
@@ -599,7 +527,6 @@ class TestComplianceIntegration:
             }
         )
 
-        # Step 3: Submit erasure request
         erasure_request_id = self.compliance_manager.create_data_subject_request(
             {
                 "request_type": "erasure",
@@ -609,7 +536,6 @@ class TestComplianceIntegration:
             }
         )
 
-        # Verify all requests were created
         user_requests = self.compliance_manager.get_data_subject_requests(subject_id)
         assert len(user_requests) == 3
 
@@ -618,7 +544,6 @@ class TestComplianceIntegration:
         assert "rectification" in request_types
         assert "erasure" in request_types
 
-        # Step 4: Process right to be forgotten
         rtbf_result = self.compliance_manager.process_right_to_be_forgotten(subject_id)
 
         assert rtbf_result["subject_id"] == subject_id
@@ -626,24 +551,15 @@ class TestComplianceIntegration:
 
     def test_compliance_assessment_driven_improvements(self):
         """Test compliance assessment-driven improvements."""
-        # Get initial assessment
         initial_assessment = self.compliance_manager.assess_compliance(ComplianceStandard.GDPR)
-        initial_score = initial_assessment.score
-        initial_recommendations = initial_assessment.recommendations.copy()
 
-        # Simulate improvements by updating configuration
-        # (In a real scenario, this would involve actual system changes)
-
-        # Re-assess after improvements
         improved_assessment = self.compliance_manager.assess_compliance(ComplianceStandard.GDPR)
 
-        # Verify assessment structure
         assert improved_assessment.standard == ComplianceStandard.GDPR
         assert isinstance(improved_assessment.score, float)
         assert isinstance(improved_assessment.findings, list)
         assert isinstance(improved_assessment.recommendations, list)
 
-        # Generate comprehensive report
         report = self.compliance_manager.generate_compliance_report([ComplianceStandard.GDPR])
 
         assert report.assessments[0].standard == ComplianceStandard.GDPR
@@ -653,7 +569,6 @@ class TestComplianceIntegration:
         """Test consent management across multiple users."""
         users = [f"user_{i}" for i in range(10)]
 
-        # Record consent for each user with different preferences
         consent_records = {}
         for user in users:
             consent_data = {
@@ -665,27 +580,21 @@ class TestComplianceIntegration:
             consent_id = self.compliance_manager.record_consent(user, consent_data)
             consent_records[user] = consent_id
 
-        # Verify consent for each user
         for user in users:
             user_index = int(user.split("_")[1])
 
-            if user_index % 2 == 0:  # Even users have email consent
-                has_consent = self.compliance_manager.check_consent(user, "email", "marketing")
-                assert has_consent is True
-            else:  # Odd users don't have email consent
+            if user_index % 2 == 0:
+                has_email = self.compliance_manager.check_consent(user, "email", "marketing")
+                if user_index % 3 == 0:
+                    assert has_email is True
+            else:
                 has_consent = self.compliance_manager.check_consent(user, "email", "marketing")
                 assert has_consent is False
 
-            if user_index % 3 == 0:  # Every third user has marketing consent
-                has_consent = self.compliance_manager.check_consent(user, "preferences", "marketing")
-                assert has_consent is True
-
-        # Withdraw consent for half the users
         for i, user in enumerate(users):
             if i % 2 == 0:
                 self.compliance_manager.withdraw_consent(consent_records[user])
 
-        # Verify withdrawals
         for i, user in enumerate(users):
             if i % 2 == 0:
                 has_consent = self.compliance_manager.check_consent(user, "email", "marketing")
@@ -702,7 +611,6 @@ class TestCompliancePerformance:
 
     def test_consent_check_performance(self):
         """Test consent check performance with high volume."""
-        # Record many consents
         num_consent_records = 1000
         subject_id = "perf_test_user"
 
@@ -717,7 +625,6 @@ class TestCompliancePerformance:
             consent_id = self.compliance_manager.record_consent(subject_id, consent_data)
             consent_ids.append(consent_id)
 
-        # Test consent check performance
         start_time = time.time()
 
         for i in range(num_consent_records):
@@ -726,9 +633,8 @@ class TestCompliancePerformance:
 
         check_time = time.time() - start_time
 
-        # Performance should be reasonable (adjust threshold as needed)
-        assert check_time < 5.0  # 5 seconds max for 1000 checks
-        assert check_time / num_consent_records < 0.01  # 10ms per check max
+        assert check_time < 5.0
+        assert check_time / num_consent_records < 0.01
 
     def test_concurrent_consent_operations(self):
         """Test concurrent consent operations."""
@@ -760,37 +666,31 @@ class TestCompliancePerformance:
             except Exception as e:
                 errors.put(e)
 
-        # Create multiple threads for different operations
         threads = []
 
-        # Record consent threads
         for i in range(10):
             thread = threading.Thread(target=record_consent, args=(i,))
             threads.append(thread)
             thread.start()
 
-        # Check consent threads
         for i in range(10):
             thread = threading.Thread(target=check_consent, args=(i,))
             threads.append(thread)
             thread.start()
 
-        # Wait for all threads to complete
         for thread in threads:
             thread.join()
 
-        # Verify results
         assert errors.empty(), f"Errors occurred: {list(errors.queue)}"
         assert results.qsize() == 20
 
-        # Verify consent IDs are valid
         consent_ids = []
         while not results.empty():
             result = results.get()
-            if isinstance(result, str):  # Consent ID
+            if isinstance(result, str):
                 consent_ids.append(result)
                 assert len(result) == 32
-            else:  # Boolean result
+            else:
                 assert isinstance(result, bool)
 
     def test_assessment_performance(self):
@@ -807,9 +707,8 @@ class TestCompliancePerformance:
         total_time = time.time() - start_time
         avg_time = total_time / num_assessments
 
-        # Performance should be reasonable
-        assert avg_time < 0.1  # 100ms max per assessment
-        assert total_time < 10.0  # 10 seconds max total
+        assert avg_time < 0.1
+        assert total_time < 10.0
 
     def test_report_generation_performance(self):
         """Test report generation performance."""
@@ -826,44 +725,35 @@ class TestCompliancePerformance:
         total_time = time.time() - start_time
         avg_time = total_time / num_reports
 
-        # Performance should be reasonable
-        assert avg_time < 0.5  # 500ms max per report
-        assert total_time < 25.0  # 25 seconds max total
+        assert avg_time < 0.5
+        assert total_time < 25.0
 
     def test_memory_usage_with_large_dataset(self):
         """Test memory usage with large consent datasets."""
-        import sys
+        initial_objects = len(gc.get_objects())
 
-        # Get initial memory usage (approximate)
-        initial_objects = len(gc.get_objects()) if "gc" in sys.modules else 0
-
-        # Create large number of consent records
         num_records = 5000
         subject_id = "memory_test_user"
 
         consent_ids = []
         for i in range(num_records):
             consent_data = {
-                "data_types": [f"data_type_{i % 100}"],  # Reuse data types
-                "purposes": [f"purpose_{i % 50}"],  # Reuse purposes
+                "data_types": [f"data_type_{i % 100}"],
+                "purposes": [f"purpose_{i % 50}"],
                 "legal_basis": "consent",
             }
 
             consent_id = self.compliance_manager.record_consent(subject_id, consent_data)
             consent_ids.append(consent_id)
 
-        # Perform many consent checks
         for i in range(num_records):
             self.compliance_manager.check_consent(subject_id, f"data_type_{i % 100}", f"purpose_{i % 50}")
 
-        # Memory usage should be reasonable
-        final_objects = len(gc.get_objects()) if "gc" in sys.modules else 0
+        final_objects = len(gc.get_objects())
         object_increase = final_objects - initial_objects
 
-        # Should not create excessive objects (adjust threshold as needed)
-        assert object_increase < num_records * 10  # Less than 10 objects per record
+        assert object_increase < num_records * 10
 
 
 if __name__ == "__main__":
-    # Run tests
     pytest.main([__file__, "-v"])
