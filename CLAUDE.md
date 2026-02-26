@@ -47,8 +47,8 @@ apps/                 # Legacy structure (DO NOT reference in CI)
 ## Known Issues
 
 - `docs/PRODUCTION_DEPLOYMENT.md`: deployment guide with docker-compose examples — CodeRabbit flags many issues, some are intentional documentation (not runnable code)
-- ~301 pre-existing test failures (broken imports, removed classes, mock mismatches)
-- Excluded in CI: training/, test_observability, test_cache_security*, unit/test_specialist_coordinator, unit/test_ui_specialist, performance/, integration/
+- ~153 remaining pre-existing test failures in 16 unit test files (rate_limiter, matcher, config, health, etc.)
+- Excluded in CI: performance/ only (via --ignore). Conftest excludes: test_redis_cache, test_rag_manager, test_cache_security (infra-dependent); test_security, test_observability dirs; 3 training files; 16 unit files with broken APIs
 - pyproject.toml `addopts` is the single source of truth for pytest flags (coverage, verbosity, strict-markers). Makefile and ci.yml only add `--ignore` and `--timeout` flags — NEVER use `--override-ini`
 - `make test` and `ci.yml` test step are aligned — update both when adding/removing test exclusions
 - Coverage omit list in `[tool.coverage.run]` must match the test `--ignore` list — if a test file is ignored, its source module should be in `omit`
