@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import urllib.error
 from unittest.mock import MagicMock, patch
@@ -50,6 +51,8 @@ class TestHTTPGatewayClient:
 
         mock_response = MagicMock()
         mock_response.read.return_value = b'{"result": "success"}'
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=None)
 
         with patch("urllib.request.urlopen", return_value=mock_response):
             result = client._make_request("http://test:4444/test")
@@ -63,11 +66,12 @@ class TestHTTPGatewayClient:
 
         mock_response = MagicMock()
         mock_response.read.return_value = b'{"result": "success"}'
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=None)
 
         with patch("urllib.request.urlopen", return_value=mock_response) as mock_urlopen:
             client._make_request("http://test:4444/test", method="POST", data=b'{"test": "data"}')
 
-        # Verify the request was created with data
         assert mock_urlopen.called
         request_arg = mock_urlopen.call_args[0][0]
         assert request_arg.data == b'{"test": "data"}'
@@ -78,18 +82,24 @@ class TestHTTPGatewayClient:
         config = GatewayConfig(url="http://test:4444", jwt="token", max_retries=3, retry_delay_ms=100)
         client = HTTPGatewayClient(config)
 
-        # First call fails with 500, second succeeds
         server_error = MagicMock()
-        server_error.code = 500
         server_error.read.return_value = b"Server Error"
 
         success_response = MagicMock()
         success_response.read.return_value = b'{"result": "success"}'
+        success_response.__enter__ = MagicMock(return_value=success_response)
+        success_response.__exit__ = MagicMock(return_value=None)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
-            with patch("time.sleep"):  # Mock sleep to speed up test
+            with patch("time.sleep"):
                 mock_urlopen.side_effect = [
-                    urllib.error.HTTPError(url="", msg="", hdrs="", fp=server_error),
+                    urllib.error.HTTPError(
+                        url="http://test:4444/test",
+                        code=500,
+                        msg="Server Error",
+                        hdrs={},
+                        fp=io.BytesIO(b"Server Error"),
+                    ),
                     success_response,
                 ]
 
@@ -105,6 +115,8 @@ class TestHTTPGatewayClient:
 
         success_response = MagicMock()
         success_response.read.return_value = b'{"result": "success"}'
+        success_response.__enter__ = MagicMock(return_value=success_response)
+        success_response.__exit__ = MagicMock(return_value=None)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
             with patch("time.sleep"):
@@ -125,6 +137,8 @@ class TestHTTPGatewayClient:
 
         success_response = MagicMock()
         success_response.read.return_value = b'{"result": "success"}'
+        success_response.__enter__ = MagicMock(return_value=success_response)
+        success_response.__exit__ = MagicMock(return_value=None)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
             with patch("time.sleep"):
@@ -143,40 +157,47 @@ class TestHTTPGatewayClient:
         config = GatewayConfig(url="http://test:4444", jwt="token", max_retries=3, retry_delay_ms=100)
         client = HTTPGatewayClient(config)
 
-        server_error = MagicMock()
-        server_error.code = 500
-        server_error.read.return_value = b"Server Error"
-
         success_response = MagicMock()
         success_response.read.return_value = b'{"result": "success"}'
+        success_response.__enter__ = MagicMock(return_value=success_response)
+        success_response.__exit__ = MagicMock(return_value=None)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
             with patch("time.sleep") as mock_sleep:
                 mock_urlopen.side_effect = [
-                    urllib.error.HTTPError(url="", msg="", hdrs="", fp=server_error),
-                    urllib.error.HTTPError(url="", msg="", hdrs="", fp=server_error),
+                    urllib.error.HTTPError(
+                        url="http://test:4444/test",
+                        code=500,
+                        msg="Server Error",
+                        hdrs={},
+                        fp=io.BytesIO(b"Server Error"),
+                    ),
+                    urllib.error.HTTPError(
+                        url="http://test:4444/test",
+                        code=500,
+                        msg="Server Error",
+                        hdrs={},
+                        fp=io.BytesIO(b"Server Error"),
+                    ),
                     success_response,
                 ]
 
                 client._make_request("http://test:4444/test")
 
-        # Verify exponential backoff: 100ms, 200ms
         assert mock_sleep.call_count == 2
-        mock_sleep.assert_any_call(0.1)  # 100ms
-        mock_sleep.assert_any_call(0.2)  # 200ms
+        mock_sleep.assert_any_call(0.1)
+        mock_sleep.assert_any_call(0.2)
 
     def test_make_request_fails_after_max_retries(self) -> None:
         """Test failure after exhausting max retries."""
         config = GatewayConfig(url="http://test:4444", jwt="token", max_retries=2, retry_delay_ms=50)
         client = HTTPGatewayClient(config)
 
-        server_error = MagicMock()
-        server_error.code = 500
-        server_error.read.return_value = b"Server Error"
-
         with patch("urllib.request.urlopen") as mock_urlopen:
             with patch("time.sleep"):
-                mock_urlopen.side_effect = urllib.error.HTTPError(url="", msg="", hdrs="", fp=server_error)
+                mock_urlopen.side_effect = urllib.error.HTTPError(
+                    url="http://test:4444/test", code=500, msg="Server Error", hdrs={}, fp=io.BytesIO(b"Server Error")
+                )
 
                 with pytest.raises(ConnectionError, match="Failed after 2 attempts"):
                     client._make_request("http://test:4444/test")
@@ -188,17 +209,14 @@ class TestHTTPGatewayClient:
         config = GatewayConfig(url="http://test:4444", jwt="token", max_retries=3)
         client = HTTPGatewayClient(config)
 
-        client_error = MagicMock()
-        client_error.code = 404
-        client_error.read.return_value = b"Not Found"
-
         with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = urllib.error.HTTPError(url="", msg="", hdrs="", fp=client_error)
+            mock_urlopen.side_effect = urllib.error.HTTPError(
+                url="http://test:4444/test", code=404, msg="Not Found", hdrs={}, fp=io.BytesIO(b"Not Found")
+            )
 
             with pytest.raises(ValueError, match="Gateway HTTP error 404"):
                 client._make_request("http://test:4444/test")
 
-        # Should not retry on client errors
         assert mock_urlopen.call_count == 1
 
     def test_make_request_invalid_json_response(self) -> None:
@@ -208,6 +226,8 @@ class TestHTTPGatewayClient:
 
         mock_response = MagicMock()
         mock_response.read.return_value = b"invalid json"
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=None)
 
         with patch("urllib.request.urlopen", return_value=mock_response):
             with pytest.raises(ValueError, match="Invalid JSON response"):
@@ -333,12 +353,10 @@ class TestHTTPGatewayClient:
         with patch.object(client, "_make_request", return_value=mock_response) as mock_request:
             client.call_tool("test_tool", {"arg1": "value1", "arg2": "value2"})
 
-        # Verify the request was made with correct data
         call_args = mock_request.call_args
         assert call_args[0][0] == f"{config.url}/rpc"
         assert call_args[1]["method"] == "POST"
 
-        # Parse the request data
         request_data = json.loads(call_args[1]["data"].decode())
         expected_body = {
             "jsonrpc": "2.0",
@@ -360,14 +378,11 @@ class TestGatewayClientProtocol:
         config = GatewayConfig(url="http://test:4444", jwt="token")
         client = HTTPGatewayClient(config)
 
-        # Should be able to assign to GatewayClient type
         gateway_client: GatewayClient = client
-        assert isinstance(gateway_client, GatewayClient)
         assert hasattr(gateway_client, "get_tools")
         assert hasattr(gateway_client, "call_tool")
-
-
-# Existing tests for module-level functions
+        assert callable(gateway_client.get_tools)
+        assert callable(gateway_client.call_tool)
 
 
 def test_get_tools_raises_when_gateway_jwt_unset() -> None:
@@ -413,10 +428,8 @@ def test_get_tools_returns_empty_for_unknown_shape() -> None:
         with patch("urllib.request.urlopen", return_value=resp):
             result = get_tools()
 
-    # Business logic: unknown/empty response should return empty list
     assert result == []
 
-    # Business logic: test with malformed JSON response
     malformed_resp = MagicMock()
     malformed_resp.read.return_value = b"not valid json"
     malformed_resp.__enter__ = MagicMock(return_value=malformed_resp)
@@ -424,11 +437,9 @@ def test_get_tools_returns_empty_for_unknown_shape() -> None:
 
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
         with patch("urllib.request.urlopen", return_value=malformed_resp):
-            # Should handle JSON parsing errors gracefully
             result = get_tools()
-            assert result == []  # Should default to empty list on JSON error
+            assert result == []
 
-    # Business logic: test with null response
     null_resp = MagicMock()
     null_resp.read.return_value = b"null"
     null_resp.__enter__ = MagicMock(return_value=null_resp)
@@ -437,10 +448,7 @@ def test_get_tools_returns_empty_for_unknown_shape() -> None:
     with patch.dict("os.environ", {"GATEWAY_JWT": "token", "GATEWAY_URL": "http://localhost:4444"}):
         with patch("urllib.request.urlopen", return_value=null_resp):
             result = get_tools()
-            assert result == []  # Should handle null response
-
-    # Business logic: verify function doesn't crash with various edge cases
-    # This tests the robustness of the response parsing logic
+            assert result == []
 
 
 def test_call_tool_raises_when_gateway_jwt_unset() -> None:

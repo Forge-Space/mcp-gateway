@@ -203,7 +203,10 @@ class TestSecurityMiddleware:
         # Business logic: disabled middleware should not perform security checks
         # This tests the security bypass logic - when disabled, no validation occurs
         assert result.violations == [], "Disabled middleware should not report violations"
-        assert result.sanitized_inputs == {}, "Disabled middleware should not sanitize inputs"
+        # Disabled middleware returns original inputs unsanitized
+        assert result.sanitized_inputs["task"] == "test task"
+        assert result.sanitized_inputs["context"] == "context"
+        assert result.sanitized_inputs["user_preferences"] == "{}"
 
         # Business logic: disabled middleware should indicate bypass in metadata
         assert "security_disabled" in result.metadata

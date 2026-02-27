@@ -430,38 +430,38 @@ class TestAIConfigAdvanced:
     def test_ai_config_with_custom_values(self) -> None:
         """Test AIConfig with custom values."""
         config = AIConfig(
-            model_name="custom-model",
-            temperature=0.9,
-            max_tokens=2048,
+            model="custom-model",
+            provider="openai",
+            endpoint="http://custom:8080",
             timeout_ms=60000,
         )
 
-        assert config.model_name == "custom-model"
-        assert config.temperature == 0.9
-        assert config.max_tokens == 2048
+        assert config.model == "custom-model"
+        assert config.provider == "openai"
+        assert config.endpoint == "http://custom:8080"
         assert config.timeout_ms == 60000
 
     def test_ai_config_edge_cases(self) -> None:
         """Test AIConfig with edge case values."""
-        config = AIConfig(model_name="", temperature=0.0, max_tokens=1, timeout_ms=1000)
+        config = AIConfig(model="", provider="", endpoint="", timeout_ms=1000)
 
-        assert config.model_name == ""
-        assert config.temperature == 0.0
-        assert config.max_tokens == 1
+        assert config.model == ""
+        assert config.provider == ""
+        assert config.endpoint == ""
         assert config.timeout_ms == 1000
 
     def test_ai_config_high_values(self) -> None:
         """Test AIConfig with high values."""
         config = AIConfig(
-            model_name="large-model",
-            temperature=2.0,
-            max_tokens=100000,
+            model="large-model",
+            weight=2.0,
+            min_confidence=0.99,
             timeout_ms=300000,
         )
 
-        assert config.model_name == "large-model"
-        assert config.temperature == 2.0
-        assert config.max_tokens == 100000
+        assert config.model == "large-model"
+        assert config.weight == 2.0
+        assert config.min_confidence == 0.99
         assert config.timeout_ms == 300000
 
 
@@ -501,10 +501,10 @@ class TestToolRouterConfigAdvanced:
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "60000")
         monkeypatch.setenv("GATEWAY_MAX_RETRIES", "5")
         monkeypatch.setenv("GATEWAY_RETRY_DELAY_MS", "5000")
-        monkeypatch.setenv("AI_MODEL_NAME", "gpt-4-turbo")
-        monkeypatch.setenv("AI_TEMPERATURE", "0.7")
-        monkeypatch.setenv("AI_MAX_TOKENS", "4096")
-        monkeypatch.setenv("AI_TIMEOUT_MS", "120000")
+        monkeypatch.setenv("ROUTER_AI_ENABLED", "true")
+        monkeypatch.setenv("ROUTER_AI_MODEL", "gpt-4-turbo")
+        monkeypatch.setenv("ROUTER_AI_PROVIDER", "openai")
+        monkeypatch.setenv("ROUTER_AI_TIMEOUT_MS", "120000")
         monkeypatch.setenv("MAX_TOOLS_SEARCH", "50")
         monkeypatch.setenv("DEFAULT_TOP_N", "5")
 
@@ -518,9 +518,9 @@ class TestToolRouterConfigAdvanced:
         assert config.gateway.retry_delay_ms == 5000
 
         # Verify AIConfig
-        assert config.ai.model_name == "gpt-4-turbo"
-        assert config.ai.temperature == 0.7
-        assert config.ai.max_tokens == 4096
+        assert config.ai.model == "gpt-4-turbo"
+        assert config.ai.provider == "openai"
+        assert config.ai.enabled is True
         assert config.ai.timeout_ms == 120000
 
         # Verify ToolRouterConfig

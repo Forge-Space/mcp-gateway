@@ -18,9 +18,9 @@ class TestHealthStatus:
 
     def test_health_status_values(self) -> None:
         """Test HealthStatus enum values."""
-        assert HealthStatus.HEALTHY == "healthy"
-        assert HealthStatus.DEGRADED == "degraded"
-        assert HealthStatus.UNHEALTHY == "unhealthy"
+        assert HealthStatus.HEALTHY.value == "healthy"
+        assert HealthStatus.DEGRADED.value == "degraded"
+        assert HealthStatus.UNHEALTHY.value == "unhealthy"
 
 
 class TestComponentHealth:
