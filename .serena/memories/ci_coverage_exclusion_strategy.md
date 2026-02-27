@@ -28,7 +28,8 @@ Exclude broken infrastructure tests rather than write hundreds of low-value test
 - PR #64 (2026-02-25): Removed `--override-ini`, extended omit list, coverage 88.98%
 - PR #70 (2026-02-25): Test restoration — observability health tests fully rewritten (21 tests), dribbble health check assertions fixed (10 tests), removed 3 --ignore flags, tests 184 → 308, CI green
 - PR #71 (2026-02-25): CHANGELOG update for PR #70
-- Current state: 308 passing tests, 88.98% coverage, 0 open PRs, main branch clean
+- PR #72 (2026-02-25): Batch 1+2 test restoration — fixed 8 test files, replaced blanket unit/ exclude with 16 granular file excludes, enabled integration/ + training/ dirs, tests 308 → 904, coverage 91.96%, v1.7.2 released
+- Current state: 904 passing tests, 91.96% coverage, 0 open PRs, main branch clean, v1.7.2
 
 ## Key Workaround
 - PostToolUse hooks revert Edit/Write changes — use Python scripts via Bash for bulk file modifications
