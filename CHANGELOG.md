@@ -4,6 +4,10 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Tests
+
+- **Re-enabled final 2 unit test files** — Fixed `test_feedback.py` (removed triplicate class definitions, 900→350 lines, fixed 9 API mismatches: `success_probability`→`confidence_factors`, `TaskPattern.success_rate`→`preferred_tools`, entity extraction, boost thresholds) and `test_cached_feedback.py` (added `tmp_path` test isolation, fixed `cache_hits`→`hits_by_type` metric keys, `PosixPath.write_text` patching, entity expectations). Removed last 2 unit/ exclusions from conftest.py. Test count: 1366 → 1474 passing, 0 unit test exclusions remaining.
+
 ## [1.7.3] - 2026-02-27
 
 ### Fixed

@@ -21,7 +21,4 @@ collect_ignore = [
     os.path.join(_dir, "training", "test_knowledge_base.py"),
     os.path.join(_dir, "training", "test_data_extraction.py"),
     os.path.join(_dir, "training", "test_evaluation.py"),
-    # Unit test files with broken imports/API mismatches (not yet restored)
-    os.path.join(_dir, "unit", "test_cached_feedback.py"),
-    os.path.join(_dir, "unit", "test_feedback.py"),
 ]
