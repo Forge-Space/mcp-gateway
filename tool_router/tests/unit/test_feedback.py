@@ -100,6 +100,7 @@ class TestFeedbackStore:
 
     def test_max_entries_trimming(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
+        store._persist = lambda: None
         for i in range(1010):
             store.record(f"task {i}", "mytool", success=True)
         assert len(store._entries) <= 1000
@@ -412,6 +413,7 @@ class TestFeedbackStoreAdvanced:
 
     def test_cleanup_old_entries(self, tmp_path: Path) -> None:
         store = FeedbackStore(str(tmp_path / "fb.json"))
+        store._persist = lambda: None
         for i in range(1050):
             store.record(f"task {i}", "mytool", success=True)
         assert len(store._entries) <= 1000

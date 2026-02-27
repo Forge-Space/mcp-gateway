@@ -554,6 +554,7 @@ class TestCachedFeedbackStore:
 
     def test_max_entries_limit(self, tmp_path: Path):
         store = CachedFeedbackStore(feedback_file=str(tmp_path / "fb.json"))
+        store._persist = lambda: None
 
         for i in range(1100):
             store.record(f"task_{i}", f"tool_{i % 10}", True)
