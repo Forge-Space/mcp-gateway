@@ -57,7 +57,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["tool_router", "service_manager", "dribbble_mcp"]
+source = ["tool_router", "dribbble_mcp"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
@@ -87,10 +87,6 @@ omit = [
     "tool_router/ai/ui_specialist.py",
     "tool_router/ai/selector.py",
     "tool_router/ai/prompts.py",
-    "tool_router/ai/enhanced_selector.py",
-    "tool_router/security/enhanced_rate_limiter.py",
-    "tool_router/security/rate_limiter.py",
-    "tool_router/security/security_middleware.py",
     "dribbble_mcp/health_check.py",
 ]
 

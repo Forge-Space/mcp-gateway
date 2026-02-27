@@ -40,27 +40,36 @@ Removed 3 `--ignore` flags from both `ci.yml` and `Makefile`:
 2. `dribbble_mcp/tests/test_health.py`
 3. Test count alignment verified
 
-## Remaining Excluded Tests
-- **Cache tests**: Redis dependency, not available in CI
-- **Specialist coordinator**: Complex state management, requires refactor
-- **UI specialist**: Depends on specialist_coordinator
-- **Training pipeline**: Pre-existing broken tests (namespace collisions, Path serialization bugs)
-- **Integration/Performance**: External service dependencies
+## Batch 2: PR #72 (2026-02-25) — 349 → 904 tests
 
-## Key Patterns Discovered
-1. **HTTPGatewayClient migration**: Old `GatewayClient` API deprecated, new pattern uses `HTTPGatewayClient` with `GatewayConfig`
-2. **Mock framework**: httpx `AsyncClient`, not aiohttp `ClientSession`
-3. **Health check responses**: Use dict access (`response.get("status")`), not object attributes
-4. **CI alignment**: `--ignore` flags in `ci.yml` and `Makefile` must match exactly
+### Fixed 8 Test Files
+- `test_security_middleware.py`: Full rewrite — methods renamed (`check_request` → `check_request_security`, etc.)
+- `test_dashboard.py`: 7 fixes — hit_rate field defaults to 0.0 (not auto-computed), alert thresholds strictly >80%, mock patterns
+- `test_invalidation.py`: 6 fixes — set ordering in delete assertions, AdvancedInvalidationManager uses real sub-managers (not mocks), no recursive cascade
+- `test_ui_specialist.py`: DesignSystem.VUE_UI → DesignSystem.CUSTOM (enum doesn't exist)
+- `test_cache_security_working.py`: "Cache Security" → "Security" assertion
+- `unit/test_specialist_coordinator.py`: case-insensitive component names, `len(results) >= 1`
+- `unit/test_ui_specialist.py`: `<` → `<=` for equal token estimates
 
-## Validation
-- All 308 tests passing locally and in CI
-- Coverage: 88.98% (maintained from before)
-- No regressions in existing test suites
-- CI green on main branch after merge
+### Enabled Suites
+- Replaced blanket `unit/` directory exclude with 16 granular file excludes (unlocked 856 unit tests)
+- Enabled `integration/` (34 tests) and `training/` (33 tests) directories
+- Reduced CI `--ignore` flags from 7 to 1 (only `performance/`)
 
-## Impact
-- Better test coverage of critical health monitoring code
-- Reduced technical debt (21 broken tests fixed, not excluded)
-- CI pipeline now tests observability layer (health checks + metrics)
-- Cleaner CI configuration (3 fewer exclusions)
+### Key Patterns
+- `CachePerformanceMetrics.hit_rate` defaults to 0.0 — must set explicitly when creating test metrics
+- `check_alerts` computes miss_rate from raw values but reads hit_rate from field directly
+- `AdvancedInvalidationManager` creates real TagInvalidationManager/EventInvalidationManager/DependencyInvalidationManager — can't mock `.call_count` on real methods
+- `invalidate_dependents` is NOT recursive — only finds direct dependents
+- `update_config` updates `self.config` dict but does NOT sync `self.enabled`/`self.strict_mode` attributes
+
+### Release
+- PR #72 merged (squash), v1.7.2 tagged and released
+- 904 tests, 91.96% coverage
+
+## Remaining Excluded Tests (Batch 3 Candidates)
+- 16 unit test files with ~153 failures: test_rate_limiter (20 failures, API redesign), test_matcher (many), test_config, test_health, test_feedback, test_cached_feedback, test_client, test_enhanced_rate_limiter, test_enhanced_selector, test_evaluation_tool, test_infrastructure_comprehensive, test_input_validator, test_knowledge_base_tool, test_metrics, test_prompt_architect, unit/test_security_middleware
+- `test_cache_security.py` — requires encryption infrastructure
+- `test_redis_cache.py` — requires Redis
+- `test_rag_manager.py` — requires RAG infrastructure
+- `performance/` — external service dependencies
