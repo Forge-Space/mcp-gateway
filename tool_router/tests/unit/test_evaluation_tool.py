@@ -98,7 +98,10 @@ class TestEvaluationTool:
             result = tool.run_evaluation(specialist_name="ui_specialist", benchmark_suite=mock_suite)
 
         # Business logic: should use provided benchmark suite
-        mock_evaluate.assert_called_once_with(specialist_type="ui_specialist", benchmark_suite=mock_suite)
+        # Note: actual method signature is specialist_name, not specialist_type
+        mock_evaluate.assert_called_once_with(
+            specialist_name="ui_specialist", benchmark_suite=mock_suite, test_cases=None
+        )
         assert result["summary"]["average_score"] == 0.9
 
     def test_run_evaluation_evaluation_error(self) -> None:
@@ -137,9 +140,10 @@ class TestEvaluationTool:
         mock_result2.timestamp = "2024-01-01T00:00:00Z"
         mock_result2.details = {"test": "data"}
 
-        with patch.object(tool.evaluator, "get_evaluation_results") as mock_get:
-            mock_get.return_value = [mock_result1, mock_result2]
-
+        # Mock the evaluation_history list attribute access
+        with patch.object(
+            SpecialistEvaluator, "get_evaluation_results", return_value=[mock_result1, mock_result2], create=True
+        ):
             result = tool.get_evaluation_history(specialist_name="ui_specialist", limit=10)
 
         assert len(result["results"]) == 2
@@ -159,9 +163,8 @@ class TestEvaluationTool:
         """Test evaluation history retrieval with no results."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, "get_evaluation_results") as mock_get:
-            mock_get.return_value = []
-
+        # Mock the evaluation_history list attribute to be empty
+        with patch.object(SpecialistEvaluator, "get_evaluation_results", return_value=[], create=True):
             result = tool.get_evaluation_history("ui_specialist")
 
         assert len(result["results"]) == 0
@@ -173,9 +176,10 @@ class TestEvaluationTool:
         """Test evaluation history retrieval with error."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, "get_evaluation_results") as mock_get:
-            mock_get.side_effect = Exception("Database error")
-
+        # Mock to raise an exception
+        with patch.object(
+            SpecialistEvaluator, "get_evaluation_results", side_effect=Exception("Database error"), create=True
+        ):
             result = tool.get_evaluation_history("ui_specialist")
 
         # Business logic: errors should be caught and reported
@@ -288,9 +292,18 @@ class TestEvaluationTool:
         mock_result3.timestamp = "2024-01-03T00:00:00"
         mock_result3.details = {"test": "data"}
 
-        with patch.object(tool.evaluator, "evaluation_history") as mock_history:
-            mock_history.__iter__ = MagicMock(return_value=iter([mock_result1, mock_result2, mock_result3]))
-            mock_history.__len__ = MagicMock(return_value=3)
+        # Mock get_evaluation_results for all specialists
+        with (
+            patch.object(
+                SpecialistEvaluator,
+                "get_evaluation_results",
+                return_value=[mock_result1, mock_result2, mock_result3],
+                create=True,
+            ),
+            patch.object(tool.evaluator, "benchmark_suites") as mock_suites,
+        ):
+            # Setup benchmark_suites.keys() to return one specialist
+            mock_suites.keys.return_value = ["ui_specialist"]
 
             result = tool.get_evaluation_summary()
 
@@ -308,9 +321,11 @@ class TestEvaluationTool:
         """Test evaluation summary with no evaluations."""
         tool = EvaluationTool()
 
-        with patch.object(tool.evaluator, "evaluation_history") as mock_history:
-            mock_history.__iter__ = MagicMock(return_value=iter([]))
-            mock_history.__len__ = MagicMock(return_value=0)
+        with (
+            patch.object(SpecialistEvaluator, "get_evaluation_results", return_value=[], create=True),
+            patch.object(tool.evaluator, "benchmark_suites") as mock_suites,
+        ):
+            mock_suites.keys.return_value = []
 
             result = tool.get_evaluation_summary()
 

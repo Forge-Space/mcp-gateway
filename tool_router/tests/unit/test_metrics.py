@@ -365,11 +365,11 @@ class TestTimingContext:
 
     def test_timing_context_initialization_default_metrics(self) -> None:
         """Test TimingContext initialization with default metrics."""
-        context = TimingContext("test_metric")
+        collector = MetricsCollector()
+        context = TimingContext("test_metric", collector)
 
         assert context.metric_name == "test_metric"
-        assert context.metrics is not None
-        assert isinstance(context.metrics, MetricsCollector)
+        assert context.metrics is collector
 
     def test_timing_context_enter(self) -> None:
         """Test TimingContext enter method."""
@@ -442,9 +442,8 @@ class TestTimingContext:
         collector = MetricsCollector()
 
         with patch("time.perf_counter") as mock_perf_counter:
-            # Outer context: 1000.0 -> 1100.0 (100ms)
-            # Inner context: 1100.0 -> 1150.0 (50ms)
-            mock_perf_counter.side_effect = [1000.0, 1100.0, 1100.0, 1150.0]
+            # Sequence: outer_enter(1000), inner_enter(1050), inner_exit(1100), outer_exit(1200)
+            mock_perf_counter.side_effect = [1000.0, 1050.0, 1100.0, 1200.0]
 
             with TimingContext("outer_metric", collector):
                 with TimingContext("inner_metric", collector):
@@ -456,6 +455,6 @@ class TestTimingContext:
 
             assert outer_stats is not None
             assert inner_stats is not None
-            # Outer context includes the inner context duration (150ms total)
-            assert outer_stats.avg == 150000.0  # 150ms total
-            assert inner_stats.avg == 50000.0  # 50ms
+            # Outer = (1200-1000)*1000 = 200000ms, Inner = (1100-1050)*1000 = 50000ms
+            assert outer_stats.avg == 200000.0
+            assert inner_stats.avg == 50000.0

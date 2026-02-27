@@ -166,7 +166,6 @@ class InputValidator:
         try:
             # Parse JSON
             parsed_prefs = json.loads(prefs)
-            metadata["parsed_keys"] = list(parsed_prefs.keys())
 
             # Validate structure
             if not isinstance(parsed_prefs, dict):
@@ -179,6 +178,8 @@ class InputValidator:
                     violations=violations,
                     metadata=metadata,
                 )
+
+            metadata["parsed_keys"] = list(parsed_prefs.keys())
 
             # Check for suspicious keys
             suspicious_keys = ["system", "prompt", "instruction", "override"]
