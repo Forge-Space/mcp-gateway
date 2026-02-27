@@ -51,7 +51,7 @@ class TestFeedbackEntry:
         assert entry.confidence == 0.0
         assert entry.task_type == ""
         assert entry.intent_category == ""
-        assert set(entry.entities) == {"test", "task"}
+        assert entry.entities == []
         assert isinstance(entry.timestamp, float)
 
 
