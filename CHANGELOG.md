@@ -4,6 +4,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-02-27
+
 ### Fixed
 
 - **GitHub ruleset required checks** — Updated main-branch-protection required checks from "CI Pipeline"/"CodeQL Security Analysis" (workflow names) to "Test"/"Build"/"Lint" (actual job names). PRs no longer require admin bypass to merge.
