@@ -10,6 +10,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Cache compliance module bugs** — Fixed wrong field names in `compliance.py` (`next_assessed` → `next_assessment`, `entry_id` → `event_id`), added `generate_compliance_report()` default argument, fixed `assess_compliance()` type validation, added input validation to `record_consent()` and `create_data_subject_request()`.
 - **ConsentRecord dataclass** — Extended with fields required by both compliance and security modules (`data_types`, `purposes`, `granted`, `user_id`, `ip_address`, `retention_days`, `expired()` method).
 - **SecurityMetrics dataclass** — Added missing fields (`compliance_violations`, `total_compliance_checks`, `encryption_errors`, `audit_failures`).
+- **Coverage config cleanup** — Removed phantom `service_manager` from coverage source (directory doesn't exist), removed restored security modules from coverage omit list. Coverage now measures `enhanced_selector`, `enhanced_rate_limiter`, `rate_limiter`, `security_middleware` (91.46%).
+- **Release pipeline repo-dispatch** — Made cross-repo notification step non-blocking (`continue-on-error: true`). `GITHUB_TOKEN` lacks permissions for cross-org dispatch; this is a notification, not critical.
 
 ### Tests
 
@@ -17,6 +19,7 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **CI alignment** — Removed 3 `--ignore` flags from both `ci.yml` and `Makefile` for `test_observability`, `test_health_check`.
 - **Re-enabled 41 cache tests** — Fixed broken imports in `test_cache_basic.py` (replaced `sys.path.insert` + stdlib `types` collision with proper `tool_router.cache.*` package imports), fixed `test_cache_compliance.py` (aligned with actual `ConsentRecord`/`ComplianceAssessment` dataclass fields). Removed `test_cache_basic.py` and `test_cache_compliance.py` from CI and conftest ignore lists. Test count: 308 → 349 passing.
 - **Re-enabled 555 tests (batch 2)** — Fixed 8 test files with API mismatches: `test_security_middleware.py` (full rewrite for renamed methods), `test_dashboard.py` (hit_rate field defaults, alert thresholds, mock patterns), `test_invalidation.py` (set ordering, real sub-managers), `test_ui_specialist.py` (DesignSystem enum), `test_cache_security_working.py` (assertion string), `unit/test_specialist_coordinator.py` (case sensitivity, count assertions), `unit/test_ui_specialist.py` (equality checks). Replaced blanket `unit/` directory exclusion with 16 granular file excludes, enabling 856 unit tests. Enabled `integration/` (34 tests) and `training/` (33 tests) suites. Test count: 349 → 904 passing, coverage 91.96%.
+- **Re-enabled 555 tests (batch 3)** — Fixed 14 unit test files with corrected mocks and assertions. Fixed Redis mock tests to bypass init connection fallback (Python 3.14 compatibility). Fixed `input_validator.py` metadata key ordering. Reduced conftest exclusions to 2 files (`test_cached_feedback.py`, `test_feedback.py`). Test count: 904 → 1459 passing, coverage 91.46%.
 
 ## [1.7.1] - 2026-02-25
 
