@@ -154,6 +154,7 @@ jobs:
             - [x] Package published to PyPI
 
       - name: Trigger Repository Dispatch
+        continue-on-error: true
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
