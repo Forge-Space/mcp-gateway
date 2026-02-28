@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 from tool_router.ai.enhanced_selector import (
     AIModel,
-    CostTracker,
     EnhancedAISelector,
     OllamaSelector,
 )
