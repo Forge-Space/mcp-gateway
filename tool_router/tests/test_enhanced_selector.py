@@ -138,37 +138,10 @@ class TestAIModel:
         assert AIModel.get_model_tier("unknown-model") == "unknown"
 
 
-class TestBaseAISelector:
-    """Test cases for BaseAISelector abstract class."""
-
-    def test_initialization(self):
-        """Test BaseAISelector initialization."""
-        # Test with default parameters
-        selector = TestSelector(AIModel.LLAMA32_3B.value)
-        assert selector.model == AIModel.LLAMA32_3B.value
-        assert selector.timeout_ms == 2000
-        assert selector.timeout_s == 2.0
-        assert selector.min_confidence == 0.3
-
-        # Test with custom parameters
-        selector = TestSelector(model=AIModel.GPT4O_MINI.value, timeout=5000, min_confidence=0.5)
-        assert selector.model == AIModel.GPT4O_MINI.value
-        assert selector.timeout_ms == 5000
-        assert selector.timeout_s == 5.0
-        assert selector.min_confidence == 0.5
-
-    def test_abstract_methods(self):
-        """Test that abstract methods raise NotImplementedError."""
-        selector = TestSelector(AIModel.LLAMA32_3B.value)
-
-        # Since TestSelector implements the abstract methods, we need to test
-        # the abstract base class directly
-        with pytest.raises(TypeError):
-            BaseAISelector(AIModel.LLAMA32_3B.value)
-
-
-class TestSelector(BaseAISelector):
+class _TestSelector(BaseAISelector):
     """Test implementation of BaseAISelector for testing."""
+
+    __test__ = False
 
     def select_tool(
         self,
@@ -189,6 +162,33 @@ class TestSelector(BaseAISelector):
     ) -> dict[str, any] | None:
         """Test implementation."""
         return {"tools": ["tool1", "tool2"], "confidence": 0.7, "reasoning": "test"}
+
+
+class TestBaseAISelector:
+    """Test cases for BaseAISelector abstract class."""
+
+    def test_initialization(self):
+        """Test BaseAISelector initialization."""
+        selector = _TestSelector(AIModel.LLAMA32_3B.value)
+        assert selector.model == AIModel.LLAMA32_3B.value
+        assert selector.timeout_ms == 2000
+        assert selector.timeout_s == 2.0
+        assert selector.min_confidence == 0.3
+
+        selector = _TestSelector(model=AIModel.GPT4O_MINI.value, timeout=5000, min_confidence=0.5)
+        assert selector.model == AIModel.GPT4O_MINI.value
+        assert selector.timeout_ms == 5000
+        assert selector.timeout_s == 5.0
+        assert selector.min_confidence == 0.5
+
+    def test_abstract_methods(self):
+        """Test that abstract methods raise NotImplementedError."""
+        selector = _TestSelector(AIModel.LLAMA32_3B.value)
+
+        # Since _TestSelector implements the abstract methods, we need to test
+        # the abstract base class directly
+        with pytest.raises(TypeError):
+            BaseAISelector(AIModel.LLAMA32_3B.value)
 
 
 class TestOllamaSelector:

@@ -18,7 +18,7 @@ Key Components:
 
 import secrets
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from threading import Lock
 from typing import Any
@@ -123,8 +123,8 @@ class GDPRComplianceHandler:
             purposes=consent_data.get("purposes", []),
             legal_basis=consent_data.get("legal_basis", "consent"),
             granted=True,
-            timestamp=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=365),
+            timestamp=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(days=365),
             withdrawn_at=None,
         )
 
@@ -142,7 +142,7 @@ class GDPRComplianceHandler:
                     and data_type in consent.data_types
                     and purpose in consent.purposes
                     and consent.granted
-                    and consent.expires_at > datetime.utcnow()
+                    and consent.expires_at > datetime.now(UTC)
                     and consent.withdrawn_at is None
                 ):
                     return True
@@ -153,7 +153,7 @@ class GDPRComplianceHandler:
         with self._lock:
             if consent_id in self._consent_records:
                 self._consent_records[consent_id].granted = False
-                self._consent_records[consent_id].withdrawn_at = datetime.utcnow()
+                self._consent_records[consent_id].withdrawn_at = datetime.now(UTC)
                 return True
         return False
 
@@ -168,8 +168,8 @@ class GDPRComplianceHandler:
             subject_contact=request_data["subject_contact"],
             description=request_data["description"],
             status="pending",
-            created=datetime.utcnow(),
-            due_date=datetime.utcnow() + timedelta(days=30),  # GDPR 30-day response
+            created=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),  # GDPR 30-day response
         )
 
         with self._lock:
@@ -193,7 +193,7 @@ class GDPRComplianceHandler:
             "records_deleted": 0,
             "cache_entries_cleared": 0,
             "audit_logs_created": 0,
-            "processed_at": datetime.utcnow().isoformat(),
+            "processed_at": datetime.now(UTC).isoformat(),
         }
 
         # Log the erasure request
@@ -203,7 +203,7 @@ class GDPRComplianceHandler:
             user_id="system",
             resource_id=subject_id,
             details={"description": f"GDPR right to be forgotten processed for {subject_id}"},
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             ip_address="127.0.0.1",
             user_agent="compliance_system",
         )
@@ -259,8 +259,8 @@ class ComplianceReporter:
             score=score,
             findings=findings,
             recommendations=recommendations,
-            last_assessed=datetime.utcnow(),
-            next_assessment=datetime.utcnow() + timedelta(days=90),
+            last_assessed=datetime.now(UTC),
+            next_assessment=datetime.now(UTC) + timedelta(days=90),
             assessor="compliance_system",
         )
 
@@ -272,7 +272,7 @@ class ComplianceReporter:
     def generate_compliance_report(self, standards: list[ComplianceStandard]) -> ComplianceReport:
         """Generate comprehensive compliance report."""
         report_id = secrets.token_hex(16)
-        period_end = datetime.utcnow()
+        period_end = datetime.now(UTC)
         period_start = period_end - timedelta(days=30)
 
         assessments = []
@@ -288,8 +288,8 @@ class ComplianceReporter:
                         score=0.0,
                         findings=["Assessment not implemented"],
                         recommendations=["Implement assessment for this standard"],
-                        last_assessed=datetime.utcnow(),
-                        next_assessed=datetime.utcnow() + timedelta(days=90),
+                        last_assessed=datetime.now(UTC),
+                        next_assessed=datetime.now(UTC) + timedelta(days=90),
                         assessor="compliance_system",
                     )
                 )
@@ -304,7 +304,7 @@ class ComplianceReporter:
             total_records_processed=0,  # Would be calculated from actual data
             data_breaches=[],  # Would be populated from incident logs
             recommendations=[],
-            generated=datetime.utcnow(),
+            generated=datetime.now(UTC),
             generated_by="compliance_system",
         )
 

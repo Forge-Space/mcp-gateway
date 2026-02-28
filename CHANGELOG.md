@@ -4,6 +4,15 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Python 3.14 deprecation warnings** — Replace all `datetime.utcnow()` with `datetime.now(UTC)` in compliance module and tests. Replace Pillow `getdata()` with `get_flattened_data()` in image analysis. Rename `TestSelector` to `_TestSelector` to fix PytestCollectionWarning. Warnings reduced from 19,007 to 0.
+- **Gitignore `test_*.py` pattern** — Anchored to repo root (`/test_*.py`) to stop blocking test files in subdirectories.
+
+### Tests
+
+- **Coverage improvement** — Add 31 new tests covering enhanced_selector.py error branches and cost optimization paths (85% → 96%). Unskip async screenshot tests and add fallback coverage (71% → 95%). Overall: 91.46% → 94.27%. Add `filterwarnings` config to treat DeprecationWarning as error.
+
 ## [1.7.6] - 2026-02-27
 
 ### Changed

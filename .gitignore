@@ -104,11 +104,11 @@ coordinated-release-test-report.json
 report.json
 
 # Root demo/test scripts (use scripts/ directory)
-demo_*.py
-test_*.py
-validate_*.py
-integrate_*.py
-debug_*.py
+/demo_*.py
+/test_*.py
+/validate_*.py
+/integrate_*.py
+/debug_*.py
 
 # Backup files (use version control for history)
 Makefile.backup
