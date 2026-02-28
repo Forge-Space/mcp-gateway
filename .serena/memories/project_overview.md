@@ -47,21 +47,21 @@ mcp-gateway/
 
 ## Package Info
 - **Name**: mcp-gateway
-- **Version**: 1.7.2
+- **Version**: 1.7.4
 - **Python package**: mcp-gateway (setuptools)
 - **npm package**: npx wrapper entry point
 - **Upstream dependency**: @forgespace/core (forge-patterns)
 
 ## Coverage & CI
-- 91.96% test coverage (gate: 80%), 904 tests passing
-- CI `--ignore`: only `performance/`. Conftest excludes: 16 unit files, test_cache_security (infra), test_redis_cache, test_rag_manager, test_security dir, test_observability dir, 3 training files
+- 91.46% test coverage (gate: 80%), 1670 tests passing (zero conftest exclusions)
+- CI `--ignore`: only `performance/`. Zero unit file exclusions.
 - pyproject.toml `addopts` is single source of truth for pytest flags — NEVER use `--override-ini`
 - 4-job CI pipeline: lint → test → build → security
 - Release pipeline: `release-automation.yml` → `make test` → pyproject.toml addopts
 - `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to stage
-- PR #70 (2026-02-25): Test restoration batch 0 — 184 → 308 tests
-- PR #72 (2026-02-25): Test restoration batch 1+2 — 308 → 904 tests, 91.96% coverage
-- v1.7.2 released: tag + GitHub Release (test restoration)
-- Current state: 0 open PRs, CI green, main branch clean, v1.7.2
-- Remaining: 16 unit files (~153 failures), test_cache_security (infra), test_redis_cache, performance/
+- Test restoration COMPLETE: 184 → 904 → 1567 → 1670 tests across 6 batches
+- PR #83 (2026-02-28): hono IP spoofing fix (4.12.0 → 4.12.3), closes #81
+- v1.7.4 released (2026-02-27): test restoration complete
+- Current state: 0 open PRs, CI green, main branch clean, v1.7.4
+- Remaining excluded: performance/ only (via --ignore). Zero conftest exclusions.
 - Known: repository-dispatch needs PAT, GitGuardian API key expired (non-blocking)
