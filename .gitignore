@@ -96,6 +96,20 @@ docker-security-report-*.md
 snyk.sarif
 *.sarif
 
+# Generated test/quality reports (use CI artifacts instead)
+quality_report.json
+test_quality_report.json
+test_quality_summary_*.json
+coordinated-release-test-report.json
+report.json
+
+# Root demo/test scripts (use scripts/ directory)
+demo_*.py
+test_*.py
+validate_*.py
+integrate_*.py
+debug_*.py
+
 # Backup files (use version control for history)
 Makefile.backup
 Makefile.original
