@@ -7,6 +7,7 @@ All notable changes to the MCP Gateway project will be documented in this file.
 ### Changed
 
 - **Remove duplicate Docker configuration variants** — Deleted 10 Docker variant files (`.optimized`, `.production`, `.scalable`, `.hardened`, `.robust`, `.simple`), 10 dead operational scripts, and 3 variant-only docs. Canonical set retained: `docker-compose.yml`, `docker-compose.n8n.yml`, `Dockerfile.tool-router`, `Dockerfile.uiforge.consolidated`, `Dockerfile.dribbble-mcp`, `.dockerignore`. Standard: one config per concern, use env vars for environment differences.
+- **Remove dead scripts** — Audited all scripts against Makefile, CI, and README references. Deleted 95 unreferenced files across 17 subdirectories. Retained 12 live scripts: `gateway/register.sh`, `setup-wizard.py`, `status.py`, `ide-setup.py`, `mcp-wrapper.sh`, `virtual-servers/cleanup-duplicates.sh`, and 3 `utils/` + 3 `lib/` files.
 
 ## [1.7.5] - 2026-02-27
 
