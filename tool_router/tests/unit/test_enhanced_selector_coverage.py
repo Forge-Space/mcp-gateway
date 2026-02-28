@@ -42,9 +42,7 @@ class TestOllamaSelectorParsing:
 
     def test_parse_response_invalid_confidence(self) -> None:
         sel = _make_ollama()
-        resp = _make_httpx_response(
-            {"response": '{"tool_name": "a", "confidence": 5, "reasoning": "x"}'}
-        )
+        resp = _make_httpx_response({"response": '{"tool_name": "a", "confidence": 5, "reasoning": "x"}'})
         with patch("httpx.Client") as mc:
             mc.return_value.__enter__.return_value.post.return_value = resp
             assert sel.select_tool("t", [{"name": "a", "description": "a"}]) is None
@@ -66,9 +64,7 @@ class TestOllamaSelectorParsing:
 
     def test_select_tool_low_confidence_discarded(self) -> None:
         sel = _make_ollama(min_confidence=0.9)
-        resp = _make_httpx_response(
-            {"response": '{"tool_name": "a", "confidence": 0.5, "reasoning": "x"}'}
-        )
+        resp = _make_httpx_response({"response": '{"tool_name": "a", "confidence": 0.5, "reasoning": "x"}'})
         with patch("httpx.Client") as mc:
             mc.return_value.__enter__.return_value.post.return_value = resp
             assert sel.select_tool("t", [{"name": "a", "description": "a"}]) is None
@@ -92,22 +88,31 @@ class TestOllamaMultiToolParsing:
         assert self._multi_call(_make_ollama(), '{"tools": ["a"]}') is None
 
     def test_empty_tools_list(self) -> None:
-        assert self._multi_call(
-            _make_ollama(),
-            '{"tools": [], "confidence": 0.8, "reasoning": "x"}',
-        ) is None
+        assert (
+            self._multi_call(
+                _make_ollama(),
+                '{"tools": [], "confidence": 0.8, "reasoning": "x"}',
+            )
+            is None
+        )
 
     def test_invalid_confidence(self) -> None:
-        assert self._multi_call(
-            _make_ollama(),
-            '{"tools": ["search"], "confidence": 2.0, "reasoning": "x"}',
-        ) is None
+        assert (
+            self._multi_call(
+                _make_ollama(),
+                '{"tools": ["search"], "confidence": 2.0, "reasoning": "x"}',
+            )
+            is None
+        )
 
     def test_no_valid_tool_names(self) -> None:
-        assert self._multi_call(
-            _make_ollama(),
-            '{"tools": ["nonexistent"], "confidence": 0.8, "reasoning": "x"}',
-        ) is None
+        assert (
+            self._multi_call(
+                _make_ollama(),
+                '{"tools": ["nonexistent"], "confidence": 0.8, "reasoning": "x"}',
+            )
+            is None
+        )
 
     def test_json_decode_error(self) -> None:
         assert self._multi_call(_make_ollama(), "{invalid json}") is None
@@ -122,9 +127,7 @@ class TestOllamaMultiToolParsing:
 
     def test_multi_low_confidence_discarded(self) -> None:
         sel = _make_ollama(min_confidence=0.9)
-        result = self._multi_call(
-            sel, '{"tools": ["search"], "confidence": 0.5, "reasoning": "x"}'
-        )
+        result = self._multi_call(sel, '{"tools": ["search"], "confidence": 0.5, "reasoning": "x"}')
         assert result is None
 
 
@@ -145,9 +148,7 @@ class TestEnhancedAISelectorCostOptimization:
 
     def test_cost_constraint_triggers_cheaper_model(self) -> None:
         sel = self._make_selector()
-        resp = _make_httpx_response(
-            {"response": '{"tool_name": "a", "confidence": 0.8, "reasoning": "x"}'}
-        )
+        resp = _make_httpx_response({"response": '{"tool_name": "a", "confidence": 0.8, "reasoning": "x"}'})
         with patch("httpx.Client") as mc:
             mc.return_value.__enter__.return_value.post.return_value = resp
             result = sel.select_tool_with_cost_optimization(
@@ -160,23 +161,17 @@ class TestEnhancedAISelectorCostOptimization:
         ollama = _make_ollama()
         ollama.model = "different-model"
         sel = EnhancedAISelector(providers=[ollama])
-        resp = _make_httpx_response(
-            {"response": '{"tool_name": "a", "confidence": 0.8, "reasoning": "x"}'}
-        )
+        resp = _make_httpx_response({"response": '{"tool_name": "a", "confidence": 0.8, "reasoning": "x"}'})
         with patch("httpx.Client") as mc:
             mc.return_value.__enter__.return_value.post.return_value = resp
-            result = sel.select_tool_with_cost_optimization(
-                "task", [{"name": "a", "description": "a"}]
-            )
+            result = sel.select_tool_with_cost_optimization("task", [{"name": "a", "description": "a"}])
             assert result is not None
 
     def test_no_provider_available_returns_none(self) -> None:
         non_ollama = MagicMock()
         non_ollama.model = "some-other-model"
         sel = EnhancedAISelector(providers=[non_ollama])
-        result = sel.select_tool_with_cost_optimization(
-            "task", [{"name": "a", "description": "a"}]
-        )
+        result = sel.select_tool_with_cost_optimization("task", [{"name": "a", "description": "a"}])
         assert result is None
 
     def test_multi_cost_optimization_empty_tools(self) -> None:
@@ -185,9 +180,7 @@ class TestEnhancedAISelectorCostOptimization:
 
     def test_multi_cost_constraint(self) -> None:
         sel = self._make_selector()
-        resp = _make_httpx_response(
-            {"response": '{"tools": ["a"], "confidence": 0.8, "reasoning": "x"}'}
-        )
+        resp = _make_httpx_response({"response": '{"tools": ["a"], "confidence": 0.8, "reasoning": "x"}'})
         with patch("httpx.Client") as mc:
             mc.return_value.__enter__.return_value.post.return_value = resp
             result = sel.select_tools_multi_with_cost_optimization(
@@ -200,9 +193,7 @@ class TestEnhancedAISelectorCostOptimization:
         non_ollama = MagicMock()
         non_ollama.model = "other"
         sel = EnhancedAISelector(providers=[non_ollama])
-        result = sel.select_tools_multi_with_cost_optimization(
-            "task", [{"name": "a", "description": "a"}]
-        )
+        result = sel.select_tools_multi_with_cost_optimization("task", [{"name": "a", "description": "a"}])
         assert result is None
 
 
