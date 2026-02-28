@@ -36,6 +36,7 @@ apps/                 # Legacy structure (DO NOT reference in CI)
 - Main branch required checks: "Test", "Build", "Lint" (must match CI job `name:` fields exactly)
 - GitGuardian `GITGUARDIAN_API_KEY` secret is expired — scan fails but is not a required check
 - Main branch ruleset has no bypass actors by default — temporarily add via API for urgent merges
+- CI Pipeline push trigger only matches `[main, dev, release/*, feature/*, feat/*]` — branches with `fix/`, `chore/`, `test/` prefixes won't trigger CI on push. Use `feat/` prefix or rely on `pull_request` event targeting main
 
 ## Documentation Governance
 - NEVER create task-specific docs in repo root or docs/ (e.g., *_COMPLETE.md, *_SUMMARY.md, STATUS_*.md, PHASE*.md, *_REPORT.md, *_CHECKLIST.md)
@@ -47,7 +48,7 @@ apps/                 # Legacy structure (DO NOT reference in CI)
 ## Known Issues
 
 - `docs/PRODUCTION_DEPLOYMENT.md`: deployment guide with docker-compose examples — CodeRabbit flags many issues, some are intentional documentation (not runnable code)
-- Excluded in CI: performance/ only (via --ignore). Conftest excludes: test_redis_cache, test_rag_manager, test_cache_security (infra-dependent); test_security, test_observability dirs; 3 training files
+- Excluded in CI: performance/ only (via --ignore). Conftest has zero exclusions (all test files restored as of batch 6)
 - pyproject.toml `addopts` is the single source of truth for pytest flags (coverage, verbosity, strict-markers). Makefile and ci.yml only add `--ignore` and `--timeout` flags — NEVER use `--override-ini`
 - `make test` and `ci.yml` test step are aligned — update both when adding/removing test exclusions
 - Coverage omit list in `[tool.coverage.run]` must match the test `--ignore` list — if a test file is ignored, its source module should be in `omit`
