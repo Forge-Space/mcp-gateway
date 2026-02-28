@@ -4,6 +4,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.7.5] - 2026-02-27
+
 ### Security
 
 - **Fix hono IP spoofing vulnerability** — Upgraded `hono` 4.12.0 → 4.12.3 to patch authentication bypass via IP spoofing in AWS Lambda ALB conninfo (GHSA-xh87-mx6m-69f3). Closes #81.
