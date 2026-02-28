@@ -42,10 +42,12 @@ class TestRedisCache:
     @patch("tool_router.cache.redis_cache.REDIS_AVAILABLE", False)
     def test_redis_cache_without_redis(self):
         """Test Redis cache behavior when Redis is not available."""
-        config = RedisConfig()
-        cache = RedisCache(config)
+        from cachetools import TTLCache
 
-        # Should fall back to local cache only
+        config = RedisConfig()
+        fallback = TTLCache(maxsize=100, ttl=60)
+        cache = RedisCache(config, fallback_cache=fallback)
+
         assert cache._redis_client is None
         assert cache._is_healthy is False
         assert cache.fallback_cache is not None
@@ -65,18 +67,20 @@ class TestRedisCache:
         assert cache._redis_client is mock_client
         assert cache._is_healthy is True
 
+    @patch("tool_router.cache.redis_cache.REDIS_AVAILABLE", False)
     def test_cache_key_namespacing(self):
         """Test cache key namespacing."""
-        config = RedisConfig(key_prefix="test_prefix:")
-        cache = RedisCache(config)
+        config = RedisConfig()
+        cache = RedisCache(config, key_prefix="test_prefix:")
 
         assert cache._make_key("user:123") == "test_prefix:user:123"
         assert cache._make_key("session:abc") == "test_prefix:session:abc"
 
+    @patch("tool_router.cache.redis_cache.REDIS_AVAILABLE", False)
     def test_serialization_pickle(self):
         """Test pickle serialization."""
-        config = RedisConfig(serializer="pickle")
-        cache = RedisCache(config)
+        config = RedisConfig()
+        cache = RedisCache(config, serializer="pickle")
 
         test_data = {"key": "value", "number": 42}
         serialized = cache._serialize(test_data)
@@ -84,10 +88,11 @@ class TestRedisCache:
 
         assert deserialized == test_data
 
+    @patch("tool_router.cache.redis_cache.REDIS_AVAILABLE", False)
     def test_serialization_json(self):
         """Test JSON serialization."""
-        config = RedisConfig(serializer="json")
-        cache = RedisCache(config)
+        config = RedisConfig()
+        cache = RedisCache(config, serializer="json")
 
         test_data = {"key": "value", "number": 42}
         serialized = cache._serialize(test_data)
@@ -154,13 +159,10 @@ class TestCacheIntegration:
     @patch("tool_router.cache.redis_cache.REDIS_AVAILABLE", False)
     def test_fallback_only_mode(self):
         """Test cache behavior when Redis is unavailable."""
-        config = CacheBackendConfig(
-            backend_type="redis",
-            redis_config=RedisConfig(),
-            fallback_config=CacheConfig(max_size=10, ttl=60),
-        )
+        from cachetools import TTLCache
 
-        cache = RedisCache(config=config.redis_config, fallback_config=config.fallback_config)
+        fallback = TTLCache(maxsize=10, ttl=60)
+        cache = RedisCache(config=RedisConfig(), fallback_cache=fallback)
 
         # Test basic operations work with fallback only
         cache.set("test_key", "test_value")
@@ -172,37 +174,35 @@ class TestCacheIntegration:
     @patch("tool_router.cache.redis_cache.redis")
     def test_redis_with_fallback(self, mock_redis):
         """Test Redis cache with fallback behavior."""
-        # Setup mock Redis
         mock_client = Mock()
         mock_client.ping.return_value = True
-        mock_client.get.return_value = None  # Simulate cache miss
+        mock_client.get.return_value = None
         mock_client.set.return_value = True
         mock_client.setex.return_value = True
         mock_client.delete.return_value = 1
         mock_client.exists.return_value = 0
+        mock_pipe = Mock()
+        mock_pipe.execute.return_value = [True, True]
+        mock_client.pipeline.return_value = mock_pipe
+        mock_client.mget.return_value = [None, None]
+        mock_client.keys.return_value = ["mcp_cache:test"]
         mock_redis.Redis.return_value = mock_client
 
-        config = CacheBackendConfig(
-            backend_type="hybrid",
-            redis_config=RedisConfig(),
-            fallback_config=CacheConfig(max_size=10, ttl=60),
-        )
+        from cachetools import TTLCache
 
-        cache = RedisCache(config=config.redis_config, fallback_config=config.fallback_config)
+        fallback = TTLCache(maxsize=10, ttl=60)
+        cache = RedisCache(config=RedisConfig(), fallback_cache=fallback)
 
-        # Test operations
         cache.set("test_key", "test_value", ttl=300)
         assert cache.get("test_key") == "test_value"
         assert cache.exists("test_key") is True
 
-        # Test batch operations
         batch_data = {"key1": "value1", "key2": "value2"}
         assert cache.set_many(batch_data) is True
 
         results = cache.get_many(["key1", "key2"])
         assert results == {"key1": "value1", "key2": "value2"}
 
-        # Test clear operation
         assert cache.clear() is True
 
 

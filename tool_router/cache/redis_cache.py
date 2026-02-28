@@ -178,7 +178,7 @@ class RedisCache:
             logger.debug(f"Redis get failed for key {key}: {e}")
 
         # Fallback to local cache
-        if self.fallback_cache:
+        if self.fallback_cache is not None:
             return self.fallback_cache.get(key, default)
 
         return default
@@ -200,15 +200,15 @@ class RedisCache:
 
                 if success:
                     # Also set in fallback cache for resilience
-                    if self.fallback_cache:
-                        self.fallback_cache.set(key, value, ttl)
+                    if self.fallback_cache is not None:
+                        self.fallback_cache[key] = value
                     return True
         except (ConnectionError, Exception) as e:
             logger.debug(f"Redis set failed for key {key}: {e}")
 
         # Fallback to local cache only
-        if self.fallback_cache:
-            self.fallback_cache.set(key, value, ttl)
+        if self.fallback_cache is not None:
+            self.fallback_cache[key] = value
             return True
 
         return False
@@ -225,7 +225,7 @@ class RedisCache:
             logger.debug(f"Redis delete failed for key {key}: {e}")
 
         # Also delete from fallback cache
-        if self.fallback_cache:
+        if self.fallback_cache is not None:
             try:
                 del self.fallback_cache[key]
                 success = True
@@ -250,7 +250,7 @@ class RedisCache:
             logger.debug(f"Redis clear failed: {e}")
 
         # Also clear fallback cache
-        if self.fallback_cache:
+        if self.fallback_cache is not None:
             self.fallback_cache.clear()
             success = True
 
@@ -261,12 +261,13 @@ class RedisCache:
         # Try Redis first
         try:
             with self._get_redis() as redis_client:
-                return redis_client.exists(self._make_key(key))
+                if redis_client.exists(self._make_key(key)):
+                    return True
         except (ConnectionError, Exception) as e:
             logger.debug(f"Redis exists check failed for key {key}: {e}")
 
         # Fallback to local cache
-        if self.fallback_cache:
+        if self.fallback_cache is not None:
             return key in self.fallback_cache
 
         return False
@@ -291,7 +292,7 @@ class RedisCache:
             logger.debug(f"Redis get_many failed: {e}")
 
         # Get missing keys from fallback cache
-        if self.fallback_cache:
+        if self.fallback_cache is not None:
             for key in keys:
                 if key not in result:
                     result[key] = self.fallback_cache.get(key)
@@ -322,9 +323,9 @@ class RedisCache:
             success = False
 
         # Also set in fallback cache
-        if self.fallback_cache:
+        if self.fallback_cache is not None:
             for key, value in mapping.items():
-                self.fallback_cache.set(key, value, ttl)
+                self.fallback_cache[key] = value
 
         return success
 
@@ -353,7 +354,7 @@ class RedisCache:
             except Exception as e:
                 logger.debug(f"Failed to get Redis info: {e}")
 
-        if self.fallback_cache:
+        if self.fallback_cache is not None:
             info.update(
                 {
                     "fallback_size": len(self.fallback_cache),
