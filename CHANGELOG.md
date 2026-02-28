@@ -4,6 +4,16 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Tests
+
+- **Final test restoration — zero conftest exclusions** — Restored all 8 remaining excluded test entries. Fixed 6 source bugs discovered during restoration (RedisCache fallback path, SQL column references, missing imports). Rewrote `test_audit_logger.py` (16 tests), `test_cache_security.py` (47 tests), fixed `test_redis_cache.py` (12 tests), 3 training test files (89 tests), enabled 2 free-win files (32 tests). Test count: 1567 → 1670 (+103 tests), conftest exclusions: 0.
+
+### Fixed
+
+- **RedisCache fallback bugs** — Empty TTLCache evaluates to falsy, breaking fallback-only mode. Fixed all `if self.fallback_cache:` → `is not None` checks. Fixed `.set()` calls on TTLCache (uses dict interface). Made `exists()` fall through to fallback on Redis miss (consistent with `get()`).
+- **Knowledge base SQL bugs** — `ORDER BY effectiveness_score` referenced non-existent column (should be `confidence_score`). Related items list appended string IDs instead of KnowledgeItem objects.
+- **Evaluation module bugs** — `best_practice` attribute accessed on KnowledgeItem (doesn't exist), now uses `metadata.get()`. Recommendation generator crashed on non-dict values in summary.
+
 ## [1.7.4] - 2026-02-27
 
 ### Tests
