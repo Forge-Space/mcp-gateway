@@ -12,7 +12,7 @@ import hashlib
 import json
 import sqlite3
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -43,8 +43,8 @@ class KnowledgeItem:
     confidence_score: float = 1.0
     status: KnowledgeStatus = KnowledgeStatus.ACTIVE
     source_url: str | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     usage_count: int = 0
     user_ratings: list[float] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -214,7 +214,7 @@ class KnowledgeBase:
                 sql += " AND category = ?"
                 params.append(category.value)
 
-            sql += " ORDER BY effectiveness_score DESC LIMIT ?"
+            sql += " ORDER BY confidence_score DESC LIMIT ?"
             params.append(limit)
 
             cursor = conn.execute(sql, params)
@@ -232,7 +232,7 @@ class KnowledgeBase:
                 """
                 SELECT * FROM knowledge_items
                 WHERE category = ? AND status = 'active'
-                ORDER BY effectiveness_score DESC
+                ORDER BY confidence_score DESC
                 LIMIT ?
             """,
                 (category.value, limit),
@@ -247,7 +247,7 @@ class KnowledgeBase:
                 """
                 SELECT * FROM knowledge_items
                 WHERE status = 'active'
-                ORDER BY effectiveness_score DESC
+                ORDER BY confidence_score DESC
                 LIMIT ?
             """,
                 (limit,),
@@ -264,7 +264,7 @@ class KnowledgeBase:
                 SET usage_count = usage_count + 1, updated_at = ?
                 WHERE id = ?
             """,
-                (datetime.now(timezone.utc).isoformat(), item_id),
+                (datetime.now(UTC).isoformat(), item_id),
             )
 
     def add_user_rating(self, item_id: str, rating: float) -> None:
@@ -272,7 +272,7 @@ class KnowledgeBase:
         item = self.get_knowledge_item(item_id)
         if item:
             item.user_ratings.append(rating)
-            item.updated_at = datetime.now(timezone.utc)
+            item.updated_at = datetime.now(UTC)
 
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
@@ -516,7 +516,7 @@ class KnowledgeIndexer:
         for related_id in related_by_tags:
             related_item = self.knowledge_base.get_knowledge_item(related_id)
             if related_item:
-                related_items.append(related_id)
+                related_items.append(related_item)
 
         # Sort by effectiveness score
         related_items.sort(key=lambda x: x.effectiveness_score, reverse=True)

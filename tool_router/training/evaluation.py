@@ -425,7 +425,7 @@ class SpecialistEvaluator:
                 pattern_quality += 0.3
 
             # Is best practice
-            if pattern.best_practice:
+            if pattern.metadata.get("best_practice", False):
                 pattern_quality += 0.3
 
             # High confidence
@@ -450,7 +450,7 @@ class SpecialistEvaluator:
             details={
                 "quality_factors": quality_factors,
                 "patterns_with_code": len([p for p in relevant_patterns if p.code_example]),
-                "best_practice_patterns": len([p for p in relevant_patterns if p.best_practice]),
+                "best_practice_patterns": len([p for p in relevant_patterns if p.metadata.get("best_practice", False)]),
             },
         )
 
@@ -580,6 +580,8 @@ class SpecialistEvaluator:
 
         # Analyze each metric and generate recommendations
         for metric_name, metric_data in metrics.items():
+            if not isinstance(metric_data, dict):
+                continue
             score = metric_data["latest_value"]
 
             if score < 0.5:
