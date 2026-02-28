@@ -147,7 +147,6 @@ class TestCaptureShotAsync:
             with pytest.raises(RuntimeError, match="playwright is required"):
                 asyncio.run(capture_shot_async("https://dribbble.com/shots/123-test"))
 
-    @pytest.mark.skip(reason="requires pytest-asyncio")
     @pytest.mark.asyncio
     async def test_async_capture_returns_base64(self) -> None:
         mock_element = AsyncMock()
@@ -178,3 +177,59 @@ class TestCaptureShotAsync:
         assert isinstance(result, str)
         decoded = base64.b64decode(result)
         assert decoded == _FAKE_PNG
+
+    @pytest.mark.asyncio
+    async def test_async_capture_fallback_to_page_screenshot(self) -> None:
+        mock_page = AsyncMock()
+        mock_page.query_selector = AsyncMock(return_value=None)
+        mock_page.screenshot = AsyncMock(return_value=_FAKE_PNG)
+
+        mock_context = AsyncMock()
+        mock_context.new_page = AsyncMock(return_value=mock_page)
+
+        mock_browser = AsyncMock()
+        mock_browser.new_context = AsyncMock(return_value=mock_context)
+        mock_browser.close = AsyncMock()
+
+        mock_chromium = AsyncMock()
+        mock_chromium.launch = AsyncMock(return_value=mock_browser)
+
+        mock_pw = AsyncMock()
+        mock_pw.chromium = mock_chromium
+        mock_pw.__aenter__ = AsyncMock(return_value=mock_pw)
+        mock_pw.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("dribbble_mcp.screenshot.async_playwright", return_value=mock_pw):
+            result = await capture_shot_async("https://dribbble.com/shots/123-test")
+
+        assert isinstance(result, str)
+        mock_page.screenshot.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_async_selector_exception_falls_back(self) -> None:
+        mock_element = AsyncMock()
+        mock_element.screenshot = AsyncMock(side_effect=RuntimeError("gone"))
+
+        mock_page = AsyncMock()
+        mock_page.query_selector = AsyncMock(return_value=mock_element)
+        mock_page.screenshot = AsyncMock(return_value=_FAKE_PNG)
+
+        mock_context = AsyncMock()
+        mock_context.new_page = AsyncMock(return_value=mock_page)
+
+        mock_browser = AsyncMock()
+        mock_browser.new_context = AsyncMock(return_value=mock_context)
+        mock_browser.close = AsyncMock()
+
+        mock_chromium = AsyncMock()
+        mock_chromium.launch = AsyncMock(return_value=mock_browser)
+
+        mock_pw = AsyncMock()
+        mock_pw.chromium = mock_chromium
+        mock_pw.__aenter__ = AsyncMock(return_value=mock_pw)
+        mock_pw.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("dribbble_mcp.screenshot.async_playwright", return_value=mock_pw):
+            result = await capture_shot_async("https://dribbble.com/shots/123-test")
+
+        assert isinstance(result, str)

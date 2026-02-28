@@ -115,7 +115,7 @@ class TestGDPRComplianceHandler:
         consent_id = self.gdpr_handler.record_consent(subject_id, consent_data)
 
         with self.gdpr_handler._lock:
-            self.gdpr_handler._consent_records[consent_id].expires_at = datetime.utcnow() - timedelta(days=1)
+            self.gdpr_handler._consent_records[consent_id].expires_at = datetime.now(UTC) - timedelta(days=1)
 
         assert self.gdpr_handler.check_consent(subject_id, "test_data", "test_purpose") is False
 

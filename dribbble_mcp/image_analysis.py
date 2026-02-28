@@ -130,7 +130,8 @@ def _extract_dominant_colors(img: Any) -> list[str]:
             return []
 
         pixel_counts: dict[int, int] = {}
-        pixels = list(quantized.getdata())
+        get_data = getattr(quantized, "get_flattened_data", quantized.getdata)
+        pixels = list(get_data())
         for px in pixels:
             pixel_counts[px] = pixel_counts.get(px, 0) + 1
 

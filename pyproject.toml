@@ -46,6 +46,10 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 asyncio_mode = "auto"
 addopts = "-v --tb=short --strict-markers --cov=tool_router --cov=dribbble_mcp --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=80"
+filterwarnings = [
+    "error::DeprecationWarning",
+    "ignore::ResourceWarning",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
