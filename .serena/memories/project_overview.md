@@ -47,21 +47,23 @@ mcp-gateway/
 
 ## Package Info
 - **Name**: mcp-gateway
-- **Version**: 1.7.4
+- **Version**: 1.7.7
 - **Python package**: mcp-gateway (setuptools)
 - **npm package**: npx wrapper entry point
 - **Upstream dependency**: @forgespace/core (forge-patterns)
 
 ## Coverage & CI
-- 91.46% test coverage (gate: 80%), 1670 tests passing (zero conftest exclusions)
+- 94.27% test coverage (gate: 80%), 1794+ tests passing (zero conftest exclusions)
 - CI `--ignore`: only `performance/`. Zero unit file exclusions.
 - pyproject.toml `addopts` is single source of truth for pytest flags — NEVER use `--override-ini`
+- `filterwarnings` config: DeprecationWarning as error, ResourceWarning ignored
 - 4-job CI pipeline: lint → test → build → security
 - Release pipeline: `release-automation.yml` → `make test` → pyproject.toml addopts
 - `CLAUDE.md` is gitignored — use `git add -f CLAUDE.md` to stage
-- Test restoration COMPLETE: 184 → 904 → 1567 → 1670 tests across 6 batches
-- PR #83 (2026-02-28): hono IP spoofing fix (4.12.0 → 4.12.3), closes #81
-- v1.7.4 released (2026-02-27): test restoration complete
-- Current state: 0 open PRs, CI green, main branch clean, v1.7.4
+- Test restoration COMPLETE: 184 → 904 → 1567 → 1670 → 1794+ tests
+- v1.7.7 released (2026-02-28): Python 3.14 deprecation cleanup + coverage 91→94%
+- v1.7.6: Docker/scripts cleanup, v1.7.5: hono IP spoofing fix
+- v1.7.7+: PR #93 merged (2026-03-01) — all 1188 ruff lint errors fixed, per-file-ignores for non-source dirs
+- Current state: 0 open PRs, CI green, main branch clean, ruff 0 errors ecosystem-wide
 - Remaining excluded: performance/ only (via --ignore). Zero conftest exclusions.
 - Known: repository-dispatch needs PAT, GitGuardian API key expired (non-blocking)
