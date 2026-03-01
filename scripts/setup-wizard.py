@@ -16,35 +16,33 @@ Features:
 """
 
 import argparse
-import json
-import os
-import shutil
+import re
 import subprocess
 import sys
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
-import re
+from typing import Any
 
 
 @dataclass
 class SetupConfig:
     """Configuration collected during setup."""
+
     # Environment settings
     gateway_url: str = "http://localhost:4444"
     server_port: int = 4444
     environment: str = "development"
 
     # Authentication
-    jwt_secret: Optional[str] = None
-    auth_secret: Optional[str] = None
+    jwt_secret: str | None = None
+    auth_secret: str | None = None
     auto_generate_secrets: bool = True
 
     # IDE configuration
     configure_ides: bool = True
-    selected_ides: List[str] = None
-    ide_configs: Dict[str, Any] = None
+    selected_ides: list[str] = None
+    ide_configs: dict[str, Any] = None
 
     # Services
     start_services: bool = True
@@ -64,7 +62,7 @@ class SetupConfig:
 class SetupWizard:
     """Interactive setup wizard for MCP Gateway."""
 
-    def __init__(self, repo_root: Optional[Path] = None):
+    def __init__(self, repo_root: Path | None = None):
         self.repo_root = repo_root or Path(__file__).parent.parent
         self.scripts_dir = self.repo_root / "scripts"
         self.data_dir = self.repo_root / "data"
@@ -98,10 +96,7 @@ class SetupWizard:
 
     def _get_input(self, prompt: str, default: str = "", validator=None) -> str:
         """Get user input with validation."""
-        if default:
-            prompt = f"{prompt} [{default}]: "
-        else:
-            prompt = f"{prompt}: "
+        prompt = f"{prompt} [{default}]: " if default else f"{prompt}: "
 
         while True:
             try:
@@ -112,8 +107,7 @@ class SetupWizard:
                 if validator and user_input:
                     if validator(user_input):
                         return user_input
-                    else:
-                        print(f"❌ Invalid input. Please try again.")
+                    print("❌ Invalid input. Please try again.")
                 else:
                     return user_input
             except KeyboardInterrupt:
@@ -127,16 +121,15 @@ class SetupWizard:
             response = self._get_input(f"{prompt} ({default_str})", "").lower()
             if not response:
                 return default
-            if response in ['y', 'yes']:
+            if response in ["y", "yes"]:
                 return True
-            elif response in ['n', 'no']:
+            if response in ["n", "no"]:
                 return False
-            else:
-                print("Please enter 'y' or 'n'.")
+            print("Please enter 'y' or 'n'.")
 
-    def _get_choice(self, prompt: str, choices: List[str], default: str = "") -> str:
+    def _get_choice(self, prompt: str, choices: list[str], default: str = "") -> str:
         """Get choice from list."""
-        print(f"\nAvailable options:")
+        print("\nAvailable options:")
         for i, choice in enumerate(choices, 1):
             marker = "→" if choice == default else " "
             print(f"  {marker} {i}. {choice}")
@@ -159,7 +152,7 @@ class SetupWizard:
                 if response in choices:
                     return response
 
-                print(f"❌ Invalid choice. Please enter a number or name.")
+                print("❌ Invalid choice. Please enter a number or name.")
             except KeyboardInterrupt:
                 print("\n\n❌ Setup cancelled.")
                 sys.exit(1)
@@ -167,12 +160,14 @@ class SetupWizard:
     def _validate_url(self, url: str) -> bool:
         """Validate URL format."""
         url_pattern = re.compile(
-            r'^https?://'  # http:// or https://
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-            r'localhost|'  # localhost...
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-            r'(?::\d+)?'  # optional port
-            r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+            r"^https?://"  # http:// or https://
+            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"  # domain...
+            r"localhost|"  # localhost...
+            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+            r"(?::\d+)?"  # optional port
+            r"(?:/?|[/?]\S+)$",
+            re.IGNORECASE,
+        )
         return url_pattern.match(url) is not None
 
     def _validate_port(self, port: str) -> bool:
@@ -183,7 +178,7 @@ class SetupWizard:
         except ValueError:
             return False
 
-    def _detect_ides(self) -> List[str]:
+    def _detect_ides(self) -> list[str]:
         """Detect installed IDEs."""
         detected = []
         home = Path.home()
@@ -206,23 +201,17 @@ class SetupWizard:
 
         return detected
 
-    def _run_command(self, cmd: List[str], cwd: Optional[Path] = None) -> Tuple[bool, str, str]:
+    def _run_command(self, cmd: list[str], cwd: Path | None = None) -> tuple[bool, str, str]:
         """Run command and return success, stdout, stderr."""
         try:
-            result = subprocess.run(
-                cmd,
-                cwd=cwd or self.repo_root,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(cmd, cwd=cwd or self.repo_root, capture_output=True, text=True, timeout=30)
             return result.returncode == 0, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
             return False, "", "Command timed out"
         except Exception as e:
             return False, "", str(e)
 
-    def _generate_secrets(self) -> Tuple[str, str]:
+    def _generate_secrets(self) -> tuple[str, str]:
         """Generate JWT and auth secrets."""
         import secrets
 
@@ -237,25 +226,25 @@ class SetupWizard:
 
         # Load existing .env
         if self.env_file.exists():
-            with open(self.env_file, 'r') as f:
+            with open(self.env_file) as f:
                 for line in f:
                     line = line.strip()
-                    if line and '=' in line and not line.startswith('#'):
-                        key, value = line.split('=', 1)
+                    if line and "=" in line and not line.startswith("#"):
+                        key, value = line.split("=", 1)
                         env_vars[key] = value
 
         # Update with new configuration
-        env_vars['GATEWAY_URL'] = self.config.gateway_url
-        env_vars['SERVER_PORT'] = str(self.config.server_port)
-        env_vars['ENVIRONMENT'] = self.config.environment
+        env_vars["GATEWAY_URL"] = self.config.gateway_url
+        env_vars["SERVER_PORT"] = str(self.config.server_port)
+        env_vars["ENVIRONMENT"] = self.config.environment
 
         if self.config.jwt_secret:
-            env_vars['JWT_SECRET_KEY'] = self.config.jwt_secret
+            env_vars["JWT_SECRET_KEY"] = self.config.jwt_secret
         if self.config.auth_secret:
-            env_vars['AUTH_ENCRYPTION_SECRET'] = self.config.auth_secret
+            env_vars["AUTH_ENCRYPTION_SECRET"] = self.config.auth_secret
 
         # Write .env file
-        with open(self.env_file, 'w') as f:
+        with open(self.env_file, "w") as f:
             f.write("# MCP Gateway Configuration\n")
             f.write(f"# Generated by setup wizard at {datetime.now().isoformat()}\n\n")
 
@@ -291,30 +280,18 @@ Let's get started!
         print("Configure your MCP Gateway environment settings.\n")
 
         # Gateway URL
-        self.config.gateway_url = self._get_input(
-            "Gateway URL",
-            self.config.gateway_url,
-            self._validate_url
-        )
+        self.config.gateway_url = self._get_input("Gateway URL", self.config.gateway_url, self._validate_url)
 
         # Server port
         default_port = str(self.config.server_port)
-        port = self._get_input(
-            "Server port",
-            default_port,
-            self._validate_port
-        )
+        port = self._get_input("Server port", default_port, self._validate_port)
         self.config.server_port = int(port)
 
         # Environment
         environments = ["development", "staging", "production"]
-        self.config.environment = self._get_choice(
-            "Environment type",
-            environments,
-            self.config.environment
-        )
+        self.config.environment = self._get_choice("Environment type", environments, self.config.environment)
 
-        print(f"\n✅ Environment configured:")
+        print("\n✅ Environment configured:")
         print(f"   URL: {self.config.gateway_url}")
         print(f"   Port: {self.config.server_port}")
         print(f"   Environment: {self.config.environment}")
@@ -330,28 +307,25 @@ Let's get started!
         # Check if secrets already exist
         existing_secrets = False
         if self.env_file.exists():
-            with open(self.env_file, 'r') as f:
+            with open(self.env_file) as f:
                 content = f.read()
-                if 'JWT_SECRET_KEY=' in content and 'AUTH_ENCRYPTION_SECRET=' in content:
+                if "JWT_SECRET_KEY=" in content and "AUTH_ENCRYPTION_SECRET=" in content:
                     existing_secrets = True
 
         if existing_secrets:
             print("🔑 Existing secrets found in .env file")
             if not self._get_yes_no("Generate new secrets?", False):
                 # Load existing secrets
-                with open(self.env_file, 'r') as f:
+                with open(self.env_file) as f:
                     for line in f:
-                        if line.startswith('JWT_SECRET_KEY='):
-                            self.config.jwt_secret = line.split('=', 1)[1].strip()
-                        elif line.startswith('AUTH_ENCRYPTION_SECRET='):
-                            self.config.auth_secret = line.split('=', 1)[1].strip()
+                        if line.startswith("JWT_SECRET_KEY="):
+                            self.config.jwt_secret = line.split("=", 1)[1].strip()
+                        elif line.startswith("AUTH_ENCRYPTION_SECRET="):
+                            self.config.auth_secret = line.split("=", 1)[1].strip()
                 return True
 
         # Generate new secrets
-        self.config.auto_generate_secrets = self._get_yes_no(
-            "Auto-generate secure secrets?",
-            True
-        )
+        self.config.auto_generate_secrets = self._get_yes_no("Auto-generate secure secrets?", True)
 
         if self.config.auto_generate_secrets:
             self.config.jwt_secret, self.config.auth_secret = self._generate_secrets()
@@ -374,10 +348,7 @@ Let's get started!
 
         print(f"Detected IDEs: {', '.join(detected) if detected else 'None'}")
 
-        self.config.configure_ides = self._get_yes_no(
-            "Configure IDE integration?",
-            True
-        )
+        self.config.configure_ides = self._get_yes_no("Configure IDE integration?", True)
 
         if not self.config.configure_ides:
             return True
@@ -411,22 +382,13 @@ Let's get started!
 
         print("Configure MCP Gateway services.\n")
 
-        self.config.start_services = self._get_yes_no(
-            "Start MCP Gateway services?",
-            True
-        )
+        self.config.start_services = self._get_yes_no("Start MCP Gateway services?", True)
 
         if self.config.start_services:
-            self.config.register_servers = self._get_yes_no(
-                "Register virtual servers?",
-                True
-            )
+            self.config.register_servers = self._get_yes_no("Register virtual servers?", True)
 
             if self.config.register_servers:
-                self.config.wait_for_ready = self._get_yes_no(
-                    "Wait for services to be ready?",
-                    True
-                )
+                self.config.wait_for_ready = self._get_yes_no("Wait for services to be ready?", True)
 
         return True
 
@@ -436,21 +398,12 @@ Let's get started!
 
         print("Configure development environment and tools.\n")
 
-        self.config.setup_dev_environment = self._get_yes_no(
-            "Setup development environment?",
-            True
-        )
+        self.config.setup_dev_environment = self._get_yes_no("Setup development environment?", True)
 
         if self.config.setup_dev_environment:
-            self.config.install_dependencies = self._get_yes_no(
-                "Install/update dependencies?",
-                True
-            )
+            self.config.install_dependencies = self._get_yes_no("Install/update dependencies?", True)
 
-            self.config.configure_git_hooks = self._get_yes_no(
-                "Configure Git hooks?",
-                True
-            )
+            self.config.configure_git_hooks = self._get_yes_no("Configure Git hooks?", True)
 
         return True
 
@@ -460,16 +413,10 @@ Let's get started!
 
         print("Validate configuration and test connections.\n")
 
-        self.config.run_validation = self._get_yes_no(
-            "Run configuration validation?",
-            True
-        )
+        self.config.run_validation = self._get_yes_no("Run configuration validation?", True)
 
         if self.config.run_validation:
-            self.config.test_connection = self._get_yes_no(
-                "Test gateway connection?",
-                True
-            )
+            self.config.test_connection = self._get_yes_no("Test gateway connection?", True)
 
         return True
 
@@ -499,7 +446,7 @@ Configuration Summary:
         print(f"\nConfiguration saved to: {self.env_file}")
 
         # Next steps
-        print(f"""
+        print("""
 📋 Next Steps:
 1. Review configuration in .env file
 2. Start services: make start
@@ -530,11 +477,9 @@ Configuration Summary:
         if self.config.configure_ides and self.config.selected_ides:
             print("\n🔧 Configuring IDEs...")
             for ide in self.config.selected_ides:
-                success, stdout, stderr = self._run_command([
-                    sys.executable,
-                    str(self.scripts_dir / "ide-setup.py"),
-                    "--ide", ide
-                ])
+                success, _stdout, stderr = self._run_command(
+                    [sys.executable, str(self.scripts_dir / "ide-setup.py"), "--ide", ide]
+                )
                 if success:
                     print(f"✅ {ide.title()} configured")
                 else:
@@ -543,7 +488,7 @@ Configuration Summary:
         # Start services
         if self.config.start_services:
             print("\n🚀 Starting MCP Gateway services...")
-            success, stdout, stderr = self._run_command(["./start.sh"])
+            success, _stdout, stderr = self._run_command(["./start.sh"])
             if success:
                 print("✅ Services started")
             else:
@@ -556,7 +501,7 @@ Configuration Summary:
             if self.config.wait_for_ready:
                 cmd.append("--wait")
 
-            success, stdout, stderr = self._run_command(cmd)
+            success, _stdout, stderr = self._run_command(cmd)
             if success:
                 print("✅ Servers registered")
             else:
@@ -568,7 +513,7 @@ Configuration Summary:
 
             if self.config.install_dependencies:
                 print("Installing dependencies...")
-                success, stdout, stderr = self._run_command(["npm", "install"])
+                success, _stdout, stderr = self._run_command(["npm", "install"])
                 if success:
                     print("✅ Dependencies installed")
                 else:
@@ -576,7 +521,7 @@ Configuration Summary:
 
             if self.config.configure_git_hooks:
                 print("Configuring Git hooks...")
-                success, stdout, stderr = self._run_command(["make", "pre-commit-install"])
+                success, _stdout, stderr = self._run_command(["make", "pre-commit-install"])
                 if success:
                     print("✅ Git hooks configured")
                 else:
@@ -585,7 +530,7 @@ Configuration Summary:
         # Validation
         if self.config.run_validation:
             print("\n✅ Running validation...")
-            success, stdout, stderr = self._run_command(["make", "validate-config"])
+            success, _stdout, stderr = self._run_command(["make", "validate-config"])
             if success:
                 print("✅ Configuration validated")
             else:
@@ -594,7 +539,7 @@ Configuration Summary:
         # Test connection
         if self.config.test_connection:
             print("\n🔗 Testing connection...")
-            success, stdout, stderr = self._run_command(["make", "status"])
+            success, _stdout, stderr = self._run_command(["make", "status"])
             if success:
                 print("✅ Connection test passed")
             else:
@@ -611,11 +556,11 @@ Configuration Summary:
             # Execute setup
             self._execute_setup()
 
-            print(f"\n🎉 Setup completed successfully!")
+            print("\n🎉 Setup completed successfully!")
             return True
 
         except KeyboardInterrupt:
-            print(f"\n\n❌ Setup cancelled by user.")
+            print("\n\n❌ Setup cancelled by user.")
             return False
         except Exception as e:
             print(f"\n❌ Setup failed: {e}")
@@ -632,20 +577,12 @@ Examples:
   %(prog)s                    # Run interactive setup
   %(prog)s --quick            # Quick setup with defaults
   %(prog)s --reconfigure      # Reconfigure existing setup
-        """
+        """,
     )
 
-    parser.add_argument(
-        "--quick",
-        action="store_true",
-        help="Quick setup with default values"
-    )
+    parser.add_argument("--quick", action="store_true", help="Quick setup with default values")
 
-    parser.add_argument(
-        "--reconfigure",
-        action="store_true",
-        help="Reconfigure existing setup"
-    )
+    parser.add_argument("--reconfigure", action="store_true", help="Reconfigure existing setup")
 
     args = parser.parse_args()
 

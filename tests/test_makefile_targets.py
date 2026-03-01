@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import re
 import subprocess
-import pytest
 from pathlib import Path
-from typing import List, Dict, Any
+
+import pytest
 
 
 class TestMakefile:
@@ -29,7 +29,7 @@ class TestMakefile:
 
     def test_makefile_has_default_goal(self, makefile_path: Path) -> None:
         """Test that Makefile sets a default goal."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should set .DEFAULT_GOAL
@@ -37,7 +37,7 @@ class TestMakefile:
 
     def test_makefile_default_goal_is_help(self, makefile_path: Path) -> None:
         """Test that default goal is help."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Default goal should be help for user-friendliness
@@ -48,7 +48,7 @@ class TestMakefile:
 
     def test_makefile_declares_phony_targets(self, makefile_path: Path) -> None:
         """Test that Makefile declares .PHONY targets."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should declare .PHONY targets
@@ -56,7 +56,7 @@ class TestMakefile:
 
     def test_makefile_has_help_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a help target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have help target
@@ -64,7 +64,7 @@ class TestMakefile:
 
     def test_makefile_has_setup_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a setup target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have setup target
@@ -72,7 +72,7 @@ class TestMakefile:
 
     def test_makefile_has_start_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a start target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have start target
@@ -80,7 +80,7 @@ class TestMakefile:
 
     def test_makefile_has_stop_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a stop target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have stop target
@@ -88,7 +88,7 @@ class TestMakefile:
 
     def test_makefile_has_test_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a test target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have test target
@@ -96,7 +96,7 @@ class TestMakefile:
 
     def test_makefile_has_lint_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a lint target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have lint target
@@ -104,7 +104,7 @@ class TestMakefile:
 
     def test_makefile_has_clean_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a clean target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have clean target
@@ -112,7 +112,7 @@ class TestMakefile:
 
     def test_makefile_has_status_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a status target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have status target
@@ -120,7 +120,7 @@ class TestMakefile:
 
     def test_makefile_has_register_target(self, makefile_path: Path) -> None:
         """Test that Makefile has a register target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have register target
@@ -128,7 +128,7 @@ class TestMakefile:
 
     def test_makefile_targets_have_help_comments(self, makefile_path: Path) -> None:
         """Test that Makefile targets have help comments."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Count targets with ## comments (help text)
@@ -137,9 +137,7 @@ class TestMakefile:
         # Should have multiple targets with help
         assert len(targets_with_help) >= 5, "Should have help comments for key targets"
 
-    def test_makefile_help_target_shows_available_commands(
-        self, makefile_path: Path, project_root: Path
-    ) -> None:
+    def test_makefile_help_target_shows_available_commands(self, makefile_path: Path, project_root: Path) -> None:
         """Test that help target shows available commands."""
         # Check if make is available
         try:
@@ -155,7 +153,7 @@ class TestMakefile:
             assert "setup" in output or "start" in output or "Commands" in output
         except FileNotFoundError:
             # If make is not available, verify help target exists in file
-            with open(makefile_path, "r") as f:
+            with open(makefile_path) as f:
                 content = f.read()
             # Verify help target has echo statements
             help_section = re.search(r"^help:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL)
@@ -164,7 +162,7 @@ class TestMakefile:
 
     def test_makefile_test_target_runs_pytest(self, makefile_path: Path) -> None:
         """Test that test target runs pytest."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Test target should use pytest
@@ -174,7 +172,7 @@ class TestMakefile:
 
     def test_makefile_lint_target_runs_linters(self, makefile_path: Path) -> None:
         """Test that lint target runs code linters."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Lint target should run linters
@@ -183,24 +181,21 @@ class TestMakefile:
             lint_content = lint_section.group(0)
             # Should use ruff, black, flake8, or shellcheck
             has_linters = any(
-                linter in lint_content.lower()
-                for linter in ["ruff", "black", "flake8", "shellcheck", "npm run lint"]
+                linter in lint_content.lower() for linter in ["ruff", "black", "flake8", "shellcheck", "npm run lint"]
             )
             assert has_linters, "Lint target should run code linters"
 
     def test_makefile_has_ide_setup_target(self, makefile_path: Path) -> None:
         """Test that Makefile has IDE setup target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have ide-setup target
-        assert re.search(
-            r"^ide-setup:", content, re.MULTILINE
-        ), "Should have 'ide-setup' target"
+        assert re.search(r"^ide-setup:", content, re.MULTILINE), "Should have 'ide-setup' target"
 
     def test_makefile_has_auth_target(self, makefile_path: Path) -> None:
         """Test that Makefile has auth target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have auth target
@@ -208,7 +203,7 @@ class TestMakefile:
 
     def test_makefile_has_deps_target(self, makefile_path: Path) -> None:
         """Test that Makefile has deps target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have deps target
@@ -216,7 +211,7 @@ class TestMakefile:
 
     def test_makefile_auth_target_supports_actions(self, makefile_path: Path) -> None:
         """Test that auth target supports multiple actions."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Auth target should support generate, check, refresh, secrets
@@ -228,20 +223,20 @@ class TestMakefile:
 
     def test_makefile_setup_target_runs_wizard(self, makefile_path: Path) -> None:
         """Test that setup target runs configuration wizard."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Setup should run wizard script
         setup_section = re.search(r"^setup:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL)
         if setup_section:
             setup_content = setup_section.group(0)
-            assert (
-                "setup-wizard.py" in setup_content or "wizard" in setup_content.lower()
-            ), "Setup should run configuration wizard"
+            assert "setup-wizard.py" in setup_content or "wizard" in setup_content.lower(), (
+                "Setup should run configuration wizard"
+            )
 
     def test_makefile_start_target_uses_start_script(self, makefile_path: Path) -> None:
         """Test that start target uses start script."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Start should use start.sh script
@@ -250,17 +245,13 @@ class TestMakefile:
             start_content = start_section.group(0)
             assert "start.sh" in start_content, "Start target should use start.sh"
 
-    def test_makefile_register_target_supports_wait_option(
-        self, makefile_path: Path
-    ) -> None:
+    def test_makefile_register_target_supports_wait_option(self, makefile_path: Path) -> None:
         """Test that register target supports WAIT option."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Register should support WAIT option
-        register_section = re.search(
-            r"^register:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL
-        )
+        register_section = re.search(r"^register:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL)
         if register_section:
             register_content = register_section.group(0)
             # Should check for WAIT variable
@@ -268,13 +259,11 @@ class TestMakefile:
 
     def test_makefile_status_target_supports_formats(self, makefile_path: Path) -> None:
         """Test that status target supports different output formats."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Status should support FORMAT option
-        status_section = re.search(
-            r"^status:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL
-        )
+        status_section = re.search(r"^status:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL)
         if status_section:
             status_content = status_section.group(0)
             # Should check for FORMAT variable
@@ -282,7 +271,7 @@ class TestMakefile:
 
     def test_makefile_test_target_supports_coverage(self, makefile_path: Path) -> None:
         """Test that test target supports coverage option."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Test should support COVERAGE option
@@ -294,7 +283,7 @@ class TestMakefile:
 
     def test_makefile_deps_target_supports_actions(self, makefile_path: Path) -> None:
         """Test that deps target supports multiple actions."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Deps should support check, update, hooks, install
@@ -306,7 +295,7 @@ class TestMakefile:
 
     def test_makefile_clean_target_removes_artifacts(self, makefile_path: Path) -> None:
         """Test that clean target removes build artifacts."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Clean should remove database and duplicates
@@ -319,22 +308,18 @@ class TestMakefile:
 
     def test_makefile_has_quickstart_target(self, makefile_path: Path) -> None:
         """Test that Makefile has quickstart target."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have quickstart target
-        assert re.search(
-            r"^quickstart:", content, re.MULTILINE
-        ), "Should have 'quickstart' target"
+        assert re.search(r"^quickstart:", content, re.MULTILINE), "Should have 'quickstart' target"
 
     def test_makefile_quickstart_shows_instructions(self, makefile_path: Path) -> None:
         """Test that quickstart target shows getting started instructions."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
-        quickstart_section = re.search(
-            r"^quickstart:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL
-        )
+        quickstart_section = re.search(r"^quickstart:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL)
         if quickstart_section:
             quickstart_content = quickstart_section.group(0)
             # Should show setup, start, register steps
@@ -342,17 +327,15 @@ class TestMakefile:
 
     def test_makefile_has_lint_strict_target(self, makefile_path: Path) -> None:
         """Test that Makefile has lint-strict target for CI."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have lint-strict target
-        assert re.search(
-            r"^lint-strict:", content, re.MULTILINE
-        ), "Should have 'lint-strict' target"
+        assert re.search(r"^lint-strict:", content, re.MULTILINE), "Should have 'lint-strict' target"
 
     def test_makefile_comments_explain_targets(self, makefile_path: Path) -> None:
         """Test that Makefile has explanatory comments."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should have comment sections
@@ -363,13 +346,11 @@ class TestMakefile:
 
     def test_makefile_uses_bash_for_complex_logic(self, makefile_path: Path) -> None:
         """Test that Makefile uses bash for conditional logic."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Should use bash for conditionals
-        uses_conditionals = (
-            "if [" in content or "if [[" in content or "case" in content
-        )
+        uses_conditionals = "if [" in content or "if [[" in content or "case" in content
         # This is optional but common for complex Makefiles
 
     def test_makefile_syntax_valid(self, makefile_path: Path, project_root: Path) -> None:
@@ -388,7 +369,7 @@ class TestMakefile:
             assert result.returncode in [0, 2], f"Makefile syntax error: {result.stderr}"
         except FileNotFoundError:
             # If make is not available, do basic validation
-            with open(makefile_path, "r") as f:
+            with open(makefile_path) as f:
                 content = f.read()
             # Check for basic Makefile patterns
             has_targets = bool(re.search(r"^\w+:", content, re.MULTILINE))
@@ -396,7 +377,7 @@ class TestMakefile:
 
     def test_makefile_core_commands_documented(self, makefile_path: Path) -> None:
         """Test that core commands are documented in help."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Core commands should have help text
@@ -408,11 +389,9 @@ class TestMakefile:
             has_help = re.search(pattern, content, re.MULTILINE)
             assert has_help, f"Command '{command}' should have help text (##)"
 
-    def test_makefile_has_consistent_phony_declarations(
-        self, makefile_path: Path
-    ) -> None:
+    def test_makefile_has_consistent_phony_declarations(self, makefile_path: Path) -> None:
         """Test that .PHONY declarations match defined targets."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             content = f.read()
 
         # Extract .PHONY targets
@@ -425,6 +404,4 @@ class TestMakefile:
 
             # All phony targets should exist
             for phony in phony_targets:
-                assert (
-                    phony in actual_targets
-                ), f".PHONY target '{phony}' should be defined"
+                assert phony in actual_targets, f".PHONY target '{phony}' should be defined"

@@ -10,12 +10,11 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
 
 
-def load_current_servers() -> Dict[str, Set[str]]:
+def load_current_servers() -> dict[str, set[str]]:
     """Load currently configured servers from gateways.txt and docker-compose.yml."""
     servers = {
         "active_local": set(),
@@ -27,10 +26,10 @@ def load_current_servers() -> Dict[str, Set[str]]:
     gateways_file = script_dir / "gateways.txt"
 
     if gateways_file.exists():
-        with open(gateways_file, "r") as f:
+        with open(gateways_file) as f:
             for line in f:
                 line = line.strip()
-                if not line or line.startswith("# Removed") or line.startswith("# -"):
+                if not line or line.startswith(("# Removed", "# -")):
                     continue
 
                 if line.startswith("#"):
@@ -52,7 +51,7 @@ def load_current_servers() -> Dict[str, Set[str]]:
     return servers
 
 
-def fetch_registry_servers() -> List[Dict]:
+def fetch_registry_servers() -> list[dict]:
     """Fetch server list from MCP Registry API."""
     registry_url = "https://registry.modelcontextprotocol.io/api/servers"
 
@@ -71,14 +70,12 @@ def fetch_registry_servers() -> List[Dict]:
         return []
 
 
-def generate_report(current: Dict[str, Set[str]], registry: List[Dict]) -> str:
+def generate_report(current: dict[str, set[str]], registry: list[dict]) -> str:
     """Generate markdown report of new and updated servers."""
     report_lines = ["# MCP Server Update Report", ""]
 
     # Extract current server names (all categories combined)
-    current_all = (
-        current["active_local"] | current["active_remote"] | current["commented"]
-    )
+    current_all = current["active_local"] | current["active_remote"] | current["commented"]
     current_all_lower = {name.lower() for name in current_all}
 
     # Find new servers
@@ -106,37 +103,33 @@ def generate_report(current: Dict[str, Set[str]], registry: List[Dict]) -> str:
         report_lines.extend(["## Commented Servers Status", ""])
         for name in sorted(current["commented"]):
             if name.lower() in ["sqlite", "github"]:
-                report_lines.append(
-                    f"- **{name}**: Local server, requires environment variables"
-                )
+                report_lines.append(f"- **{name}**: Local server, requires environment variables")
             elif name.lower() in ["cloudflare-observability", "cloudflare-bindings"]:
-                report_lines.append(
-                    f"- **{name}**: Requires Cloudflare authentication in Admin UI"
-                )
+                report_lines.append(f"- **{name}**: Requires Cloudflare authentication in Admin UI")
             elif name.lower() == "v0":
-                report_lines.append(
-                    f"- **{name}**: Requires Vercel authentication in Admin UI"
-                )
+                report_lines.append(f"- **{name}**: Requires Vercel authentication in Admin UI")
             else:
                 report_lines.append(f"- **{name}**: Commented, check documentation")
         report_lines.append("")
 
     # Summary
-    report_lines.extend([
-        "## Summary",
-        "",
-        f"- **Active Local Servers**: {len(current['active_local'])}",
-        f"- **Active Remote Servers**: {len(current['active_remote'])}",
-        f"- **Commented Servers**: {len(current['commented'])}",
-        f"- **New Servers Available**: {len(new_servers)}",
-        "",
-        "---",
-        "",
-        "To add a new server:",
-        "1. Add to `config/gateways.txt` with format: `Name|URL|Transport`",
-        "2. Run `make register` to register the gateway",
-        "3. For remote servers requiring auth, configure in Admin UI",
-    ])
+    report_lines.extend(
+        [
+            "## Summary",
+            "",
+            f"- **Active Local Servers**: {len(current['active_local'])}",
+            f"- **Active Remote Servers**: {len(current['active_remote'])}",
+            f"- **Commented Servers**: {len(current['commented'])}",
+            f"- **New Servers Available**: {len(new_servers)}",
+            "",
+            "---",
+            "",
+            "To add a new server:",
+            "1. Add to `config/gateways.txt` with format: `Name|URL|Transport`",
+            "2. Run `make register` to register the gateway",
+            "3. For remote servers requiring auth, configure in Admin UI",
+        ]
+    )
 
     return "\n".join(report_lines)
 

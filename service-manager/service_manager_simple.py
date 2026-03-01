@@ -12,13 +12,13 @@ from collections import deque
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-import datetime
+from typing import Any
 
 import structlog
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
+
 
 # Configure structured logging
 structlog.configure(
@@ -44,6 +44,7 @@ logger = structlog.get_logger()
 
 class ServiceState(Enum):
     """Service states for serverless-like behavior."""
+
     STOPPED = "stopped"
     STARTING = "starting"
     RUNNING = "running"
@@ -55,6 +56,7 @@ class ServiceState(Enum):
 
 class Settings(BaseSettings):
     """Service manager configuration."""
+
     config_path: str = "/config"
     log_level: str = "info"
     port: int = 9000
@@ -72,20 +74,22 @@ class Settings(BaseSettings):
 
 class ServiceConfig(BaseModel):
     """Individual service configuration."""
+
     name: str
     image: str = "forge-mcp-gateway-translate:latest"
-    command: List[str]
+    command: list[str]
     port: int
-    environment: Dict[str, str] = {}
-    volumes: Dict[str, str] = {}
-    resources: Dict[str, Any] = {}
+    environment: dict[str, str] = {}
+    volumes: dict[str, str] = {}
+    resources: dict[str, Any] = {}
     auto_start: bool = False
-    health_check: Optional[Dict[str, Any]] = None
-    sleep_policy: Optional[Dict[str, Any]] = None
+    health_check: dict[str, Any] | None = None
+    sleep_policy: dict[str, Any] | None = None
 
 
 class SleepPolicy(BaseModel):
     """Sleep policy configuration for serverless-like behavior."""
+
     enabled: bool = True
     idle_timeout: int = 300  # 5 minutes
     min_sleep_time: int = 60  # Don't sleep if used recently
@@ -95,14 +99,15 @@ class SleepPolicy(BaseModel):
 
 class ServiceStatus(BaseModel):
     """Service status information."""
+
     name: str
     status: str  # running, stopped, starting, stopping, error, sleeping, waking
-    container_id: Optional[str] = None
-    port: Optional[int] = None
-    last_accessed: Optional[str] = None
-    resource_usage: Dict[str, float] = {}
-    error_message: Optional[str] = None
-    sleep_start_time: Optional[float] = None
+    container_id: str | None = None
+    port: int | None = None
+    last_accessed: str | None = None
+    resource_usage: dict[str, float] = {}
+    error_message: str | None = None
+    sleep_start_time: float | None = None
     wake_count: int = 0
     total_sleep_time: float = 0.0
     # Enhanced metrics for high-efficiency Docker standards
@@ -110,22 +115,23 @@ class ServiceStatus(BaseModel):
     memory_usage: float = 0.0
     memory_limit: float = 0.0
     cpu_limit: float = 0.0
-    wake_time_ms: Optional[float] = None
+    wake_time_ms: float | None = None
     sleep_efficiency: float = 0.0  # Memory reduction percentage
     state_transitions: int = 0
     uptime_seconds: float = 0.0
-    last_state_change: Optional[float] = None
+    last_state_change: float | None = None
 
 
 @dataclass
 class PerformanceMetrics:
     """Performance metrics for a service."""
+
     service_name: str
     wake_times: deque  # Recent wake times in milliseconds
-    sleep_times: deque   # Recent sleep times in milliseconds
+    sleep_times: deque  # Recent sleep times in milliseconds
     resource_usage: deque  # Recent resource usage snapshots
     error_count: int = 0
-    last_error: Optional[str] = None
+    last_error: str | None = None
     total_requests: int = 0
     uptime_percentage: float = 0.0
 
@@ -135,12 +141,12 @@ class ServiceManager:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.services: Dict[str, ServiceConfig] = {}
-        self.service_status: Dict[str, ServiceStatus] = {}
-        self.sleep_policies: Dict[str, SleepPolicy] = {}
-        self.performance_metrics: Dict[str, PerformanceMetrics] = {}
+        self.services: dict[str, ServiceConfig] = {}
+        self.service_status: dict[str, ServiceStatus] = {}
+        self.sleep_policies: dict[str, SleepPolicy] = {}
+        self.performance_metrics: dict[str, PerformanceMetrics] = {}
         self._shutdown_event = asyncio.Event()
-        self._auto_sleep_task: Optional[asyncio.Task] = None
+        self._auto_sleep_task: asyncio.Task | None = None
 
     async def initialize(self):
         """Initialize the service manager."""
@@ -153,9 +159,9 @@ class ServiceManager:
         # Load configuration
         await self._load_configuration()
 
-        logger.info("Service manager initialized",
-                   config_path=self.settings.config_path,
-                   services_loaded=len(self.services))
+        logger.info(
+            "Service manager initialized", config_path=self.settings.config_path, services_loaded=len(self.services)
+        )
 
     async def _load_configuration(self):
         """Load service configurations from files."""
@@ -165,23 +171,24 @@ class ServiceManager:
         services_file = config_path / "services.yml"
         if services_file.exists():
             import yaml
-            with open(services_file, 'r') as f:
+
+            with open(services_file) as f:
                 services_data = yaml.safe_load(f)
                 # Handle the services wrapper
-                services_dict = services_data.get('services', services_data)
+                services_dict = services_data.get("services", services_data)
                 for name, config in services_dict.items():
                     # Ensure required fields are present and convert types
                     service_config = {
-                        'name': name,
-                        'image': config.get('image', 'forge-mcp-gateway-translate:latest'),
-                        'command': config.get('command', ['python3', '-m', 'forge.translate']),
-                        'port': config.get('port', 8000),
-                        'environment': {str(k): str(v) for k, v in config.get('environment', {}).items()},
-                        'volumes': config.get('volumes', {}),
-                        'resources': config.get('resources', {}),
-                        'auto_start': config.get('auto_start', False),
-                        'health_check': config.get('health_check'),
-                        'sleep_policy': config.get('sleep_policy')
+                        "name": name,
+                        "image": config.get("image", "forge-mcp-gateway-translate:latest"),
+                        "command": config.get("command", ["python3", "-m", "forge.translate"]),
+                        "port": config.get("port", 8000),
+                        "environment": {str(k): str(v) for k, v in config.get("environment", {}).items()},
+                        "volumes": config.get("volumes", {}),
+                        "resources": config.get("resources", {}),
+                        "auto_start": config.get("auto_start", False),
+                        "health_check": config.get("health_check"),
+                        "sleep_policy": config.get("sleep_policy"),
                     }
                     self.services[name] = ServiceConfig(**service_config)
                     self.service_status[name] = ServiceStatus(name=name, status="stopped")
@@ -191,17 +198,18 @@ class ServiceManager:
         policies_file = config_path / "sleep_settings.yml"
         if policies_file.exists():
             import yaml
-            with open(policies_file, 'r') as f:
+
+            with open(policies_file) as f:
                 policies_data = yaml.safe_load(f)
                 # Handle sleep_settings wrapper - this contains global settings, not individual service policies
-                sleep_settings = policies_data.get('sleep_settings', policies_data)
+                sleep_settings = policies_data.get("sleep_settings", policies_data)
                 # For simplified version, we'll create a default policy
                 default_policy = SleepPolicy(
-                    enabled=sleep_settings.get('enabled', True),
-                    idle_timeout=sleep_settings.get('sleep_check_interval', 300),
+                    enabled=sleep_settings.get("enabled", True),
+                    idle_timeout=sleep_settings.get("sleep_check_interval", 300),
                     min_sleep_time=60,
                     memory_reservation="128MB",
-                    priority="normal"
+                    priority="normal",
                 )
                 # Apply default policy to all services
                 for service_name in self.services:
@@ -211,10 +219,7 @@ class ServiceManager:
     async def start_service(self, service_name: str) -> ServiceStatus:
         """Start a service."""
         if service_name not in self.services:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
         service_config = self.services[service_name]
@@ -248,9 +253,7 @@ class ServiceManager:
                 metrics.record_state_transition("starting", "running", start_time + 2)
                 metrics.total_requests += 1
 
-            logger.info("Service started successfully",
-                       service=service_name,
-                       port=service_config.port)
+            logger.info("Service started successfully", service=service_name, port=service_config.port)
             return current_status
 
         except Exception as e:
@@ -261,21 +264,13 @@ class ServiceManager:
                 metrics.record_state_transition(from_state, "error")
                 metrics.error_count += 1
                 metrics.last_error = str(e)
-            logger.error("Failed to start service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to start service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to start service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to start service {service_name}: {e!s}")
 
     async def stop_service(self, service_name: str) -> ServiceStatus:
         """Stop a service."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
         metrics = self.performance_metrics.get(service_name)
@@ -307,8 +302,7 @@ class ServiceManager:
             if metrics:
                 metrics.record_state_transition("stopping", "stopped", stop_time + 1)
 
-            logger.info("Service stopped successfully",
-                       service=service_name)
+            logger.info("Service stopped successfully", service=service_name)
             return current_status
 
         except Exception as e:
@@ -319,21 +313,13 @@ class ServiceManager:
                 metrics.record_state_transition(from_state, "error")
                 metrics.error_count += 1
                 metrics.last_error = str(e)
-            logger.error("Failed to stop service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to stop service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to stop service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to stop service {service_name}: {e!s}")
 
     async def sleep_service(self, service_name: str) -> ServiceStatus:
         """Put a service to sleep."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
         metrics = self.performance_metrics.get(service_name)
@@ -368,9 +354,7 @@ class ServiceManager:
                 metrics.sleep_times.append(sleep_duration * 1000)  # Convert to milliseconds
                 metrics.total_sleep_duration += sleep_duration
 
-            logger.info("Service slept successfully",
-                       service=service_name,
-                       sleep_duration_ms=sleep_duration * 1000)
+            logger.info("Service slept successfully", service=service_name, sleep_duration_ms=sleep_duration * 1000)
             return current_status
 
         except Exception as e:
@@ -380,21 +364,13 @@ class ServiceManager:
                 metrics.record_state_transition(from_state, "error")
                 metrics.error_count += 1
                 metrics.last_error = str(e)
-            logger.error("Failed to sleep service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to sleep service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to sleep service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to sleep service {service_name}: {e!s}")
 
     async def wake_service(self, service_name: str) -> ServiceStatus:
         """Wake a service from sleep state."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
         metrics = self.performance_metrics.get(service_name)
@@ -435,10 +411,12 @@ class ServiceManager:
                 metrics.total_wake_duration += wake_duration
                 metrics.total_requests += 1
 
-            logger.info("Service woke successfully",
-                       service=service_name,
-                       wake_time_ms=wake_duration * 1000,
-                       total_sleep_time=current_status.total_sleep_time)
+            logger.info(
+                "Service woke successfully",
+                service=service_name,
+                wake_time_ms=wake_duration * 1000,
+                total_sleep_time=current_status.total_sleep_time,
+            )
 
             return current_status
 
@@ -450,25 +428,17 @@ class ServiceManager:
                 metrics.record_state_transition(from_state, "error")
                 metrics.error_count += 1
                 metrics.last_error = str(e)
-            logger.error("Failed to wake service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to wake service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to wake service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to wake service {service_name}: {e!s}")
 
     async def get_service_status(self, service_name: str) -> ServiceStatus:
         """Get the status of a specific service."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         return self.service_status[service_name]
 
-    async def list_services(self) -> List[ServiceStatus]:
+    async def list_services(self) -> list[ServiceStatus]:
         """List all services and their status."""
         services = []
         for service_name in self.service_status:
@@ -476,7 +446,7 @@ class ServiceManager:
             services.append(status)
         return services
 
-    async def get_performance_metrics(self) -> Dict[str, Dict[str, float]]:
+    async def get_performance_metrics(self) -> dict[str, dict[str, float]]:
         """Get performance metrics for all services."""
         metrics = {}
 
@@ -489,7 +459,7 @@ class ServiceManager:
                 "total_sleep_time": status.total_sleep_time,
                 "sleep_efficiency": status.sleep_efficiency,
                 "state_transitions": status.state_transitions,
-                "uptime_seconds": status.uptime_seconds
+                "uptime_seconds": status.uptime_seconds,
             }
 
             # Add wake time if available
@@ -498,7 +468,7 @@ class ServiceManager:
 
         return metrics
 
-    async def get_system_metrics(self) -> Dict[str, Any]:
+    async def get_system_metrics(self) -> dict[str, Any]:
         """Get system-wide performance metrics."""
         # Count services by state
         running_count = sum(1 for s in self.service_status.values() if s.status == "running")
@@ -521,31 +491,25 @@ class ServiceManager:
             "total_memory_usage_mb": total_memory_usage,
             "average_cpu_usage": total_cpu_usage / max(total_services, 1),
             "sleep_ratio": sleeping_count / max(total_services, 1) * 100,
-            "running_ratio": running_count / max(total_services, 1) * 100
+            "running_ratio": running_count / max(total_services, 1) * 100,
         }
 
         return efficiency_metrics
 
-    async def health_check(self) -> Dict[str, str]:
+    async def health_check(self) -> dict[str, str]:
         """Perform health check."""
         try:
             # Count running services
-            running_count = sum(
-                1 for status in self.service_status.values()
-                if status.status == "running"
-            )
+            running_count = sum(1 for status in self.service_status.values() if status.status == "running")
 
             return {
                 "status": "healthy",
                 "services_running": str(running_count),
-                "services_total": str(len(self.services))
+                "services_total": str(len(self.services)),
             }
         except Exception as e:
             logger.error("Health check failed", error=str(e))
-            return {
-                "status": "unhealthy",
-                "error": str(e)
-            }
+            return {"status": "unhealthy", "error": str(e)}
 
     async def shutdown(self):
         """Shutdown the service manager."""
@@ -564,9 +528,7 @@ class ServiceManager:
             try:
                 await self.stop_service(service_name)
             except Exception as e:
-                logger.warning("Failed to stop service during shutdown",
-                            service=service_name,
-                            error=str(e))
+                logger.warning("Failed to stop service during shutdown", service=service_name, error=str(e))
 
         logger.info("Service manager shutdown complete")
 
@@ -575,11 +537,11 @@ class ServiceManager:
 app = FastAPI(
     title="Forge MCP Gateway Service Manager (Simplified)",
     description="Dynamic service management for MCP servers (simplified version)",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Global service manager instance
-service_manager: Optional[ServiceManager] = None
+service_manager: ServiceManager | None = None
 
 
 @app.on_event("startup")
@@ -700,9 +662,5 @@ if __name__ == "__main__":
     # Run the application
     settings = Settings.from_env()
     uvicorn.run(
-        "service_manager_simple:app",
-        host="0.0.0.0",
-        port=settings.port,
-        log_level=settings.log_level,
-        reload=False
+        "service_manager_simple:app", host="0.0.0.0", port=settings.port, log_level=settings.log_level, reload=False
     )

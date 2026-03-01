@@ -318,6 +318,50 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "F841",    # unused variable
     "E501",    # line too long
 ]
+"tests/**/*.py" = [
+    "S101",    # Allow assert in tests
+    "ANN",     # Don't require type hints in tests
+    "PLR2004", # Allow magic values in tests
+    "ARG",     # Allow unused arguments in test fixtures
+    "S607",    # Partial executable path (intentional script testing)
+    "S603",    # subprocess call check (intentional script testing)
+    "S113",    # requests timeout (test HTTP calls)
+    "PLW1510", # subprocess.run without check (test assertions handle it)
+    "PT011",   # Allow broad exception types in pytest.raises
+    "B017",    # Allow asserting on Exception in tests
+    "F401",    # Allow unused imports (test setup/fixtures)
+    "RUF006",  # asyncio dangling task (test patterns)
+    "PLW1508", # env var default type (test config)
+    "RUF059",  # unused variable (test assertions)
+    "SIM102",  # collapsible if (test readability)
+    "PTH108",  # os.unlink (test cleanup)
+]
+"scripts/**/*.py" = [
+    "S607",    # Partial executable path (CLI scripts)
+    "S603",    # subprocess call check (CLI scripts)
+    "PLW1510", # subprocess.run without check (scripts handle errors)
+    "S113",    # requests timeout (scripts are interactive)
+    "ANN",     # Don't require type hints in scripts
+    "ASYNC230", # async subprocess (scripts are standalone)
+    "PLW0602", # global statement (script-level state)
+]
+"service-manager/**/*.py" = [
+    "S607",    # Partial executable path (service management)
+    "S603",    # subprocess call check (service management)
+    "PLW1510", # subprocess.run without check (service manager handles errors)
+    "S113",    # requests timeout (local service calls)
+    "S112",    # try-except-continue (service resilience)
+    "ANN",     # Don't require type hints in service manager
+    "ASYNC230", # async subprocess (service management)
+    "PLW0602", # global statement (service-level state)
+    "F401",    # Allow unused imports (conditional imports)
+    "PT011",   # Allow broad exception types in tests
+    "RUF006",  # asyncio dangling task
+    "RUF059",  # unused variable
+    "SIM102",  # collapsible if (readability)
+    "PTH108",  # os.unlink → Path.unlink
+    "PLW1508", # env var default type
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["tool_router", "dribbble_mcp"]

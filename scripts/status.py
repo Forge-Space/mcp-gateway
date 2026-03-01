@@ -6,27 +6,28 @@ Phase 3: Command Simplification
 Provides a unified view of system status, services, and configurations.
 """
 
-import os
-import sys
+import argparse
 import json
 import subprocess
 import time
-from pathlib import Path
-from typing import Dict, List, Optional
 from datetime import datetime
-import argparse
+from pathlib import Path
+
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
 
 try:
     import requests
+
     HAS_REQUESTS = True
 except ImportError:
     HAS_REQUESTS = False
+
 
 class SystemStatus:
     """Comprehensive system status checker."""
@@ -42,21 +43,16 @@ class SystemStatus:
             "ide_status": {},
             "docker_status": {},
             "gateway_status": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
-    def check_docker_status(self) -> Dict:
+    def check_docker_status(self) -> dict:
         """Check Docker and Docker Compose status."""
         status = {"docker": "unknown", "compose": "unknown", "containers": {}}
 
         try:
             # Check Docker daemon
-            result = subprocess.run(
-                ["docker", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+            result = subprocess.run(["docker", "--version"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 status["docker"] = "running"
                 status["docker_version"] = result.stdout.strip()
@@ -67,12 +63,7 @@ class SystemStatus:
 
         try:
             # Check Docker Compose
-            result = subprocess.run(
-                ["docker-compose", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+            result = subprocess.run(["docker-compose", "--version"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 status["compose"] = "available"
                 status["compose_version"] = result.stdout.strip()
@@ -85,10 +76,7 @@ class SystemStatus:
         if status["docker"] == "running":
             try:
                 result = subprocess.run(
-                    ["docker", "ps", "--format", "json"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
+                    ["docker", "ps", "--format", "json"], capture_output=True, text=True, timeout=10
                 )
                 if result.returncode == 0:
                     containers = json.loads(result.stdout)
@@ -97,14 +85,14 @@ class SystemStatus:
                             "status": container["Status"],
                             "state": container["State"],
                             "ports": container.get("Ports", []),
-                            "image": container["Image"]
+                            "image": container["Image"],
                         }
             except (subprocess.TimeoutExpired, json.JSONDecodeError):
                 status["containers"] = {"error": "Failed to get container status"}
 
         return status
 
-    def check_services_status(self) -> Dict:
+    def check_services_status(self) -> dict:
         """Check MCP services status."""
         services_status = {}
 
@@ -112,17 +100,17 @@ class SystemStatus:
         services_file = self.repo_root / "config" / "services.yml"
         if services_file.exists() and HAS_YAML:
             try:
-                with open(services_file, 'r') as f:
+                with open(services_file) as f:
                     services_config = yaml.safe_load(f)
 
-                for service_name, service_config in services_config.get('services', {}).items():
+                for service_name, service_config in services_config.get("services", {}).items():
                     service_status = {
                         "configured": True,
-                        "enabled": service_config.get('enabled', True),
-                        "container_name": service_config.get('container_name', service_name),
-                        "port": service_config.get('port'),
-                        "health_check": service_config.get('health_check', {}),
-                        "status": "unknown"
+                        "enabled": service_config.get("enabled", True),
+                        "container_name": service_config.get("container_name", service_name),
+                        "port": service_config.get("port"),
+                        "health_check": service_config.get("health_check", {}),
+                        "status": "unknown",
                     }
 
                     # Check if container is running
@@ -142,22 +130,18 @@ class SystemStatus:
 
         return services_status
 
-    def check_gateway_status(self) -> Dict:
+    def check_gateway_status(self) -> dict:
         """Check gateway API status."""
         gateway_status = {
             "api_reachable": False,
             "health_check": False,
             "virtual_servers": 0,
             "gateways": 0,
-            "response_time": None
+            "response_time": None,
         }
 
         # Try to reach gateway API
-        gateway_urls = [
-            "http://localhost:8080",
-            "http://localhost:3000",
-            "http://localhost:8000"
-        ]
+        gateway_urls = ["http://localhost:8080", "http://localhost:3000", "http://localhost:8000"]
 
         for url in gateway_urls:
             try:
@@ -175,38 +159,33 @@ class SystemStatus:
                 else:
                     # Fallback to curl
                     result = subprocess.run(
-                        ["curl", "-s", "-w", "%{http_code}", f"{url}/health"],
-                        capture_output=True,
-                        text=True,
-                        timeout=5
+                        ["curl", "-s", "-w", "%{http_code}", f"{url}/health"], capture_output=True, text=True, timeout=5
                     )
                     if result.returncode == 0 and "200" in result.stdout:
                         gateway_status["api_reachable"] = True
                         gateway_status["health_check"] = True
                         gateway_status["url"] = url
                         break
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
         # Get virtual servers count
         try:
             result = subprocess.run(
-                ["make", "list-servers"],
-                cwd=self.repo_root,
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["make", "list-servers"], cwd=self.repo_root, capture_output=True, text=True, timeout=10
             )
             if result.returncode == 0:
                 # Count lines that look like server entries
-                server_lines = [line for line in result.stdout.split('\n') if '|' in line and not line.startswith('NAME')]
+                server_lines = [
+                    line for line in result.stdout.split("\n") if "|" in line and not line.startswith("NAME")
+                ]
                 gateway_status["virtual_servers"] = len(server_lines)
         except Exception:
             pass
 
         return gateway_status
 
-    def check_configuration_status(self) -> Dict:
+    def check_configuration_status(self) -> dict:
         """Check configuration files status."""
         config_status = {}
 
@@ -214,12 +193,12 @@ class SystemStatus:
         env_file = self.repo_root / ".env"
         if env_file.exists():
             config_status["env_file"] = "exists"
-            with open(env_file, 'r') as f:
+            with open(env_file) as f:
                 env_vars = {}
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        key, value = line.split('=', 1)
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
                         env_vars[key] = value
 
                 # Check critical variables
@@ -245,7 +224,7 @@ class SystemStatus:
 
         return config_status
 
-    def check_ide_status(self) -> Dict:
+    def check_ide_status(self) -> dict:
         """Check IDE configuration status."""
         ide_status = {}
 
@@ -256,7 +235,7 @@ class SystemStatus:
                 cwd=self.repo_root,
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
             )
 
             if result.returncode == 0:
@@ -274,7 +253,7 @@ class SystemStatus:
                             cwd=self.repo_root,
                             capture_output=True,
                             text=True,
-                            timeout=5
+                            timeout=5,
                         )
                         ide_status[ide] = "configured" if status_result.returncode == 0 else "not_configured"
                     except Exception:
@@ -286,7 +265,7 @@ class SystemStatus:
 
         return ide_status
 
-    def generate_recommendations(self) -> List[str]:
+    def generate_recommendations(self) -> list[str]:
         """Generate recommendations based on status."""
         recommendations = []
 
@@ -314,15 +293,19 @@ class SystemStatus:
         ide_status = self.status.get("ide_status", {})
         detected_ides = ide_status.get("detected", [])
         if detected_ides:
-            unconfigured = [ide for ide in detected_ides
-                          if ide_status.get(ide) == "not_configured"]
+            unconfigured = [ide for ide in detected_ides if ide_status.get(ide) == "not_configured"]
             if unconfigured:
-                recommendations.append(f"Configure IDE connections: {', '.join(unconfigured)} (run 'make ide-setup IDE=all')")
+                recommendations.append(
+                    f"Configure IDE connections: {', '.join(unconfigured)} (run 'make ide-setup IDE=all')"
+                )
 
         # Service recommendations
         services_status = self.status.get("services", {})
-        stopped_services = [name for name, status in services_status.items()
-                          if isinstance(status, dict) and status.get("status") == "stopped"]
+        stopped_services = [
+            name
+            for name, status in services_status.items()
+            if isinstance(status, dict) and status.get("status") == "stopped"
+        ]
         if stopped_services:
             recommendations.append(f"Consider starting stopped services: {', '.join(stopped_services)}")
 
@@ -437,6 +420,7 @@ class SystemStatus:
         print("  make help               # Show all available commands")
         print()
 
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Show MCP Gateway system status")
@@ -451,6 +435,7 @@ def main():
         print(json.dumps(status_checker.status, indent=2))
     else:
         status_checker.print_status()
+
 
 if __name__ == "__main__":
     main()
