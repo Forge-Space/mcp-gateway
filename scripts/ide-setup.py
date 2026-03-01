@@ -18,27 +18,27 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
 
 @dataclass
 class IDEConfig:
     """IDE configuration metadata."""
+
     name: str
     config_path: str
     config_format: str  # json, toml, etc.
     wrapper_script: str
-    env_vars: Dict[str, str]
-    example_profiles: List[str]
+    env_vars: dict[str, str]
+    example_profiles: list[str]
 
 
 class IDEManager:
     """Manages IDE detection, configuration, and operations."""
 
-    def __init__(self, repo_root: Optional[Path] = None):
+    def __init__(self, repo_root: Path | None = None):
         self.repo_root = repo_root or Path(__file__).parent.parent
         self.scripts_dir = self.repo_root / "scripts"
         self.data_dir = self.repo_root / "data"
@@ -55,9 +55,9 @@ class IDEManager:
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
                     "TAVILY_API_KEY": "Tavily API key",
-                    "FIGMA_TOKEN": "Figma personal access token"
+                    "FIGMA_TOKEN": "Figma personal access token",
                 },
-                example_profiles=["cursor-default", "cursor-router", "nodejs-typescript", "react-nextjs"]
+                example_profiles=["cursor-default", "cursor-router", "nodejs-typescript", "react-nextjs"],
             ),
             "windsurf": IDEConfig(
                 name="Windsurf",
@@ -67,9 +67,9 @@ class IDEManager:
                 env_vars={
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
-                    "TAVILY_API_KEY": "Tavily API key"
+                    "TAVILY_API_KEY": "Tavily API key",
                 },
-                example_profiles=["windsurf-default", "windsurf-router", "python-dev"]
+                example_profiles=["windsurf-default", "windsurf-router", "python-dev"],
             ),
             "vscode": IDEConfig(
                 name="VSCode",
@@ -79,9 +79,9 @@ class IDEManager:
                 env_vars={
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
-                    "TAVILY_API_KEY": "Tavily API key"
+                    "TAVILY_API_KEY": "Tavily API key",
                 },
-                example_profiles=["vscode-default", "vscode-router", "web-dev"]
+                example_profiles=["vscode-default", "vscode-router", "web-dev"],
             ),
             "claude": IDEConfig(
                 name="Claude Desktop",
@@ -91,13 +91,13 @@ class IDEManager:
                 env_vars={
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
-                    "TAVILY_API_KEY": "Tavily API key"
+                    "TAVILY_API_KEY": "Tavily API key",
                 },
-                example_profiles=["claude-default", "claude-router", "research"]
-            )
+                example_profiles=["claude-default", "claude-router", "research"],
+            ),
         }
 
-    def detect_installed_ides(self) -> List[str]:
+    def detect_installed_ides(self) -> list[str]:
         """Auto-detect which IDEs are installed on the system."""
         detected = []
 
@@ -106,9 +106,11 @@ class IDEManager:
             detected.append("cursor")
 
         # Check for VSCode
-        if (Path("/Applications/Visual Studio Code.app").exists() or
-            Path("/Applications/VSCode.app").exists() or
-            shutil.which("code")):
+        if (
+            Path("/Applications/Visual Studio Code.app").exists()
+            or Path("/Applications/VSCode.app").exists()
+            or shutil.which("code")
+        ):
             detected.append("vscode")
 
         # Check for Windsurf (often installed via npm)
@@ -124,7 +126,7 @@ class IDEManager:
 
         return detected
 
-    def get_available_servers(self) -> List[Dict]:
+    def get_available_servers(self) -> list[dict]:
         """Get list of available virtual servers from config."""
         servers_file = self.config_dir / "virtual-servers.txt"
         servers = []
@@ -133,35 +135,31 @@ class IDEManager:
             print(f"❌ Virtual servers config not found: {servers_file}")
             return servers
 
-        with open(servers_file, 'r') as f:
+        with open(servers_file) as f:
             for line in f:
                 line = line.strip()
-                if not line or line.startswith('#') or '|' not in line:
+                if not line or line.startswith("#") or "|" not in line:
                     continue
 
-                parts = line.split('|')
+                parts = line.split("|")
                 if len(parts) >= 1:
                     name = parts[0].strip()
                     if len(parts) >= 4:
-                        enabled = parts[1].strip().lower() in ['true', '1', 'yes']
+                        enabled = parts[1].strip().lower() in ["true", "1", "yes"]
                         description = parts[3].strip()
                     elif len(parts) >= 2:
                         enabled = True  # Legacy format defaults to enabled
-                        description = parts[2].strip() if len(parts) >= 3 else ''
+                        description = parts[2].strip() if len(parts) >= 3 else ""
                     else:
                         enabled = True  # Legacy format defaults to enabled
-                        description = ''
+                        description = ""
 
                     if enabled:
-                        servers.append({
-                            'name': name,
-                            'enabled': enabled,
-                            'description': description
-                        })
+                        servers.append({"name": name, "enabled": enabled, "description": description})
 
         return servers
 
-    def get_server_url(self, server_name: str) -> Optional[str]:
+    def get_server_url(self, server_name: str) -> str | None:
         """Get the MCP URL for a specific server."""
         url_file = self.data_dir / ".cursor-mcp-url"
         if not url_file.exists():
@@ -169,10 +167,10 @@ class IDEManager:
 
         # For now, return the first URL found
         # TODO: Implement server-specific URL mapping
-        with open(url_file, 'r') as f:
+        with open(url_file) as f:
             return f.read().strip()
 
-    def generate_ide_config(self, ide: str, server_name: str, profile: Optional[str] = None) -> Dict:
+    def generate_ide_config(self, ide: str, server_name: str, profile: str | None = None) -> dict:
         """Generate IDE configuration for a specific server."""
         if ide not in self.ides:
             raise ValueError(f"Unsupported IDE: {ide}")
@@ -199,8 +197,8 @@ class IDEManager:
                         "args": ["--server-name", server_name],
                         "env": {
                             "GATEWAY_URL": server_url.replace(f"/servers/{server_uuid}/mcp", ""),
-                            "SERVER_ID": server_uuid
-                        }
+                            "SERVER_ID": server_uuid,
+                        },
                     }
                 }
             }
@@ -212,8 +210,8 @@ class IDEManager:
                         "args": ["--server-name", server_name],
                         "env": {
                             "GATEWAY_URL": server_url.replace(f"/servers/{server_uuid}/mcp", ""),
-                            "SERVER_ID": server_uuid
-                        }
+                            "SERVER_ID": server_uuid,
+                        },
                     }
                 }
             }
@@ -233,7 +231,7 @@ class IDEManager:
 
         return config
 
-    def install_ide_config(self, ide: str, server_name: str, profile: Optional[str] = None) -> bool:
+    def install_ide_config(self, ide: str, server_name: str, profile: str | None = None) -> bool:
         """Install IDE configuration for a specific server."""
         try:
             config = self.generate_ide_config(ide, server_name, profile)
@@ -249,7 +247,7 @@ class IDEManager:
             existing_config = {}
             if config_path.exists():
                 try:
-                    with open(config_path, 'r') as f:
+                    with open(config_path) as f:
                         existing_config = json.load(f)
                 except json.JSONDecodeError:
                     print(f"⚠️  Invalid JSON in {config_path}, creating new config")
@@ -261,14 +259,13 @@ class IDEManager:
                     existing_config["mcp.servers"].update(config["mcp.servers"])
                 else:
                     existing_config.update(config)
+            elif "mcpServers" in existing_config:
+                existing_config["mcpServers"].update(config["mcpServers"])
             else:
-                if "mcpServers" in existing_config:
-                    existing_config["mcpServers"].update(config["mcpServers"])
-                else:
-                    existing_config.update(config)
+                existing_config.update(config)
 
             # Write configuration
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(existing_config, f, indent=2)
 
             print(f"✅ Installed {ide_config.name} configuration for server '{server_name}'")
@@ -294,7 +291,7 @@ class IDEManager:
             backup_dir.mkdir(exist_ok=True)
 
             # Create backup filename with timestamp
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             backup_file = backup_dir / f"{ide}_config_{timestamp}.json"
 
             # Copy configuration
@@ -306,7 +303,7 @@ class IDEManager:
             print(f"❌ Failed to backup {ide} configuration: {e}")
             return False
 
-    def restore_ide_config(self, ide: str, backup_file: Optional[str] = None) -> bool:
+    def restore_ide_config(self, ide: str, backup_file: str | None = None) -> bool:
         """Restore IDE configuration from backup."""
         try:
             ide_config = self.ides[ide]
@@ -338,7 +335,7 @@ class IDEManager:
             print(f"❌ Failed to restore {ide} configuration: {e}")
             return False
 
-    def get_ide_status(self, ide: str) -> Dict:
+    def get_ide_status(self, ide: str) -> dict:
         """Get status of IDE configuration."""
         ide_config = self.ides[ide]
         config_path = Path(ide_config.config_path).expanduser()
@@ -348,17 +345,17 @@ class IDEManager:
             "config_exists": config_path.exists(),
             "config_path": str(config_path),
             "servers_configured": [],
-            "last_modified": None
+            "last_modified": None,
         }
 
         if config_path.exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     config_data = json.load(f)
 
                 servers = config_data.get("mcpServers", {})
                 status["servers_configured"] = list(servers.keys())
-                status["last_modified"] = datetime.fromtimestamp(config_path.stat().st_mtime, timezone.utc).isoformat()
+                status["last_modified"] = datetime.fromtimestamp(config_path.stat().st_mtime, UTC).isoformat()
 
             except (json.JSONDecodeError, Exception) as e:
                 status["error"] = str(e)
@@ -378,13 +375,7 @@ class IDEManager:
 
         try:
             # Generate new JWT token
-            jwt_result = subprocess.run(
-                ["make", "jwt"],
-                cwd=self.repo_root,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+            jwt_result = subprocess.run(["make", "jwt"], cwd=self.repo_root, capture_output=True, text=True, timeout=10)
 
             if jwt_result.returncode != 0:
                 print("❌ Failed to generate JWT token")
@@ -392,8 +383,8 @@ class IDEManager:
 
             # Extract JWT from output
             jwt_line = None
-            for line in jwt_result.stdout.split('\n'):
-                if line.startswith('eyJ') and line.endswith('=='):
+            for line in jwt_result.stdout.split("\n"):
+                if line.startswith("eyJ") and line.endswith("=="):
                     jwt_line = line
                     break
 
@@ -402,13 +393,13 @@ class IDEManager:
                 return False
 
             # Update configuration
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = json.load(f)
 
             # Find context-forge key
             context_forge_key = None
             for key in config.keys():
-                if 'context-forge' in key.lower():
+                if "context-forge" in key.lower():
                     context_forge_key = key
                     break
 
@@ -417,20 +408,16 @@ class IDEManager:
                 return False
 
             # Update JWT token
-            if 'mcpServers' in config and context_forge_key in config['mcpServers']:
-                config['mcpServers'][context_forge_key]['headers'] = {
-                    'Authorization': f'Bearer {jwt_line}'
-                }
+            if "mcpServers" in config and context_forge_key in config["mcpServers"]:
+                config["mcpServers"][context_forge_key]["headers"] = {"Authorization": f"Bearer {jwt_line}"}
             elif context_forge_key in config:
-                config[context_forge_key]['headers'] = {
-                    'Authorization': f'Bearer {jwt_line}'
-                }
+                config[context_forge_key]["headers"] = {"Authorization": f"Bearer {jwt_line}"}
 
             # Backup and update
-            backup_path = config_path.with_suffix('.json.bak')
+            backup_path = config_path.with_suffix(".json.bak")
             shutil.copy2(config_path, backup_path)
 
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(config, f, indent=2)
 
             print(f"✅ Updated JWT token for '{context_forge_key}' in {config_path}")
@@ -467,13 +454,13 @@ class IDEManager:
                 return False
 
             # Load configuration
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = json.load(f)
 
             # Find or create context-forge key
             context_forge_key = None
             for key in config.keys():
-                if 'context-forge' in key.lower():
+                if "context-forge" in key.lower():
                     context_forge_key = key
                     break
 
@@ -483,19 +470,19 @@ class IDEManager:
             # Configure wrapper
             wrapper_config = {
                 "command": str(wrapper_path),
-                "timeout": 120000  # 2 minutes
+                "timeout": 120000,  # 2 minutes
             }
 
-            if 'mcpServers' in config:
-                config['mcpServers'][context_forge_key] = wrapper_config
+            if "mcpServers" in config:
+                config["mcpServers"][context_forge_key] = wrapper_config
             else:
                 config[context_forge_key] = wrapper_config
 
             # Backup and update
-            backup_path = config_path.with_suffix('.json.bak')
+            backup_path = config_path.with_suffix(".json.bak")
             shutil.copy2(config_path, backup_path)
 
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(config, f, indent=2)
 
             print(f"✅ Set '{context_forge_key}' to use wrapper script in {config_path}")
@@ -518,11 +505,20 @@ class IDEManager:
         # Check gateway reachability
         try:
             result = subprocess.run(
-                ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-                 "--connect-timeout", "3", "http://localhost:8080/health"],
+                [
+                    "curl",
+                    "-s",
+                    "-o",
+                    "/dev/null",
+                    "-w",
+                    "%{http_code}",
+                    "--connect-timeout",
+                    "3",
+                    "http://localhost:8080/health",
+                ],
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
 
             if result.returncode == 0 and result.stdout == "200":
@@ -540,14 +536,15 @@ class IDEManager:
             print("❌ data/.cursor-mcp-url missing or empty (run: make register)")
             return False
 
-        with open(url_file, 'r') as f:
+        with open(url_file) as f:
             mcp_url = f.read().strip()
 
         print(f"✅ data/.cursor-mcp-url exists: {mcp_url}")
 
         # Check URL format
         import re
-        if not re.search(r'/servers/([a-f0-9-]+)/mcp', mcp_url):
+
+        if not re.search(r"/servers/([a-f0-9-]+)/mcp", mcp_url):
             print("❌ URL does not look like .../servers/UUID/mcp")
             return False
 
@@ -558,13 +555,13 @@ class IDEManager:
             return False
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = json.load(f)
 
             # Find context-forge entry
             context_forge_key = None
             for key in config.keys():
-                if 'context-forge' in key.lower():
+                if "context-forge" in key.lower():
                     context_forge_key = key
                     break
 
@@ -575,14 +572,14 @@ class IDEManager:
             print(f"✅ Found context-forge entry: {context_forge_key}")
 
             # Check if using wrapper or direct connection
-            if 'mcpServers' in config and context_forge_key in config['mcpServers']:
-                entry = config['mcpServers'][context_forge_key]
+            if "mcpServers" in config and context_forge_key in config["mcpServers"]:
+                entry = config["mcpServers"][context_forge_key]
             else:
                 entry = config[context_forge_key]
 
-            if 'command' in entry:
+            if "command" in entry:
                 print("✅ Configured to use wrapper script")
-                wrapper_path = entry['command']
+                wrapper_path = entry["command"]
                 if Path(wrapper_path).exists():
                     print(f"✅ Wrapper script exists: {wrapper_path}")
                 else:
@@ -590,7 +587,7 @@ class IDEManager:
                     return False
             else:
                 print("✅ Configured for direct connection")
-                if 'headers' in entry and 'Authorization' in entry['headers']:
+                if "headers" in entry and "Authorization" in entry["headers"]:
                     print("✅ JWT token configured")
                 else:
                     print("⚠️  No JWT token found - run 'make ide-setup IDE=cursor ACTION=refresh-jwt'")
@@ -605,7 +602,9 @@ class IDEManager:
             print(f"❌ Error checking configuration: {e}")
             return False
 
-    def setup_ide(self, ide: str, action: str = "install", server_name: Optional[str] = None, profile: Optional[str] = None) -> bool:
+    def setup_ide(
+        self, ide: str, action: str = "install", server_name: str | None = None, profile: str | None = None
+    ) -> bool:
         """Main setup function for IDE operations."""
         if ide == "all":
             # Apply to all detected IDEs
@@ -639,28 +638,28 @@ class IDEManager:
                     print(f"  {i}. {server['name']} - {server.get('description', 'No description')}")
 
                 # For now, use the first server
-                server_name = servers[0]['name']
+                server_name = servers[0]["name"]
                 print(f"Using server: {server_name}")
 
             return self.install_ide_config(ide, server_name, profile)
 
-        elif action == "backup":
+        if action == "backup":
             return self.backup_ide_config(ide)
 
-        elif action == "restore":
+        if action == "restore":
             return self.restore_ide_config(ide)
 
-        elif action == "status":
+        if action == "status":
             try:
                 status = self.get_ide_status(ide)
                 print(f"\n{status['ide']} Status:")
                 print(f"  Config exists: {'✅' if status['config_exists'] else '❌'}")
                 print(f"  Config path: {status['config_path']}")
-                if status['servers_configured']:
+                if status["servers_configured"]:
                     print(f"  Configured servers: {', '.join(status['servers_configured'])}")
-                if status.get('error'):
+                if status.get("error"):
                     print(f"  Error: {status['error']}")
-                if status['last_modified']:
+                if status["last_modified"]:
                     print(f"  Last modified: {status['last_modified']}")
                 return True
             except Exception as e:
@@ -694,37 +693,23 @@ Examples:
   %(prog)s setup windsurf --action backup   # Backup Windsurf config
   %(prog)s setup vscode --action status     # Check VSCode status
   %(prog)s setup claude --server-name cursor-default  # Install specific server
-        """
+        """,
     )
 
-    parser.add_argument(
-        "command",
-        choices=["setup", "detect", "list-servers"],
-        help="Command to execute"
-    )
+    parser.add_argument("command", choices=["setup", "detect", "list-servers"], help="Command to execute")
 
-    parser.add_argument(
-        "ide",
-        nargs="?",
-        help="IDE name (cursor, windsurf, vscode, claude, all)"
-    )
+    parser.add_argument("ide", nargs="?", help="IDE name (cursor, windsurf, vscode, claude, all)")
 
     parser.add_argument(
         "--action",
         choices=["install", "backup", "restore", "status"],
         default="install",
-        help="Action for setup command (default: install)"
+        help="Action for setup command (default: install)",
     )
 
-    parser.add_argument(
-        "--server-name",
-        help="Specific server name to configure"
-    )
+    parser.add_argument("--server-name", help="Specific server name to configure")
 
-    parser.add_argument(
-        "--profile",
-        help="Configuration profile to use"
-    )
+    parser.add_argument("--profile", help="Configuration profile to use")
 
     args = parser.parse_args()
 
@@ -743,7 +728,7 @@ Examples:
             if servers:
                 print("Available virtual servers:")
                 for server in servers:
-                    status = "✅" if server['enabled'] else "❌"
+                    status = "✅" if server["enabled"] else "❌"
                     print(f"  {status} {server['name']} - {server.get('description', 'No description')}")
             else:
                 print("No enabled virtual servers found")
@@ -754,12 +739,7 @@ Examples:
                 print("Supported IDEs: cursor, windsurf, vscode, claude, all")
                 sys.exit(1)
 
-            success = manager.setup_ide(
-                args.ide,
-                args.action,
-                args.server_name,
-                args.profile
-            )
+            success = manager.setup_ide(args.ide, args.action, args.server_name, args.profile)
 
             sys.exit(0 if success else 1)
 

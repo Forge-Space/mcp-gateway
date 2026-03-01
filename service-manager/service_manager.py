@@ -14,23 +14,20 @@ from collections import deque
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-
-import psutil
+from typing import Any
 
 import docker
+import psutil
 import structlog
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
+
 # Import Sentry integration
 try:
-    from tool_router.sentry_integration import (
-        init_sentry,
-        monitor_service_lifecycle,
-        monitor_mcp_request
-    )
+    from tool_router.sentry_integration import init_sentry, monitor_mcp_request, monitor_service_lifecycle
+
     SENTRY_AVAILABLE = True
 except ImportError:
     SENTRY_AVAILABLE = False
@@ -63,6 +60,7 @@ if SENTRY_AVAILABLE:
 
 class ServiceState(Enum):
     """Service states for serverless-like behavior."""
+
     STOPPED = "stopped"
     STARTING = "starting"
     RUNNING = "running"
@@ -74,10 +72,11 @@ class ServiceState(Enum):
 
 class Settings(BaseSettings):
     """Service manager configuration."""
+
     config_path: str = "/config"
     log_level: str = "info"
     port: int = 9000
-    docker_host: Optional[str] = None
+    docker_host: str | None = None
 
     class Config:
         env_prefix = ""
@@ -92,20 +91,22 @@ class Settings(BaseSettings):
 
 class ServiceConfig(BaseModel):
     """Individual service configuration."""
+
     name: str
     image: str = "forge-mcp-gateway-translate:latest"
-    command: List[str]
+    command: list[str]
     port: int
-    environment: Dict[str, str] = {}
-    volumes: Dict[str, str] = {}
-    resources: Dict[str, Any] = {}
+    environment: dict[str, str] = {}
+    volumes: dict[str, str] = {}
+    resources: dict[str, Any] = {}
     auto_start: bool = False
-    health_check: Optional[Dict[str, Any]] = None
-    sleep_policy: Optional[Dict[str, Any]] = None
+    health_check: dict[str, Any] | None = None
+    sleep_policy: dict[str, Any] | None = None
 
 
 class SleepPolicy(BaseModel):
     """Sleep policy configuration for serverless-like behavior."""
+
     enabled: bool = True
     idle_timeout: int = 300  # 5 minutes
     min_sleep_time: int = 60  # Don't sleep if used recently
@@ -115,6 +116,7 @@ class SleepPolicy(BaseModel):
 
 class ScalingPolicy(BaseModel):
     """Scaling policy configuration."""
+
     min_instances: int = 0
     max_instances: int = 1
     idle_timeout: int = 300  # 5 minutes
@@ -124,14 +126,15 @@ class ScalingPolicy(BaseModel):
 
 class ServiceStatus(BaseModel):
     """Service status information."""
+
     name: str
     status: str  # running, stopped, starting, stopping, error, sleeping, waking
-    container_id: Optional[str] = None
-    port: Optional[int] = None
-    last_accessed: Optional[str] = None
-    resource_usage: Dict[str, float] = {}
-    error_message: Optional[str] = None
-    sleep_start_time: Optional[float] = None
+    container_id: str | None = None
+    port: int | None = None
+    last_accessed: str | None = None
+    resource_usage: dict[str, float] = {}
+    error_message: str | None = None
+    sleep_start_time: float | None = None
     wake_count: int = 0
     total_sleep_time: float = 0.0
     # Enhanced metrics for high-efficiency Docker standards
@@ -139,22 +142,23 @@ class ServiceStatus(BaseModel):
     memory_usage: float = 0.0
     memory_limit: float = 0.0
     cpu_limit: float = 0.0
-    wake_time_ms: Optional[float] = None
+    wake_time_ms: float | None = None
     sleep_efficiency: float = 0.0  # Memory reduction percentage
     state_transitions: int = 0
     uptime_seconds: float = 0.0
-    last_state_change: Optional[float] = None
+    last_state_change: float | None = None
 
 
 @dataclass
 class PerformanceMetrics:
     """Performance metrics for a service."""
+
     service_name: str
     wake_times: deque  # Recent wake times in milliseconds
-    sleep_times: deque   # Recent sleep times in milliseconds
+    sleep_times: deque  # Recent sleep times in milliseconds
     resource_usage: deque  # Recent resource usage snapshots
     error_count: int = 0
-    last_error: Optional[str] = None
+    last_error: str | None = None
     total_requests: int = 0
     uptime_percentage: float = 0.0
 
@@ -162,8 +166,8 @@ class PerformanceMetrics:
     state_transitions: deque = None  # Track all state changes with timestamps
     transition_history: dict = None  # Count of each transition type
     state_durations: dict = None  # Time spent in each state
-    last_state_change: Optional[float] = None
-    current_state_start: Optional[float] = None
+    last_state_change: float | None = None
+    current_state_start: float | None = None
 
     # Performance and efficiency metrics
     wake_count: int = 0
@@ -176,13 +180,13 @@ class PerformanceMetrics:
 
     # Resource efficiency metrics
     memory_efficiency_score: float = 0.0  # 0-1, higher is better
-    cpu_efficiency_score: float = 0.0     # 0-1, higher is better
+    cpu_efficiency_score: float = 0.0  # 0-1, higher is better
     resource_utilization_efficiency: float = 0.0  # Overall efficiency
 
     # Alerting thresholds
     wake_time_threshold_ms: float = 500.0  # Alert if wake takes longer
     sleep_time_threshold_ms: float = 200.0  # Alert if sleep takes longer
-    error_rate_threshold: float = 0.05     # Alert if error rate exceeds 5%
+    error_rate_threshold: float = 0.05  # Alert if error rate exceeds 5%
 
     def __post_init__(self):
         """Initialize deques and dictionaries."""
@@ -190,31 +194,31 @@ class PerformanceMetrics:
             self.state_transitions = deque(maxlen=1000)
         if self.transition_history is None:
             self.transition_history = {
-                'stopped_to_running': 0,
-                'running_to_sleeping': 0,
-                'sleeping_to_running': 0,
-                'running_to_stopped': 0,
-                'sleeping_to_stopped': 0,
-                'stopped_to_sleeping': 0,
-                'running_to_error': 0,
-                'sleeping_to_error': 0,
-                'stopped_to_error': 0,
-                'error_to_running': 0,
-                'error_to_sleeping': 0,
-                'error_to_stopped': 0
+                "stopped_to_running": 0,
+                "running_to_sleeping": 0,
+                "sleeping_to_running": 0,
+                "running_to_stopped": 0,
+                "sleeping_to_stopped": 0,
+                "stopped_to_sleeping": 0,
+                "running_to_error": 0,
+                "sleeping_to_error": 0,
+                "stopped_to_error": 0,
+                "error_to_running": 0,
+                "error_to_sleeping": 0,
+                "error_to_stopped": 0,
             }
         if self.state_durations is None:
             self.state_durations = {
-                'running': 0.0,
-                'sleeping': 0.0,
-                'stopped': 0.0,
-                'error': 0.0,
-                'starting': 0.0,
-                'stopping': 0.0,
-                'waking': 0.0
+                "running": 0.0,
+                "sleeping": 0.0,
+                "stopped": 0.0,
+                "error": 0.0,
+                "starting": 0.0,
+                "stopping": 0.0,
+                "waking": 0.0,
             }
 
-    def record_state_transition(self, from_state: str, to_state: str, timestamp: Optional[float] = None):
+    def record_state_transition(self, from_state: str, to_state: str, timestamp: float | None = None):
         """Record a state transition with timing."""
         if timestamp is None:
             timestamp = time.time()
@@ -230,23 +234,25 @@ class PerformanceMetrics:
         self.transition_history[transition_key] = self.transition_history.get(transition_key, 0) + 1
 
         # Add to transition history
-        self.state_transitions.append({
-            'from_state': from_state,
-            'to_state': to_state,
-            'timestamp': timestamp,
-            'duration': duration if self.current_state_start else 0
-        })
+        self.state_transitions.append(
+            {
+                "from_state": from_state,
+                "to_state": to_state,
+                "timestamp": timestamp,
+                "duration": duration if self.current_state_start else 0,
+            }
+        )
 
         # Update tracking variables
         self.last_state_change = to_state
         self.current_state_start = timestamp
 
         # Update counters
-        if to_state == 'running' and from_state in ['sleeping', 'stopped', 'error']:
+        if to_state == "running" and from_state in ["sleeping", "stopped", "error"]:
             self.wake_count += 1
-        elif to_state == 'sleeping' and from_state in ['running', 'stopped', 'error']:
+        elif to_state == "sleeping" and from_state in ["running", "stopped", "error"]:
             self.sleep_count += 1
-        elif to_state == 'running' and from_state == 'error':
+        elif to_state == "running" and from_state == "error":
             self.error_recovery_count += 1
 
     def get_state_efficiency_metrics(self) -> dict:
@@ -258,33 +264,28 @@ class PerformanceMetrics:
             total_time += duration
 
         if total_time == 0:
-            return {
-                'running_efficiency': 0.0,
-                'sleep_efficiency': 0.0,
-                'error_rate': 0.0,
-                'transition_frequency': 0.0
-            }
+            return {"running_efficiency": 0.0, "sleep_efficiency": 0.0, "error_rate": 0.0, "transition_frequency": 0.0}
 
-        running_efficiency = self.state_durations['running'] / total_time
-        sleep_efficiency = self.state_durations['sleeping'] / total_time
-        error_rate = self.state_durations['error'] / total_time
+        running_efficiency = self.state_durations["running"] / total_time
+        sleep_efficiency = self.state_durations["sleeping"] / total_time
+        error_rate = self.state_durations["error"] / total_time
         transition_frequency = len(self.state_transitions) / max(total_time, 1)
 
         return {
-            'running_efficiency': running_efficiency,
-            'sleep_efficiency': sleep_efficiency,
-            'error_rate': error_rate,
-            'transition_frequency': transition_frequency,
-            'total_transitions': len(self.state_transitions)
+            "running_efficiency": running_efficiency,
+            "sleep_efficiency": sleep_efficiency,
+            "error_rate": error_rate,
+            "transition_frequency": transition_frequency,
+            "total_transitions": len(self.state_transitions),
         }
 
     def should_trigger_alert(self, metric_type: str, value: float) -> bool:
         """Check if an alert should be triggered based on thresholds."""
-        if metric_type == 'wake_time' and value > self.wake_time_threshold_ms:
+        if (metric_type == "wake_time" and value > self.wake_time_threshold_ms) or (
+            metric_type == "sleep_time" and value > self.sleep_time_threshold_ms
+        ):
             return True
-        elif metric_type == 'sleep_time' and value > self.sleep_time_threshold_ms:
-            return True
-        elif metric_type == 'error_rate':
+        if metric_type == "error_rate":
             total_requests = max(self.total_requests, 1)
             error_rate = self.error_count / total_requests
             return error_rate > self.error_rate_threshold
@@ -301,11 +302,11 @@ class GlobalSleepSettings(BaseModel):
     system_memory_threshold: str = "4GB"
     sleep_check_interval: int = 30
     wake_timeout: int = 10
-    resource_monitoring: Dict[str, any] = {}
-    performance_optimization: Dict[str, bool] = {}
-    wake_priorities: Dict[str, List[str]] = {}
-    resource_thresholds: Dict[str, float] = {}
-    monitoring: Dict[str, any] = {}
+    resource_monitoring: dict[str, any] = {}
+    performance_optimization: dict[str, bool] = {}
+    wake_priorities: dict[str, list[str]] = {}
+    resource_thresholds: dict[str, float] = {}
+    monitoring: dict[str, any] = {}
 
 
 class ResourceMonitor:
@@ -314,7 +315,7 @@ class ResourceMonitor:
     def __init__(self):
         self.metrics_history = deque(maxlen=1000)
 
-    def get_system_resources(self) -> Dict[str, float]:
+    def get_system_resources(self) -> dict[str, float]:
         """Get current system resource usage."""
         return {
             "cpu_percent": psutil.cpu_percent(interval=1),
@@ -324,7 +325,7 @@ class ResourceMonitor:
             "memory_total_gb": psutil.virtual_memory().total / (1024**3),
         }
 
-    def get_container_resources(self, container) -> Dict[str, float]:
+    def get_container_resources(self, container) -> dict[str, float]:
         """Get resource usage for a specific container."""
         try:
             stats = container.stats(stream=False)
@@ -338,10 +339,12 @@ class ResourceMonitor:
             logger.warning("Failed to get container stats", error=str(e))
             return {}
 
-    def _calculate_cpu_percent(self, stats: Dict) -> float:
+    def _calculate_cpu_percent(self, stats: dict) -> float:
         """Calculate CPU percentage from container stats."""
         try:
-            cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+            cpu_delta = (
+                stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+            )
             system_cpu_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
             if system_cpu_delta > 0:
                 return (cpu_delta / system_cpu_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100
@@ -356,16 +359,16 @@ class ServiceManager:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.docker_client = None
-        self.services: Dict[str, ServiceConfig] = {}
-        self.service_status: Dict[str, ServiceStatus] = {}
-        self.scaling_policies: Dict[str, ScalingPolicy] = {}
-        self.sleep_policies: Dict[str, SleepPolicy] = {}
-        self.global_sleep_settings: Optional[GlobalSleepSettings] = None
+        self.services: dict[str, ServiceConfig] = {}
+        self.service_status: dict[str, ServiceStatus] = {}
+        self.scaling_policies: dict[str, ScalingPolicy] = {}
+        self.sleep_policies: dict[str, SleepPolicy] = {}
+        self.global_sleep_settings: GlobalSleepSettings | None = None
         self.resource_monitor = ResourceMonitor()
-        self.performance_metrics: Dict[str, PerformanceMetrics] = {}
+        self.performance_metrics: dict[str, PerformanceMetrics] = {}
         self._shutdown_event = asyncio.Event()
-        self._auto_sleep_task: Optional[asyncio.Task] = None
-        self._resource_monitor_task: Optional[asyncio.Task] = None
+        self._auto_sleep_task: asyncio.Task | None = None
+        self._resource_monitor_task: asyncio.Task | None = None
         self._wake_queue: asyncio.Queue = asyncio.Queue()
         self._processing_wake = False
 
@@ -382,9 +385,9 @@ class ServiceManager:
         # Load configuration
         await self._load_configuration()
 
-        logger.info("Service manager initialized",
-                   config_path=self.settings.config_path,
-                   services_loaded=len(self.services))
+        logger.info(
+            "Service manager initialized", config_path=self.settings.config_path, services_loaded=len(self.services)
+        )
 
     async def _load_configuration(self):
         """Load service configurations from files."""
@@ -394,31 +397,34 @@ class ServiceManager:
         services_file = config_path / "services.yml"
         if services_file.exists():
             import yaml
-            with open(services_file, 'r') as f:
+
+            with open(services_file) as f:
                 services_data = yaml.safe_load(f)
-                for name, config in services_data.get('services', {}).items():
+                for name, config in services_data.get("services", {}).items():
                     # Convert environment values to strings
-                    env_config = config.get('environment', {})
+                    env_config = config.get("environment", {})
                     env_config = {str(k): str(v) for k, v in env_config.items()}
-                    config['environment'] = env_config
+                    config["environment"] = env_config
                     self.services[name] = ServiceConfig(name=name, **config)
 
         # Load scaling policies
         policies_file = config_path / "scaling-policies.yml"
         if policies_file.exists():
             import yaml
-            with open(policies_file, 'r') as f:
+
+            with open(policies_file) as f:
                 policies_data = yaml.safe_load(f)
-                for name, policy in policies_data.get('policies', {}).items():
+                for name, policy in policies_data.get("policies", {}).items():
                     self.scaling_policies[name] = ScalingPolicy(**policy)
 
         # Load global sleep settings
         sleep_settings_file = config_path / "sleep_settings.yml"
         if sleep_settings_file.exists():
             import yaml
-            with open(sleep_settings_file, 'r') as f:
+
+            with open(sleep_settings_file) as f:
                 sleep_data = yaml.safe_load(f)
-                self.global_sleep_settings = GlobalSleepSettings(**sleep_data.get('sleep_settings', {}))
+                self.global_sleep_settings = GlobalSleepSettings(**sleep_data.get("sleep_settings", {}))
         else:
             # Default settings if file doesn't exist
             self.global_sleep_settings = GlobalSleepSettings()
@@ -430,17 +436,14 @@ class ServiceManager:
 
         # Initialize service status and performance metrics
         for service_name in self.services:
-            self.service_status[service_name] = ServiceStatus(
-                name=service_name,
-                status="stopped"
-            )
+            self.service_status[service_name] = ServiceStatus(name=service_name, status="stopped")
             # Initialize performance metrics with history size from config
             history_size = self.global_sleep_settings.monitoring.get("performance_history_size", 1000)
             self.performance_metrics[service_name] = PerformanceMetrics(
                 service_name=service_name,
                 wake_times=deque(maxlen=history_size),
                 sleep_times=deque(maxlen=history_size),
-                resource_usage=deque(maxlen=history_size)
+                resource_usage=deque(maxlen=history_size),
             )
 
         # Start background tasks
@@ -451,10 +454,7 @@ class ServiceManager:
     async def start_service(self, service_name: str) -> ServiceStatus:
         """Start a specific service."""
         if service_name not in self.services:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         service_config = self.services[service_name]
         current_status = self.service_status[service_name]
@@ -498,30 +498,20 @@ class ServiceManager:
             current_status.port = service_config.port
             current_status.last_accessed = asyncio.get_event_loop().time()
 
-            logger.info("Service started successfully",
-                       service=service_name,
-                       container_id=container.id)
+            logger.info("Service started successfully", service=service_name, container_id=container.id)
 
             return current_status
 
         except Exception as e:
             current_status.status = "error"
             current_status.error_message = str(e)
-            logger.error("Failed to start service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to start service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to start service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to start service {service_name}: {e!s}")
 
     async def stop_service(self, service_name: str) -> ServiceStatus:
         """Stop a specific service."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
 
@@ -552,21 +542,13 @@ class ServiceManager:
         except Exception as e:
             current_status.status = "error"
             current_status.error_message = str(e)
-            logger.error("Failed to stop service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to stop service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to stop service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to stop service {service_name}: {e!s}")
 
     async def sleep_service(self, service_name: str) -> ServiceStatus:
         """Transition service to sleep state using Docker pause with resource optimization."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
         sleep_policy = self.sleep_policies.get(service_name)
@@ -584,9 +566,11 @@ class ServiceManager:
         # Check system resource pressure
         system_resources = self.resource_monitor.get_system_resources()
         if self._should_skip_sleep_due_to_pressure(system_resources):
-            logger.info("Skipping sleep due to system resource pressure",
-                       service=service_name,
-                       memory_percent=system_resources["memory_percent"])
+            logger.info(
+                "Skipping sleep due to system resource pressure",
+                service=service_name,
+                memory_percent=system_resources["memory_percent"],
+            )
             return current_status
 
         # Check minimum sleep time
@@ -594,9 +578,11 @@ class ServiceManager:
         if current_status.last_accessed:
             last_accessed_time = float(current_status.last_accessed)
             if current_time - last_accessed_time < sleep_policy.min_sleep_time:
-                logger.info("Service used too recently, skipping sleep",
-                           service=service_name,
-                           time_since_access=current_time - last_accessed_time)
+                logger.info(
+                    "Service used too recently, skipping sleep",
+                    service=service_name,
+                    time_since_access=current_time - last_accessed_time,
+                )
                 return current_status
 
         try:
@@ -632,9 +618,7 @@ class ServiceManager:
                 metrics.sleep_times.append(sleep_duration * 1000)  # Convert to milliseconds
                 metrics.total_sleep_duration += sleep_duration
 
-            logger.info("Service slept successfully",
-                       service=service_name,
-                       sleep_duration_ms=sleep_duration * 1000)
+            logger.info("Service slept successfully", service=service_name, sleep_duration_ms=sleep_duration * 1000)
             return current_status
 
         except Exception as e:
@@ -644,21 +628,13 @@ class ServiceManager:
                 metrics.record_state_transition(from_state, "error")
                 metrics.error_count += 1
                 metrics.last_error = str(e)
-            logger.error("Failed to sleep service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to sleep service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to sleep service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to sleep service {service_name}: {e!s}")
 
     async def wake_service(self, service_name: str) -> ServiceStatus:
         """Wake service from sleep state using Docker unpause with performance monitoring."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
         metrics = self.performance_metrics.get(service_name)
@@ -707,10 +683,12 @@ class ServiceManager:
                 metrics.total_wake_duration += wake_duration
                 metrics.total_requests += 1
 
-            logger.info("Service woke successfully",
-                       service=service_name,
-                       wake_time_ms=wake_duration * 1000,
-                       total_sleep_time=current_status.total_sleep_time)
+            logger.info(
+                "Service woke successfully",
+                service=service_name,
+                wake_time_ms=wake_duration * 1000,
+                total_sleep_time=current_status.total_sleep_time,
+            )
 
             return current_status
 
@@ -722,13 +700,8 @@ class ServiceManager:
                 metrics.record_state_transition(from_state, "error")
                 metrics.error_count += 1
                 metrics.last_error = str(e)
-            logger.error("Failed to wake service",
-                        service=service_name,
-                        error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to wake service {service_name}: {str(e)}"
-            )
+            logger.error("Failed to wake service", service=service_name, error=str(e))
+            raise HTTPException(status_code=500, detail=f"Failed to wake service {service_name}: {e!s}")
 
     # Phase 4: Alerting System for Sleep/Wake Events
     def _check_and_trigger_alerts(self, service_name: str, metrics: PerformanceMetrics):
@@ -738,70 +711,80 @@ class ServiceManager:
         # Check wake time alerts
         if metrics.wake_times:
             latest_wake_time = metrics.wake_times[-1]
-            if metrics.should_trigger_alert('wake_time', latest_wake_time):
-                alerts.append({
-                    'type': 'wake_time_exceeded',
-                    'service': service_name,
-                    'value': latest_wake_time,
-                    'threshold': metrics.wake_time_threshold_ms,
-                    'message': f'Wake time {latest_wake_time:.2f}ms exceeded threshold {metrics.wake_time_threshold_ms}ms',
-                    'severity': 'warning',
-                    'timestamp': time.time()
-                })
+            if metrics.should_trigger_alert("wake_time", latest_wake_time):
+                alerts.append(
+                    {
+                        "type": "wake_time_exceeded",
+                        "service": service_name,
+                        "value": latest_wake_time,
+                        "threshold": metrics.wake_time_threshold_ms,
+                        "message": f"Wake time {latest_wake_time:.2f}ms exceeded threshold {metrics.wake_time_threshold_ms}ms",
+                        "severity": "warning",
+                        "timestamp": time.time(),
+                    }
+                )
 
         # Check sleep time alerts
         if metrics.sleep_times:
             latest_sleep_time = metrics.sleep_times[-1]
-            if metrics.should_trigger_alert('sleep_time', latest_sleep_time):
-                alerts.append({
-                    'type': 'sleep_time_exceeded',
-                    'service': service_name,
-                    'value': latest_sleep_time,
-                    'threshold': metrics.sleep_time_threshold_ms,
-                    'message': f'Sleep time {latest_sleep_time:.2f}ms exceeded threshold {metrics.sleep_time_threshold_ms}ms',
-                    'severity': 'warning',
-                    'timestamp': time.time()
-                })
+            if metrics.should_trigger_alert("sleep_time", latest_sleep_time):
+                alerts.append(
+                    {
+                        "type": "sleep_time_exceeded",
+                        "service": service_name,
+                        "value": latest_sleep_time,
+                        "threshold": metrics.sleep_time_threshold_ms,
+                        "message": f"Sleep time {latest_sleep_time:.2f}ms exceeded threshold {metrics.sleep_time_threshold_ms}ms",
+                        "severity": "warning",
+                        "timestamp": time.time(),
+                    }
+                )
 
         # Check error rate alerts
         total_operations = metrics.wake_count + metrics.sleep_count
         if total_operations > 0:
             error_rate = metrics.error_count / total_operations
-            if metrics.should_trigger_alert('error_rate', error_rate):
-                alerts.append({
-                    'type': 'high_error_rate',
-                    'service': service_name,
-                    'value': error_rate,
-                    'threshold': metrics.error_rate_threshold,
-                    'message': f'Error rate {error_rate:.2%} exceeded threshold {metrics.error_rate_threshold:.2%}',
-                    'severity': 'critical',
-                    'timestamp': time.time()
-                })
+            if metrics.should_trigger_alert("error_rate", error_rate):
+                alerts.append(
+                    {
+                        "type": "high_error_rate",
+                        "service": service_name,
+                        "value": error_rate,
+                        "threshold": metrics.error_rate_threshold,
+                        "message": f"Error rate {error_rate:.2%} exceeded threshold {metrics.error_rate_threshold:.2%}",
+                        "severity": "critical",
+                        "timestamp": time.time(),
+                    }
+                )
 
         # Check state transition frequency alerts
         efficiency_metrics = metrics.get_state_efficiency_metrics()
-        if efficiency_metrics['transition_frequency'] > 0.1:  # More than 1 transition per 10 seconds
-            alerts.append({
-                'type': 'high_transition_frequency',
-                'service': service_name,
-                'value': efficiency_metrics['transition_frequency'],
-                'threshold': 0.1,
-                'message': f'Transition frequency {efficiency_metrics["transition_frequency"]:.3f} transitions/second is unusually high',
-                'severity': 'warning',
-                'timestamp': time.time()
-            })
+        if efficiency_metrics["transition_frequency"] > 0.1:  # More than 1 transition per 10 seconds
+            alerts.append(
+                {
+                    "type": "high_transition_frequency",
+                    "service": service_name,
+                    "value": efficiency_metrics["transition_frequency"],
+                    "threshold": 0.1,
+                    "message": f"Transition frequency {efficiency_metrics['transition_frequency']:.3f} transitions/second is unusually high",
+                    "severity": "warning",
+                    "timestamp": time.time(),
+                }
+            )
 
         # Log alerts
         for alert in alerts:
-            logger.warning("Alert triggered",
-                         service=alert['service'],
-                         type=alert['type'],
-                         severity=alert['severity'],
-                         message=alert['message'])
+            logger.warning(
+                "Alert triggered",
+                service=alert["service"],
+                type=alert["type"],
+                severity=alert["severity"],
+                message=alert["message"],
+            )
 
         return alerts
 
-    def get_service_alerts(self, service_name: str) -> List[dict]:
+    def get_service_alerts(self, service_name: str) -> list[dict]:
         """Get recent alerts for a specific service."""
         if service_name not in self.performance_metrics:
             return []
@@ -819,9 +802,9 @@ class ServiceManager:
                 all_alerts[service_name] = service_alerts
 
         return {
-            'alerts': all_alerts,
-            'total_alerts': sum(len(alerts) for alerts in all_alerts.values()),
-            'timestamp': time.time()
+            "alerts": all_alerts,
+            "total_alerts": sum(len(alerts) for alerts in all_alerts.values()),
+            "timestamp": time.time(),
         }
 
     def get_system_health_summary(self) -> dict:
@@ -857,34 +840,31 @@ class ServiceManager:
             health_score = max(0, 100 - error_penalty - resource_penalty)
 
         return {
-            'health_score': round(health_score, 1),
-            'service_status': {
-                'total': total_services,
-                'running': running_count,
-                'sleeping': sleeping_count,
-                'stopped': stopped_count,
-                'error': error_count
+            "health_score": round(health_score, 1),
+            "service_status": {
+                "total": total_services,
+                "running": running_count,
+                "sleeping": sleeping_count,
+                "stopped": stopped_count,
+                "error": error_count,
             },
-            'performance': {
-                'total_wake_time_ms': total_wake_time,
-                'total_sleep_time_ms': total_sleep_time,
-                'total_errors': total_errors,
-                'total_transitions': total_transitions,
-                'avg_wake_time_ms': total_wake_time / max(total_wake_time, 1),
-                'avg_sleep_time_ms': total_sleep_time / max(total_sleep_time, 1)
+            "performance": {
+                "total_wake_time_ms": total_wake_time,
+                "total_sleep_time_ms": total_sleep_time,
+                "total_errors": total_errors,
+                "total_transitions": total_transitions,
+                "avg_wake_time_ms": total_wake_time / max(total_wake_time, 1),
+                "avg_sleep_time_ms": total_sleep_time / max(total_sleep_time, 1),
             },
-            'resources': system_resources,
-            'alerts': self.get_all_system_alerts(),
-            'timestamp': time.time()
+            "resources": system_resources,
+            "alerts": self.get_all_system_alerts(),
+            "timestamp": time.time(),
         }
 
     async def get_service_status(self, service_name: str) -> ServiceStatus:
         """Get the status of a specific service."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
 
@@ -904,13 +884,11 @@ class ServiceManager:
                 current_status.container_id = None
                 current_status.port = None
             except Exception as e:
-                logger.warning("Failed to check container status",
-                            service=service_name,
-                            error=str(e))
+                logger.warning("Failed to check container status", service=service_name, error=str(e))
 
         return current_status
 
-    async def list_services(self) -> List[ServiceStatus]:
+    async def list_services(self) -> list[ServiceStatus]:
         """List all services and their status."""
         services = []
         for service_name in self.service_status:
@@ -931,15 +909,10 @@ class ServiceManager:
             memory_bytes = self._parse_memory_string(memory_reservation)
 
             # Update container memory limits
-            container.update(
-                mem_limit=memory_bytes,
-                mem_reservation=memory_bytes
-            )
-            logger.info("Applied memory optimization",
-                       memory_reservation=memory_reservation)
+            container.update(mem_limit=memory_bytes, mem_reservation=memory_bytes)
+            logger.info("Applied memory optimization", memory_reservation=memory_reservation)
         except Exception as e:
-            logger.warning("Failed to apply memory optimization",
-                         error=str(e))
+            logger.warning("Failed to apply memory optimization", error=str(e))
 
     async def _restore_memory_settings(self, container):
         """Restore original memory settings for waking containers."""
@@ -947,27 +920,25 @@ class ServiceManager:
             # Reset to default memory limits (or service-specific limits)
             container.update(
                 mem_limit=0,  # Remove limit
-                mem_reservation=0  # Remove reservation
+                mem_reservation=0,  # Remove reservation
             )
             logger.info("Restored memory settings")
         except Exception as e:
-            logger.warning("Failed to restore memory settings",
-                         error=str(e))
+            logger.warning("Failed to restore memory settings", error=str(e))
 
     def _parse_memory_string(self, memory_str: str) -> int:
         """Parse memory string (e.g., '128MB', '1GB') to bytes."""
         memory_str = memory_str.upper()
-        if memory_str.endswith('MB'):
+        if memory_str.endswith("MB"):
             return int(memory_str[:-2]) * 1024 * 1024
-        elif memory_str.endswith('GB'):
+        if memory_str.endswith("GB"):
             return int(memory_str[:-2]) * 1024 * 1024 * 1024
-        elif memory_str.endswith('KB'):
+        if memory_str.endswith("KB"):
             return int(memory_str[:-2]) * 1024
-        else:
-            # Assume bytes if no unit
-            return int(memory_str)
+        # Assume bytes if no unit
+        return int(memory_str)
 
-    def _should_skip_sleep_due_to_pressure(self, system_resources: Dict[str, float]) -> bool:
+    def _should_skip_sleep_due_to_pressure(self, system_resources: dict[str, float]) -> bool:
         """Check if sleep should be skipped due to system resource pressure."""
         if not self.global_sleep_settings:
             return False
@@ -981,10 +952,7 @@ class ServiceManager:
 
         # Check CPU pressure
         cpu_pressure = system_resources.get("cpu_percent", 0) / 100
-        if cpu_pressure > thresholds.get("cpu_pressure_threshold", 0.8):
-            return True
-
-        return False
+        return cpu_pressure > thresholds.get("cpu_pressure_threshold", 0.8)
 
     def _get_service_priority(self, service_name: str) -> int:
         """Get wake priority for a service (lower number = higher priority)."""
@@ -997,10 +965,9 @@ class ServiceManager:
             if service_name in services:
                 if priority_level == "high":
                     return 0
-                elif priority_level == "normal":
+                if priority_level == "normal":
                     return 1
-                else:
-                    return 2
+                return 2
 
         return 2  # Default to low priority
 
@@ -1008,7 +975,9 @@ class ServiceManager:
         """Background task to monitor system resources and optimize states."""
         while not self._shutdown_event.is_set():
             try:
-                if not self.global_sleep_settings or not self.global_sleep_settings.resource_monitoring.get("enabled", True):
+                if not self.global_sleep_settings or not self.global_sleep_settings.resource_monitoring.get(
+                    "enabled", True
+                ):
                     await asyncio.sleep(60)
                     continue
 
@@ -1022,13 +991,13 @@ class ServiceManager:
                 check_interval = self.global_sleep_settings.resource_monitoring.get("check_interval", 60)
                 await asyncio.wait_for(self._shutdown_event.wait(), timeout=check_interval)
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
                 logger.error("Error in resource monitor loop", error=str(e))
                 await asyncio.sleep(30)
 
-    async def _handle_resource_pressure(self, system_resources: Dict[str, float]):
+    async def _handle_resource_pressure(self, system_resources: dict[str, float]):
         """Handle system resource pressure by adjusting service states."""
         memory_pressure = system_resources.get("memory_percent", 0) / 100
         thresholds = self.global_sleep_settings.resource_thresholds
@@ -1044,45 +1013,33 @@ class ServiceManager:
 
     async def _force_sleep_low_priority_services(self):
         """Force sleep low-priority services under memory pressure."""
-        running_services = [
-            name for name, status in self.service_status.items()
-            if status.status == "running"
-        ]
+        running_services = [name for name, status in self.service_status.items() if status.status == "running"]
 
         # Sort by priority (low priority first)
-        running_services.sort(key=lambda x: self._get_service_priority(x), reverse=True)
+        running_services.sort(key=self._get_service_priority, reverse=True)
 
         for service_name in running_services:
             if self._get_service_priority(service_name) >= 2:  # Low priority
                 try:
                     await self.sleep_service(service_name)
-                    logger.info("Force-slept low priority service due to memory pressure",
-                               service=service_name)
+                    logger.info("Force-slept low priority service due to memory pressure", service=service_name)
                 except Exception as e:
-                    logger.warning("Failed to force sleep service",
-                                service=service_name,
-                                error=str(e))
+                    logger.warning("Failed to force sleep service", service=service_name, error=str(e))
 
     async def _pre_warm_critical_services(self):
         """Pre-warm critical services when resources are available."""
-        sleeping_services = [
-            name for name, status in self.service_status.items()
-            if status.status == "sleeping"
-        ]
+        sleeping_services = [name for name, status in self.service_status.items() if status.status == "sleeping"]
 
         # Sort by priority (high priority first)
-        sleeping_services.sort(key=lambda x: self._get_service_priority(x))
+        sleeping_services.sort(key=self._get_service_priority)
 
         for service_name in sleeping_services:
             if self._get_service_priority(service_name) <= 0:  # High priority
                 try:
                     await self.wake_service(service_name)
-                    logger.info("Pre-warmed critical service",
-                               service=service_name)
+                    logger.info("Pre-warmed critical service", service=service_name)
                 except Exception as e:
-                    logger.warning("Failed to pre-warm service",
-                                service=service_name,
-                                error=str(e))
+                    logger.warning("Failed to pre-warm service", service=service_name, error=str(e))
 
     async def _wake_processor(self):
         """Background task to process wake requests with priority ordering."""
@@ -1098,7 +1055,7 @@ class ServiceManager:
                     finally:
                         self._processing_wake = False
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
                 logger.error("Error in wake processor", error=str(e))
@@ -1107,10 +1064,7 @@ class ServiceManager:
     async def request_wake(self, service_name: str):
         """Request a service wake with priority queuing."""
         if service_name not in self.service_status:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Service {service_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         current_status = self.service_status[service_name]
 
@@ -1121,9 +1075,7 @@ class ServiceManager:
         elif current_status.status == "running":
             logger.info("Service already running", service=service_name)
         else:
-            logger.info("Service not in sleepable state",
-                       service=service_name,
-                       status=current_status.status)
+            logger.info("Service not in sleepable state", service=service_name, status=current_status.status)
 
     def predict_service_wake_need(self, service_name: str, hours_ahead: int = 1) -> float:
         """Predict the likelihood that a service will need to be woken up in the next N hours.
@@ -1168,17 +1120,16 @@ class ServiceManager:
         # 4. Recent wake patterns (if recently woken, might be needed again)
         if metrics.wake_times and len(metrics.wake_times) > 0:
             # Check if service was woken recently (last hour)
-            recent_wakes = len([t for t in metrics.wake_times if time.time() - t/1000 < 3600])
+            recent_wakes = len([t for t in metrics.wake_times if time.time() - t / 1000 < 3600])
             wake_factor = min(recent_wakes / 5.0, 1.0)
             factors.append(wake_factor)
 
         # Calculate weighted average
         if factors:
             return sum(factors) / len(factors)
-        else:
-            return 0.5  # Default probability
+        return 0.5  # Default probability
 
-    def get_pre_warm_candidates(self, max_candidates: int = 3) -> List[Tuple[str, float]]:
+    def get_pre_warm_candidates(self, max_candidates: int = 3) -> list[tuple[str, float]]:
         """Get services that should be pre-warmed based on prediction.
 
         Returns a list of (service_name, probability) tuples sorted by probability.
@@ -1205,7 +1156,9 @@ class ServiceManager:
 
     async def apply_wake_predictions(self):
         """Apply wake predictions to pre-warm likely services."""
-        if not self.global_sleep_settings or not self.global_sleep_settings.performance_optimization.get("wake_prediction_enabled", False):
+        if not self.global_sleep_settings or not self.global_sleep_settings.performance_optimization.get(
+            "wake_prediction_enabled", False
+        ):
             return
 
         # Get pre-warm candidates
@@ -1217,8 +1170,7 @@ class ServiceManager:
 
         # Only pre-warm if memory pressure is low
         if memory_pressure > 0.7:  # 70% memory usage threshold
-            logger.info("Skipping pre-warming due to memory pressure",
-                       memory_percent=memory_pressure * 100)
+            logger.info("Skipping pre-warming due to memory pressure", memory_percent=memory_pressure * 100)
             return
 
         # Pre-warm high-probability services
@@ -1226,13 +1178,9 @@ class ServiceManager:
             if probability > 0.7:  # High probability threshold
                 try:
                     await self.wake_service(service_name)
-                    logger.info("Pre-warmed service based on prediction",
-                               service=service_name,
-                               probability=probability)
+                    logger.info("Pre-warmed service based on prediction", service=service_name, probability=probability)
                 except Exception as e:
-                    logger.warning("Failed to pre-warm service",
-                                service=service_name,
-                                error=str(e))
+                    logger.warning("Failed to pre-warm service", service=service_name, error=str(e))
 
     async def _auto_sleep_manager(self):
         """Background task to manage service sleep states."""
@@ -1257,20 +1205,18 @@ class ServiceManager:
                         idle_time = current_time - last_accessed_time
 
                         if idle_time >= sleep_policy.idle_timeout:
-                            logger.info("Auto-sleeping service due to inactivity",
-                                       service=service_name,
-                                       idle_time=idle_time)
+                            logger.info(
+                                "Auto-sleeping service due to inactivity", service=service_name, idle_time=idle_time
+                            )
                             try:
                                 await self.sleep_service(service_name)
                             except Exception as e:
-                                logger.error("Failed to auto-sleep service",
-                                            service=service_name,
-                                            error=str(e))
+                                logger.error("Failed to auto-sleep service", service=service_name, error=str(e))
 
                 # Wait before next check (30 seconds)
                 try:
                     await asyncio.wait_for(self._shutdown_event.wait(), timeout=30.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue  # Continue the loop
 
             except Exception as e:
@@ -1290,17 +1236,17 @@ class ServiceManager:
 
             if stats:
                 # CPU usage calculation
-                cpu_delta = stats['cpu_stats']['cpu_usage']['total_usage'] - \
-                          stats['precpu_stats']['cpu_usage']['total_usage']
-                system_delta = stats['cpu_stats']['system_cpu_usage'] - \
-                             stats['precpu_stats']['system_cpu_usage']
+                cpu_delta = (
+                    stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+                )
+                system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
 
                 if system_delta > 0:
-                    cpu_usage = (cpu_delta / system_delta) * len(stats['cpu_stats']['cpu_usage']['percpu_usage']) * 100
+                    cpu_usage = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100
 
                 # Memory usage
-                memory_usage = stats['memory_stats']['usage']
-                memory_limit = stats['memory_stats']['limit']
+                memory_usage = stats["memory_stats"]["usage"]
+                memory_limit = stats["memory_stats"]["limit"]
 
             # Update service status with metrics
             if service_name in self.service_status:
@@ -1313,19 +1259,19 @@ class ServiceManager:
                 if service_name in self.sleep_policies:
                     sleep_policy = self.sleep_policies[service_name]
                     running_memory = status.memory_usage
-                    sleep_memory = float(sleep_policy.memory_reservation.replace('MB', ''))
+                    sleep_memory = float(sleep_policy.memory_reservation.replace("MB", ""))
                     if running_memory > 0:
                         status.sleep_efficiency = round(((running_memory - sleep_memory) / running_memory) * 100, 2)
 
-            logger.debug("Collected resource metrics",
-                        service=service_name,
-                        cpu_usage=cpu_usage,
-                        memory_usage_mb=memory_usage / 1024 / 1024)
+            logger.debug(
+                "Collected resource metrics",
+                service=service_name,
+                cpu_usage=cpu_usage,
+                memory_usage_mb=memory_usage / 1024 / 1024,
+            )
 
         except Exception as e:
-            logger.warning("Failed to collect resource metrics",
-                        service=service_name,
-                        error=str(e))
+            logger.warning("Failed to collect resource metrics", service=service_name, error=str(e))
 
     async def _update_service_metrics(self, service_name: str):
         """Update all metrics for a service."""
@@ -1343,7 +1289,7 @@ class ServiceManager:
         if status.container_id and status.status in ["running", "sleeping"]:
             await self._collect_resource_metrics(service_name, status.container_id)
 
-    async def get_performance_metrics(self) -> Dict[str, Dict[str, float]]:
+    async def get_performance_metrics(self) -> dict[str, dict[str, float]]:
         """Get performance metrics for all services."""
         metrics = {}
 
@@ -1356,7 +1302,7 @@ class ServiceManager:
                 "total_sleep_time": status.total_sleep_time,
                 "sleep_efficiency": status.sleep_efficiency,
                 "state_transitions": status.state_transitions,
-                "uptime_seconds": status.uptime_seconds
+                "uptime_seconds": status.uptime_seconds,
             }
 
             # Add wake time if available
@@ -1365,14 +1311,11 @@ class ServiceManager:
 
         return metrics
 
-    async def get_system_metrics(self) -> Dict[str, Any]:
+    async def get_system_metrics(self) -> dict[str, Any]:
         """Get system-wide performance metrics."""
         try:
             # Get Docker system info if client is available
-            if self.docker_client:
-                docker_info = self.docker_client.info()
-            else:
-                docker_info = {}
+            docker_info = self.docker_client.info() if self.docker_client else {}
 
             # Count services by state
             running_count = sum(1 for s in self.service_status.values() if s.status == "running")
@@ -1395,17 +1338,19 @@ class ServiceManager:
                 "total_memory_usage_mb": total_memory_usage,
                 "average_cpu_usage": total_cpu_usage / max(total_services, 1),
                 "sleep_ratio": sleeping_count / max(total_services, 1) * 100,
-                "running_ratio": running_count / max(total_services, 1) * 100
+                "running_ratio": running_count / max(total_services, 1) * 100,
             }
 
             # Add Docker system info if available
             if docker_info:
-                efficiency_metrics.update({
-                    "docker_version": docker_info.get("ServerVersion", "unknown"),
-                    "docker_ncpu": docker_info.get("NCPU", 0),
-                    "docker_mem_total": docker_info.get("MemTotal", 0),
-                    "docker_mem_free": docker_info.get("MemFree", 0)
-                })
+                efficiency_metrics.update(
+                    {
+                        "docker_version": docker_info.get("ServerVersion", "unknown"),
+                        "docker_ncpu": docker_info.get("NCPU", 0),
+                        "docker_mem_total": docker_info.get("MemTotal", 0),
+                        "docker_mem_free": docker_info.get("MemFree", 0),
+                    }
+                )
 
             return efficiency_metrics
 
@@ -1413,7 +1358,7 @@ class ServiceManager:
             logger.error("Failed to get system metrics", error=str(e))
             return {"error": str(e)}
 
-    async def health_check(self) -> Dict[str, str]:
+    async def health_check(self) -> dict[str, str]:
         """Perform health check."""
         try:
             # Check Docker connection if client is available
@@ -1424,23 +1369,17 @@ class ServiceManager:
                 docker_connection = "limited_mode"
 
             # Count running services
-            running_count = sum(
-                1 for status in self.service_status.values()
-                if status.status == "running"
-            )
+            running_count = sum(1 for status in self.service_status.values() if status.status == "running")
 
             return {
                 "status": "healthy",
                 "docker_connection": docker_connection,
                 "services_running": str(running_count),
-                "services_total": str(len(self.services))
+                "services_total": str(len(self.services)),
             }
         except Exception as e:
             logger.error("Health check failed", error=str(e))
-            return {
-                "status": "unhealthy",
-                "error": str(e)
-            }
+            return {"status": "unhealthy", "error": str(e)}
 
     async def shutdown(self):
         """Shutdown the service manager."""
@@ -1453,7 +1392,7 @@ class ServiceManager:
         ]
 
         # Add wake processor task if it exists
-        if hasattr(self, '_wake_processor_task'):
+        if hasattr(self, "_wake_processor_task"):
             tasks_to_cancel.append(self._wake_processor_task)
 
         for task in tasks_to_cancel:
@@ -1471,18 +1410,16 @@ class ServiceManager:
                     await self.wake_service(service_name)
                     logger.info("Woke sleeping service during shutdown", service=service_name)
                 except Exception as e:
-                    logger.warning("Failed to wake sleeping service during shutdown",
-                                service=service_name,
-                                error=str(e))
+                    logger.warning(
+                        "Failed to wake sleeping service during shutdown", service=service_name, error=str(e)
+                    )
 
         # Stop all running services
         for service_name in list(self.service_status.keys()):
             try:
                 await self.stop_service(service_name)
             except Exception as e:
-                logger.warning("Failed to stop service during shutdown",
-                            service=service_name,
-                            error=str(e))
+                logger.warning("Failed to stop service during shutdown", service=service_name, error=str(e))
 
         # Close Docker client
         if self.docker_client:
@@ -1493,13 +1430,11 @@ class ServiceManager:
 
 # FastAPI application
 app = FastAPI(
-    title="Forge MCP Gateway Service Manager",
-    description="Dynamic service management for MCP servers",
-    version="1.0.0"
+    title="Forge MCP Gateway Service Manager", description="Dynamic service management for MCP servers", version="1.0.0"
 )
 
 # Global service manager instance
-service_manager: Optional[ServiceManager] = None
+service_manager: ServiceManager | None = None
 
 
 @app.on_event("startup")
@@ -1626,7 +1561,7 @@ async def get_efficiency_metrics():
         "wake_time_target_ms": 200.0,  # < 200ms wake time
         "memory_reduction_target": 60.0,  # > 60% memory reduction when sleeping
         "cpu_usage_target": 5.0,  # < 5% CPU for sleeping services
-        "service_availability_target": 99.8  # 99.8% effective availability
+        "service_availability_target": 99.8,  # 99.8% effective availability
     }
 
     # Current efficiency metrics
@@ -1634,14 +1569,15 @@ async def get_efficiency_metrics():
         "sleep_ratio": system_metrics.get("sleep_ratio", 0.0),
         "running_ratio": system_metrics.get("running_ratio", 0.0),
         "total_memory_usage_mb": system_metrics.get("total_memory_usage_mb", 0.0),
-        "average_cpu_usage": system_metrics.get("average_cpu_usage", 0.0)
+        "average_cpu_usage": system_metrics.get("average_cpu_usage", 0.0),
     }
 
     # Compliance status
     compliance_status = {
-        "sleep_ratio_compliant": current_efficiency["sleep_ratio"] >= efficiency_targets["sleep_ratio_target"] * 0.5,  # At least half of target
+        "sleep_ratio_compliant": current_efficiency["sleep_ratio"]
+        >= efficiency_targets["sleep_ratio_target"] * 0.5,  # At least half of target
         "cpu_usage_compliant": current_efficiency["average_cpu_usage"] <= efficiency_targets["cpu_usage_target"],
-        "overall_compliance": "unknown"  # Will be calculated below
+        "overall_compliance": "unknown",  # Will be calculated below
     }
 
     # Calculate overall compliance
@@ -1655,7 +1591,7 @@ async def get_efficiency_metrics():
         "current_efficiency": current_efficiency,
         "compliance_status": compliance_status,
         "compliance_percentage": round(compliance_percentage, 2),
-        "system_metrics": system_metrics
+        "system_metrics": system_metrics,
     }
 
 
@@ -1753,7 +1689,9 @@ async def get_system_metrics():
                 "avg_ms": sum(all_wake_times) / len(all_wake_times) if all_wake_times else 0,
                 "min_ms": min(all_wake_times) if all_wake_times else 0,
                 "max_ms": max(all_wake_times) if all_wake_times else 0,
-                "p95_ms": sorted(all_wake_times)[int(len(all_wake_times) * 0.95)] if all_wake_times and len(all_wake_times) > 20 else 0,
+                "p95_ms": sorted(all_wake_times)[int(len(all_wake_times) * 0.95)]
+                if all_wake_times and len(all_wake_times) > 20
+                else 0,
             },
             "sleep_times": {
                 "count": len(all_sleep_times),
@@ -1763,7 +1701,9 @@ async def get_system_metrics():
             },
         },
         "total_errors": total_errors,
-        "global_settings": service_manager.global_sleep_settings.dict() if service_manager.global_sleep_settings else None,
+        "global_settings": service_manager.global_sleep_settings.dict()
+        if service_manager.global_sleep_settings
+        else None,
     }
 
 
@@ -1787,7 +1727,7 @@ async def update_sleep_settings(settings: dict):
         logger.info("Updated global sleep settings")
         return {"message": "Sleep settings updated successfully"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid settings: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid settings: {e!s}")
 
 
 @app.get("/services/predictions")
@@ -1803,11 +1743,11 @@ async def get_wake_predictions():
             {
                 "service_name": service_name,
                 "wake_probability": probability,
-                "recommendation": "pre_warm" if probability > 0.7 else "monitor"
+                "recommendation": "pre_warm" if probability > 0.7 else "monitor",
             }
             for service_name, probability in candidates
         ],
-        "timestamp": datetime.datetime.now().isoformat()
+        "timestamp": datetime.datetime.now().isoformat(),
     }
 
 
@@ -1840,7 +1780,7 @@ async def get_service_state_transitions(service_name: str):
         "recent_transitions": list(metrics.state_transitions)[-50:],  # Last 50 transitions
         "efficiency_metrics": metrics.get_state_efficiency_metrics(),
         "total_transitions": len(metrics.state_transitions),
-        "timestamp": time.time()
+        "timestamp": time.time(),
     }
 
 
@@ -1852,12 +1792,7 @@ async def get_service_alerts(service_name: str):
 
     alerts = service_manager.get_service_alerts(service_name)
 
-    return {
-        "service_name": service_name,
-        "alerts": alerts,
-        "alert_count": len(alerts),
-        "timestamp": time.time()
-    }
+    return {"service_name": service_name, "alerts": alerts, "alert_count": len(alerts), "timestamp": time.time()}
 
 
 @app.get("/system/alerts")
@@ -1899,7 +1834,7 @@ async def get_system_efficiency_metrics():
         if status and status.status == "running":
             weight = 2.0
 
-        total_efficiency += efficiency.get('running_efficiency', 0) * weight
+        total_efficiency += efficiency.get("running_efficiency", 0) * weight
 
     # Calculate system-wide averages
     avg_efficiency = total_efficiency / max(total_services * 2, 1)  # Normalize by max weight
@@ -1910,16 +1845,20 @@ async def get_system_efficiency_metrics():
         "service_efficiencies": service_efficiencies,
         "efficiency_breakdown": {
             "avg_running_efficiency": round(
-                sum(s.get('running_efficiency', 0) for s in service_efficiencies.values()) / max(total_services, 1) * 100, 1
+                sum(s.get("running_efficiency", 0) for s in service_efficiencies.values())
+                / max(total_services, 1)
+                * 100,
+                1,
             ),
             "avg_sleep_efficiency": round(
-                sum(s.get('sleep_efficiency', 0) for s in service_efficiencies.values()) / max(total_services, 1) * 100, 1
+                sum(s.get("sleep_efficiency", 0) for s in service_efficiencies.values()) / max(total_services, 1) * 100,
+                1,
             ),
             "avg_error_rate": round(
-                sum(s.get('error_rate', 0) for s in service_efficiencies.values()) / max(total_services, 1) * 100, 1
-            )
+                sum(s.get("error_rate", 0) for s in service_efficiencies.values()) / max(total_services, 1) * 100, 1
+            ),
         },
-        "timestamp": time.time()
+        "timestamp": time.time(),
     }
 
 
@@ -1940,7 +1879,7 @@ async def get_monitoring_dashboard():
         "efficiency": efficiency_metrics,
         "resources": service_manager.resource_monitor.get_system_resources(),
         "timestamp": time.time(),
-        "dashboard_version": "1.0"
+        "dashboard_version": "1.0",
     }
 
 
@@ -1961,10 +1900,4 @@ if __name__ == "__main__":
 
     # Run the application
     settings = Settings.from_env()
-    uvicorn.run(
-        "service_manager:app",
-        host="0.0.0.0",
-        port=settings.port,
-        log_level=settings.log_level,
-        reload=False
-    )
+    uvicorn.run("service_manager:app", host="0.0.0.0", port=settings.port, log_level=settings.log_level, reload=False)

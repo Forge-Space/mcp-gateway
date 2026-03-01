@@ -3,23 +3,19 @@ Integration tests for serverless MCP sleep architecture with real Docker contain
 Tests the complete sleep/wake functionality with actual MCP services.
 """
 
-import pytest
 import asyncio
-import time
-import docker
-from unittest.mock import patch, AsyncMock
-from typing import Dict, List
-import tempfile
-import yaml
 import os
+import tempfile
+import time
+from unittest.mock import AsyncMock
 
+import docker
+import pytest
+import yaml
 from service_manager import (
-    ServiceManager,
-    ServiceStatus,
-    SleepPolicy,
     GlobalSleepSettings,
-    PerformanceMetrics,
-    ResourceMonitor
+    ResourceMonitor,
+    ServiceManager,
 )
 
 
@@ -37,16 +33,14 @@ def test_service_config():
         "image": "alpine:latest",
         "command": ["sh", "-c", "echo 'Service running' && sleep 3600"],
         "port": 8080,
-        "environment": {
-            "TEST_MODE": "integration"
-        },
+        "environment": {"TEST_MODE": "integration"},
         "sleep_policy": {
             "enabled": True,
             "idle_timeout": 60,
             "min_sleep_time": 30,
             "memory_reservation": "64MB",
-            "priority": "normal"
-        }
+            "priority": "normal",
+        },
     }
 
 
@@ -61,17 +55,13 @@ def global_sleep_settings():
         wake_timeout=5,
         resource_monitoring={"enabled": True, "check_interval": 5},
         performance_optimization={"wake_prediction_enabled": True},
-        wake_priorities={
-            "high": [],
-            "normal": ["test-mcp-service"],
-            "low": []
-        },
+        wake_priorities={"high": [], "normal": ["test-mcp-service"], "low": []},
         resource_thresholds={
             "high_memory_pressure": 0.9,
             "moderate_memory_pressure": 0.75,
             "low_memory_pressure": 0.5,
-            "cpu_pressure_threshold": 0.8
-        }
+            "cpu_pressure_threshold": 0.8,
+        },
     )
 
 
@@ -79,7 +69,7 @@ def global_sleep_settings():
 async def service_manager_with_docker(docker_client, test_service_config, global_sleep_settings):
     """Create a ServiceManager instance with real Docker for integration testing."""
     # Create temporary config file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
         yaml.dump({"services": [test_service_config]}, f)
         config_path = f.name
 
@@ -373,9 +363,7 @@ class TestIntegrationSleepWake:
         service_name = "test-mcp-service"
 
         # Test concurrent sleep requests
-        sleep_tasks = [
-            manager.sleep_service(service_name) for _ in range(3)
-        ]
+        sleep_tasks = [manager.sleep_service(service_name) for _ in range(3)]
 
         sleep_results = await asyncio.gather(*sleep_tasks, return_exceptions=True)
 
@@ -388,9 +376,7 @@ class TestIntegrationSleepWake:
         assert status.status == "sleeping"
 
         # Test concurrent wake requests
-        wake_tasks = [
-            manager.wake_service(service_name) for _ in range(3)
-        ]
+        wake_tasks = [manager.wake_service(service_name) for _ in range(3)]
 
         wake_results = await asyncio.gather(*wake_tasks, return_exceptions=True)
 

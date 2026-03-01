@@ -5,20 +5,20 @@ Tests the dynamic service management, sleep/wake functionality,
 resource optimization, and performance characteristics of the scalable architecture.
 """
 
-import asyncio
 import json
+import sys
 import time
-import pytest
-import requests
-import docker
-from typing import Dict, List, Optional
 from dataclasses import dataclass
 from pathlib import Path
+
+import docker
+import requests
 
 
 @dataclass
 class TestConfig:
     """Test configuration"""
+
     gateway_url: str = "http://localhost:4444"
     service_manager_url: str = "http://localhost:9000"
     tool_router_url: str = "http://localhost:8030"
@@ -48,12 +48,7 @@ class ScalableArchitectureTestSuite:
 
     def log_result(self, test_name: str, passed: bool, message: str = ""):
         """Log test result"""
-        result = {
-            "test": test_name,
-            "passed": passed,
-            "message": message,
-            "timestamp": time.time()
-        }
+        result = {"test": test_name, "passed": passed, "message": message, "timestamp": time.time()}
         self.test_results.append(result)
 
         status = "PASS" if passed else "FAIL"
@@ -66,23 +61,20 @@ class ScalableArchitectureTestSuite:
                 "image": "forge-mcp-gateway-translate:latest",
                 "port": self.config.test_port,
                 "command": ["echo", "test"],
-                "resources": {
-                    "memory": "128MB",
-                    "cpu": "0.1"
-                },
+                "resources": {"memory": "128MB", "cpu": "0.1"},
                 "sleep_policy": {
                     "enabled": True,
                     "idle_timeout": 60,
                     "min_sleep_time": 30,
                     "memory_reservation": "64MB",
-                    "priority": "low"
-                }
+                    "priority": "low",
+                },
             }
 
             response = requests.post(
                 f"{self.config.service_manager_url}/services/{self.config.test_service}/register",
                 json=service_config,
-                timeout=self.config.timeout
+                timeout=self.config.timeout,
             )
 
             return response.status_code == 200
@@ -95,8 +87,7 @@ class ScalableArchitectureTestSuite:
         """Clean up test service"""
         try:
             response = requests.delete(
-                f"{self.config.service_manager_url}/services/{self.config.test_service}",
-                timeout=self.config.timeout
+                f"{self.config.service_manager_url}/services/{self.config.test_service}", timeout=self.config.timeout
             )
 
             return response.status_code in [200, 404]  # 404 is OK if service doesn't exist
@@ -111,7 +102,7 @@ class ScalableArchitectureTestSuite:
             services = {
                 "Gateway": f"{self.config.gateway_url}/health",
                 "Service Manager": f"{self.config.service_manager_url}/health",
-                "Tool Router": f"{self.config.tool_router_url}/health"
+                "Tool Router": f"{self.config.tool_router_url}/health",
             }
 
             results = {}
@@ -127,13 +118,13 @@ class ScalableArchitectureTestSuite:
                     print(f"  {name}: Timeout")
                 except Exception as e:
                     results[name] = False
-                    print(f"  {name}: {str(e)}")
+                    print(f"  {name}: {e!s}")
 
             all_healthy = all(results.values())
             self.log_result(
                 "test_connectivity",
                 all_healthy,
-                f"Services healthy: {sum(results.values())}/{len(results)} - {results}"
+                f"Services healthy: {sum(results.values())}/{len(results)} - {results}",
             )
 
             return all_healthy
@@ -161,7 +152,7 @@ class ScalableArchitectureTestSuite:
             self.log_result(
                 "test_service_manager_api",
                 api_healthy,
-                f"Status: {status_ok}, Health: {health_ok}, Metrics: {metrics_ok}"
+                f"Status: {status_ok}, Health: {health_ok}, Metrics: {metrics_ok}",
             )
 
             return api_healthy
@@ -199,7 +190,7 @@ class ScalableArchitectureTestSuite:
             self.log_result(
                 "test_dynamic_service_registration",
                 registration_ok,
-                f"Status: {status_ok}, Config: {has_config}, Resources: {has_resources}"
+                f"Status: {status_ok}, Config: {has_config}, Resources: {has_resources}",
             )
 
             return registration_ok
@@ -233,9 +224,7 @@ class ScalableArchitectureTestSuite:
 
             # Test wake command
             wake_start = time.time()
-            wake_response = requests.post(
-                f"{self.config.service_manager_url}/services/{self.config.test_service}/wake"
-            )
+            wake_response = requests.post(f"{self.config.service_manager_url}/services/{self.config.test_service}/wake")
             wake_ok = wake_response.status_code == 200
             wake_time = (time.time() - wake_start) * 1000  # Convert to milliseconds
 
@@ -246,7 +235,7 @@ class ScalableArchitectureTestSuite:
             self.log_result(
                 "test_sleep_wake_functionality",
                 functionality_ok,
-                f"Sleep: {sleep_ok} ({sleep_time:.0f}ms), Wake: {wake_ok} ({wake_time:.0f}ms), Performance: {wake_performance_ok}"
+                f"Sleep: {sleep_ok} ({sleep_time:.0f}ms), Wake: {wake_ok} ({wake_time:.0f}ms), Performance: {wake_performance_ok}",
             )
 
             return functionality_ok
@@ -285,7 +274,7 @@ class ScalableArchitectureTestSuite:
             self.log_result(
                 "test_bulk_operations",
                 operations_ok,
-                f"Sleep: {sleep_ok} ({sleep_time:.0f}ms), Wake: {wake_ok} ({wake_time:.0f}ms), Performance: {bulk_performance_ok}"
+                f"Sleep: {sleep_ok} ({sleep_time:.0f}ms), Wake: {wake_ok} ({wake_time:.0f}ms), Performance: {bulk_performance_ok}",
             )
 
             return operations_ok
@@ -325,7 +314,7 @@ class ScalableArchitectureTestSuite:
             self.log_result(
                 "test_resource_optimization",
                 optimization_ok,
-                f"Metrics: {metrics_ok}, Cost: {cost_ok}, Data Quality: {metrics_data_ok and cost_data_ok}"
+                f"Metrics: {metrics_ok}, Cost: {cost_ok}, Data Quality: {metrics_data_ok and cost_data_ok}",
             )
 
             return optimization_ok
@@ -359,7 +348,7 @@ class ScalableArchitectureTestSuite:
             self.log_result(
                 "test_performance_metrics",
                 performance_ok,
-                f"Gateway: {gateway_time:.0f}ms, Service Manager: {sm_time:.0f}ms, Tool Router: {tr_time:.0f}ms"
+                f"Gateway: {gateway_time:.0f}ms, Service Manager: {sm_time:.0f}ms, Tool Router: {tr_time:.0f}ms",
             )
 
             return performance_ok
@@ -372,7 +361,9 @@ class ScalableArchitectureTestSuite:
         """Test Docker container resource limits"""
         try:
             if not self.docker_available:
-                self.log_result("test_container_resource_limits", False, "Docker not available - cannot test container limits")
+                self.log_result(
+                    "test_container_resource_limits", False, "Docker not available - cannot test container limits"
+                )
                 return False
 
             # Get containers from scalable compose file
@@ -395,7 +386,7 @@ class ScalableArchitectureTestSuite:
                         self.log_result(
                             f"test_container_resource_limits_{container.name}",
                             False,
-                            f"Memory limit: {has_memory_limit}, CPU limit: {has_cpu_limit}"
+                            f"Memory limit: {has_memory_limit}, CPU limit: {has_cpu_limit}",
                         )
 
             if limits_ok:
@@ -426,15 +417,12 @@ class ScalableArchitectureTestSuite:
                 discovery_ok = len(discoverable_services) > 0
 
                 self.log_result(
-                    "test_service_discovery",
-                    discovery_ok,
-                    f"Found {len(discoverable_services)} discoverable services"
+                    "test_service_discovery", discovery_ok, f"Found {len(discoverable_services)} discoverable services"
                 )
 
                 return discovery_ok
-            else:
-                self.log_result("test_service_discovery", False, "Failed to get service status")
-                return False
+            self.log_result("test_service_discovery", False, "Failed to get service status")
+            return False
 
         except Exception as e:
             self.log_result("test_service_discovery", False, str(e))
@@ -446,11 +434,16 @@ class ScalableArchitectureTestSuite:
             # Test basic AI selector imports and structure
             try:
                 from tool_router.ai.enhanced_selector import (
-                    AIProvider, AIModel, EnhancedAISelector,
-                    OllamaSelector, OpenAISelector, AnthropicSelector
+                    AIModel,
+                    AIProvider,
+                    AnthropicSelector,
+                    EnhancedAISelector,
+                    OllamaSelector,
+                    OpenAISelector,
                 )
                 from tool_router.ai.feedback import FeedbackStore
                 from tool_router.ai.prompts import PromptTemplates
+
                 print("✅ AI enhancement imports successful")
             except ImportError as e:
                 print(f"⚠️ AI enhancement imports failed (may not be implemented): {e}")
@@ -472,10 +465,7 @@ class ScalableArchitectureTestSuite:
             # Test Ollama selector (if available)
             try:
                 ollama_selector = OllamaSelector(
-                    endpoint="http://localhost:11434",
-                    model=AIModel.LLAMA32_3B.value,
-                    timeout=2000,
-                    min_confidence=0.3
+                    endpoint="http://localhost:11434", model=AIModel.LLAMA32_3B.value, timeout=2000, min_confidence=0.3
                 )
 
                 # Test basic structure (don't actually call Ollama since it may not be running)
@@ -488,7 +478,7 @@ class ScalableArchitectureTestSuite:
                 enhanced = EnhancedAISelector(
                     providers=[],  # Empty providers for structure test
                     primary_weight=0.7,
-                    fallback_weight=0.3
+                    fallback_weight=0.3,
                 )
                 print("✅ Enhanced selector structure valid")
             except Exception as e:
@@ -502,7 +492,7 @@ class ScalableArchitectureTestSuite:
             self.log_result("test_ai_enhancement_functionality", False, str(e))
             return False
 
-    def generate_test_report(self) -> Dict:
+    def generate_test_report(self) -> dict:
         """Generate comprehensive test report"""
         total_tests = len(self.test_results)
         passed_tests = sum(1 for result in self.test_results if result["passed"])
@@ -515,10 +505,10 @@ class ScalableArchitectureTestSuite:
                 "passed": passed_tests,
                 "failed": failed_tests,
                 "pass_rate": pass_rate,
-                "timestamp": time.time()
+                "timestamp": time.time(),
             },
             "results": self.test_results,
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Add recommendations based on failed tests
@@ -545,11 +535,13 @@ class ScalableArchitectureTestSuite:
         # Add positive feedback if some services are working
         connectivity_result = next((r for r in self.test_results if r["test"] == "test_connectivity"), None)
         if connectivity_result and "2/3" in connectivity_result.get("message", ""):
-            report["recommendations"].append("✅ Gateway and Service Manager are running well - only Tool Router needs attention")
+            report["recommendations"].append(
+                "✅ Gateway and Service Manager are running well - only Tool Router needs attention"
+            )
 
         return report
 
-    def run_all_tests(self) -> Dict:
+    def run_all_tests(self) -> dict:
         """Run all tests and return report"""
         print("Running Scalable Architecture Test Suite...")
         print("=" * 50)
@@ -565,7 +557,7 @@ class ScalableArchitectureTestSuite:
             self.test_performance_metrics,
             self.test_container_resource_limits,
             self.test_service_discovery,
-            self.test_ai_enhancement_functionality
+            self.test_ai_enhancement_functionality,
         ]
 
         for test_method in test_methods:
@@ -580,15 +572,15 @@ class ScalableArchitectureTestSuite:
         report = self.generate_test_report()
 
         # Print summary
-        print(f"Test Summary:")
+        print("Test Summary:")
         print(f"  Total Tests: {report['summary']['total_tests']}")
         print(f"  Passed: {report['summary']['passed']}")
         print(f"  Failed: {report['summary']['failed']}")
         print(f"  Pass Rate: {report['summary']['pass_rate']:.1f}%")
 
-        if report['recommendations']:
-            print(f"\nRecommendations:")
-            for rec in report['recommendations']:
+        if report["recommendations"]:
+            print("\nRecommendations:")
+            for rec in report["recommendations"]:
                 print(f"  - {rec}")
 
         return report
@@ -607,14 +599,14 @@ def main():
     report_file = Path("test-results/scalable-architecture-test-report.json")
     report_file.parent.mkdir(exist_ok=True)
 
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     print(f"\nTest report saved to: {report_file}")
 
     # Exit with appropriate code
-    exit_code = 0 if report['summary']['pass_rate'] >= 80 else 1
-    exit(exit_code)
+    exit_code = 0 if report["summary"]["pass_rate"] >= 80 else 1
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

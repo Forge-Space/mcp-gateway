@@ -2,21 +2,20 @@
 Comprehensive tests for serverless MCP sleep/wake functionality.
 """
 
-import pytest
 import asyncio
 import time
-from unittest.mock import Mock, patch
 from collections import deque
+from unittest.mock import Mock, patch
 
 import docker
-
+import pytest
 from service_manager import (
+    GlobalSleepSettings,
+    PerformanceMetrics,
+    ResourceMonitor,
     ServiceManager,
     ServiceStatus,
     SleepPolicy,
-    GlobalSleepSettings,
-    PerformanceMetrics,
-    ResourceMonitor
 )
 
 
@@ -37,16 +36,13 @@ def mock_container():
     container.stats.return_value = {
         "cpu_stats": {
             "cpu_usage": {"total_usage": 1000000, "percpu_usage": [100000, 200000]},
-            "system_cpu_usage": 2000000
+            "system_cpu_usage": 2000000,
         },
-        "precpu_stats": {
-            "cpu_usage": {"total_usage": 800000},
-            "system_cpu_usage": 1800000
-        },
+        "precpu_stats": {"cpu_usage": {"total_usage": 800000}, "system_cpu_usage": 1800000},
         "memory_stats": {
             "usage": 134217728,  # 128MB
-            "limit": 268435456   # 256MB
-        }
+            "limit": 268435456,  # 256MB
+        },
     }
     return container
 
@@ -65,29 +61,16 @@ def service_manager(mock_docker_client):
     # Setup test data
     manager.services = {
         "test-service": Mock(name="test-service", sleep_policy=None),
-        "priority-service": Mock(name="priority-service", sleep_policy=None)
+        "priority-service": Mock(name="priority-service", sleep_policy=None),
     }
 
     manager.service_status = {
-        "test-service": ServiceStatus(
-            name="test-service",
-            status="running",
-            container_id="container-123"
-        ),
-        "priority-service": ServiceStatus(
-            name="priority-service",
-            status="running",
-            container_id="container-456"
-        )
+        "test-service": ServiceStatus(name="test-service", status="running", container_id="container-123"),
+        "priority-service": ServiceStatus(name="priority-service", status="running", container_id="container-456"),
     }
 
     manager.sleep_policies = {
-        "test-service": SleepPolicy(
-            enabled=True,
-            idle_timeout=300,
-            min_sleep_time=60,
-            memory_reservation="128MB"
-        )
+        "test-service": SleepPolicy(enabled=True, idle_timeout=300, min_sleep_time=60, memory_reservation="128MB")
     }
 
     manager.global_sleep_settings = GlobalSleepSettings(
@@ -98,17 +81,13 @@ def service_manager(mock_docker_client):
         wake_timeout=10,
         resource_monitoring={"enabled": True, "check_interval": 60},
         performance_optimization={"wake_prediction_enabled": True},
-        wake_priorities={
-            "high": ["priority-service"],
-            "normal": ["test-service"],
-            "low": []
-        },
+        wake_priorities={"high": ["priority-service"], "normal": ["test-service"], "low": []},
         resource_thresholds={
             "high_memory_pressure": 0.9,
             "moderate_memory_pressure": 0.75,
             "low_memory_pressure": 0.5,
-            "cpu_pressure_threshold": 0.8
-        }
+            "cpu_pressure_threshold": 0.8,
+        },
     )
 
     manager.performance_metrics = {
@@ -116,7 +95,7 @@ def service_manager(mock_docker_client):
             service_name="test-service",
             wake_times=deque(maxlen=100),
             sleep_times=deque(maxlen=100),
-            resource_usage=deque(maxlen=100)
+            resource_usage=deque(maxlen=100),
         )
     }
 
@@ -137,13 +116,13 @@ class TestServiceSleep:
         service_manager.docker_client.containers.get.return_value = mock_container
 
         # Mock system resources to be under pressure threshold
-        with patch.object(service_manager.resource_monitor, 'get_system_resources') as mock_resources:
+        with patch.object(service_manager.resource_monitor, "get_system_resources") as mock_resources:
             mock_resources.return_value = {
                 "cpu_percent": 50.0,
                 "memory_percent": 60.0,
                 "memory_available_gb": 8.0,
                 "memory_used_gb": 4.0,
-                "memory_total_gb": 12.0
+                "memory_total_gb": 12.0,
             }
 
             # Execute
@@ -157,7 +136,7 @@ class TestServiceSleep:
             # Check memory optimization was applied
             mock_container.update.assert_called_once_with(
                 mem_limit=134217728,  # 128MB in bytes
-                mem_reservation=134217728
+                mem_reservation=134217728,
             )
 
     @pytest.mark.asyncio
@@ -188,13 +167,13 @@ class TestServiceSleep:
     async def test_sleep_service_resource_pressure(self, service_manager):
         """Test sleep skipped due to resource pressure."""
         # Setup - mock high memory pressure
-        with patch.object(service_manager.resource_monitor, 'get_system_resources') as mock_resources:
+        with patch.object(service_manager.resource_monitor, "get_system_resources") as mock_resources:
             mock_resources.return_value = {
                 "cpu_percent": 50.0,
                 "memory_percent": 95.0,  # High memory pressure
                 "memory_available_gb": 1.0,
                 "memory_used_gb": 11.0,
-                "memory_total_gb": 12.0
+                "memory_total_gb": 12.0,
             }
 
             # Execute
@@ -223,13 +202,13 @@ class TestServiceSleep:
         service_manager.docker_client.containers.get.return_value = mock_container
 
         # Mock system resources
-        with patch.object(service_manager.resource_monitor, 'get_system_resources') as mock_resources:
+        with patch.object(service_manager.resource_monitor, "get_system_resources") as mock_resources:
             mock_resources.return_value = {
                 "cpu_percent": 50.0,
                 "memory_percent": 60.0,
                 "memory_available_gb": 8.0,
                 "memory_used_gb": 4.0,
-                "memory_total_gb": 12.0
+                "memory_total_gb": 12.0,
             }
 
             # Execute & Verify
@@ -297,14 +276,12 @@ class TestResourceMonitoring:
 
     def test_get_system_resources(self, service_manager):
         """Test system resource monitoring."""
-        with patch('psutil.cpu_percent', return_value=50.0), \
-             patch('psutil.virtual_memory') as mock_memory:
-
+        with patch("psutil.cpu_percent", return_value=50.0), patch("psutil.virtual_memory") as mock_memory:
             mock_memory.return_value = Mock(
                 percent=60.0,
                 available=8589934592,  # 8GB
-                used=4294967296,      # 4GB
-                total=12884901888     # 12GB
+                used=4294967296,  # 4GB
+                total=12884901888,  # 12GB
             )
 
             result = service_manager.resource_monitor.get_system_resources()
@@ -475,7 +452,7 @@ class TestMemoryOptimization:
 
         mock_container.update.assert_called_once_with(
             mem_limit=134217728,  # 128MB in bytes
-            mem_reservation=134217728
+            mem_reservation=134217728,
         )
 
     @pytest.mark.asyncio

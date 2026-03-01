@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 import yaml
-from pathlib import Path
-from typing import Any, Dict
 
 
 class TestGitHubWorkflows:
@@ -36,7 +36,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml is valid YAML."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         assert data is not None, "ci.yml should contain valid YAML"
@@ -46,7 +46,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml has a workflow name."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         assert "name" in data, "Workflow should have a name"
@@ -56,7 +56,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml has appropriate triggers."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         # YAML may parse "on" as True (boolean), so check for both
@@ -64,18 +64,14 @@ class TestGitHubWorkflows:
         on_config = data.get("on", data.get(True, {}))
 
         # Should have push and/or pull_request triggers
-        has_triggers = (
-            "push" in on_config
-            or "pull_request" in on_config
-            or "workflow_dispatch" in on_config
-        )
+        has_triggers = "push" in on_config or "pull_request" in on_config or "workflow_dispatch" in on_config
         assert has_triggers, "Workflow should have push, pull_request, or workflow_dispatch triggers"
 
     def test_ci_workflow_has_jobs(self, workflows_dir: Path) -> None:
         """Test that ci.yml defines jobs."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         assert "jobs" in data, "Workflow should have jobs"
@@ -86,7 +82,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml defines required environment variables."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         # Check for env section
@@ -104,7 +100,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml uses shared workflow template."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})
@@ -117,15 +113,15 @@ class TestGitHubWorkflows:
                 break
 
         # CI workflow should use reusable workflows or define steps
-        assert uses_reusable or any(
-            "steps" in job for job in jobs.values() if isinstance(job, dict)
-        ), "Jobs should either use reusable workflows or define steps"
+        assert uses_reusable or any("steps" in job for job in jobs.values() if isinstance(job, dict)), (
+            "Jobs should either use reusable workflows or define steps"
+        )
 
     def test_ci_workflow_has_test_job(self, workflows_dir: Path) -> None:
         """Test that ci.yml includes testing jobs."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})
@@ -148,7 +144,7 @@ class TestGitHubWorkflows:
         """Test that setup-node.yml is valid and reusable."""
         setup_node = reusable_dir / "setup-node.yml"
 
-        with open(setup_node, "r") as f:
+        with open(setup_node) as f:
             data = yaml.safe_load(f)
 
         assert data is not None, "setup-node.yml should be valid YAML"
@@ -161,7 +157,7 @@ class TestGitHubWorkflows:
         """Test that setup-node.yml defines inputs."""
         setup_node = reusable_dir / "setup-node.yml"
 
-        with open(setup_node, "r") as f:
+        with open(setup_node) as f:
             data = yaml.safe_load(f)
 
         on_config = data.get("on", data.get(True, {}))
@@ -176,7 +172,7 @@ class TestGitHubWorkflows:
         """Test that setup-node.yml installs Node.js dependencies."""
         setup_node = reusable_dir / "setup-node.yml"
 
-        with open(setup_node, "r") as f:
+        with open(setup_node) as f:
             content = f.read()
 
         # Should contain npm install commands
@@ -192,7 +188,7 @@ class TestGitHubWorkflows:
         """Test that setup-python.yml is valid and reusable."""
         setup_python = reusable_dir / "setup-python.yml"
 
-        with open(setup_python, "r") as f:
+        with open(setup_python) as f:
             data = yaml.safe_load(f)
 
         assert data is not None, "setup-python.yml should be valid YAML"
@@ -205,7 +201,7 @@ class TestGitHubWorkflows:
         """Test that setup-python.yml defines inputs."""
         setup_python = reusable_dir / "setup-python.yml"
 
-        with open(setup_python, "r") as f:
+        with open(setup_python) as f:
             data = yaml.safe_load(f)
 
         on_config = data.get("on", data.get(True, {}))
@@ -220,7 +216,7 @@ class TestGitHubWorkflows:
         """Test that setup-python.yml installs Python dependencies."""
         setup_python = reusable_dir / "setup-python.yml"
 
-        with open(setup_python, "r") as f:
+        with open(setup_python) as f:
             content = f.read()
 
         # Should contain pip install commands
@@ -231,7 +227,7 @@ class TestGitHubWorkflows:
         """Test that setup-python.yml installs testing tools."""
         setup_python = reusable_dir / "setup-python.yml"
 
-        with open(setup_python, "r") as f:
+        with open(setup_python) as f:
             content = f.read()
 
         # Should install pytest and related tools
@@ -248,7 +244,7 @@ class TestGitHubWorkflows:
         """Test that upload-coverage.yml is valid and reusable."""
         upload_coverage = reusable_dir / "upload-coverage.yml"
 
-        with open(upload_coverage, "r") as f:
+        with open(upload_coverage) as f:
             data = yaml.safe_load(f)
 
         assert data is not None, "upload-coverage.yml should be valid YAML"
@@ -261,7 +257,7 @@ class TestGitHubWorkflows:
         """Test that upload-coverage.yml requires CODECOV_TOKEN secret."""
         upload_coverage = reusable_dir / "upload-coverage.yml"
 
-        with open(upload_coverage, "r") as f:
+        with open(upload_coverage) as f:
             data = yaml.safe_load(f)
 
         on_config = data.get("on", data.get(True, {}))
@@ -277,7 +273,7 @@ class TestGitHubWorkflows:
         """Test that upload-coverage.yml uses Codecov action."""
         upload_coverage = reusable_dir / "upload-coverage.yml"
 
-        with open(upload_coverage, "r") as f:
+        with open(upload_coverage) as f:
             content = f.read()
 
         # Should use codecov action
@@ -294,7 +290,7 @@ class TestGitHubWorkflows:
             workflow_files.extend(reusable_dir.glob("*.yml"))
 
         for workflow_file in workflow_files:
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 data = yaml.safe_load(f)
 
             if "jobs" in data:
@@ -308,7 +304,7 @@ class TestGitHubWorkflows:
         """Test that workflows use reasonably recent action versions."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             content = f.read()
 
         # Should use v4+ for checkout action (if present)
@@ -320,7 +316,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml includes pattern validation job."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})
@@ -333,7 +329,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml includes integration test job."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})
@@ -346,7 +342,7 @@ class TestGitHubWorkflows:
         """Test that integration test job configures PostgreSQL service."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})
@@ -362,7 +358,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml includes performance test job."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})
@@ -375,7 +371,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml includes documentation check job."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})
@@ -388,7 +384,7 @@ class TestGitHubWorkflows:
         """Test that ci.yml includes workflow summary job."""
         ci_file = workflows_dir / "ci.yml"
 
-        with open(ci_file, "r") as f:
+        with open(ci_file) as f:
             data = yaml.safe_load(f)
 
         jobs = data.get("jobs", {})

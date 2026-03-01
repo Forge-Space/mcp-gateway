@@ -5,12 +5,14 @@ Uses PLATFORM_ADMIN_EMAIL, JWT_SECRET_KEY (and optional JWT_ISSUER, JWT_AUDIENCE
 from the environment. Run with .env sourced (e.g. make jwt) or pass vars explicitly.
 Requires: PyJWT (pip install pyjwt).
 """
+
 from __future__ import annotations
 
 import os
 import sys
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+
 
 try:
     import jwt
@@ -40,7 +42,7 @@ def main() -> None:
     except ValueError:
         exp_minutes = EXP_MINUTES_DEFAULT
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "username": username,
         "sub": username,

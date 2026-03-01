@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import subprocess
-import pytest
 from pathlib import Path
-from typing import Any
+
+import pytest
 
 
 class TestSimpleValidationScript:
@@ -64,9 +64,7 @@ class TestSimpleValidationScript:
         assert "Configuration Validation:" in output
         assert "Docker Configuration Validation:" in output
 
-    def test_script_validates_project_structure(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_validates_project_structure(self, script_path: Path, project_root: Path) -> None:
         """Test that the script validates project structure."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -83,9 +81,7 @@ class TestSimpleValidationScript:
         assert "tests" in output
         assert "directory" in output.lower()
 
-    def test_script_validates_key_files(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_validates_key_files(self, script_path: Path, project_root: Path) -> None:
         """Test that the script validates key files exist."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -108,9 +104,7 @@ class TestSimpleValidationScript:
         for file in expected_files:
             assert file in output, f"{file} should be checked by validation script"
 
-    def test_script_validates_docker_config(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_validates_docker_config(self, script_path: Path, project_root: Path) -> None:
         """Test that the script validates Docker configuration."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -126,9 +120,7 @@ class TestSimpleValidationScript:
         assert "Docker Configuration Validation:" in output
         assert "docker-compose.yml" in output or "Dockerfile" in output
 
-    def test_script_provides_summary(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_provides_summary(self, script_path: Path, project_root: Path) -> None:
         """Test that the script provides a validation summary."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -144,9 +136,7 @@ class TestSimpleValidationScript:
         assert "Validation Summary:" in output or "Summary" in output
         assert "Project Status:" in output or "Status:" in output
 
-    def test_script_shows_success_indicators(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_shows_success_indicators(self, script_path: Path, project_root: Path) -> None:
         """Test that the script uses success/failure indicators."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -162,9 +152,7 @@ class TestSimpleValidationScript:
         has_indicators = "✅" in output or "❌" in output or "exists" in output.lower()
         assert has_indicators, "Script should show success/failure indicators"
 
-    def test_script_handles_missing_directories_gracefully(
-        self, script_path: Path, tmp_path: Path
-    ) -> None:
+    def test_script_handles_missing_directories_gracefully(self, script_path: Path, tmp_path: Path) -> None:
         """Test that the script handles missing directories gracefully."""
         # Run in empty temporary directory
         result = subprocess.run(
@@ -179,9 +167,7 @@ class TestSimpleValidationScript:
         # It may have non-zero exit, but should not crash
         assert result.stderr == "" or "not found" in result.stderr.lower()
 
-    def test_script_provides_next_steps(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_provides_next_steps(self, script_path: Path, project_root: Path) -> None:
         """Test that the script provides next steps or recommendations."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -194,16 +180,10 @@ class TestSimpleValidationScript:
         output = result.stdout
 
         # Should provide next steps or recommendations
-        has_guidance = (
-            "Next Steps:" in output
-            or "Recommendation:" in output
-            or "Manual Testing Commands:" in output
-        )
+        has_guidance = "Next Steps:" in output or "Recommendation:" in output or "Manual Testing Commands:" in output
         assert has_guidance, "Script should provide guidance or next steps"
 
-    def test_script_checks_web_admin(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_checks_web_admin(self, script_path: Path, project_root: Path) -> None:
         """Test that the script checks web admin application."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -249,15 +229,13 @@ class TestSimpleValidationScript:
 
     def test_script_contains_shebang(self, script_path: Path) -> None:
         """Test that the script contains a proper shebang."""
-        with open(script_path, "r") as f:
+        with open(script_path) as f:
             first_line = f.readline().strip()
 
         assert first_line.startswith("#!"), "Script should have a shebang"
         assert "bash" in first_line.lower(), "Script should use bash"
 
-    def test_script_validates_virtual_environment(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_validates_virtual_environment(self, script_path: Path, project_root: Path) -> None:
         """Test that the script checks for virtual environment."""
         result = subprocess.run(
             ["bash", str(script_path)],
@@ -272,9 +250,7 @@ class TestSimpleValidationScript:
         # Should check for venv
         assert ".venv" in output or "virtual" in output.lower()
 
-    def test_script_validates_scripts_directory(
-        self, script_path: Path, project_root: Path
-    ) -> None:
+    def test_script_validates_scripts_directory(self, script_path: Path, project_root: Path) -> None:
         """Test that the script validates scripts directory."""
         result = subprocess.run(
             ["bash", str(script_path)],
