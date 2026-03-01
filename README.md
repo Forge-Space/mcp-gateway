@@ -1,6 +1,10 @@
-# Forge MCP Gateway
-
-> **AI-powered MCP tool routing hub — part of the [Forge Space](https://github.com/Forge-Space) open developer workspace.**
+<div align="center">
+  <a href="https://forgespace.co">
+    <img src="https://brand.forgespace.co/logos/wordmark.svg" alt="Forge Space" height="48">
+  </a>
+  <h1>Forge MCP Gateway</h1>
+  <p>AI-powered MCP tool routing hub — part of the <a href="https://github.com/Forge-Space">Forge Space</a> open developer workspace.</p>
+</div>
 
 Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge) with AI-driven optimization, predictive scaling, ML monitoring, and enterprise security. Connect any MCP server, route intelligently, manage via admin UI.
 
