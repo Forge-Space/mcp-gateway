@@ -56,7 +56,7 @@
   "dependencies": {
     "@forgespace/core": "1.1.4",
     "@modelcontextprotocol/sdk": "^1.0.4",
-    "hono": "^4.11.10",
+    "hono": "^4.12.5",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
