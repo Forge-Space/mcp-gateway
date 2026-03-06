@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forge-mcp-gateway"
-version = "1.7.8"
+version = "1.8.0"
 description = "Self-hosted MCP gateway (Context Forge) with tool-router"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,7 @@ dependencies = [
     "psycopg2-binary>=2.9.0",
     "redis>=5.0.0",
     "requests>=2.31.0",
+    "python-jose[cryptography]>=3.3.0",
 ]
 
 [project.optional-dependencies]

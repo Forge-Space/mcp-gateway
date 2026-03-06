@@ -11,6 +11,14 @@ Provides comprehensive security features including:
 from __future__ import annotations
 
 from .audit_logger import SecurityAuditLogger
+from .auth import AuthenticationError, JoseJWTValidator, JWTPayload
+from .authorization import (
+    AuthorizationError,
+    AuthzResult,
+    Permission,
+    RBACEvaluator,
+    Role,
+)
 from .input_validator import InputValidator, SecurityValidationResult, ValidationLevel
 from .rate_limiter import RateLimitConfig, RateLimiter, RateLimitResult
 from .security_middleware import (
@@ -21,10 +29,18 @@ from .security_middleware import (
 
 
 __all__ = [
+    "AuthenticationError",
+    "AuthorizationError",
+    "AuthzResult",
     "InputValidator",
+    "JoseJWTValidator",
+    "JWTPayload",
+    "Permission",
+    "RBACEvaluator",
     "RateLimitConfig",
     "RateLimitResult",
     "RateLimiter",
+    "Role",
     "SecurityAuditLogger",
     "SecurityCheckResult",
     "SecurityContext",
