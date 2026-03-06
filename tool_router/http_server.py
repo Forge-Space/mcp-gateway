@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,7 +40,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "tool-router",
-        "timestamp": "2025-02-20T21:10:00Z",
+        "timestamp": datetime.now(UTC).isoformat(),
         "version": "1.0.0",
     }
 
@@ -47,13 +48,13 @@ async def health_check():
 @app.get("/ready")
 async def readiness_check():
     """Readiness check endpoint."""
-    return {"ready": True, "timestamp": "2025-02-20T21:10:00Z"}
+    return {"ready": True, "timestamp": datetime.now(UTC).isoformat()}
 
 
 @app.get("/live")
 async def liveness_check():
     """Liveness check endpoint."""
-    return {"alive": True, "timestamp": "2025-02-20T21:10:00Z"}
+    return {"alive": True, "timestamp": datetime.now(UTC).isoformat()}
 
 
 def main() -> None:

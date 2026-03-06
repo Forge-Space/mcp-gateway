@@ -22,6 +22,9 @@ class StdioTransport(Transport):
         env: dict[str, str] | None = None,
         cwd: str | None = None,
     ) -> None:
+        if not command or not command[0]:
+            msg = "Command list must not be empty"
+            raise ValueError(msg)
         self.command = command
         self.env = env
         self.cwd = cwd
