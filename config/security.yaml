@@ -50,25 +50,32 @@ security:
 
   # Authentication Settings
   authentication:
-    required: false
-    methods: ["api_key", "jwt", "session"]
+    required: true
+    enable_jose_auth: true
+    methods: ["jwt"]
+    jwt_issuer: "${SUPABASE_JWT_ISSUER}"
+    jwks_url: "${SUPABASE_JWKS_URL}"
+    jwt_audience: null
+    fallback_to_legacy: true  # Keep PyJWT as fallback for 2 weeks
     api_key_header: "X-API-Key"
-    jwt_secret_env: "JWT_SECRET"
     session_timeout: 3600 # seconds
 
   # Authorization Settings
   authorization:
-    enabled: false
+    enabled: true
     default_role: "user"
     roles:
-      - name: "user"
-        permissions: ["read", "execute_basic"]
-      - name: "developer"
-        permissions: ["read", "execute", "configure"]
       - name: "admin"
-        permissions: ["read", "execute", "configure", "manage"]
-      - name: "enterprise"
-        permissions: ["read", "execute", "configure", "manage", "admin"]
+        permissions: ["*"]
+      - name: "developer"
+        permissions: ["component:read", "component:create", "component:update",
+                       "template:read", "template:create", "system:read",
+                       "audit:read", "policy:read", "scorecard:read", "tool:execute"]
+      - name: "user"
+        permissions: ["component:read", "component:create", "component:update",
+                       "template:read", "scorecard:read", "tool:execute"]
+      - name: "guest"
+        permissions: ["component:read", "template:read"]
 
   # Audit Logging
   audit_logging:
