@@ -8,9 +8,14 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Jose JWT authentication** — `JoseJWTValidator` with JWKS caching, Supabase-issued token validation, configurable issuer/audience
 - **RBAC authorization** — `RBACEvaluator` with 4 roles (admin, developer, viewer, user), permission-based access control, wildcard support
 - **Audit events API** — `/api/audit/events` endpoint for governance audit trail
+- **Security context propagation** — `SecurityMetadata` in JSON-RPC params forwards user_id, role, permissions to spoke MCP servers
+- **Transport abstraction** — Abstract `Transport` interface with `StdioTransport` (asyncio subprocess) and `HttpTransport` (extracted from gateway client)
+- **Unleash deployment config** — `docker-compose.unleash.yml` for centralized feature flag management
 - 36 new tests for auth and authorization modules
 
 ### Changed
+- **Security middleware** — Integrated `authenticate_request()` and `authorize_request()` methods backed by jose JWT + RBAC
+- **HTTP server** — Registered audit, health, and performance API routers
 - **Security config** — `authentication.required` now `true`, `enable_jose_auth` enabled, JWT-only methods with legacy fallback
 - **Authorization** — Enabled by default with role-based permissions for components, templates, policies, scorecards
 - **Branding** — Replace claudecodeui icons with Forge Space Modern Horn monogram; `--brand-error` and `--brand-inactive` CSS variables (PR #97)
