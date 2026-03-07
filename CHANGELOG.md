@@ -2,6 +2,15 @@
 
 All notable changes to the MCP Gateway project will be documented in this file.
 
+## [1.8.1] - 2026-03-07
+
+### Changed
+- **Branding**: Forge Space Modern Horn monogram + CSS variable centralization (PR #97)
+- **IDP governance**: Transport abstraction, context propagation, Unleash docker-compose (PR #100)
+
+### Dependencies
+- npm_and_yarn group updates (PR #98)
+
 ## [1.8.0] - 2026-03-06
 
 ### Added
