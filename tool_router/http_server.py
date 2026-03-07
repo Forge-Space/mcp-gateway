@@ -11,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from scalar_fastapi import get_scalar_api_reference
 
-from tool_router.middleware.request_logger import RequestLoggingMiddleware
 from tool_router.api.audit import router as audit_router
 from tool_router.api.health import router as health_router
 from tool_router.api.metrics_export import metrics
@@ -19,6 +18,7 @@ from tool_router.api.metrics_export import router as metrics_router
 from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
+from tool_router.middleware.request_logger import RequestLoggingMiddleware
 
 
 logger = logging.getLogger(__name__)
