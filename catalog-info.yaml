@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Service
+metadata:
+  name: mcp-gateway
+  description: Central MCP aggregation hub — routing, auth, quality gates, OpenAPI
+  tags:
+    - python
+    - mcp
+    - gateway
+    - docker
+spec:
+  owner: forge-space
+  system: siza
+  lifecycle: production
+  dependsOn:
+    - forge-patterns
