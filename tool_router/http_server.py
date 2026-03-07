@@ -12,6 +12,8 @@ from pydantic import BaseModel, Field
 
 from tool_router.api.audit import router as audit_router
 from tool_router.api.health import router as health_router
+from tool_router.api.metrics_export import metrics
+from tool_router.api.metrics_export import router as metrics_router
 from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
@@ -36,6 +38,7 @@ app = FastAPI(
         {"name": "audit", "description": "Audit trail for auth and tool call events"},
         {"name": "health", "description": "Health, readiness, and liveness probes"},
         {"name": "monitoring", "description": "Performance metrics and system stats"},
+        {"name": "metrics", "description": "Prometheus-compatible metrics export"},
     ],
 )
 
@@ -55,6 +58,18 @@ app.include_router(rpc_router)
 app.include_router(audit_router)
 app.include_router(health_router)
 app.include_router(performance_router)
+app.include_router(metrics_router)
+
+
+@app.middleware("http")
+async def metrics_middleware(request, call_next):
+    import time as _time
+
+    start = _time.monotonic()
+    response = await call_next(request)
+    duration = _time.monotonic() - start
+    metrics.record_request(request.method, request.url.path, response.status_code, duration)
+    return response
 
 
 class ServiceInfoResponse(BaseModel):
