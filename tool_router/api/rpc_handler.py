@@ -90,6 +90,7 @@ def _run_security_check(
     user_preferences: str,
 ) -> tuple[bool, str | None, dict[str, str]]:
     if _security_middleware is None:
+        logger.warning("Security middleware not initialized — bypassing security checks")
         return True, None, {"task": task, "context": context_str}
 
     result = _security_middleware.check_request_security(
