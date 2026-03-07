@@ -18,6 +18,7 @@ from tool_router.api.metrics_export import router as metrics_router
 from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
+from tool_router.middleware.request_logger import RequestLoggingMiddleware
 
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register request logging middleware (before routers, toggled via REQUEST_LOGGING env)
+app.add_middleware(RequestLoggingMiddleware)
 
 # Register routers
 app.include_router(rpc_router)
