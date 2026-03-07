@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from scalar_fastapi import get_scalar_api_reference
 
 from tool_router.api.audit import router as audit_router
 from tool_router.api.health import router as health_router
@@ -63,6 +64,8 @@ class ServiceInfoResponse(BaseModel):
     service: str = Field(description="Service name")
     version: str = Field(description="Semantic version")
     docs: str = Field(description="Path to Swagger UI")
+    redoc: str = Field(description="Path to ReDoc UI")
+    scalar: str = Field(description="Path to Scalar API reference")
     openapi: str = Field(description="Path to OpenAPI JSON spec")
 
 
@@ -89,6 +92,14 @@ class AliveResponse(BaseModel):
     timestamp: str = Field(description="ISO 8601 timestamp")
 
 
+@app.get("/api-docs", include_in_schema=False)
+async def scalar_docs():
+    return get_scalar_api_reference(
+        openapi_url=app.openapi_url,
+        title=app.title,
+    )
+
+
 @app.get(
     "/",
     tags=["health"],
@@ -101,6 +112,8 @@ async def root():
         "service": "Forge Space MCP Gateway",
         "version": "1.8.1",
         "docs": "/docs",
+        "redoc": "/redoc",
+        "scalar": "/api-docs",
         "openapi": "/openapi.json",
     }
 
