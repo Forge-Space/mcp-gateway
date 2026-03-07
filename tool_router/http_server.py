@@ -9,6 +9,9 @@ from datetime import UTC, datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from tool_router.api.audit import router as audit_router
+from tool_router.api.health import router as health_router
+from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
 
@@ -17,9 +20,22 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
-    title="Tool Router HTTP API",
-    description="HTTP interface for Tool Router MCP Gateway",
-    version="1.0.0",
+    title="Forge Space MCP Gateway",
+    description=(
+        "Central hub for the Forge Space IDP ecosystem. "
+        "Provides JSON-RPC routing to MCP spokes, "
+        "JWT authentication, RBAC, audit logging, "
+        "and quality gates for AI-generated code."
+    ),
+    version="1.8.1",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {"name": "rpc", "description": "JSON-RPC 2.0 endpoints for MCP tool execution"},
+        {"name": "audit", "description": "Audit trail for auth and tool call events"},
+        {"name": "health", "description": "Health, readiness, and liveness probes"},
+        {"name": "monitoring", "description": "Performance metrics and system stats"},
+    ],
 )
 
 # Add CORS middleware
@@ -33,17 +49,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register JSON-RPC endpoint
+# Register routers
 app.include_router(rpc_router)
+app.include_router(audit_router)
+app.include_router(health_router)
+app.include_router(performance_router)
 
 
-@app.get("/")
+@app.get("/", tags=["health"])
 async def root():
-    """Root endpoint."""
-    return {"message": "Tool Router HTTP API", "version": "1.0.0"}
+    """Root endpoint with links to API documentation."""
+    return {
+        "service": "Forge Space MCP Gateway",
+        "version": "1.8.1",
+        "docs": "/docs",
+        "openapi": "/openapi.json",
+    }
 
 
-@app.get("/health")
+@app.get("/health", tags=["health"])
 async def health_check():
     """Health check endpoint."""
     return {
@@ -54,13 +78,13 @@ async def health_check():
     }
 
 
-@app.get("/ready")
+@app.get("/ready", tags=["health"])
 async def readiness_check():
     """Readiness check endpoint."""
     return {"ready": True, "timestamp": datetime.now(UTC).isoformat()}
 
 
-@app.get("/live")
+@app.get("/live", tags=["health"])
 async def liveness_check():
     """Liveness check endpoint."""
     return {"alive": True, "timestamp": datetime.now(UTC).isoformat()}
