@@ -293,15 +293,28 @@ async def _stream_tool_call(
             }
         )
 
+    from tool_router.api.quality_gates import run_quality_gates
+
+    quality_report = run_quality_gates(result_text)
+    yield _sse_event(
+        {
+            "type": "quality",
+            "report": quality_report.to_dict(),
+            "timestamp": int(time.time() * 1000),
+        }
+    )
+
     yield _sse_event(
         {
             "type": "complete",
             "code": result_text,
             "totalLength": len(result_text),
+            "qualityPassed": quality_report.passed,
             "metadata": {
                 "tool": name,
                 "elapsed_ms": round(elapsed_ms),
                 "user_id": ctx.user_id,
+                "quality_score": quality_report.score,
             },
             "timestamp": int(time.time() * 1000),
         }

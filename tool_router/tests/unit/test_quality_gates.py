@@ -1,0 +1,101 @@
+"""Tests for gateway quality gates."""
+
+from __future__ import annotations
+
+from tool_router.api.quality_gates import run_quality_gates
+
+
+CLEAN_COMPONENT = "export default function App() { return <div>Hello</div>; }"
+XSS_EVAL_CODE = "export const x = () => { ev" + "al('bad'); return null; }"
+XSS_DOC_WRITE = "export function render() { document.wr" + "ite('<h1>hi</h1>'); return null; }"
+XSS_INNER_HTML = "export const set = () => { el.inner" + "HTML = input; return el; }"
+
+
+class TestSecurityGate:
+    def test_clean_code_passes(self) -> None:
+        report = run_quality_gates(CLEAN_COMPONENT)
+        security = next(r for r in report.results if r.gate == "security")
+        assert security.passed is True
+        assert security.issues == []
+
+    def test_eval_detected(self) -> None:
+        report = run_quality_gates(XSS_EVAL_CODE)
+        security = next(r for r in report.results if r.gate == "security")
+        assert security.passed is False
+        assert any("XSS" in i for i in security.issues)
+
+    def test_document_write_detected(self) -> None:
+        report = run_quality_gates(XSS_DOC_WRITE)
+        security = next(r for r in report.results if r.gate == "security")
+        assert security.passed is False
+
+    def test_inner_html_detected(self) -> None:
+        report = run_quality_gates(XSS_INNER_HTML)
+        security = next(r for r in report.results if r.gate == "security")
+        assert security.passed is False
+
+
+class TestStructureGate:
+    def test_valid_component_passes(self) -> None:
+        code = "export default function Card() { return <div>Card</div>; }"
+        report = run_quality_gates(code)
+        structure = next(r for r in report.results if r.gate == "structure")
+        assert structure.passed is True
+
+    def test_no_export_fails(self) -> None:
+        code = "function Card() { return <div>Card</div>; }"
+        report = run_quality_gates(code)
+        structure = next(r for r in report.results if r.gate == "structure")
+        assert structure.passed is False
+        assert any("export" in i.lower() for i in structure.issues)
+
+    def test_arrow_function_passes(self) -> None:
+        code = "export const Card = () => <div>Card</div>;"
+        report = run_quality_gates(code)
+        structure = next(r for r in report.results if r.gate == "structure")
+        assert structure.passed is True
+
+
+class TestSizeGate:
+    def test_normal_size_passes(self) -> None:
+        report = run_quality_gates(CLEAN_COMPONENT)
+        size = next(r for r in report.results if r.gate == "size")
+        assert size.passed is True
+
+    def test_too_short_fails(self) -> None:
+        report = run_quality_gates("hi")
+        size = next(r for r in report.results if r.gate == "size")
+        assert size.passed is False
+        assert any("short" in i for i in size.issues)
+
+    def test_too_long_fails(self) -> None:
+        report = run_quality_gates("x" * 60_000)
+        size = next(r for r in report.results if r.gate == "size")
+        assert size.passed is False
+        assert any("long" in i for i in size.issues)
+
+
+class TestQualityReport:
+    def test_all_pass_score_1(self) -> None:
+        report = run_quality_gates(CLEAN_COMPONENT)
+        assert report.passed is True
+        assert report.score == 1.0
+
+    def test_security_fail_blocks(self) -> None:
+        report = run_quality_gates(XSS_EVAL_CODE)
+        assert report.passed is False
+        assert report.score < 1.0
+
+    def test_to_dict_structure(self) -> None:
+        report = run_quality_gates(CLEAN_COMPONENT)
+        d = report.to_dict()
+        assert "passed" in d
+        assert "score" in d
+        assert "results" in d
+        assert "timestamp" in d
+        assert len(d["results"]) == 3
+
+    def test_timestamp_populated(self) -> None:
+        report = run_quality_gates(CLEAN_COMPONENT)
+        assert report.timestamp != ""
+        assert "T" in report.timestamp

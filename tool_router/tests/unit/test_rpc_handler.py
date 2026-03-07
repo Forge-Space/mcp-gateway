@@ -221,9 +221,15 @@ class TestStreamToolCall:
         assert len(chunks) == 3  # 500 / 200 = 3 chunks
         assert "".join(c["content"] for c in chunks) == "A" * 500
 
+        quality_events = [e for e in events if e["type"] == "quality"]
+        assert len(quality_events) == 1
+        assert "report" in quality_events[0]
+
         complete = events[-1]
         assert complete["totalLength"] == 500
         assert complete["metadata"]["tool"] == "test_tool"
+        assert "qualityPassed" in complete
+        assert "quality_score" in complete["metadata"]
 
     @pytest.mark.asyncio
     @patch("tool_router.api.rpc_handler._call_tool")
