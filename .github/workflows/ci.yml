@@ -79,7 +79,6 @@ jobs:
     name: Type Check (mypy)
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v6
@@ -94,7 +93,7 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Run mypy
-        run: mypy tool_router/ --config-file pyproject.toml || true
+        run: mypy tool_router/ --config-file pyproject.toml
 
   security:
     name: Security Scan
@@ -114,4 +113,7 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: pip audit
-        run: pip audit || true
+        run: pip audit
+
+      - name: Bandit security scan
+        run: pip install bandit && bandit -r tool_router/ -ll -ii --format json --output bandit-report.json || bandit -r tool_router/ -ll -ii
