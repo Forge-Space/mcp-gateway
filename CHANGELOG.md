@@ -11,6 +11,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Database client stub** — `tool_router.database.supabase_client` module for health check endpoints
 - **OpenAPI schema tests** — 6 tests validating schema completeness, model presence, and endpoint documentation
 - **JSON-RPC request examples** — Embedded `tools/list` and `tools/call` examples in OpenAPI spec
+- **Request logging middleware** — Structured JSON logs with method, path, duration_ms, status, request_id. Toggled via `REQUEST_LOGGING=true` env var (closes #134)
+- **Scalar API docs** — Interactive API documentation at `/api-docs` via Scalar (PR #140)
 
 ## [1.8.1] - 2026-03-07
 

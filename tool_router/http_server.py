@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from scalar_fastapi import get_scalar_api_reference
 
+from tool_router.middleware.request_logger import RequestLoggingMiddleware
 from tool_router.api.audit import router as audit_router
 from tool_router.api.health import router as health_router
 from tool_router.api.metrics_export import metrics
@@ -53,6 +54,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register request logging middleware (before routers, toggled via REQUEST_LOGGING env)
+app.add_middleware(RequestLoggingMiddleware)
 
 # Register routers
 app.include_router(rpc_router)
