@@ -5,6 +5,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Prometheus `/metrics` endpoint** — Exposes gateway metrics in Prometheus text format: request count, error count, duration summary, uptime gauge (closes #135)
+- **Metrics middleware** — Auto-records method, path, status, and duration for every HTTP request
 - **OpenAPI enrichment** — All 21 API routes have summaries, descriptions, and typed Pydantic response models
 - **Database client stub** — `tool_router.database.supabase_client` module for health check endpoints
 - **OpenAPI schema tests** — 6 tests validating schema completeness, model presence, and endpoint documentation
