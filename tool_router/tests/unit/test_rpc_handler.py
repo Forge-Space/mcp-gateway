@@ -9,6 +9,7 @@ import pytest
 from tool_router.api.rpc_handler import (
     JsonRpcRequest,
     JsonRpcResponse,
+    _get_rate_limit_headers,
     _handle_tools_call,
     _handle_tools_list,
     init_rpc_security,
@@ -181,6 +182,73 @@ class TestJsonRpcResponse:
         )
         assert resp.result is None
         assert resp.error.code == -32601
+
+
+class TestGetRateLimitHeaders:
+    def test_returns_empty_when_no_middleware(self, security_context: SecurityContext) -> None:
+        init_rpc_security(None, None)
+        headers = _get_rate_limit_headers(security_context)
+        assert headers == {}
+
+    def test_returns_standard_headers(self, security_context: SecurityContext) -> None:
+        mock_mw = MagicMock()
+        mock_mw._get_rate_limit_identifier.return_value = "user:user-123"
+        mock_config = MagicMock()
+        mock_config.requests_per_minute = 60
+        mock_mw._get_rate_limit_config.return_value = mock_config
+        mock_mw.rate_limiter.get_usage_stats.return_value = {
+            "minute": {"count": 5, "window_end": 1700000060},
+        }
+        init_rpc_security(mock_mw, MagicMock())
+
+        headers = _get_rate_limit_headers(security_context)
+
+        assert headers["X-RateLimit-Limit"] == "60"
+        assert headers["X-RateLimit-Remaining"] == "55"
+        assert headers["X-RateLimit-Reset"] == "1700000060"
+        assert "Retry-After" not in headers
+
+        init_rpc_security(None, None)
+
+    def test_includes_retry_after_on_penalty(self, security_context: SecurityContext) -> None:
+        import time
+
+        mock_mw = MagicMock()
+        mock_mw._get_rate_limit_identifier.return_value = "user:user-123"
+        mock_config = MagicMock()
+        mock_config.requests_per_minute = 60
+        mock_mw._get_rate_limit_config.return_value = mock_config
+        penalty_end = int(time.time()) + 120
+        mock_mw.rate_limiter.get_usage_stats.return_value = {
+            "minute": {"count": 60, "window_end": 1700000060},
+            "penalty_active": True,
+            "penalty_end": penalty_end,
+        }
+        init_rpc_security(mock_mw, MagicMock())
+
+        headers = _get_rate_limit_headers(security_context)
+
+        assert headers["X-RateLimit-Remaining"] == "0"
+        assert "Retry-After" in headers
+        assert int(headers["Retry-After"]) > 0
+
+        init_rpc_security(None, None)
+
+    def test_remaining_never_negative(self, security_context: SecurityContext) -> None:
+        mock_mw = MagicMock()
+        mock_mw._get_rate_limit_identifier.return_value = "user:user-123"
+        mock_config = MagicMock()
+        mock_config.requests_per_minute = 10
+        mock_mw._get_rate_limit_config.return_value = mock_config
+        mock_mw.rate_limiter.get_usage_stats.return_value = {
+            "minute": {"count": 15, "window_end": 1700000060},
+        }
+        init_rpc_security(mock_mw, MagicMock())
+
+        headers = _get_rate_limit_headers(security_context)
+        assert headers["X-RateLimit-Remaining"] == "0"
+
+        init_rpc_security(None, None)
 
 
 class TestSseEvent:
