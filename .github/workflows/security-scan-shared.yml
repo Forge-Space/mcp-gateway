@@ -145,7 +145,7 @@ jobs:
 
       - name: Setup Python
         if: inputs.project-type == 'gateway' || inputs.project-type == 'mcp'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
           cache: "pip"
