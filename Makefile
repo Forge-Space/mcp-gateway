@@ -108,6 +108,10 @@ lint: ## Run all linters (replaces lint-python, lint-typescript, shellcheck, lin
 	if [ -f start.sh ]; then SCRIPTS="start.sh $$SCRIPTS"; fi; \
 	if [ -n "$$SCRIPTS" ]; then shellcheck $$SCRIPTS || echo "⚠️ Shell lint issues found"; fi
 
+typecheck: ## Run mypy type checking (non-blocking)
+	@echo "🔍 Running mypy type check..."
+	mypy tool_router/ --config-file pyproject.toml || true
+
 lint-strict: ## Run all linters without fallbacks (CI-friendly)
 	@echo "🔍 Running strict linters (no fallbacks)..."
 	@echo "==> Python..."
