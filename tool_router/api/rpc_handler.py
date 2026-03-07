@@ -9,7 +9,7 @@ import time
 from collections.abc import AsyncGenerator
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -149,6 +149,36 @@ def _run_security_check(
     return True, None, sanitized
 
 
+def _get_rate_limit_headers(ctx: SecurityContext) -> dict[str, str]:
+    """Build standard rate limit headers from current limiter state."""
+    if _security_middleware is None:
+        return {}
+
+    identifier = _security_middleware._get_rate_limit_identifier(ctx)
+    config = _security_middleware._get_rate_limit_config(ctx)
+    stats = _security_middleware.rate_limiter.get_usage_stats(identifier)
+
+    minute_stats = stats.get("minute", {})
+    current_count = minute_stats.get("count", 0)
+    limit = config.requests_per_minute
+    remaining = max(0, limit - current_count)
+    reset_time = minute_stats.get("window_end", int(time.time()) + 60)
+
+    headers: dict[str, str] = {
+        "X-RateLimit-Limit": str(limit),
+        "X-RateLimit-Remaining": str(remaining),
+        "X-RateLimit-Reset": str(reset_time),
+    }
+
+    if stats.get("penalty_active"):
+        penalty_end = int(stats.get("penalty_end", 0))
+        retry_after = penalty_end - int(time.time())
+        if retry_after > 0:
+            headers["Retry-After"] = str(retry_after)
+
+    return headers
+
+
 def _handle_tools_list(
     params: dict[str, Any],
     ctx: SecurityContext,
@@ -268,7 +298,11 @@ RPC_METHOD_HANDLERS = {
 async def json_rpc_endpoint(
     request: JsonRpcRequest,
     security_context: Annotated[SecurityContext, Depends(get_security_context)],
+    response: Response,
 ) -> JsonRpcResponse:
+    for key, value in _get_rate_limit_headers(security_context).items():
+        response.headers[key] = value
+
     handler = RPC_METHOD_HANDLERS.get(request.method)
     if handler is None:
         return JsonRpcResponse(
@@ -466,8 +500,14 @@ async def json_rpc_stream_endpoint(
             details={"method": "tools/call", "tool": name, "streaming": True},
         )
 
+    stream_headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+        **_get_rate_limit_headers(security_context),
+    }
+
     return StreamingResponse(
         _stream_tool_call(name, arguments, security_context),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        headers=stream_headers,
     )
