@@ -18,14 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - uses: Forge-Space/.github/.github/actions/setup-python@main
 
       - name: Ruff check
         run: ruff check tool_router/ dribbble_mcp/ --output-format=github
@@ -41,14 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - uses: Forge-Space/.github/.github/actions/setup-python@main
 
       - name: Run tests
         run: |
@@ -65,12 +51,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: Forge-Space/.github/.github/actions/setup-python@main
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install build deps
-        run: pip install build
+          install-command: "pip install build"
 
       - name: Build package
         run: python -m build
@@ -83,14 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - uses: Forge-Space/.github/.github/actions/setup-python@main
 
       - name: Run mypy
         run: mypy tool_router/ --config-file pyproject.toml || true
@@ -103,14 +79,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - uses: Forge-Space/.github/.github/actions/setup-python@main
 
       - name: pip audit
         run: pip install pip-audit && pip-audit || true
