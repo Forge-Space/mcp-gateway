@@ -1,0 +1,47 @@
+name: Container Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile*"
+      - "docker-compose*.yml"
+      - "requirements*.txt"
+      - "pyproject.toml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "Dockerfile*"
+      - "docker-compose*.yml"
+      - "requirements*.txt"
+      - "pyproject.toml"
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  trivy-scan:
+    name: Trivy Container Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t forge-mcp-gateway:scan .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "forge-mcp-gateway:scan"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
