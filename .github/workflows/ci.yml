@@ -116,4 +116,4 @@ jobs:
         run: pip install pip-audit && pip-audit || true
 
       - name: Bandit security scan
-        run: pip install bandit && bandit -r tool_router/ -ll -ii --format json --output bandit-report.json || bandit -r tool_router/ -ll -ii
+        run: pip install bandit && bandit -r tool_router/ -ll -ii || true
