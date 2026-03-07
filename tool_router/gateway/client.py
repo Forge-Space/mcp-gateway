@@ -4,9 +4,32 @@ import json
 import time
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 from tool_router.core.config import GatewayConfig
+
+
+@dataclass
+class SecurityMetadata:
+    """Security context propagated to spoke MCP servers."""
+
+    user_id: str | None = None
+    role: str | None = None
+    permissions: list[str] | None = None
+    request_id: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            k: v
+            for k, v in {
+                "user_id": self.user_id,
+                "role": self.role,
+                "permissions": self.permissions,
+                "request_id": self.request_id,
+            }.items()
+            if v is not None
+        }
 
 
 class GatewayClient(Protocol):
@@ -119,22 +142,31 @@ class HTTPGatewayClient:
             return response_data["tools"]
         return []
 
-    def call_tool(self, name: str, arguments: dict[str, Any]) -> str:
+    def call_tool(
+        self,
+        name: str,
+        arguments: dict[str, Any],
+        security: SecurityMetadata | None = None,
+    ) -> str:
         """Execute a tool via the gateway.
 
         Args:
             name: Tool name to execute
             arguments: Tool arguments
+            security: Optional security context for spoke propagation
 
         Returns:
             Tool execution result as string
         """
         url = f"{self.config.url}/rpc"
+        params: dict[str, Any] = {"name": name, "arguments": arguments}
+        if security:
+            params["_metadata"] = {"security": security.to_dict()}
         body = {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "tools/call",
-            "params": {"name": name, "arguments": arguments},
+            "params": params,
         }
 
         try:
