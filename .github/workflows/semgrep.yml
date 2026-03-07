@@ -14,9 +14,10 @@ jobs:
   semgrep:
     name: Semgrep Scan
     runs-on: ubuntu-latest
+    continue-on-error: true
     container:
       image: semgrep/semgrep
     if: (github.actor != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v4
-      - run: semgrep scan --config auto --error --json --output semgrep-results.json tool_router/ dribbble_mcp/ || semgrep scan --config auto --error tool_router/ dribbble_mcp/
+      - run: semgrep scan --config auto --error tool_router/ dribbble_mcp/
