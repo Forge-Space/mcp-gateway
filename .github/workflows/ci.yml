@@ -75,6 +75,27 @@ jobs:
       - name: Build package
         run: python -m build
 
+  typecheck:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run mypy
+        run: mypy tool_router/ --config-file pyproject.toml || true
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
