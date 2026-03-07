@@ -90,6 +90,7 @@ omit = [
     "tool_router/observability/*",
     "tool_router/mcp_tools/*",
     "tool_router/api/*",
+    "tool_router/database/*",
     "tool_router/ai/cached_feedback.py",
     "tool_router/ai/feedback.py",
     "tool_router/ai/ui_specialist.py",

@@ -40,23 +40,66 @@ def init_rpc_security(
 
 
 class JsonRpcRequest(BaseModel):
-    jsonrpc: str = Field(default="2.0", pattern=r"^2\.0$")
-    method: str
-    params: dict[str, Any] = Field(default_factory=dict)
-    id: str | int | None = None
+    """JSON-RPC 2.0 request envelope."""
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "jsonrpc": "2.0",
+                    "method": "tools/list",
+                    "params": {},
+                    "id": 1,
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "method": "tools/call",
+                    "params": {
+                        "name": "generate_ui",
+                        "arguments": {
+                            "task": "Create a login form",
+                            "context": "React + Tailwind",
+                        },
+                    },
+                    "id": 2,
+                },
+            ]
+        }
+    }
+
+    jsonrpc: str = Field(
+        default="2.0",
+        pattern=r"^2\.0$",
+        description="JSON-RPC protocol version (must be 2.0)",
+    )
+    method: str = Field(
+        description="RPC method name: 'tools/list' or 'tools/call'",
+    )
+    params: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Method parameters. For tools/call: {name, arguments}",
+    )
+    id: str | int | None = Field(
+        default=None,
+        description="Request identifier echoed in the response",
+    )
 
 
 class JsonRpcError(BaseModel):
-    code: int
-    message: str
-    data: dict[str, Any] | None = None
+    """JSON-RPC 2.0 error object."""
+
+    code: int = Field(description="Error code (-32601=method not found, -32602=invalid params, -32603=internal)")
+    message: str = Field(description="Human-readable error message")
+    data: dict[str, Any] | None = Field(default=None, description="Additional error details")
 
 
 class JsonRpcResponse(BaseModel):
+    """JSON-RPC 2.0 response envelope."""
+
     jsonrpc: str = "2.0"
-    result: dict[str, Any] | None = None
-    error: JsonRpcError | None = None
-    id: str | int | None = None
+    result: dict[str, Any] | None = Field(default=None, description="Success payload (mutually exclusive with error)")
+    error: JsonRpcError | None = Field(default=None, description="Error payload (mutually exclusive with result)")
+    id: str | int | None = Field(default=None, description="Echoed request identifier")
 
 
 TOOL_DISPATCH: dict[str, Any] = {}
@@ -209,7 +252,19 @@ RPC_METHOD_HANDLERS = {
 }
 
 
-@router.post("/rpc")
+@router.post(
+    "/rpc",
+    response_model=JsonRpcResponse,
+    summary="Execute JSON-RPC call",
+    description="Route JSON-RPC 2.0 requests to MCP tool spokes. "
+    "Supports `tools/list` and `tools/call` methods. "
+    "Requires a valid Supabase JWT in the Authorization header.",
+    responses={
+        200: {"description": "JSON-RPC response (check `error` field for failures)"},
+        401: {"description": "Missing or invalid JWT token"},
+        403: {"description": "Request blocked by security middleware"},
+    },
+)
 async def json_rpc_endpoint(
     request: JsonRpcRequest,
     security_context: Annotated[SecurityContext, Depends(get_security_context)],
@@ -322,7 +377,19 @@ async def _stream_tool_call(
     )
 
 
-@router.post("/rpc/stream")
+@router.post(
+    "/rpc/stream",
+    summary="Stream JSON-RPC tool call via SSE",
+    description="Execute a `tools/call` via Server-Sent Events. "
+    "Returns chunked code output followed by a quality gate report. "
+    "Event types: `start`, `chunk`, `quality`, `complete`, `error`.",
+    responses={
+        200: {"description": "SSE stream (text/event-stream)", "content": {"text/event-stream": {}}},
+        400: {"description": "Missing tool name in params"},
+        401: {"description": "Missing or invalid JWT token"},
+        403: {"description": "Request blocked by security middleware"},
+    },
+)
 async def json_rpc_stream_endpoint(
     request: JsonRpcRequest,
     security_context: Annotated[SecurityContext, Depends(get_security_context)],

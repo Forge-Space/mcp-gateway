@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from tool_router.api.audit import router as audit_router
 from tool_router.api.health import router as health_router
@@ -56,9 +57,46 @@ app.include_router(health_router)
 app.include_router(performance_router)
 
 
-@app.get("/", tags=["health"])
+class ServiceInfoResponse(BaseModel):
+    """Service metadata and documentation links."""
+
+    service: str = Field(description="Service name")
+    version: str = Field(description="Semantic version")
+    docs: str = Field(description="Path to Swagger UI")
+    openapi: str = Field(description="Path to OpenAPI JSON spec")
+
+
+class SimpleHealthResponse(BaseModel):
+    """Quick health check result."""
+
+    status: str = Field(description="Service status")
+    service: str = Field(description="Service identifier")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+    version: str = Field(description="Service version")
+
+
+class ReadyResponse(BaseModel):
+    """Readiness probe result."""
+
+    ready: bool = Field(description="Whether the service is ready")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+
+
+class AliveResponse(BaseModel):
+    """Liveness probe result."""
+
+    alive: bool = Field(description="Whether the service is alive")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+
+
+@app.get(
+    "/",
+    tags=["health"],
+    response_model=ServiceInfoResponse,
+    summary="Service info",
+    description="Returns service metadata and documentation links.",
+)
 async def root():
-    """Root endpoint with links to API documentation."""
     return {
         "service": "Forge Space MCP Gateway",
         "version": "1.8.1",
@@ -67,26 +105,38 @@ async def root():
     }
 
 
-@app.get("/health", tags=["health"])
+@app.get(
+    "/health",
+    tags=["health"],
+    response_model=SimpleHealthResponse,
+    summary="Quick health check",
+)
 async def health_check():
-    """Health check endpoint."""
     return {
         "status": "healthy",
         "service": "tool-router",
         "timestamp": datetime.now(UTC).isoformat(),
-        "version": "1.0.0",
+        "version": "1.8.1",
     }
 
 
-@app.get("/ready", tags=["health"])
+@app.get(
+    "/ready",
+    tags=["health"],
+    response_model=ReadyResponse,
+    summary="Readiness probe",
+)
 async def readiness_check():
-    """Readiness check endpoint."""
     return {"ready": True, "timestamp": datetime.now(UTC).isoformat()}
 
 
-@app.get("/live", tags=["health"])
+@app.get(
+    "/live",
+    tags=["health"],
+    response_model=AliveResponse,
+    summary="Liveness probe",
+)
 async def liveness_check():
-    """Liveness check endpoint."""
     return {"alive": True, "timestamp": datetime.now(UTC).isoformat()}
 
 

@@ -297,6 +297,16 @@ make n8n-secrets   # generate webhook secrets
 - Read-only GitHub API access (no merging, no deploying)
 - n8n data excluded from git (`n8n-data/`, `n8n-logs/`)
 
+## API Documentation
+
+The gateway exposes an auto-generated OpenAPI spec with all 21 endpoints documented:
+
+- **Swagger UI**: `http://localhost:8030/docs`
+- **ReDoc**: `http://localhost:8030/redoc`
+- **OpenAPI JSON**: `http://localhost:8030/openapi.json`
+
+Endpoints are grouped by tag: `rpc` (JSON-RPC tool execution), `audit` (governance trail), `health` (probes), `monitoring` (cache/performance metrics).
+
 ## Development
 
 - **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
