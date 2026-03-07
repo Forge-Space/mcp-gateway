@@ -4,6 +4,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-03-07
+
 ### Added
 - **Prometheus `/metrics` endpoint** — Exposes gateway metrics in Prometheus text format: request count, error count, duration summary, uptime gauge (closes #135)
 - **Metrics middleware** — Auto-records method, path, status, and duration for every HTTP request
