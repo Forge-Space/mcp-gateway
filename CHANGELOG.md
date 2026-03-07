@@ -2,6 +2,14 @@
 
 All notable changes to the MCP Gateway project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **OpenAPI enrichment** — All 21 API routes have summaries, descriptions, and typed Pydantic response models
+- **Database client stub** — `tool_router.database.supabase_client` module for health check endpoints
+- **OpenAPI schema tests** — 6 tests validating schema completeness, model presence, and endpoint documentation
+- **JSON-RPC request examples** — Embedded `tools/list` and `tools/call` examples in OpenAPI spec
+
 ## [1.8.1] - 2026-03-07
 
 ### Changed

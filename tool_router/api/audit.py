@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 logger = logging.getLogger(__name__)
@@ -15,20 +15,33 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 
 
 class AuditEvent(BaseModel):
-    timestamp: str
-    event_type: str
-    severity: str
-    user_id: str | None = None
-    request_id: str | None = None
-    ip_address: str | None = None
-    details: dict[str, Any] = {}
+    """A single audit trail entry."""
+
+    timestamp: str = Field(description="ISO 8601 timestamp")
+    event_type: str = Field(description="Event category (e.g. request_received, request_blocked)")
+    severity: str = Field(description="Severity level: info, warning, error, critical")
+    user_id: str | None = Field(default=None, description="Authenticated user ID")
+    request_id: str | None = Field(default=None, description="Correlation ID for the request")
+    ip_address: str | None = Field(default=None, description="Client IP address")
+    details: dict[str, Any] = Field(default_factory=dict, description="Event-specific metadata")
 
 
 class AuditEventsResponse(BaseModel):
+    """Paginated audit events response."""
+
     events: list[AuditEvent]
-    total: int
-    page: int
-    page_size: int
+    total: int = Field(description="Total events matching the filter")
+    page: int = Field(description="Current page number (1-based)")
+    page_size: int = Field(description="Number of events per page")
+
+
+class AuditSummaryResponse(BaseModel):
+    """Aggregate audit statistics."""
+
+    total_events: int = Field(default=0)
+    events_by_type: dict[str, int] = Field(default_factory=dict)
+    events_by_severity: dict[str, int] = Field(default_factory=dict)
+    recent_events: list[dict[str, Any]] = Field(default_factory=list)
 
 
 def _get_audit_logger():
@@ -38,15 +51,19 @@ def _get_audit_logger():
     return SecurityAuditLogger()
 
 
-@router.get("/events", response_model=AuditEventsResponse)
+@router.get(
+    "/events",
+    response_model=AuditEventsResponse,
+    summary="List audit events",
+    description="Retrieve paginated audit trail with optional filters. Requires admin role.",
+)
 async def get_audit_events(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=200),
-    event_type: str | None = Query(None),
-    severity: str | None = Query(None),
-    user_id: str | None = Query(None),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(50, ge=1, le=200, description="Events per page"),
+    event_type: str | None = Query(None, description="Filter by event type"),
+    severity: str | None = Query(None, description="Filter by severity level"),
+    user_id: str | None = Query(None, description="Filter by user ID"),
 ) -> AuditEventsResponse:
-    """Retrieve audit events. Requires admin role."""
     audit_logger = _get_audit_logger()
 
     try:
@@ -89,9 +106,13 @@ async def get_audit_events(
     )
 
 
-@router.get("/summary")
+@router.get(
+    "/summary",
+    response_model=AuditSummaryResponse,
+    summary="Get audit summary",
+    description="Aggregate audit statistics. Requires admin role.",
+)
 async def get_audit_summary() -> dict[str, Any]:
-    """Get audit summary statistics. Requires admin role."""
     audit_logger = _get_audit_logger()
     try:
         return audit_logger.get_security_summary()

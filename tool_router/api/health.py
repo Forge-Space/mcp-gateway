@@ -9,7 +9,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from tool_router.database.supabase_client import (
     close_database_client,
@@ -23,29 +23,52 @@ router = APIRouter(prefix="/health", tags=["health"])
 
 
 class HealthResponse(BaseModel):
-    """Health check response model."""
+    """Overall system health status."""
 
-    status: str
-    database: str
-    timestamp: str
-    details: dict[str, Any] = {}
+    status: str = Field(description="System status: healthy or unhealthy")
+    database: str = Field(description="Database connection: connected or disconnected")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+    details: dict[str, Any] = Field(default_factory=dict, description="Component-level status details")
 
 
 class DatabaseHealthResponse(BaseModel):
-    """Database health check response model."""
+    """Database connection health details."""
 
-    status: str
-    connection: str
-    timestamp: str
-    error: str | None = None
+    status: str = Field(description="Database status: healthy or unhealthy")
+    connection: str = Field(description="Connection state: connected or disconnected")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+    error: str | None = Field(default=None, description="Error message if unhealthy")
 
 
-@router.get("/", response_model=HealthResponse)
+class ReadinessResponse(BaseModel):
+    """Service readiness for accepting traffic."""
+
+    ready: bool = Field(description="Whether the service is ready")
+    checks: dict[str, bool] = Field(description="Individual readiness checks")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+    error: str | None = Field(default=None, description="Error message if not ready")
+
+
+class LivenessResponse(BaseModel):
+    """Service liveness probe."""
+
+    alive: bool = Field(default=True, description="Always true if the process is running")
+    timestamp: str = Field(description="ISO 8601 timestamp")
+
+
+class ConnectionStatusResponse(BaseModel):
+    """Database connection close result."""
+
+    status: str = Field(description="Result: connections_closed")
+
+
+@router.get(
+    "/",
+    response_model=HealthResponse,
+    summary="System health check",
+    description="Returns overall health including database connectivity.",
+)
 async def health_check() -> HealthResponse:
-    """
-    Basic health check endpoint.
-    Returns overall system health status.
-    """
     try:
         # Check database connection
         db_client = await get_database_client()
@@ -71,12 +94,14 @@ async def health_check() -> HealthResponse:
         )
 
 
-@router.get("/database", response_model=DatabaseHealthResponse)
+@router.get(
+    "/database",
+    response_model=DatabaseHealthResponse,
+    summary="Database health check",
+    description="Returns detailed database connection status.",
+    responses={503: {"description": "Database connection failed"}},
+)
 async def database_health() -> DatabaseHealthResponse:
-    """
-    Database-specific health check endpoint.
-    Returns detailed database connection status.
-    """
     try:
         db_client = await get_database_client()
         health = await db_client.health_check()
@@ -93,12 +118,13 @@ async def database_health() -> DatabaseHealthResponse:
         raise HTTPException(status_code=503, detail=f"Database health check failed: {e!s}")
 
 
-@router.get("/readiness")
+@router.get(
+    "/readiness",
+    response_model=ReadinessResponse,
+    summary="Readiness probe",
+    description="Indicates if the service is ready to accept traffic. Used by orchestrators.",
+)
 async def readiness_check() -> dict[str, Any]:
-    """
-    Readiness check endpoint.
-    Indicates if the service is ready to accept traffic.
-    """
     try:
         db_client = await get_database_client()
         health = await db_client.health_check()
@@ -124,24 +150,27 @@ async def readiness_check() -> dict[str, Any]:
         }
 
 
-@router.get("/liveness")
+@router.get(
+    "/liveness",
+    response_model=LivenessResponse,
+    summary="Liveness probe",
+    description="Indicates if the process is alive. Used by orchestrators for restart decisions.",
+)
 async def liveness_check() -> dict[str, Any]:
-    """
-    Liveness check endpoint.
-    Indicates if the service is alive.
-    """
     return {
         "alive": True,
         "timestamp": "2025-01-20T00:00:00Z",  # Will be updated with actual timestamp
     }
 
 
-@router.post("/close")
+@router.post(
+    "/close",
+    response_model=ConnectionStatusResponse,
+    summary="Close database connections",
+    description="Gracefully close all database connections. Used during shutdown.",
+    responses={500: {"description": "Failed to close connections"}},
+)
 async def close_connections() -> dict[str, str]:
-    """
-    Close database connections.
-    Useful for graceful shutdown.
-    """
     try:
         await close_database_client()
         return {"status": "connections_closed"}

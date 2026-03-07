@@ -7,7 +7,7 @@ import time
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..cache import cache_manager, get_cache_metrics
 from ..database.query_cache import get_query_cache
@@ -19,43 +19,65 @@ router = APIRouter(prefix="/monitoring", tags=["monitoring"])
 
 
 class CacheMetricsResponse(BaseModel):
-    """Response model for cache metrics."""
+    """Cache layer performance metrics."""
 
-    cache_hit_rate: float
-    total_hits: int
-    total_misses: int
-    total_requests: int
-    cache_sizes: dict[str, int]
-    hits_by_type: dict[str, int]
-    misses_by_type: dict[str, int]
+    cache_hit_rate: float = Field(description="Overall hit rate (0.0-1.0)")
+    total_hits: int = Field(description="Total cache hits")
+    total_misses: int = Field(description="Total cache misses")
+    total_requests: int = Field(description="Total cache lookups")
+    cache_sizes: dict[str, int] = Field(description="Size of each named cache")
+    hits_by_type: dict[str, int] = Field(description="Hits broken down by cache type")
+    misses_by_type: dict[str, int] = Field(description="Misses broken down by cache type")
 
 
 class SystemMetricsResponse(BaseModel):
-    """Response model for system metrics."""
+    """Comprehensive system performance snapshot."""
 
-    timestamp: float
-    uptime: float
+    timestamp: float = Field(description="Unix timestamp")
+    uptime: float = Field(description="Seconds since server start")
     cache_metrics: CacheMetricsResponse
-    feedback_metrics: dict[str, Any]
-    rate_limiter_metrics: dict[str, Any]
-    query_cache_metrics: dict[str, Any]
+    feedback_metrics: dict[str, Any] = Field(description="Feedback store metrics")
+    rate_limiter_metrics: dict[str, Any] = Field(description="Rate limiter state")
+    query_cache_metrics: dict[str, Any] = Field(description="Database query cache stats")
 
 
-class HealthResponse(BaseModel):
-    """Response model for health check."""
+class MonitoringHealthResponse(BaseModel):
+    """Monitoring-level health with cache subsystem checks."""
 
-    status: str
-    timestamp: float
-    checks: dict[str, Any]
+    status: str = Field(description="Overall status: healthy or degraded")
+    timestamp: float = Field(description="Unix timestamp")
+    checks: dict[str, Any] = Field(description="Per-subsystem health checks")
+
+
+class CacheResetResponse(BaseModel):
+    """Result of cache metrics reset."""
+
+    status: str = Field(description="Operation result")
+    message: str = Field(description="Human-readable summary")
+    timestamp: float = Field(description="Unix timestamp")
+
+
+class PerformanceSummaryResponse(BaseModel):
+    """High-level performance dashboard."""
+
+    timestamp: float = Field(description="Unix timestamp")
+    uptime_seconds: float = Field(description="Seconds since server start")
+    cache_performance: dict[str, Any] = Field(description="Cache hit rate and sizes")
+    query_cache: dict[str, Any] = Field(description="Query cache stats")
+    recommendations: list[str] = Field(description="Auto-generated tuning suggestions")
 
 
 # Global start time for uptime calculation
 _start_time = time.time()
 
 
-@router.get("/health", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
-    """Comprehensive health check with cache status."""
+@router.get(
+    "/health",
+    response_model=MonitoringHealthResponse,
+    summary="Monitoring health check",
+    description="Comprehensive health check including cache, feedback, and query cache subsystems.",
+)
+async def health_check() -> MonitoringHealthResponse:
     current_time = time.time()
     uptime = current_time - _start_time
 
@@ -84,12 +106,16 @@ async def health_check() -> HealthResponse:
     all_healthy = all(check["status"] == "healthy" for check in checks.values() if isinstance(check, dict))
     status = "healthy" if all_healthy else "degraded"
 
-    return HealthResponse(status=status, timestamp=current_time, checks=checks)
+    return MonitoringHealthResponse(status=status, timestamp=current_time, checks=checks)
 
 
-@router.get("/metrics/cache", response_model=CacheMetricsResponse)
+@router.get(
+    "/metrics/cache",
+    response_model=CacheMetricsResponse,
+    summary="Cache metrics",
+    description="Returns cache hit/miss rates, sizes, and breakdowns by cache type.",
+)
 async def get_cache_metrics() -> CacheMetricsResponse:
-    """Get comprehensive cache performance metrics."""
     try:
         metrics = get_cache_metrics()
 
@@ -107,9 +133,13 @@ async def get_cache_metrics() -> CacheMetricsResponse:
         raise HTTPException(status_code=500, detail="Failed to retrieve cache metrics")
 
 
-@router.get("/metrics/system", response_model=SystemMetricsResponse)
+@router.get(
+    "/metrics/system",
+    response_model=SystemMetricsResponse,
+    summary="System metrics",
+    description="Full system snapshot: cache, feedback, rate limiter, and query cache metrics.",
+)
 async def get_system_metrics() -> SystemMetricsResponse:
-    """Get comprehensive system performance metrics."""
     current_time = time.time()
     uptime = current_time - _start_time
 
@@ -158,9 +188,13 @@ async def get_system_metrics() -> SystemMetricsResponse:
         raise HTTPException(status_code=500, detail="Failed to retrieve system metrics")
 
 
-@router.post("/metrics/cache/reset")
+@router.post(
+    "/metrics/cache/reset",
+    response_model=CacheResetResponse,
+    summary="Reset cache metrics",
+    description="Reset hit/miss counters for a specific cache or all caches.",
+)
 async def reset_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
-    """Reset cache metrics for a specific cache or all caches."""
     try:
         reset_cache_metrics(cache_name)
 
@@ -177,9 +211,13 @@ async def reset_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="Failed to reset cache metrics")
 
 
-@router.post("/cache/clear")
+@router.post(
+    "/cache/clear",
+    response_model=CacheResetResponse,
+    summary="Clear cache",
+    description="Evict all entries from a specific cache or all caches.",
+)
 async def clear_cache(cache_name: str | None = None) -> dict[str, Any]:
-    """Clear a specific cache or all caches."""
     try:
         if cache_name:
             from ..cache import clear_cache as clear_specific_cache
@@ -204,9 +242,12 @@ async def clear_cache(cache_name: str | None = None) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="Failed to clear cache")
 
 
-@router.get("/cache/info")
+@router.get(
+    "/cache/info",
+    summary="Cache configuration info",
+    description="Returns configuration and state for all named caches.",
+)
 async def get_cache_info() -> dict[str, Any]:
-    """Get detailed information about all caches."""
     try:
         return cache_manager.get_cache_info()
     except Exception as e:
@@ -214,9 +255,13 @@ async def get_cache_info() -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="Failed to retrieve cache information")
 
 
-@router.post("/query-cache/invalidate")
+@router.post(
+    "/query-cache/invalidate",
+    response_model=CacheResetResponse,
+    summary="Invalidate query cache",
+    description="Evict cached database query results for a table or all tables.",
+)
 async def invalidate_query_cache(table: str | None = None) -> dict[str, Any]:
-    """Invalidate query cache for a specific table or all queries."""
     try:
         query_cache = get_query_cache()
 
@@ -239,9 +284,13 @@ async def invalidate_query_cache(table: str | None = None) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="Failed to invalidate query cache")
 
 
-@router.get("/performance")
+@router.get(
+    "/performance",
+    response_model=PerformanceSummaryResponse,
+    summary="Performance dashboard",
+    description="High-level performance overview with cache stats and auto-generated tuning recommendations.",
+)
 async def get_performance_summary() -> dict[str, Any]:
-    """Get a performance summary with key metrics."""
     try:
         current_time = time.time()
         uptime = current_time - _start_time
