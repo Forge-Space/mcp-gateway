@@ -67,3 +67,7 @@ mcp-gateway/
 - Current state: 0 open PRs, CI green, main branch clean, ruff 0 errors ecosystem-wide
 - Remaining excluded: performance/ only (via --ignore). Zero conftest exclusions.
 - Known: repository-dispatch needs PAT, GitGuardian API key expired (non-blocking)
+- v1.8.1+ (2026-03-07): PR #103 webapp routing, #129 OpenAPI enrichment, #132 rate limit headers, #133 ARCHITECTURE.md — all MERGED
+- Issue templates added (PR #131 MERGED). 3 good-first-issues created (#134-#136)
+- Tooling analysis: P0 gaps identified — security scans non-blocking, FastAPI/uvicorn not pinned, Dockerfile uses Python 3.14 (should be 3.12)
+- Recommended additions: OpenTelemetry (P1), Semgrep+Trivy (P1), prometheus-client (P2)

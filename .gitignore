@@ -123,3 +123,4 @@ Makefile.original
 test-results/
 .windsurf/plans/
 .claude/plans/
+src/forge_mcp_gateway.egg-info/
