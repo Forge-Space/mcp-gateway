@@ -45,7 +45,7 @@ jobs:
 
       - name: Upload update report
         if: steps.check.outputs.status == 'update-available'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker-update-report
           path: docker-update-report.md
