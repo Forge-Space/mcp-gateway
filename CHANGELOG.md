@@ -4,6 +4,16 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-03-08
+
+### Added
+- **Circuit breaker** — Per-endpoint CLOSED→OPEN→HALF_OPEN state machine with configurable failure threshold, recovery timeout, and success threshold. Integrated into gateway client for automatic provider failover (closes #152)
+- **Streamable HTTP transport** — `POST /mcp` endpoint per MCP 2025-03-26 spec with session management, Accept-header SSE upgrade, and `DELETE /mcp` session cleanup (closes #153)
+- **Generate-review-refine loop** — Iterative code improvement using quality gates as feedback. Configurable max iterations, target score, and plateau detection (closes #154)
+- **A/B testing manager** — Deterministic variant assignment via SHA-256 consistent hashing, outcome tracking with quality/latency/success metrics, winner detection with configurable sample threshold, JSON persistence (closes #155)
+- **Prompt optimizer** — Vague term expansion (8 mappings), component-specific hints (8 types), automatic a11y and responsive injection, feedback-derived learning insights (closes #156)
+- 67 new tests across 5 test modules (circuit breaker 13, refinement loop 11, A/B testing 10, prompt optimizer 14, streamable HTTP 11)
+
 ## [1.9.0] - 2026-03-07
 
 ### Added

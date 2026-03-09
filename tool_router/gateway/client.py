@@ -8,6 +8,10 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from tool_router.core.config import GatewayConfig
+from tool_router.gateway.circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerConfig,
+)
 
 
 @dataclass
@@ -47,15 +51,15 @@ class GatewayClient(Protocol):
 class HTTPGatewayClient:
     """HTTP-based gateway client with retry logic and configurable timeouts."""
 
-    def __init__(self, config: GatewayConfig) -> None:
-        """Initialize client with configuration.
-
-        Args:
-            config: Gateway connection configuration
-        """
+    def __init__(
+        self,
+        config: GatewayConfig,
+        circuit_breaker: CircuitBreaker | None = None,
+    ) -> None:
         self.config = config
         self._timeout_seconds = config.timeout_ms / 1000
         self._retry_delay_seconds = config.retry_delay_ms / 1000
+        self._breaker = circuit_breaker or CircuitBreaker(CircuitBreakerConfig())
 
     def _headers(self) -> dict[str, str]:
         """Build request headers with authentication."""
@@ -65,7 +69,10 @@ class HTTPGatewayClient:
         }
 
     def _make_request(self, url: str, method: str = "GET", data: bytes | None = None) -> dict[str, Any]:
-        """Make HTTP request with retry logic for transient failures."""
+        endpoint = self.config.url
+        return self._breaker.call(endpoint, self._make_request_inner, url, method, data)
+
+    def _make_request_inner(self, url: str, method: str = "GET", data: bytes | None = None) -> dict[str, Any]:
         req = urllib.request.Request(url, headers=self._headers(), method=method)
         if data:
             req.data = data

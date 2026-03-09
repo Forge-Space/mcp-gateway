@@ -1,0 +1,148 @@
+"""Tests for A/B testing manager."""
+
+import tempfile
+
+import pytest
+
+from tool_router.ai.ab_testing import (
+    ABTestManager,
+    Experiment,
+    ExperimentOutcome,
+    Variant,
+)
+
+
+@pytest.fixture
+def experiment():
+    return Experiment(
+        id="model_test",
+        variants=[
+            Variant(name="balanced", weight=1.0, config={"model": "llama3.2:3b"}),
+            Variant(name="efficient", weight=1.0, config={"model": "gemma2:2b"}),
+        ],
+    )
+
+
+@pytest.fixture
+def manager(experiment):
+    return ABTestManager(experiments=[experiment])
+
+
+class TestVariantAssignment:
+    def test_deterministic_assignment(self, manager):
+        v1 = manager.assign_variant("user-1", "model_test")
+        v2 = manager.assign_variant("user-1", "model_test")
+        assert v1 is not None
+        assert v1.name == v2.name
+
+    def test_different_users_get_different_variants(self, manager):
+        assignments = set()
+        for i in range(100):
+            v = manager.assign_variant(f"user-{i}", "model_test")
+            assignments.add(v.name)
+        assert len(assignments) == 2
+
+    def test_returns_none_for_missing_experiment(self, manager):
+        assert manager.assign_variant("user-1", "nonexistent") is None
+
+    def test_returns_none_for_inactive(self, manager):
+        manager._experiments["model_test"].active = False
+        assert manager.assign_variant("user-1", "model_test") is None
+
+    def test_weighted_assignment(self):
+        exp = Experiment(
+            id="weighted",
+            variants=[
+                Variant(name="heavy", weight=9.0),
+                Variant(name="light", weight=1.0),
+            ],
+        )
+        mgr = ABTestManager(experiments=[exp])
+        counts = {"heavy": 0, "light": 0}
+        for i in range(1000):
+            v = mgr.assign_variant(f"u{i}", "weighted")
+            counts[v.name] += 1
+        assert counts["heavy"] > counts["light"]
+
+
+class TestOutcomeTracking:
+    def test_record_and_stats(self, manager):
+        for i in range(10):
+            manager.record_outcome(
+                ExperimentOutcome(
+                    experiment_id="model_test",
+                    variant_name="balanced",
+                    user_id=f"user-{i}",
+                    quality_score=7.5 + (i * 0.1),
+                    latency_ms=1000 + i * 100,
+                    success=True,
+                )
+            )
+        stats = manager.get_variant_stats("model_test")
+        assert "balanced" in stats
+        assert stats["balanced"]["count"] == 10
+        assert stats["balanced"]["avg_score"] > 7.0
+        assert stats["balanced"]["success_rate"] == 1.0
+
+    def test_empty_stats(self, manager):
+        assert manager.get_variant_stats("model_test") == {}
+
+    def test_winner_detection(self, manager):
+        for i in range(25):
+            manager.record_outcome(
+                ExperimentOutcome(
+                    experiment_id="model_test",
+                    variant_name="balanced",
+                    user_id=f"a{i}",
+                    quality_score=8.0,
+                    latency_ms=1000,
+                    success=True,
+                )
+            )
+            manager.record_outcome(
+                ExperimentOutcome(
+                    experiment_id="model_test",
+                    variant_name="efficient",
+                    user_id=f"b{i}",
+                    quality_score=6.0,
+                    latency_ms=500,
+                    success=True,
+                )
+            )
+        winner = manager.get_winner("model_test", min_samples=20)
+        assert winner == "balanced"
+
+    def test_no_winner_insufficient_samples(self, manager):
+        manager.record_outcome(
+            ExperimentOutcome(
+                experiment_id="model_test",
+                variant_name="balanced",
+                user_id="u1",
+                quality_score=9.0,
+                latency_ms=100,
+                success=True,
+            )
+        )
+        assert manager.get_winner("model_test", min_samples=20) is None
+
+
+class TestPersistence:
+    def test_save_and_load(self, experiment):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            path = f.name
+
+        mgr1 = ABTestManager(experiments=[experiment], storage_path=path)
+        for i in range(55):
+            mgr1.record_outcome(
+                ExperimentOutcome(
+                    experiment_id="model_test",
+                    variant_name="balanced",
+                    user_id=f"u{i}",
+                    quality_score=7.0,
+                    latency_ms=1000,
+                    success=True,
+                )
+            )
+
+        mgr2 = ABTestManager(experiments=[experiment], storage_path=path)
+        assert len(mgr2._outcomes) > 0
