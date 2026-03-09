@@ -11,6 +11,7 @@ from tool_router.core.config import GatewayConfig
 from tool_router.gateway.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
+    CircuitOpenError,
 )
 
 
@@ -72,43 +73,57 @@ class HTTPGatewayClient:
         endpoint = self.config.url
         return self._breaker.call(endpoint, self._make_request_inner, url, method, data)
 
+    def _should_retry(self, attempt: int) -> bool:
+        return attempt < self.config.max_retries - 1
+
+    def _sleep_before_retry(self, attempt: int) -> None:
+        time.sleep(self._retry_delay_seconds * (2**attempt))
+
+    def _handle_http_error(self, error: urllib.error.HTTPError, attempt: int) -> str:
+        if error.code >= 500:
+            if self._should_retry(attempt):
+                self._sleep_before_retry(attempt)
+            return f"Gateway server error (HTTP {error.code})"
+
+        try:
+            error_body = error.read().decode("utf-8")
+        except (OSError, UnicodeDecodeError):
+            error_body = "<unable to read response body>"
+        msg = f"Gateway HTTP error {error.code}: {error_body}"
+        raise ValueError(msg)
+
+    def _handle_network_error(self, error: urllib.error.URLError, attempt: int) -> str:
+        if self._should_retry(attempt):
+            self._sleep_before_retry(attempt)
+        return f"Network error: {error.reason}"
+
+    def _handle_timeout_error(self, attempt: int) -> str:
+        if self._should_retry(attempt):
+            self._sleep_before_retry(attempt)
+        return f"Request timeout after {self._timeout_seconds}s"
+
     def _make_request_inner(self, url: str, method: str = "GET", data: bytes | None = None) -> dict[str, Any]:
         req = urllib.request.Request(url, headers=self._headers(), method=method)
         if data:
             req.data = data
 
-        last_error = None
+        last_error: str | None = None
         for attempt in range(self.config.max_retries):
             try:
                 with urllib.request.urlopen(req, timeout=self._timeout_seconds) as resp:
                     return json.loads(resp.read().decode())
-            except urllib.error.HTTPError as http_error:
-                if http_error.code >= 500:
-                    last_error = f"Gateway server error (HTTP {http_error.code})"
-                    if attempt < self.config.max_retries - 1:
-                        time.sleep(self._retry_delay_seconds * (2**attempt))
-                        continue
-                else:
-                    # Safely read error response body
-                    try:
-                        error_body = http_error.read().decode("utf-8")
-                    except (OSError, UnicodeDecodeError):
-                        error_body = "<unable to read response body>"
-                    msg = f"Gateway HTTP error {http_error.code}: {error_body}"
-                    raise ValueError(msg)
-            except urllib.error.URLError as network_error:
-                last_error = f"Network error: {network_error.reason}"
-                if attempt < self.config.max_retries - 1:
-                    time.sleep(self._retry_delay_seconds * (2**attempt))
-                    continue
+            except urllib.error.HTTPError as error:
+                last_error = self._handle_http_error(error, attempt)
+            except urllib.error.URLError as error:
+                last_error = self._handle_network_error(error, attempt)
             except TimeoutError:
-                last_error = f"Request timeout after {self._timeout_seconds}s"
-                if attempt < self.config.max_retries - 1:
-                    time.sleep(self._retry_delay_seconds * (2**attempt))
-                    continue
+                last_error = self._handle_timeout_error(attempt)
             except json.JSONDecodeError:
                 msg = "Invalid JSON response"
                 raise ValueError(msg)
+
+            if self._should_retry(attempt):
+                continue
 
         msg = f"Failed after {self.config.max_retries} attempts. Last error: {last_error}"
         raise ConnectionError(msg)
@@ -134,7 +149,7 @@ class HTTPGatewayClient:
             # Re-raise other ValueErrors (like HTTP errors) with original message format
             msg = f"Failed to fetch tools: {error}"
             raise ValueError(msg) from error
-        except ConnectionError as error:
+        except (ConnectionError, CircuitOpenError) as error:
             # Business logic: Convert connection errors from HTTP retries to ValueError
             # This maintains backward compatibility with existing error handling
             if "Failed after" in str(error) and "attempts" in str(error):
@@ -178,7 +193,7 @@ class HTTPGatewayClient:
 
         try:
             json_rpc_response = self._make_request(url, method="POST", data=json.dumps(body).encode())
-        except (ValueError, ConnectionError) as error:
+        except (ValueError, ConnectionError, CircuitOpenError) as error:
             return f"Failed to call tool: {error}"
 
         if "error" in json_rpc_response:

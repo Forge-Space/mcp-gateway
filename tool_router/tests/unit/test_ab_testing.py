@@ -82,7 +82,7 @@ class TestOutcomeTracking:
         assert "balanced" in stats
         assert stats["balanced"]["count"] == 10
         assert stats["balanced"]["avg_score"] > 7.0
-        assert stats["balanced"]["success_rate"] == 1.0
+        assert stats["balanced"]["success_rate"] == pytest.approx(1.0)
 
     def test_empty_stats(self, manager):
         assert manager.get_variant_stats("model_test") == {}

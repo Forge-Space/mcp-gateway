@@ -296,6 +296,7 @@ make n8n-secrets   # generate webhook secrets
 - Resource-limited: 0.5 CPU, 512MB RAM, 50 PIDs
 - Read-only GitHub API access (no merging, no deploying)
 - n8n data excluded from git (`n8n-data/`, `n8n-logs/`)
+- JSON-RPC and SSE error responses redact internal exception details; full traces stay server-side.
 
 ## API Documentation
 

@@ -137,7 +137,7 @@ class PromptOptimizer:
             return None
         return "Responsive across mobile, tablet, and desktop"
 
-    def _apply_learning_insights(self, prompt: str, task_type: str | None) -> list[str]:
+    def _apply_learning_insights(self, prompt: str, _task_type: str | None) -> list[str]:
         additions = []
         try:
             if hasattr(self._feedback, "get_learning_insights"):

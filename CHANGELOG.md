@@ -6,6 +6,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ### Fixed
 - **PR #157 lint gate regressions** — Fixed Ruff failures in new AI resilience tests (unused unpacked variable and import ordering/unused imports) so CI lint passes for circuit breaker, prompt optimizer, refinement loop, and streamable HTTP test modules.
+- **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
+  reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
+  SonarCloud/CodeQL new-code requirements.
 
 ## [1.10.0] - 2026-03-08
 

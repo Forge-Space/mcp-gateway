@@ -11,7 +11,7 @@ import asyncio
 import logging
 import time
 import uuid
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -34,6 +34,26 @@ _sessions_lock = asyncio.Lock()
 _MAX_SESSIONS = 1000
 
 
+def _safe_log_value(value: str) -> str:
+    return "".join(ch if ch.isprintable() and ch not in "\r\n\t" else "_" for ch in value)
+
+
+def _jsonrpc_error_response(
+    request_id: int | str | None,
+    session_id: str,
+    code: int,
+    message: str,
+) -> JSONResponse:
+    return JSONResponse(
+        content={
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": code, "message": message},
+        },
+        headers={"Mcp-Session-Id": session_id},
+    )
+
+
 async def _prune_sessions() -> None:
     async with _sessions_lock:
         if len(_sessions) <= _MAX_SESSIONS:
@@ -42,6 +62,38 @@ async def _prune_sessions() -> None:
         to_remove = len(_sessions) - _MAX_SESSIONS
         for key, _ in by_last_seen[:to_remove]:
             del _sessions[key]
+
+
+async def _resolve_session(session_header: str | None) -> str:
+    session_id = session_header or str(uuid.uuid4())
+    now = time.time()
+
+    async with _sessions_lock:
+        if session_header and session_id not in _sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
+        if session_id in _sessions:
+            _sessions[session_id]["last_seen"] = now
+        else:
+            _sessions[session_id] = {"created": now, "last_seen": now}
+
+    await _prune_sessions()
+    return session_id
+
+
+def _build_security_context(request: Request, session_id: str):
+    from tool_router.security.security_middleware import SecurityContext
+
+    return SecurityContext(
+        user_id=request.headers.get("X-User-Id", "anonymous"),
+        session_id=session_id,
+        ip_address=request.client.host if request.client else "unknown",
+        user_agent=request.headers.get("User-Agent", ""),
+        request_id=request.headers.get("X-Request-Id", str(uuid.uuid4())),
+    )
+
+
+def _as_str_detail(detail: Any) -> str:
+    return detail if isinstance(detail, str) else str(detail)
 
 
 @router.post(
@@ -62,38 +114,13 @@ async def _prune_sessions() -> None:
 async def mcp_endpoint(
     request: Request,
     body: JsonRpcRequest,
-    accept: str = Header(default="application/json"),
-    mcp_session_id: str | None = Header(default=None, alias="Mcp-Session-Id"),
-):
-    from tool_router.security.security_middleware import SecurityContext
+    accept: Annotated[str, Header()] = "application/json",
+    mcp_session_id: Annotated[str | None, Header(alias="Mcp-Session-Id")] = None,
+) -> StreamingResponse | JSONResponse:
+    session_id = await _resolve_session(mcp_session_id)
+    ctx = _build_security_context(request, session_id)
 
-    ctx = SecurityContext(
-        user_id=request.headers.get("X-User-Id", "anonymous"),
-        session_id=mcp_session_id or str(uuid.uuid4()),
-        ip_address=request.client.host if request.client else "unknown",
-        user_agent=request.headers.get("User-Agent", ""),
-        request_id=request.headers.get("X-Request-Id", str(uuid.uuid4())),
-    )
-
-    async with _sessions_lock:
-        if mcp_session_id and mcp_session_id not in _sessions:
-            raise HTTPException(status_code=404, detail="Session not found")
-
-        if not mcp_session_id:
-            session_id = str(uuid.uuid4())
-            _sessions[session_id] = {
-                "created": time.time(),
-                "last_seen": time.time(),
-            }
-        else:
-            session_id = mcp_session_id
-            _sessions[session_id]["last_seen"] = time.time()
-
-    await _prune_sessions()
-
-    wants_stream = "text/event-stream" in accept
-
-    if wants_stream and body.method == "tools/call":
+    if "text/event-stream" in accept and body.method == "tools/call":
         params = body.params
         name = params.get("name")
         if not name:
@@ -115,17 +142,7 @@ async def mcp_endpoint(
 
     handler = RPC_METHOD_HANDLERS.get(body.method)
     if handler is None:
-        return JSONResponse(
-            content={
-                "jsonrpc": "2.0",
-                "id": body.id,
-                "error": {
-                    "code": -32601,
-                    "message": f"Method not found: {body.method}",
-                },
-            },
-            headers={"Mcp-Session-Id": session_id},
-        )
+        return _jsonrpc_error_response(body.id, session_id, -32601, f"Method not found: {body.method}")
 
     try:
         result = handler(body.params, ctx)
@@ -139,31 +156,10 @@ async def mcp_endpoint(
         )
     except HTTPException as exc:
         error_code = -32602 if exc.status_code == 400 else -32603
-        return JSONResponse(
-            content={
-                "jsonrpc": "2.0",
-                "id": body.id,
-                "error": {
-                    "code": error_code,
-                    "message": (exc.detail if isinstance(exc.detail, str) else str(exc.detail)),
-                },
-            },
-            headers={"Mcp-Session-Id": session_id},
-        )
-    except Exception as exc:
-        logger.exception("MCP handler error for method %s", body.method)
-        return JSONResponse(
-            content={
-                "jsonrpc": "2.0",
-                "id": body.id,
-                "error": {
-                    "code": -32603,
-                    "message": "Internal error",
-                    "data": {"detail": str(exc)},
-                },
-            },
-            headers={"Mcp-Session-Id": session_id},
-        )
+        return _jsonrpc_error_response(body.id, session_id, error_code, _as_str_detail(exc.detail))
+    except Exception:
+        logger.exception("MCP handler error for method %s", _safe_log_value(body.method))
+        return _jsonrpc_error_response(body.id, session_id, -32603, "Internal error")
 
 
 @router.delete(
@@ -177,7 +173,7 @@ async def mcp_endpoint(
     status_code=204,
 )
 async def mcp_close_session(
-    mcp_session_id: str = Header(alias="Mcp-Session-Id"),
+    mcp_session_id: Annotated[str, Header(alias="Mcp-Session-Id")],
 ) -> None:
     async with _sessions_lock:
         if mcp_session_id not in _sessions:
