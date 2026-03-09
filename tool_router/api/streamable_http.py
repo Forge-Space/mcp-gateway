@@ -34,10 +34,6 @@ _sessions_lock = asyncio.Lock()
 _MAX_SESSIONS = 1000
 
 
-def _safe_log_value(value: str) -> str:
-    return "".join(ch if ch.isprintable() and ch not in "\r\n\t" else "_" for ch in value)
-
-
 def _jsonrpc_error_response(
     request_id: int | str | None,
     session_id: str,
@@ -158,7 +154,7 @@ async def mcp_endpoint(
         error_code = -32602 if exc.status_code == 400 else -32603
         return _jsonrpc_error_response(body.id, session_id, error_code, _as_str_detail(exc.detail))
     except Exception:
-        logger.exception("MCP handler error for method %s", _safe_log_value(body.method))
+        logger.exception("MCP handler error")
         return _jsonrpc_error_response(body.id, session_id, -32603, "Internal error")
 
 

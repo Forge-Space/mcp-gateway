@@ -30,12 +30,6 @@ _security_middleware: SecurityMiddleware | None = None
 _audit_logger: SecurityAuditLogger | None = None
 
 
-def _safe_log_value(value: str | None) -> str:
-    if value is None:
-        return "unknown"
-    return "".join(ch if ch.isprintable() and ch not in "\r\n\t" else "_" for ch in value)
-
-
 def init_rpc_security(
     security_middleware: SecurityMiddleware,
     audit_logger: SecurityAuditLogger,
@@ -334,7 +328,7 @@ async def json_rpc_endpoint(
             ),
         )
     except Exception:
-        logger.exception("RPC handler error for method %s", _safe_log_value(request.method))
+        logger.exception("RPC handler error")
         return JsonRpcResponse(
             id=request.id,
             error=JsonRpcError(
@@ -360,7 +354,7 @@ async def _stream_tool_call(
         loop = asyncio.get_running_loop()
         result_text = await loop.run_in_executor(None, _call_tool, name, arguments)
     except Exception:
-        logger.exception("Streaming tool call failed: %s", _safe_log_value(name))
+        logger.exception("Streaming tool call failed")
         yield _sse_event(
             {
                 "type": "error",
@@ -371,12 +365,7 @@ async def _stream_tool_call(
         return
 
     elapsed_ms = (time.monotonic() - start) * 1000
-    logger.info(
-        "Streaming tool call completed: %s (%.0fms, user=%s)",
-        _safe_log_value(name),
-        elapsed_ms,
-        _safe_log_value(ctx.user_id),
-    )
+    logger.info("Streaming tool call completed (%.0fms)", elapsed_ms)
 
     chunk_size = 200
     for i in range(0, len(result_text), chunk_size):
