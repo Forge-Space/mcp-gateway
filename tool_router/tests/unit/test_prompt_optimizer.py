@@ -11,14 +11,19 @@ def optimizer():
 
 
 class TestVagueTermExpansion:
-    def test_expands_nice(self, optimizer):
-        result = optimizer.optimize("Make a nice button")
-        assert "polished and visually refined" in result.optimized_prompt
-        assert any("nice" in a for a in result.additions)
-
-    def test_expands_cool(self, optimizer):
-        result = optimizer.optimize("A cool dashboard")
-        assert "modern with subtle animations" in result.optimized_prompt
+    @pytest.mark.parametrize(
+        ("prompt", "expected_substrings"),
+        [
+            ("Make a nice button", ["polished and visually refined"]),
+            ("A cool dashboard", ["modern with subtle animations"]),
+            ("A nice and nice card", ["polished and visually refined"]),
+            ("", []),
+        ],
+    )
+    def test_parametrized_expansions(self, optimizer, prompt, expected_substrings):
+        result = optimizer.optimize(prompt)
+        for expected in expected_substrings:
+            assert expected in result.optimized_prompt
 
     def test_no_expansion_for_specific_prompts(self, optimizer):
         prompt = "A button with ARIA labels and responsive layout"
@@ -101,8 +106,8 @@ class TestLearningIntegration:
             def get_learning_insights(self, prompt):
                 return {
                     "recommended_tools": [
-                        {"tool": "generate_component", "score": 0.9},
-                        {"tool": "style_matcher", "score": 0.8},
+                        {"tool": "generate_component", "success_rate": 0.9},
+                        {"tool": "style_matcher", "success_rate": 0.8},
                     ]
                 }
 

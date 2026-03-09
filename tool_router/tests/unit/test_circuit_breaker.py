@@ -56,7 +56,8 @@ class TestCircuitBreaker:
                 breaker.call("test", self._failing_fn)
 
         with patch("tool_router.gateway.circuit_breaker.time") as mock_time:
-            mock_time.monotonic.return_value = time.monotonic() + 2.0
+            base = time.monotonic()
+            mock_time.monotonic.side_effect = [base + 2.0, base + 2.1]
             assert breaker.state("test") == CircuitState.HALF_OPEN
 
     def test_half_open_recovers_on_success(self, breaker):

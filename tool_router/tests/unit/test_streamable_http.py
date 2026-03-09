@@ -1,5 +1,6 @@
 """Tests for MCP Streamable HTTP endpoint."""
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -172,5 +173,5 @@ class TestSessionPruning:
         for i in range(_MAX_SESSIONS + 50):
             _sessions[f"s{i}"] = {"created": i, "last_seen": i}
 
-        _prune_sessions()
+        asyncio.run(_prune_sessions())
         assert len(_sessions) == _MAX_SESSIONS

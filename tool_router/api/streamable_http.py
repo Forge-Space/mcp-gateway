@@ -7,6 +7,7 @@ the Accept header.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 import uuid
@@ -28,17 +29,19 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["mcp"])
 
 _sessions: dict[str, dict[str, Any]] = {}
+_sessions_lock = asyncio.Lock()
 
 _MAX_SESSIONS = 1000
 
 
-def _prune_sessions() -> None:
-    if len(_sessions) <= _MAX_SESSIONS:
-        return
-    by_last_seen = sorted(_sessions.items(), key=lambda kv: kv[1].get("last_seen", 0))
-    to_remove = len(_sessions) - _MAX_SESSIONS
-    for key, _ in by_last_seen[:to_remove]:
-        del _sessions[key]
+async def _prune_sessions() -> None:
+    async with _sessions_lock:
+        if len(_sessions) <= _MAX_SESSIONS:
+            return
+        by_last_seen = sorted(_sessions.items(), key=lambda kv: kv[1].get("last_seen", 0))
+        to_remove = len(_sessions) - _MAX_SESSIONS
+        for key, _ in by_last_seen[:to_remove]:
+            del _sessions[key]
 
 
 @router.post(
@@ -72,19 +75,21 @@ async def mcp_endpoint(
         request_id=request.headers.get("X-Request-Id", str(uuid.uuid4())),
     )
 
-    if mcp_session_id and mcp_session_id not in _sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
+    async with _sessions_lock:
+        if mcp_session_id and mcp_session_id not in _sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
 
-    if not mcp_session_id:
-        session_id = str(uuid.uuid4())
-        _sessions[session_id] = {
-            "created": time.time(),
-            "last_seen": time.time(),
-        }
-        _prune_sessions()
-    else:
-        session_id = mcp_session_id
-        _sessions[session_id]["last_seen"] = time.time()
+        if not mcp_session_id:
+            session_id = str(uuid.uuid4())
+            _sessions[session_id] = {
+                "created": time.time(),
+                "last_seen": time.time(),
+            }
+        else:
+            session_id = mcp_session_id
+            _sessions[session_id]["last_seen"] = time.time()
+
+    await _prune_sessions()
 
     wants_stream = "text/event-stream" in accept
 
@@ -174,6 +179,7 @@ async def mcp_endpoint(
 async def mcp_close_session(
     mcp_session_id: str = Header(alias="Mcp-Session-Id"),
 ) -> None:
-    if mcp_session_id not in _sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
-    del _sessions[mcp_session_id]
+    async with _sessions_lock:
+        if mcp_session_id not in _sessions:
+            raise HTTPException(status_code=404, detail="Session not found")
+        del _sessions[mcp_session_id]
