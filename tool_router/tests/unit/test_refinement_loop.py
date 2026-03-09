@@ -1,14 +1,12 @@
 """Tests for generate-review-refine loop."""
 
-import pytest
-
 from tool_router.ai.refinement_loop import (
     RefinementConfig,
     build_refinement_prompt,
     refine_code,
     should_refine,
 )
-from tool_router.api.quality_gates import QualityReport, GateResult
+from tool_router.api.quality_gates import GateResult, QualityReport
 
 
 def _make_report(score: float, passed: bool) -> QualityReport:

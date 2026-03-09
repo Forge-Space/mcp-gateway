@@ -64,7 +64,7 @@ class TestCircuitBreaker:
             with pytest.raises(ValueError):
                 breaker.call("test", self._failing_fn)
 
-        state, metrics = breaker._circuits["test"]
+        _state, metrics = breaker._circuits["test"]
         metrics.last_failure_time = time.monotonic() - 2.0
 
         breaker.call("test", lambda: "ok")
@@ -76,7 +76,7 @@ class TestCircuitBreaker:
             with pytest.raises(ValueError):
                 breaker.call("test", self._failing_fn)
 
-        state, metrics = breaker._circuits["test"]
+        _state, metrics = breaker._circuits["test"]
         metrics.last_failure_time = time.monotonic() - 2.0
 
         with pytest.raises(ValueError):

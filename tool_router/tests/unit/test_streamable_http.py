@@ -1,6 +1,5 @@
 """Tests for MCP Streamable HTTP endpoint."""
 
-import json
 from unittest.mock import patch
 
 import pytest

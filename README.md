@@ -312,6 +312,7 @@ Endpoints are grouped by tag: `rpc` (JSON-RPC tool execution), `audit` (governan
 - **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - **Script index:** [scripts/README.md](scripts/README.md)
 - **Maintenance automation:** See [Automated Maintenance](#automated-maintenance) above
+- **Lint baseline:** `ruff check tool_router/ dribbble_mcp/` is enforced in CI and includes test files (import ordering and unused unpacked variables fail the lint job).
 
 ### Trunk Based Development Workflow
 

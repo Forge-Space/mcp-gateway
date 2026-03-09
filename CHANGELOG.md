@@ -4,6 +4,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **PR #157 lint gate regressions** — Fixed Ruff failures in new AI resilience tests (unused unpacked variable and import ordering/unused imports) so CI lint passes for circuit breaker, prompt optimizer, refinement loop, and streamable HTTP test modules.
+
 ## [1.10.0] - 2026-03-08
 
 ### Added
@@ -427,4 +430,3 @@ requirements-benchmark.txt                # Benchmarking tools
   - **Intelligent Alerting**: ML confidence scoring for reduced false positives
 
 - **✅ Enterprise-Grade Features**: Comprehensive audit logging and compliance management
-

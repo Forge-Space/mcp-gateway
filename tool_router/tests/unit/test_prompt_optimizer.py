@@ -2,7 +2,7 @@
 
 import pytest
 
-from tool_router.ai.prompt_optimizer import PromptOptimizer, OptimizationResult
+from tool_router.ai.prompt_optimizer import OptimizationResult, PromptOptimizer
 
 
 @pytest.fixture
