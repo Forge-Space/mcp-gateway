@@ -4,6 +4,22 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **PR #157 lint gate regressions** — Fixed Ruff failures in new AI resilience tests (unused unpacked variable and import ordering/unused imports) so CI lint passes for circuit breaker, prompt optimizer, refinement loop, and streamable HTTP test modules.
+- **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
+  reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
+  SonarCloud/CodeQL new-code requirements.
+
+## [1.10.0] - 2026-03-08
+
+### Added
+- **Circuit breaker** — Per-endpoint CLOSED→OPEN→HALF_OPEN state machine with configurable failure threshold, recovery timeout, and success threshold. Integrated into gateway client for automatic provider failover (closes #152)
+- **Streamable HTTP transport** — `POST /mcp` endpoint per MCP 2025-03-26 spec with session management, Accept-header SSE upgrade, and `DELETE /mcp` session cleanup (closes #153)
+- **Generate-review-refine loop** — Iterative code improvement using quality gates as feedback. Configurable max iterations, target score, and plateau detection (closes #154)
+- **A/B testing manager** — Deterministic variant assignment via SHA-256 consistent hashing, outcome tracking with quality/latency/success metrics, winner detection with configurable sample threshold, JSON persistence (closes #155)
+- **Prompt optimizer** — Vague term expansion (8 mappings), component-specific hints (8 types), automatic a11y and responsive injection, feedback-derived learning insights (closes #156)
+- 67 new tests across 5 test modules (circuit breaker 13, refinement loop 11, A/B testing 10, prompt optimizer 14, streamable HTTP 11)
+
 ## [1.9.0] - 2026-03-07
 
 ### Added
@@ -417,4 +433,3 @@ requirements-benchmark.txt                # Benchmarking tools
   - **Intelligent Alerting**: ML confidence scoring for reduced false positives
 
 - **✅ Enterprise-Grade Features**: Comprehensive audit logging and compliance management
-
