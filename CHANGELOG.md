@@ -5,6 +5,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **Reusable workflow secret schema violation** — Removed reserved `GITHUB_TOKEN` from
+  `workflow_call.secrets` in `.github/workflows/security-scan-shared.yml`, resolving
+  parser-level workflow-file failures on `main`.
 - **PR #157 lint gate regressions** — Fixed Ruff failures in new AI resilience tests (unused unpacked variable and import ordering/unused imports) so CI lint passes for circuit breaker, prompt optimizer, refinement loop, and streamable HTTP test modules.
 - **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
   reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
