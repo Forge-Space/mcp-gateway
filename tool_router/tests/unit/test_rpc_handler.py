@@ -317,4 +317,4 @@ class TestStreamToolCall:
         assert "start" in types
         assert "error" in types
         assert "complete" not in types
-        assert "Gateway unreachable" in events[-1]["message"]
+        assert events[-1]["message"] == "Tool execution failed"
