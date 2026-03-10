@@ -49,6 +49,11 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Container scan workflow build target** — Updated `Container Security Scan` workflow to build
   `Dockerfile.tool-router` explicitly, fixing main-branch scan failures caused by missing root
   `Dockerfile`.
+- **SonarCloud hotspot remediation (PR #169)** — Closed remaining hotspot findings by:
+  - enforcing HTTPS-only validation for external image URLs in `dribbble_mcp/image_analysis.py`,
+  - pinning all CI action dependencies in `.github/workflows/ci.yml` to full commit SHAs,
+  - removing inherited `PATH` usage from `apps/web-admin/run-build.mjs` by running npm via
+    resolved Node CLI path.
 
 ## [1.10.0] - 2026-03-08
 

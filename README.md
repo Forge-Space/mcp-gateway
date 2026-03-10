@@ -30,6 +30,8 @@ Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context
 - Security-sensitive workflow dependencies in `.github/workflows` are pinned to full commit SHAs.
 - Docker runtime templates avoid broad copy scope and writable runtime artifacts where possible.
 - Security-focused tests use temporary directories and non-literal insecure fixture construction to keep SonarCloud security hotspots actionable.
+- Dribbble image analysis enforces HTTPS-only remote image URLs.
+- Cross-repo tenant profile checkout in CI uses `FORGE_TENANT_PROFILES_READ_TOKEN` (fallback: `GITHUB_TOKEN`).
 
 ## Quick start
 
