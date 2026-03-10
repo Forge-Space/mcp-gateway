@@ -43,10 +43,6 @@ on:
         description: "GitHub token"
         required: false
 
-env:
-  NODE_VERSION: ${{ inputs.node-version }}
-  PYTHON_VERSION: ${{ inputs.python-version }}
-
 permissions:
   contents: read
   security-events: write

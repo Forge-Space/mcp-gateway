@@ -14,6 +14,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
   to `string`, and corrected job conditions to `inputs.action`) and corrected
   `.github/workflows/security-scan-shared.yml` timeout input to `number`, eliminating main-branch
   workflow-file failures.
+- **Shared security workflow parse scope** — Removed top-level `env` references to
+  `workflow_call` inputs in `.github/workflows/security-scan-shared.yml` to prevent parser-level
+  workflow-file failures on push events.
 - **Release pipeline Docker compatibility** — Pinned `Dockerfile.tool-router` to `python:3.13-alpine`
   because `mcp-contextforge-gateway` currently supports Python `<3.14`, fixing release Docker build
   failures on `main`.
