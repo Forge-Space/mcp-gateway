@@ -9,6 +9,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
   reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
   SonarCloud/CodeQL new-code requirements.
+- **Release pipeline Docker compatibility** — Pinned `Dockerfile.tool-router` to `python:3.13-alpine`
+  because `mcp-contextforge-gateway` currently supports Python `<3.14`, fixing release Docker build
+  failures on `main`.
 
 ## [1.10.0] - 2026-03-08
 
