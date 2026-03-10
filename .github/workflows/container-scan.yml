@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Build Docker image
-        run: docker build -t forge-mcp-gateway:scan .
+        run: docker build -f Dockerfile.tool-router -t forge-mcp-gateway:scan .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master

@@ -214,6 +214,8 @@ See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`,
 ## Automated Maintenance
 
 This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
+The `Container Security Scan` workflow builds `Dockerfile.tool-router` as the canonical container
+target for Trivy scanning.
 
 ### Dependency Updates (Renovate)
 
