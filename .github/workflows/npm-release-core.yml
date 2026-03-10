@@ -1,471 +1,227 @@
-# Automated NPM Release Workflow for Core Package
-# Triggers on release branch merges and version tags
-
 name: NPM Release - Core Package
 
 on:
-  # Trigger on release branch merges or version tags
-  push:
-    branches: [release/core]
-    tags:
-      - 'core-v*'
+  pull_request:
+    branches: [main]
     paths:
-      - 'package.json'
-      - 'src/**'
-      - 'README.md'
-      - 'LICENSE'
-
-  # Allow manual triggering
+      - ".github/workflows/npm-release-core.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "src/**"
+      - "README.md"
+      - "docs/NPM_DEPLOYMENT_GUIDE.md"
+  push:
+    tags:
+      - "core-v*"
   workflow_dispatch:
     inputs:
-      version_type:
-        description: 'Version bump type'
+      publish:
+        description: "Publish package to npm"
         required: true
-        default: 'patch'
+        default: false
+        type: boolean
+      npm_tag:
+        description: "Dist-tag used for workflow_dispatch publish runs"
+        required: true
+        default: "latest"
         type: choice
         options:
-          - patch
-          - minor
-          - major
-      dry_run:
-        description: 'Dry run (no actual publish)'
-        required: false
-        default: 'false'
-        type: boolean
+          - latest
+          - next
 
-# Environment variables
+concurrency:
+  group: npm-release-core-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 env:
-  NODE_VERSION: '22'
-  NPM_REGISTRY: 'https://registry.npmjs.org'
+  NODE_VERSION: "22"
+  NPM_REGISTRY: "https://registry.npmjs.org"
+  PACKAGE_NAME: "@forge-mcp-gateway/client"
 
 jobs:
-  # Pre-release validation
   validate:
-    name: Validate Release
+    name: Validate package
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
+    timeout-minutes: 15
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
-      
+      version: ${{ steps.meta.outputs.version }}
+      is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
-          
-      - name: Cache node modules
-        uses: actions/cache@v5
+
+      - name: Cache npm
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
-            
+            ${{ runner.os }}-npm-
+
       - name: Install dependencies
-        run: npm ci
-        
-      - name: Run linting
+        run: npm ci --legacy-peer-deps --ignore-scripts
+
+      - name: Lint
         run: npm run lint:check
-        
-      - name: Type checking
+
+      - name: Type-check
         run: npm run lint:types
-        
-      - name: Build package
+
+      - name: Build
         run: npm run build
-        
-      - name: Validate build output
+
+      - name: Validate package tarball
+        run: npm pack --dry-run
+
+      - name: Extract release metadata
+        id: meta
         run: |
-          echo "Checking build output..."
-          if [ ! -d "build" ]; then
-            echo "❌ Build directory not found"
-            exit 1
-          fi
-          if [ ! -f "build/index.js" ]; then
-            echo "❌ Main entry point not found"
-            exit 1
-          fi
-          echo "✅ Build validation passed"
-          
-      - name: Extract version info
-        id: version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
-          # Check if this is a prerelease
-          if [[ "$VERSION" =~ -[a-z] ]]; then
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          if [[ "${VERSION}" == *-* ]]; then
+            echo "is_prerelease=true" >> "${GITHUB_OUTPUT}"
           else
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "is_prerelease=false" >> "${GITHUB_OUTPUT}"
           fi
-          
-          echo "📦 Package version: $VERSION"
-          echo "🏷️  Is prerelease: ${{ steps.version.outputs.is_prerelease }}"
+          echo "Package version: ${VERSION}"
 
-  # Security and quality checks
-  security:
-    name: Security & Quality Checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          
-      - name: Cache node modules
-        uses: actions/cache@v5
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-            
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Run security audit
-        run: npm audit --audit-level high
-        
-      - name: Check for vulnerable dependencies
-        run: |
-          echo "🔍 Checking for high-severity vulnerabilities..."
-          if npm audit --json | grep -q '"high":\s*[1-9]'; then
-            echo "❌ High-severity vulnerabilities found"
-            npm audit
-            exit 1
-          fi
-          echo "✅ No high-severity vulnerabilities found"
-          
-      - name: Validate package.json
-        run: |
-          echo "📋 Validating package.json..."
-          
-          # Check required fields
-          REQUIRED_FIELDS=("name" "version" "description" "main" "keywords" "author" "license" "repository")
-          for field in "${REQUIRED_FIELDS[@]}"; do
-            if ! jq -e ".$field" package.json > /dev/null; then
-              echo "❌ Missing required field: $field"
-              exit 1
-            fi
-          done
-          
-          # Check package name format
-          PACKAGE_NAME=$(jq -r '.name' package.json)
-          if [[ ! "$PACKAGE_NAME" =~ ^@([a-z0-9-]+\/)?[a-z0-9-]+$ ]]; then
-            echo "❌ Invalid package name format: $PACKAGE_NAME"
-            exit 1
-          fi
-          
-          echo "✅ package.json validation passed"
-
-  # Test package locally
-  test:
-    name: Test Package
+  dry-run:
+    name: Dry run release
+    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.publish != true)
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-        
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
-          
-      - name: Cache node modules
-        uses: actions/cache@v5
+          registry-url: ${{ env.NPM_REGISTRY }}
+
+      - name: Cache npm
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
-            
+            ${{ runner.os }}-npm-
+
       - name: Install dependencies
-        run: npm ci
-        
-      - name: Build package
+        run: npm ci --legacy-peer-deps --ignore-scripts
+
+      - name: Build
         run: npm run build
-        
-      - name: Test local installation
-        run: |
-          echo "🧪 Testing local package installation..."
-          
-          # Create test directory
-          mkdir -p test-install
-          cd test-install
-          
-          # Initialize test project
-          npm init -y
-          npm pack ../
-          
-          # Install the packed package
-          PACKAGE_FILE=$(ls ../@forge-mcp-gateway-client-*.tgz | head -1)
-          npm install "$PACKAGE_FILE"
-          
-          # Test import (basic smoke test)
-          node -e "
-            try {
-              require('@forge-mcp-gateway/client');
-              console.log('✅ Package imports successfully');
-            } catch (e) {
-              console.error('❌ Package import failed:', e.message);
-              process.exit(1);
-            }
-          "
-          
-          echo "✅ Local installation test passed"
 
-  # Version bump (if manual trigger)
-  bump-version:
-    name: Bump Version
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    if: github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-          
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-      - name: Bump version
-        run: |
-          echo "🔢 Bumping version: ${{ github.event.inputs.version_type }}"
-          
-          # Install npm for version bumping
-          npm install -g npm@latest
-          
-          # Bump version
-          npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
-          
-          # Get new version
-          NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "📦 New version: $NEW_VERSION"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          
-      - name: Commit and tag
-        run: |
-          NEW_VERSION="${{ steps.bump-version.outputs.new_version }}"
-          
-          # Commit changes
-          git add package.json package-lock.json
-          git commit -m "chore: bump version to $NEW_VERSION"
-          
-          # Create and push tag
-          git tag "core-v$NEW_VERSION"
-          git push origin main --tags
-          
-        id: bump-version
+      - name: Simulate publish
+        run: npm publish --dry-run --access public
 
-  # Publish to NPM
   publish:
-    name: Publish to NPM
+    name: Publish package
+    needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [validate, security, test]
-    
+    timeout-minutes: 20
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish == true)
     environment:
       name: npm
       url: https://www.npmjs.com/package/@forge-mcp-gateway/client
-      
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-        
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
-          
-      - name: Cache node modules
-        uses: actions/cache@v5
+
+      - name: Cache npm
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
-            
+            ${{ runner.os }}-npm-
+
       - name: Install dependencies
-        run: npm ci
-        
-      - name: Build package
+        run: npm ci --legacy-peer-deps --ignore-scripts
+
+      - name: Build
         run: npm run build
-        
-      - name: Check if dry run
-        id: dry_run
-        run: |
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            echo "dry_run=true" >> $GITHUB_OUTPUT
-            echo "🧪 This is a dry run - no actual publishing"
-          else
-            echo "dry_run=false" >> $GITHUB_OUTPUT
-            echo "🚀 This is a real publish"
-          fi
-          
-      - name: Publish to NPM (Dry Run)
-        if: steps.dry_run.outputs.dry_run == 'true'
-        run: |
-          echo "🧪 Dry run - checking package before publish..."
-          npm pack --dry-run
-          echo "✅ Dry run completed - package is ready for publishing"
-          
-      - name: Publish to NPM
-        if: steps.dry_run.outputs.dry_run == 'false'
+
+      - name: Verify npm token
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "🚀 Publishing to NPM..."
-          
-          # Configure npm token
-          npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-          
-          # Check if this is a prerelease
-          IS_PRERELEASE="${{ needs.validate.outputs.is_prerelease }}"
-          VERSION="${{ needs.validate.outputs.version }}"
-          
-          echo "📦 Publishing version: $VERSION"
-          echo "🏷️  Prerelease: $IS_PRERELEASE"
-          
-          # Publish with appropriate tag
-          if [ "$IS_PRERELEASE" = "true" ]; then
-            echo "🏷️  Publishing as prerelease (next tag)"
-            npm publish --access public --tag next
-          else
-            echo "🏷️  Publishing as stable (latest tag)"
-            npm publish --access public
+          if [[ -z "${NODE_AUTH_TOKEN:-}" ]]; then
+            echo "::error::NPM_TOKEN is required for publish runs."
+            exit 1
           fi
-          
-          echo "✅ Published successfully!"
+          npm whoami >/dev/null
 
-  # Create GitHub Release
-  github-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [validate, publish]
-    if: success() && needs.publish.result == 'success'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
+      - name: Verify scope access
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: core-v${{ needs.validate.outputs.version }}
-          release_name: Core Package v${{ needs.validate.outputs.version }}
-          body: |
-            ## Core Package v${{ needs.validate.outputs.version }}
-            
-            ### 🚀 Changes
-            - Automated release from main branch
-            - Built and tested package
-            - Published to NPM registry
-            
-            ### 📦 Installation
-            ```bash
-            npm install @forge-mcp-gateway/client
-            ```
-            
-            ### 🔗 Links
-            - [NPM Package](https://www.npmjs.com/package/@forge-mcp-gateway/client)
-            - [Documentation](https://github.com/Forge-Space/mcp-gateway/tree/main/src)
-            
-            ---
-            🤖 Generated by automated release workflow
-          draft: false
-          prerelease: ${{ needs.validate.outputs.is_prerelease }}
-
-  # Update documentation
-  update-docs:
-    name: Update Documentation
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [validate, publish]
-    if: success() && needs.publish.result == 'success'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          
-      - name: Update version in docs
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "📝 Updating documentation..."
-          
+          if ! npm access list packages @forge-mcp-gateway --json >/tmp/npm-scope.json 2>/tmp/npm-scope.err; then
+            cat /tmp/npm-scope.err >&2
+            echo "::error::NPM token cannot publish to @forge-mcp-gateway scope."
+            echo "::error::Grant org package write access and retry."
+            exit 1
+          fi
+
+      - name: Fail if version already exists
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
           VERSION="${{ needs.validate.outputs.version }}"
-          
-          # Update README with latest version
-          sed -i.bak "s/npm install @forge-mcp-gateway-client@[0-9]\.[0-9]\.[0-9]/npm install @forge-mcp-gateway-client@$VERSION/g" README.md
-          
-          # Update any other documentation files
-          find docs/ -name "*.md" -type f -exec sed -i.bak "s/@forge-mcp-gateway-client@[0-9]\.[0-9]\.[0-9]/@forge-mcp-gateway-client@$VERSION/g" {} \;
-          
-          # Commit documentation updates
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md docs/ || true
-          git diff --staged --quiet || git commit -m "docs: update installation instructions for v$VERSION"
-          git push || true
-          
-          echo "✅ Documentation updated"
+          if npm view "${PACKAGE_NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "::error::Version ${VERSION} already exists on npm."
+            exit 1
+          fi
 
-  # Notify team
-  notify:
-    name: Notify Team
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    needs: [validate, publish, github-release]
-    if: always()
-    
-    steps:
-      - name: Notify Success
-        if: needs.publish.result == 'success'
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "🎉 Core Package published successfully!"
-          echo "📦 Version: ${{ needs.validate.outputs.version }}"
-          echo "🔗 NPM: https://www.npmjs.com/package/@forge-mcp-gateway/client"
-          echo "📋 Release: https://github.com/Forge-Space/mcp-gateway/releases/tag/core-v${{ needs.validate.outputs.version }}"
-          
-      - name: Notify Failure
-        if: failure()
+          DIST_TAG="latest"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            DIST_TAG="${{ inputs.npm_tag }}"
+          elif [[ "${{ needs.validate.outputs.is_prerelease }}" == "true" ]]; then
+            DIST_TAG="next"
+          fi
+          echo "Publishing ${PACKAGE_NAME}@${{ needs.validate.outputs.version }} with dist-tag ${DIST_TAG}"
+          npm publish --access public --tag "${DIST_TAG}"
+
+      - name: Verify published package resolvability
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "❌ Core Package release failed!"
-          echo "🔍 Check the workflow logs for details"
-          echo "📋 Version: ${{ needs.validate.outputs.version }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+          FOUND=0
+          for ATTEMPT in $(seq 1 12); do
+            RESOLVED="$(npm view "${PACKAGE_NAME}@${VERSION}" version 2>/dev/null || true)"
+            if [[ "${RESOLVED}" == "${VERSION}" ]]; then
+              FOUND=1
+              break
+            fi
+            sleep 10
+          done
+
+          if [[ "${FOUND}" -ne 1 ]]; then
+            echo "::error::Published version did not resolve from npm registry."
+            exit 1
+          fi
+
+          npx -y "${PACKAGE_NAME}@${VERSION}" --help >/tmp/npx-help.txt

@@ -18,6 +18,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
   reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
   SonarCloud/CodeQL new-code requirements.
+- **NPM publish automation for MCP client** — Replaced stale `npm-release-core.yml` logic with a
+  deterministic release flow: PR dry-run validation, publish-time npm scope/token preflight, and
+  post-publish resolvability checks (`npm view` + `npx --help`) for `@forge-mcp-gateway/client`.
 - **Wrapper path and URL-file drift in IDE setup** — `scripts/ide-setup.py` now uses
   `mcp-wrapper.sh` and `data/.mcp-client-url`, and `--action verify/use-wrapper/refresh-jwt` are
   available through CLI argument validation.

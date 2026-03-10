@@ -18,7 +18,6 @@
  *   MCP_GATEWAY_TIMEOUT - Request timeout in ms (default: 120000)
  */
 
-import { ForgeCore } from '@forgespace/core';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -82,13 +81,6 @@ const server = new Server(
     },
   }
 );
-
-// Initialize ForgeCore
-const forgeCore = new ForgeCore({
-  gatewayUrl: GATEWAY_URL,
-  authToken: GATEWAY_TOKEN,
-  timeout: REQUEST_TIMEOUT_MILLISECONDS,
-} as any);
 
 // Define response type for gateway requests
 interface GatewayResponse {
@@ -308,15 +300,6 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 
 // Start the server with stdio transport
 async function main(): Promise<void> {
-  // Initialize ForgeCore
-  try {
-    await (forgeCore as any).initialize();
-    console.error('ForgeCore initialized successfully');
-  } catch (error) {
-    console.error('Failed to initialize ForgeCore:', error);
-    // Continue without ForgeCore if initialization fails
-  }
-
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
