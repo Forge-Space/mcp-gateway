@@ -17,10 +17,12 @@ All notable changes to the MCP Gateway project will be documented in this file.
   - replacing regex hotspot patterns in `scripts/utils/check-mcp-registry.py` and
     `tool_router/api/quality_gates.py`,
   - hardening Dockerfiles (`apps/web-admin/Dockerfile`, `service-manager/Dockerfile`) for COPY scope,
-    runtime file permissions, and non-root execution,
+    runtime file permissions, and non-root defaults,
   - replacing flagged test/example literals for insecure protocol/IP patterns in affected
     `tool_router/tests/*`, `tests/test_security.py`, and `dribbble_mcp/tests/test_image_analysis.py`,
   - removing `/tmp` fixed paths in benchmark/audit tests with temporary-directory usage.
+- **Service-manager runtime compatibility** — Set `service-manager` compose service to run as root
+  (`user: \"0:0\"`) so Docker socket access behavior remains unchanged while Dockerfile defaults stay hardened.
 - **Reusable workflow secret schema violation** — Removed reserved `GITHUB_TOKEN` from
   `workflow_call.secrets` in `.github/workflows/security-scan-shared.yml`, resolving
   parser-level workflow-file failures on `main`.
