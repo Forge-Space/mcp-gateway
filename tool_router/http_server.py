@@ -18,6 +18,7 @@ from tool_router.api.metrics_export import router as metrics_router
 from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
+from tool_router.api.streamable_http import router as mcp_router
 from tool_router.middleware.request_logger import RequestLoggingMiddleware
 
 
@@ -64,6 +65,7 @@ app.include_router(audit_router)
 app.include_router(health_router)
 app.include_router(performance_router)
 app.include_router(metrics_router)
+app.include_router(mcp_router)
 
 
 @app.middleware("http")
