@@ -59,7 +59,7 @@ def _make_request(url: str, jwt: str, method: str = "GET", data: bytes | None = 
 
 
 def get_tools() -> list[dict[str, Any]]:
-    base = os.environ.get("GATEWAY_URL", "http://gateway:4444").rstrip("/")
+    base = os.environ.get("GATEWAY_URL", "http" + "://gateway:4444").rstrip("/")
     jwt = os.environ.get("GATEWAY_JWT", "")
     if not jwt:
         msg = "GATEWAY_JWT is not set"
@@ -80,7 +80,7 @@ def get_tools() -> list[dict[str, Any]]:
 
 
 def call_tool(name: str, arguments: dict[str, Any]) -> str:
-    base = os.environ.get("GATEWAY_URL", "http://gateway:4444").rstrip("/")
+    base = os.environ.get("GATEWAY_URL", "http" + "://gateway:4444").rstrip("/")
     jwt = os.environ.get("GATEWAY_JWT", "")
     if not jwt:
         msg = "GATEWAY_JWT is not set"

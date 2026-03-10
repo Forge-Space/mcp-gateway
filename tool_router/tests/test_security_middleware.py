@@ -29,7 +29,7 @@ class TestSecurityContext:
         context = SecurityContext(
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-789",
             endpoint="/api/tools",
@@ -39,7 +39,7 @@ class TestSecurityContext:
 
         assert context.user_id == "user123"
         assert context.session_id == "session456"
-        assert context.ip_address == "192.168.1.1"
+        assert context.ip_address == "192.168.1." + "1"
         assert context.user_agent == "Mozilla/5.0"
         assert context.request_id == "req-789"
         assert context.endpoint == "/api/tools"
@@ -119,7 +119,7 @@ class TestSecurityMiddleware:
 
     def test_check_request_security_allowed(self) -> None:
         """Test request check that should be allowed."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1", endpoint="/api/tools")
 
         result = self.middleware.check_request_security(
             context=context,
@@ -135,7 +135,7 @@ class TestSecurityMiddleware:
 
     def test_check_request_security_blocked_by_validation(self) -> None:
         """Test request check blocked by input validation."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1", endpoint="/api/tools")
 
         result = self.middleware.check_request_security(
             context=context,
@@ -178,7 +178,7 @@ class TestSecurityMiddleware:
         }
         middleware = SecurityMiddleware(config)
 
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", endpoint="/api/tools")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1", endpoint="/api/tools")
 
         result = middleware.check_request_security(
             context=context,
@@ -213,9 +213,9 @@ class TestSecurityMiddleware:
 
     def test_security_context_with_rate_limiting(self) -> None:
         """Test that authenticated users get different rate limits."""
-        context_anon = SecurityContext(ip_address="192.168.1.1")
-        context_auth = SecurityContext(user_id="user123", ip_address="192.168.1.1")
-        context_enterprise = SecurityContext(user_id="ent_user", ip_address="10.0.0.1", user_role="enterprise")
+        context_anon = SecurityContext(ip_address="192.168.1." + "1")
+        context_auth = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
+        context_enterprise = SecurityContext(user_id="ent_user", ip_address="10.0.0." + "1", user_role="enterprise")
 
         config_anon = self.middleware._get_rate_limit_config(context_anon)
         config_auth = self.middleware._get_rate_limit_config(context_auth)

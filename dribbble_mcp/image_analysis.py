@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -36,7 +37,8 @@ class ImageAnalyzer:
             ValueError: If image_url is empty or invalid.
             RuntimeError: If download or analysis fails.
         """
-        if not image_url or not image_url.startswith(("http://", "https://")):
+        parsed_url = urlparse(image_url) if image_url else None
+        if not image_url or parsed_url is None or parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
             msg = "image_url must be a valid HTTP/HTTPS URL"
             raise ValueError(msg)
 

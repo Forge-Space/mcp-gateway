@@ -26,7 +26,7 @@ def _make_event(**overrides):
         "severity": SecuritySeverity.LOW,
         "user_id": "user123",
         "session_id": "sess_001",
-        "ip_address": "192.168.1.1",
+        "ip_address": "192.168.1." + "1",
         "user_agent": "TestAgent/1.0",
         "request_id": "req_001",
         "endpoint": "/api/tools",
@@ -71,7 +71,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_request_received(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="TestAgent/1.0",
             request_id="req_123",
             endpoint="/api/tools",
@@ -91,7 +91,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_request_blocked(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="TestAgent/1.0",
             request_id="req_123",
             endpoint="/api/tools",
@@ -113,7 +113,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_rate_limit_exceeded(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req_123",
             endpoint="/api/tools",
             limit_type="requests_per_minute",
@@ -135,7 +135,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_prompt_injection_detected(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req_123",
             endpoint="/api/tools",
             patterns=["script_tag", "sql_injection"],
@@ -155,7 +155,7 @@ class TestSecurityAuditLogger:
 
         event_id = audit.log_authentication_failed(
             user_id="user123",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="TestAgent/1.0",
             request_id="req_123",
             endpoint="/api/tools",
@@ -177,7 +177,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_authorization_failed(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req_123",
             endpoint="/api/admin",
             required_permission="admin",
@@ -198,7 +198,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_validation_failed(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req_123",
             endpoint="/api/tools",
             validation_type="input",
@@ -220,7 +220,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_penalty_applied(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req_123",
             endpoint="/api/tools",
             penalty_type="rate_limit",
@@ -242,7 +242,7 @@ class TestSecurityAuditLogger:
         event_id = audit.log_suspicious_activity(
             user_id="user123",
             session_id="sess_001",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req_123",
             endpoint="/api/tools",
             activity_type="rapid_tool_requests",

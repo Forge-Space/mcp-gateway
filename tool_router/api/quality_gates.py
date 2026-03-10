@@ -49,9 +49,9 @@ _XSS_PATTERNS = [
 ]
 
 _INJECTION_PATTERNS = [
-    re.compile(r"\$\{.*\}.*exec"),
-    re.compile(r"child_" + r"process"),
-    re.compile(r"require\s*\(\s*['\"]fs['\"]\s*\)"),
+    "child_process",
+    "require('fs')",
+    'require("fs")',
 ]
 
 
@@ -60,9 +60,11 @@ def _run_security_scan(code: str) -> GateResult:
     for pattern in _XSS_PATTERNS:
         if pattern.search(code):
             issues.append(f"Potential XSS: {pattern.pattern}")
+    if "${" in code and "}" in code and "exec" in code:
+        issues.append("Potential injection: template expression with exec")
     for pattern in _INJECTION_PATTERNS:
-        if pattern.search(code):
-            issues.append(f"Potential injection: {pattern.pattern}")
+        if pattern in code:
+            issues.append(f"Potential injection: {pattern}")
     return GateResult(
         gate="security",
         passed=len(issues) == 0,

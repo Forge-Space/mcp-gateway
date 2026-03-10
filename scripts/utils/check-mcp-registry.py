@@ -7,10 +7,10 @@ to identify new servers or version updates.
 """
 
 import json
-import re
 import sys
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 
@@ -34,16 +34,19 @@ def load_current_servers() -> dict[str, set[str]]:
 
                 if line.startswith("#"):
                     # Commented server
-                    match = re.match(r"#\s*([^|]+)\|", line)
-                    if match:
-                        servers["commented"].add(match.group(1).strip())
+                    commented = line.lstrip("#").strip()
+                    if "|" in commented:
+                        name = commented.split("|", 1)[0].strip()
+                        if name:
+                            servers["commented"].add(name)
                 elif "|" in line and not line.startswith("#"):
                     # Active server
                     parts = line.split("|")
                     name = parts[0].strip()
                     url = parts[1].strip()
 
-                    if url.startswith("http://") and not url.startswith("http://localhost"):
+                    parsed_url = urlparse(url)
+                    if parsed_url.scheme == "http" and parsed_url.hostname != "localhost":
                         servers["active_local"].add(name)
                     else:
                         servers["active_remote"].add(name)

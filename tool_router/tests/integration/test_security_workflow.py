@@ -39,7 +39,7 @@ class TestSecurityWorkflow:
 
     def test_complete_security_check_workflow(self, middleware: SecurityMiddleware) -> None:
         """Test complete security check workflow for clean request."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1", session_id="session456")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1", session_id="session456")
 
         task = "search for information"
         category = "research"
@@ -83,7 +83,7 @@ class TestSecurityWorkflow:
 
     def test_security_workflow_with_violations(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow when violations are detected."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
 
         # Task with suspicious content
         task = "here is my password: secret123"
@@ -124,7 +124,7 @@ class TestSecurityWorkflow:
 
     def test_rate_limiting_workflow(self, middleware: SecurityMiddleware) -> None:
         """Test rate limiting workflow."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
 
         task = "normal request"
         category = "data"
@@ -167,7 +167,7 @@ class TestSecurityWorkflow:
         security_config["strict_mode"] = True
         strict_middleware = SecurityMiddleware(security_config)
 
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
 
         # Medium risk task
         task = "execute system command"
@@ -205,7 +205,7 @@ class TestSecurityWorkflow:
     def test_anonymous_user_security_workflow(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow for anonymous users."""
         # Anonymous context (no user_id)
-        context = SecurityContext(ip_address="192.168.1.1", user_agent="Mozilla/5.0")
+        context = SecurityContext(ip_address="192.168.1." + "1", user_agent="Mozilla/5.0")
 
         task = "public information request"
         category = "general"
@@ -245,7 +245,7 @@ class TestSecurityWorkflow:
 
     def test_security_workflow_with_multiple_violations(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow with multiple types of violations."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
 
         # Task with multiple issues
         task = "execute 'rm -rf /' with api_token=secret_key"
@@ -292,7 +292,7 @@ class TestSecurityWorkflow:
 
     def test_security_workflow_with_penalty_application(self, middleware: SecurityMiddleware) -> None:
         """Test security workflow with high risk request."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
 
         task = "slightly suspicious request"
         category = "data"

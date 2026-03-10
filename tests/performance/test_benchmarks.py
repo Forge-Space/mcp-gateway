@@ -3,7 +3,9 @@ Performance tests for MCP Gateway tool router.
 """
 
 import os
+import tempfile
 import time
+from pathlib import Path
 
 import psutil
 import pytest
@@ -135,14 +137,11 @@ class TestResourceLimits:
 
         initial_handles = process.num_handles() if hasattr(process, "num_handles") else process.num_fds()
 
-        # Open and close some files
-        for i in range(10):
-            with open(f"/tmp/test_{i}.txt", "w") as f:
-                f.write(f"test data {i}")
-
-        # Clean up files
-        for i in range(10):
-            os.remove(f"/tmp/test_{i}.txt")
+        with tempfile.TemporaryDirectory(prefix="perf-bench-") as temp_dir:
+            temp_path = Path(temp_dir)
+            for i in range(10):
+                file_path = temp_path / f"test_{i}.txt"
+                file_path.write_text(f"test data {i}", encoding="utf-8")
 
         final_handles = process.num_handles() if hasattr(process, "num_handles") else process.num_fds()
         handle_growth = final_handles - initial_handles

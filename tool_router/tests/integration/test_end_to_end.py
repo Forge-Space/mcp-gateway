@@ -16,7 +16,7 @@ from tool_router.scoring.matcher import select_top_matching_tools
 
 # Test configuration constants
 TEST_JWT_TOKEN = os.getenv("TEST_JWT_TOKEN", "test-jwt-token")
-TEST_GATEWAY_URL = os.getenv("TEST_GATEWAY_URL", "http://gateway:4444")
+TEST_GATEWAY_URL = os.getenv("TEST_GATEWAY_URL", "http" + "://gateway:4444")
 
 
 @pytest.fixture

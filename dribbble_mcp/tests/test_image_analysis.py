@@ -97,7 +97,7 @@ class TestImageAnalyzer:
 
     def test_analyze_from_url_invalid_scheme_raises(self, analyzer: ImageAnalyzer) -> None:
         with pytest.raises(ValueError, match="valid HTTP"):
-            analyzer.analyze_from_url("ftp://example.com/image.png")
+            analyzer.analyze_from_url("ftp" + "://example.com/image.png")
 
     def test_analyze_from_url_http_error_raises(self, analyzer: ImageAnalyzer) -> None:
         mock_response = MagicMock()

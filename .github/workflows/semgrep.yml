@@ -9,6 +9,6 @@ on:
 
 jobs:
   semgrep:
-    uses: Forge-Space/.github/.github/workflows/reusable-semgrep.yml@main
+    uses: Forge-Space/.github/.github/workflows/reusable-semgrep.yml@6fbe56bc610ddf84b70f213c752b95196bcadd95
     with:
       scan-paths: "tool_router/ dribbble_mcp/"

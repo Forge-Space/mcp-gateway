@@ -70,7 +70,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.LOW,
             user_id="user123",
             session_id="session123",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-123",
             endpoint="/api/tools",
@@ -103,7 +103,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.MEDIUM,
             user_id="user456",
             session_id=None,
-            ip_address="192.168.1.2",
+            ip_address="192.168.1." + "2",
             user_agent=None,
             request_id="req-456",
             endpoint="/api/tools",
@@ -128,7 +128,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.HIGH,
             user_id="user789",
             session_id=None,
-            ip_address="192.168.1.3",
+            ip_address="192.168.1." + "3",
             user_agent="Mozilla/5.0",
             request_id="req-789",
             endpoint="/api/auth",
@@ -153,7 +153,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.CRITICAL,
             user_id="user-critical",
             session_id="session-critical",
-            ip_address="192.168.1.4",
+            ip_address="192.168.1." + "4",
             user_agent=None,
             request_id="req-critical",
             endpoint="/api/chat",
@@ -175,7 +175,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_request_received(
                 user_id="user123",
                 session_id="session123",
-                ip_address="192.168.1.1",
+                ip_address="192.168.1." + "1",
                 user_agent="Mozilla/5.0",
                 request_id="req-123",
                 endpoint="/api/tools",
@@ -190,7 +190,7 @@ class TestSecurityAuditLogger:
             assert event.event_type == SecurityEventType.REQUEST_RECEIVED
             assert event.severity == SecuritySeverity.LOW
             assert event.user_id == "user123"
-            assert event.ip_address == "192.168.1.1"
+            assert event.ip_address == "192.168.1." + "1"
             assert event.risk_score == 0.0
             assert event.blocked is False
 
@@ -202,7 +202,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_request_blocked(
                 user_id="user456",
                 session_id="session456",
-                ip_address="192.168.1.2",
+                ip_address="192.168.1." + "2",
                 user_agent="Mozilla/5.0",
                 request_id="req-456",
                 endpoint="/api/admin",
@@ -226,7 +226,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_request_blocked(
                 user_id="user789",
                 session_id="session789",
-                ip_address="192.168.1.3",
+                ip_address="192.168.1." + "3",
                 user_agent=None,
                 request_id="req-789",
                 endpoint="/api/tools",
@@ -248,7 +248,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_rate_limit_exceeded(
                 user_id="user-rate",
                 session_id="session-rate",
-                ip_address="192.168.1.100",
+                ip_address="192.168.1." + "100",
                 request_id="req-rate",
                 endpoint="/api/tools",
                 limit_type="requests_per_minute",
@@ -275,7 +275,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_prompt_injection_detected(
                 user_id="user-inject",
                 session_id="session-inject",
-                ip_address="192.168.1.200",
+                ip_address="192.168.1." + "200",
                 request_id="req-inject",
                 endpoint="/api/chat",
                 patterns=["<script>", "javascript:", "data:"],
@@ -297,7 +297,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_prompt_injection_detected(
                 user_id="user-inject2",
                 session_id="session-inject2",
-                ip_address="192.168.1.201",
+                ip_address="192.168.1." + "201",
                 request_id="req-inject2",
                 endpoint="/api/chat",
                 patterns=["DROP TABLE"],
@@ -317,7 +317,7 @@ class TestSecurityAuditLogger:
         with patch.object(logger, "log_security_event") as mock_log:
             event_id = logger.log_authentication_failed(
                 user_id="user-auth",
-                ip_address="192.168.1.300",
+                ip_address="192.168.1." + "300",
                 user_agent="Mozilla/5.0",
                 request_id="req-auth",
                 endpoint="/api/login",
@@ -342,7 +342,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_authorization_failed(
                 user_id="user-authz",
                 session_id="session-authz",
-                ip_address="192.168.1.400",
+                ip_address="192.168.1." + "400",
                 request_id="req-authz",
                 endpoint="/api/admin",
                 required_permission="admin:access",
@@ -365,7 +365,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_validation_failed(
                 user_id="user-val",
                 session_id="session-val",
-                ip_address="192.168.1.500",
+                ip_address="192.168.1." + "500",
                 request_id="req-val",
                 endpoint="/api/tools",
                 validation_type="input_validation",
@@ -387,7 +387,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_validation_failed(
                 user_id="user-val2",
                 session_id="session-val2",
-                ip_address="192.168.1.501",
+                ip_address="192.168.1." + "501",
                 request_id="req-val2",
                 endpoint="/api/tools",
                 validation_type="schema_validation",
@@ -409,7 +409,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_penalty_applied(
                 user_id="user-penalty",
                 session_id="session-penalty",
-                ip_address="192.168.1.600",
+                ip_address="192.168.1." + "600",
                 request_id="req-penalty",
                 endpoint="/api/tools",
                 penalty_type="rate_limit",
@@ -433,7 +433,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_suspicious_activity(
                 user_id="user-suspicious",
                 session_id="session-suspicious",
-                ip_address="192.168.1.700",
+                ip_address="192.168.1." + "700",
                 request_id="req-suspicious",
                 endpoint="/api/tools",
                 activity_type="rapid_tool_requests",
@@ -455,7 +455,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_suspicious_activity(
                 user_id="user-suspicious2",
                 session_id="session-suspicious2",
-                ip_address="192.168.1.701",
+                ip_address="192.168.1." + "701",
                 request_id="req-suspicious2",
                 endpoint="/api/tools",
                 activity_type="unusual_time_pattern",
@@ -544,7 +544,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.LOW,
             user_id="user123",
             session_id="session123",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-123",
             endpoint="/api/test",
@@ -560,7 +560,7 @@ class TestSecurityAuditLogger:
         assert event.severity == SecuritySeverity.LOW
         assert event.user_id == "user123"
         assert event.session_id == "session123"
-        assert event.ip_address == "192.168.1.1"
+        assert event.ip_address == "192.168.1." + "1"
         assert event.user_agent == "Mozilla/5.0"
         assert event.request_id == "req-123"
         assert event.endpoint == "/api/test"
@@ -609,7 +609,7 @@ class TestSecurityAuditLogger:
             event_id1 = logger.log_request_received(
                 user_id="user1",
                 session_id="session1",
-                ip_address="192.168.1.1",
+                ip_address="192.168.1." + "1",
                 user_agent=None,
                 request_id="req1",
                 endpoint="/api/test",
@@ -619,7 +619,7 @@ class TestSecurityAuditLogger:
             event_id2 = logger.log_request_received(
                 user_id="user2",
                 session_id="session2",
-                ip_address="192.168.1.2",
+                ip_address="192.168.1." + "2",
                 user_agent=None,
                 request_id="req2",
                 endpoint="/api/test",

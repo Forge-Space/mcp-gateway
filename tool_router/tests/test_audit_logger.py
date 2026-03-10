@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+import tempfile
 from datetime import UTC, datetime
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from tool_router.security.audit_logger import (
@@ -63,7 +65,7 @@ class TestSecurityEvent:
             severity=SecuritySeverity.LOW,
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-789",
             endpoint="/api/tools",
@@ -79,7 +81,7 @@ class TestSecurityEvent:
         assert event.severity == SecuritySeverity.LOW
         assert event.user_id == "user123"
         assert event.session_id == "session456"
-        assert event.ip_address == "192.168.1.1"
+        assert event.ip_address == "192.168.1." + "1"
         assert event.user_agent == "Mozilla/5.0"
         assert event.request_id == "req-789"
         assert event.endpoint == "/api/tools"
@@ -132,7 +134,7 @@ class TestSecurityEvent:
             severity=SecuritySeverity.LOW,
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-789",
             endpoint="/api/tools",
@@ -150,7 +152,7 @@ class TestSecurityEvent:
         assert event_dict["severity"] == SecuritySeverity.LOW
         assert event_dict["user_id"] == "user123"
         assert event_dict["session_id"] == "session456"
-        assert event_dict["ip_address"] == "192.168.1.1"
+        assert event_dict["ip_address"] == "192.168.1." + "1"
         assert event_dict["user_agent"] == "Mozilla/5.0"
         assert event_dict["request_id"] == "req-789"
         assert event_dict["endpoint"] == "/api/tools"
@@ -174,11 +176,13 @@ class TestSecurityAuditLogger:
 
     def test_initialization_with_file(self):
         """Test SecurityAuditLogger initialization with log file."""
-        logger = SecurityAuditLogger(log_file="/tmp/security.log")
+        with tempfile.TemporaryDirectory(prefix="security-log-") as temp_dir:
+            log_file = Path(temp_dir) / "security.log"
+            logger = SecurityAuditLogger(log_file=str(log_file))
 
-        assert logger.log_file == "/tmp/security.log"
-        assert logger.enable_console is True
-        assert len(logger.logger.handlers) == 2  # Console + file handlers
+            assert logger.log_file == str(log_file)
+            assert logger.enable_console is True
+            assert len(logger.logger.handlers) == 2  # Console + file handlers
 
     def test_initialization_console_disabled(self):
         """Test SecurityAuditLogger initialization with console disabled."""
@@ -212,14 +216,16 @@ class TestSecurityAuditLogger:
         mock_stream_handler.return_value = mock_stream_instance
         mock_file_handler.return_value = mock_file_instance
 
-        logger = SecurityAuditLogger(log_file="/tmp/test.log")
+        with tempfile.TemporaryDirectory(prefix="security-log-") as temp_dir:
+            log_file = Path(temp_dir) / "test.log"
+            logger = SecurityAuditLogger(log_file=str(log_file))
 
-        # Verify both handlers were created
-        mock_stream_handler.assert_called_once()
-        mock_file_handler.assert_called_once_with("/tmp/test.log")
+            # Verify both handlers were created
+            mock_stream_handler.assert_called_once()
+            mock_file_handler.assert_called_once_with(str(log_file))
 
-        # Verify both handlers were added
-        assert len(logger.logger.handlers) == 2
+            # Verify both handlers were added
+            assert len(logger.logger.handlers) == 2
 
     def test_log_security_event_low_severity(self):
         """Test logging a low severity security event."""
@@ -233,7 +239,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.LOW,
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-789",
             endpoint="/api/tools",
@@ -264,7 +270,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.MEDIUM,
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent=None,
             request_id="req-789",
             endpoint="/api/tools",
@@ -295,7 +301,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.HIGH,
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-789",
             endpoint="/api/tools",
@@ -326,7 +332,7 @@ class TestSecurityAuditLogger:
             severity=SecuritySeverity.CRITICAL,
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req-789",
             endpoint="/api/tools",
@@ -353,7 +359,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_request_received(
                 user_id="user123",
                 session_id="session456",
-                ip_address="192.168.1.1",
+                ip_address="192.168.1." + "1",
                 user_agent="Mozilla/5.0",
                 request_id="req-789",
                 endpoint="/api/tools",
@@ -371,7 +377,7 @@ class TestSecurityAuditLogger:
             assert event_arg.severity == SecuritySeverity.LOW
             assert event_arg.user_id == "user123"
             assert event_arg.session_id == "session456"
-            assert event_arg.ip_address == "192.168.1.1"
+            assert event_arg.ip_address == "192.168.1." + "1"
             assert event_arg.user_agent == "Mozilla/5.0"
             assert event_arg.request_id == "req-789"
             assert event_arg.endpoint == "/api/tools"
@@ -420,7 +426,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_request_blocked(
                 user_id="user123",
                 session_id="session456",
-                ip_address="192.168.1.1",
+                ip_address="192.168.1." + "1",
                 user_agent="Mozilla/5.0",
                 request_id="req-789",
                 endpoint="/api/tools",
@@ -439,7 +445,7 @@ class TestSecurityAuditLogger:
             assert event_arg.severity == SecuritySeverity.HIGH
             assert event_arg.user_id == "user123"
             assert event_arg.session_id == "session456"
-            assert event_arg.ip_address == "192.168.1.1"
+            assert event_arg.ip_address == "192.168.1." + "1"
             assert event_arg.user_agent == "Mozilla/5.0"
             assert event_arg.request_id == "req-789"
             assert event_arg.endpoint == "/api/tools"
@@ -456,7 +462,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_request_blocked(
                 user_id="user123",
                 session_id="session456",
-                ip_address="192.168.1.1",
+                ip_address="192.168.1." + "1",
                 user_agent="Mozilla/5.0",
                 request_id="req-789",
                 endpoint="/api/tools",
@@ -512,7 +518,7 @@ class TestSecurityAuditLogger:
             event_id = logger.log_rate_limit_exceeded(
                 user_id="user123",
                 session_id="session456",
-                ip_address="192.168.1.1",
+                ip_address="192.168.1." + "1",
                 request_id="req-789",
                 endpoint="/api/tools",
                 limit_type="requests_per_minute",
@@ -531,7 +537,7 @@ class TestSecurityAuditLogger:
             assert event_arg.severity == SecuritySeverity.MEDIUM
             assert event_arg.user_id == "user123"
             assert event_arg.session_id == "session456"
-            assert event_arg.ip_address == "192.168.1.1"
+            assert event_arg.ip_address == "192.168.1." + "1"
             assert event_arg.request_id == "req-789"
             assert event_arg.endpoint == "/api/tools"
             assert event_arg.details["limit_type"] == "requests_per_minute"

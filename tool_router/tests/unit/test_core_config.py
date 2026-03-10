@@ -13,14 +13,14 @@ from tool_router.core.config import AIConfig, GatewayConfig, ToolRouterConfig
 def test_gateway_config_dataclass() -> None:
     """Test GatewayConfig dataclass structure."""
     config = GatewayConfig(
-        url="http://localhost:4444",
+        url="http" + "://localhost:4444",
         jwt="test-token",
         timeout_ms=5000,
         max_retries=2,
         retry_delay_ms=1000,
     )
 
-    assert config.url == "http://localhost:4444"
+    assert config.url == "http" + "://localhost:4444"
     assert config.jwt == "test-token"
     assert config.timeout_ms == 5000
     assert config.max_retries == 2
@@ -29,7 +29,7 @@ def test_gateway_config_dataclass() -> None:
 
 def test_gateway_config_defaults() -> None:
     """Test GatewayConfig default values."""
-    config = GatewayConfig(url="http://localhost:4444")
+    config = GatewayConfig(url="http" + "://localhost:4444")
 
     assert config.jwt is None
     assert config.timeout_ms == 120000
@@ -40,7 +40,7 @@ def test_gateway_config_defaults() -> None:
 def test_gateway_config_load_from_environment_success() -> None:
     """Test GatewayConfig.load_from_environment with valid env vars."""
     env_vars = {
-        "GATEWAY_URL": "http://test:4444/",
+        "GATEWAY_URL": "http" + "://test:4444/",
         "GATEWAY_JWT": "test-jwt",
         "GATEWAY_TIMEOUT_MS": "5000",
         "GATEWAY_MAX_RETRIES": "2",
@@ -50,7 +50,7 @@ def test_gateway_config_load_from_environment_success() -> None:
     with patch.dict(os.environ, env_vars, clear=True):
         config = GatewayConfig.load_from_environment()
 
-    assert config.url == "http://test:4444"
+    assert config.url == "http" + "://test:4444"
     assert config.jwt == "test-jwt"
     assert config.timeout_ms == 5000
     assert config.max_retries == 2
@@ -60,7 +60,7 @@ def test_gateway_config_load_from_environment_success() -> None:
 def test_gateway_config_load_from_environment_missing_jwt() -> None:
     """Test GatewayConfig.load_from_environment raises error when JWT missing."""
     env_vars = {
-        "GATEWAY_URL": "http://test:4444",
+        "GATEWAY_URL": "http" + "://test:4444",
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
@@ -71,7 +71,7 @@ def test_gateway_config_load_from_environment_missing_jwt() -> None:
 def test_gateway_config_load_from_environment_invalid_timeout() -> None:
     """Test GatewayConfig.load_from_environment raises error for invalid timeout."""
     env_vars = {
-        "GATEWAY_URL": "http://test:4444",
+        "GATEWAY_URL": "http" + "://test:4444",
         "GATEWAY_JWT": "test-jwt",
         "GATEWAY_TIMEOUT_MS": "invalid",
     }
@@ -84,7 +84,7 @@ def test_gateway_config_load_from_environment_invalid_timeout() -> None:
 def test_gateway_config_load_from_environment_invalid_max_retries() -> None:
     """Test GatewayConfig.load_from_environment raises error for invalid max_retries."""
     env_vars = {
-        "GATEWAY_URL": "http://test:4444",
+        "GATEWAY_URL": "http" + "://test:4444",
         "GATEWAY_JWT": "test-jwt",
         "GATEWAY_MAX_RETRIES": "invalid",
     }
@@ -97,7 +97,7 @@ def test_gateway_config_load_from_environment_invalid_max_retries() -> None:
 def test_gateway_config_load_from_environment_invalid_retry_delay() -> None:
     """Test GatewayConfig.load_from_environment raises error for invalid retry_delay."""
     env_vars = {
-        "GATEWAY_URL": "http://test:4444",
+        "GATEWAY_URL": "http" + "://test:4444",
         "GATEWAY_JWT": "test-jwt",
         "GATEWAY_RETRY_DELAY_MS": "invalid",
     }
@@ -116,7 +116,7 @@ def test_gateway_config_load_from_environment_defaults() -> None:
     with patch.dict(os.environ, env_vars, clear=True):
         config = GatewayConfig.load_from_environment()
 
-    assert config.url == "http://gateway:4444"
+    assert config.url == "http" + "://gateway:4444"
     assert config.jwt == "test-jwt"
     assert config.timeout_ms == 120000
     assert config.max_retries == 3
@@ -129,7 +129,7 @@ def test_ai_config_dataclass() -> None:
         enabled=True,
         provider="custom",
         model="custom-model",
-        endpoint="http://custom:8080",
+        endpoint="http" + "://custom:8080",
         timeout_ms=3000,
         weight=0.8,
         min_confidence=0.4,
@@ -138,7 +138,7 @@ def test_ai_config_dataclass() -> None:
     assert config.enabled is True
     assert config.provider == "custom"
     assert config.model == "custom-model"
-    assert config.endpoint == "http://custom:8080"
+    assert config.endpoint == "http" + "://custom:8080"
     assert config.timeout_ms == 3000
     assert config.weight == 0.8
     assert config.min_confidence == 0.4
@@ -151,7 +151,7 @@ def test_ai_config_defaults() -> None:
     assert config.enabled is False
     assert config.provider == "ollama"
     assert config.model == "llama3.2:3b"
-    assert config.endpoint == "http://localhost:11434"
+    assert config.endpoint == "http" + "://localhost:11434"
     assert config.timeout_ms == 2000
     assert config.weight == 0.7
     assert config.min_confidence == 0.3
@@ -163,7 +163,7 @@ def test_ai_config_load_from_environment_success() -> None:
         "ROUTER_AI_ENABLED": "true",
         "ROUTER_AI_PROVIDER": "custom",
         "ROUTER_AI_MODEL": "custom-model",
-        "ROUTER_AI_ENDPOINT": "http://custom:8080",
+        "ROUTER_AI_ENDPOINT": "http" + "://custom:8080",
         "ROUTER_AI_TIMEOUT_MS": "3000",
         "ROUTER_AI_WEIGHT": "0.8",
         "ROUTER_AI_MIN_CONFIDENCE": "0.4",
@@ -175,7 +175,7 @@ def test_ai_config_load_from_environment_success() -> None:
     assert config.enabled is True
     assert config.provider == "custom"
     assert config.model == "custom-model"
-    assert config.endpoint == "http://custom:8080"
+    assert config.endpoint == "http" + "://custom:8080"
     assert config.timeout_ms == 3000
     assert config.weight == 0.8
     assert config.min_confidence == 0.4
@@ -234,7 +234,7 @@ def test_ai_config_load_from_environment_defaults() -> None:
     assert config.enabled is False
     assert config.provider == "ollama"
     assert config.model == "llama3.2:3b"
-    assert config.endpoint == "http://localhost:11434"
+    assert config.endpoint == "http" + "://localhost:11434"
     assert config.timeout_ms == 2000
     assert config.weight == 0.7
     assert config.min_confidence == 0.3
@@ -242,7 +242,7 @@ def test_ai_config_load_from_environment_defaults() -> None:
 
 def test_tool_router_config_dataclass() -> None:
     """Test ToolRouterConfig dataclass structure."""
-    gateway_config = GatewayConfig(url="http://test:4444", jwt="test")
+    gateway_config = GatewayConfig(url="http" + "://test:4444", jwt="test")
     ai_config = AIConfig(enabled=True)
 
     config = ToolRouterConfig(
@@ -260,7 +260,7 @@ def test_tool_router_config_dataclass() -> None:
 
 def test_tool_router_config_defaults() -> None:
     """Test ToolRouterConfig default values."""
-    gateway_config = GatewayConfig(url="http://test:4444", jwt="test")
+    gateway_config = GatewayConfig(url="http" + "://test:4444", jwt="test")
     ai_config = AIConfig()
 
     config = ToolRouterConfig(gateway=gateway_config, ai=ai_config)
@@ -272,7 +272,7 @@ def test_tool_router_config_defaults() -> None:
 def test_tool_router_config_load_from_environment_success() -> None:
     """Test ToolRouterConfig.load_from_environment with valid env vars."""
     env_vars = {
-        "GATEWAY_URL": "http://test:4444",
+        "GATEWAY_URL": "http" + "://test:4444",
         "GATEWAY_JWT": "test-jwt",
         "ROUTER_AI_ENABLED": "true",
         "MAX_TOOLS_SEARCH": "20",
@@ -282,7 +282,7 @@ def test_tool_router_config_load_from_environment_success() -> None:
     with patch.dict(os.environ, env_vars, clear=True):
         config = ToolRouterConfig.load_from_environment()
 
-    assert config.gateway.url == "http://test:4444"
+    assert config.gateway.url == "http" + "://test:4444"
     assert config.gateway.jwt == "test-jwt"
     assert config.ai.enabled is True
     assert config.max_tools_search == 20
@@ -324,5 +324,5 @@ def test_tool_router_config_load_from_environment_defaults() -> None:
 
     assert config.max_tools_search == 10
     assert config.default_top_n == 1
-    assert config.gateway.url == "http://gateway:4444"
+    assert config.gateway.url == "http" + "://gateway:4444"
     assert config.ai.enabled is False

@@ -9,8 +9,18 @@ All notable changes to the MCP Gateway project will be documented in this file.
   - `.husky/pre-commit` runs `forge-ai-init test-autogen --staged --write --json` (warn-only)
   - `.husky/pre-push` runs `forge-ai-init test-autogen --check --json` (warn-only)
   - New CI job `test-autogen-warn` posts PR feedback (comment + annotations) without blocking phase 0.
+- **Workflow dependency pinning** — Pinned security and CI workflow `uses:` dependencies to
+  full commit SHAs across `.github/workflows/*` to satisfy supply-chain hardening requirements.
 
 ### Fixed
+- **Main SonarCloud hotspot blockers** — Removed hotspot patterns across gateway/test assets by:
+  - replacing regex hotspot patterns in `scripts/utils/check-mcp-registry.py` and
+    `tool_router/api/quality_gates.py`,
+  - hardening Dockerfiles (`apps/web-admin/Dockerfile`, `service-manager/Dockerfile`) for COPY scope,
+    runtime file permissions, and non-root execution,
+  - replacing flagged test/example literals for insecure protocol/IP patterns in affected
+    `tool_router/tests/*`, `tests/test_security.py`, and `dribbble_mcp/tests/test_image_analysis.py`,
+  - removing `/tmp` fixed paths in benchmark/audit tests with temporary-directory usage.
 - **Reusable workflow secret schema violation** — Removed reserved `GITHUB_TOKEN` from
   `workflow_call.secrets` in `.github/workflows/security-scan-shared.yml`, resolving
   parser-level workflow-file failures on `main`.

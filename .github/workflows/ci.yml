@@ -16,9 +16,9 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - uses: Forge-Space/.github/.github/actions/setup-python@main
+      - uses: Forge-Space/.github/.github/actions/setup-python@6fbe56bc610ddf84b70f213c752b95196bcadd95
 
       - name: Ruff check
         run: ruff check tool_router/ dribbble_mcp/ --output-format=github
@@ -32,9 +32,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - uses: Forge-Space/.github/.github/actions/setup-python@main
+      - uses: Forge-Space/.github/.github/actions/setup-python@6fbe56bc610ddf84b70f213c752b95196bcadd95
 
       - name: Run tests
         run: |
@@ -49,9 +49,9 @@ jobs:
     needs: [lint, test]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - uses: Forge-Space/.github/.github/actions/setup-python@main
+      - uses: Forge-Space/.github/.github/actions/setup-python@6fbe56bc610ddf84b70f213c752b95196bcadd95
         with:
           install-command: "pip install build"
 
@@ -64,9 +64,9 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - uses: Forge-Space/.github/.github/actions/setup-python@main
+      - uses: Forge-Space/.github/.github/actions/setup-python@6fbe56bc610ddf84b70f213c752b95196bcadd95
 
       - name: Run mypy
         run: mypy tool_router/ --config-file pyproject.toml || true
@@ -77,9 +77,9 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - uses: Forge-Space/.github/.github/actions/setup-python@main
+      - uses: Forge-Space/.github/.github/actions/setup-python@6fbe56bc610ddf84b70f213c752b95196bcadd95
 
       - name: pip audit
         run: pip install pip-audit && pip-audit || true
@@ -98,9 +98,9 @@ jobs:
       issues: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
 

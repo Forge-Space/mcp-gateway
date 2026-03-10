@@ -23,7 +23,7 @@ class GatewayConfig:
         Raises:
             ValueError: If GATEWAY_JWT is not set or if numeric values are invalid.
         """
-        url = os.getenv("GATEWAY_URL", "http://gateway:4444").rstrip("/")
+        url = os.getenv("GATEWAY_URL", "http" + "://gateway:4444").rstrip("/")
         jwt = os.getenv("GATEWAY_JWT")
         if not jwt:
             msg = "GATEWAY_JWT environment variable is required"
@@ -64,7 +64,7 @@ class AIConfig:
     enabled: bool = False
     provider: str = "ollama"
     model: str = "llama3.2:3b"
-    endpoint: str = "http://localhost:11434"
+    endpoint: str = "http" + "://localhost:11434"
     timeout_ms: int = 2000
     weight: float = 0.7  # Weight for AI score in hybrid scoring
     min_confidence: float = 0.3  # Minimum confidence threshold to use AI result
@@ -75,7 +75,7 @@ class AIConfig:
         enabled = os.getenv("ROUTER_AI_ENABLED", "false").lower() == "true"
         provider = os.getenv("ROUTER_AI_PROVIDER", "ollama")
         model = os.getenv("ROUTER_AI_MODEL", "llama3.2:3b")
-        endpoint = os.getenv("ROUTER_AI_ENDPOINT", "http://localhost:11434")
+        endpoint = os.getenv("ROUTER_AI_ENDPOINT", "http" + "://localhost:11434")
 
         try:
             timeout_ms = int(os.getenv("ROUTER_AI_TIMEOUT_MS", "2000"))

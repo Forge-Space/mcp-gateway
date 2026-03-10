@@ -25,6 +25,12 @@ Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context
 
 **Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. Part of the [Forge Space Ecosystem](../../ECOSYSTEM_OVERVIEW.md) - Complete AI-powered development platform.
 
+### Security and CI hardening
+
+- Security-sensitive workflow dependencies in `.github/workflows` are pinned to full commit SHAs.
+- Docker runtime templates avoid broad copy scope and writable runtime artifacts where possible.
+- Security-focused tests use temporary directories and non-literal insecure fixture construction to keep SonarCloud security hotspots actionable.
+
 ## Quick start
 
 ```bash

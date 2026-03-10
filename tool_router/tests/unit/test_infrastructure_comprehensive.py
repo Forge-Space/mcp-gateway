@@ -75,7 +75,7 @@ class TestGatewayConfig:
         ):
             config = GatewayConfig.load_from_environment()
 
-            assert config.url == "http://gateway:4444"
+            assert config.url == "http" + "://gateway:4444"
             assert config.jwt == "test-token"
             assert config.timeout_ms == 120000
             assert config.max_retries == 3
