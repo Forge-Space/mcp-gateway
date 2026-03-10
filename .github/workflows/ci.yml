@@ -6,11 +6,6 @@ on:
   pull_request:
     branches: [main, dev, release/*, feature/*, feat/*]
 
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-
 env:
   PYTHON_VERSION: "3.12"
 
@@ -97,6 +92,10 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
 
     steps:
       - uses: actions/checkout@v6
@@ -106,7 +105,7 @@ jobs:
           node-version: "22"
 
       - name: Run test-autogen parity check
-        uses: Forge-Space/forge-ai-action@b4b07901e4e2e4f5ed510f4abc42c5e061fa735f
+        uses: Forge-Space/forge-ai-action@d4b81b223bf1dfba5cc24884f57073031168c98f
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
