@@ -218,6 +218,8 @@ The `Container Security Scan` workflow builds `Dockerfile.tool-router` as the ca
 target for Trivy scanning.
 Shared reusable workflows (`security-scan-shared.yml` and `branch-protection-core.yml`) are
 validated for `workflow_call` schema compatibility to prevent workflow-file failures on `main`.
+For reusable workflows, input expressions are kept at job/step scope (not top-level `env`) to
+avoid parser-scope validation errors during push checks.
 
 ### Dependency Updates (Renovate)
 
