@@ -20,6 +20,8 @@ Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context
 
 - Docker
 - Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
+- Tool-router Docker image currently targets Python 3.13 for
+  `mcp-contextforge-gateway` compatibility.
 
 **Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. Part of the [Forge Space Ecosystem](../../ECOSYSTEM_OVERVIEW.md) - Complete AI-powered development platform.
 
