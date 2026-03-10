@@ -2,7 +2,7 @@
 
 **Version:** 1.35.0
 **Last Updated:** 2026-02-20
-**Repository:** [forge-mcp-gateway](https://github.com/LucasSantana-Dev/forge-mcp-gateway)
+**Repository:** [forge-mcp-gateway](https://github.com/Forge-Space/mcp-gateway)
 
 ## 📋 Executive Summary
 
@@ -1313,6 +1313,6 @@ The MCP Gateway now implements a comprehensive **three-state service model** tha
 
 **Last Updated**: 2026-02-18
 **Next Review**: After serverless MCP sleep architecture production deployment
-**Maintained By**: Lucas Santana (@LucasSantana-Dev)
+**Maintained By**: Lucas Santana (@Forge-Space)
 **Recent Achievement**: Serverless MCP Sleep Architecture Implementation Complete
 **Current Phase**: Production Deployment Preparation

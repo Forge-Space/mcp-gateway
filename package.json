@@ -25,9 +25,10 @@
     "precommit": "npm run lint",
     "lint:check": "eslint . --ext .js,.ts",
     "format:check": "prettier --check .",
-    "validate": "npm run lint:check && npm run format:check && npm run test",
-    "ci:test-autogen:write": "npx forge-ai-init test-autogen --staged --write --json",
-    "ci:test-autogen:check": "npx forge-ai-init test-autogen --check --json",
+    "check:tenant-decoupling": "bash scripts/security/validate-tenant-decoupling.sh",
+    "validate": "npm run lint:check && npm run format:check && npm run test && npm run check:tenant-decoupling",
+    "ci:test-autogen:write": "npx forge-ai-init test-autogen --staged --write --json --tenant \"$FORGE_TENANT_ID\" --tenant-profile-ref \"$FORGE_TENANT_PROFILE_REF\"",
+    "ci:test-autogen:check": "npx forge-ai-init test-autogen --check --json --tenant \"$FORGE_TENANT_ID\" --tenant-profile-ref \"$FORGE_TENANT_PROFILE_REF\"",
     "pre-commit": "npm run lint && npm run format && npm run test",
     "prepack": "npm run build",
     "publish": "npm publish --access public",
@@ -53,7 +54,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lucassantana/forge-mcp-gateway.git"
+    "url": "https://github.com/Forge-Space/mcp-gateway.git"
   },
   "dependencies": {
     "@forgespace/core": "1.10.1",

@@ -11,6 +11,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
   - New CI job `test-autogen-warn` posts PR feedback (comment + annotations) without blocking phase 0.
 - **Workflow dependency pinning** — Pinned security and CI workflow `uses:` dependencies to
   full commit SHAs across `.github/workflows/*` to satisfy supply-chain hardening requirements.
+- **Tenant decoupling guardrail** — Added `scripts/security/validate-tenant-decoupling.sh`,
+  wired into `npm run validate` and CI (`tenant-decoupling` job), and sanitized hardcoded
+  tenant/personal values from templates, shared workflows, monitoring runbooks, and Docker defaults.
 
 ### Fixed
 - **Main SonarCloud hotspot blockers** — Removed hotspot patterns across gateway/test assets by:
@@ -338,7 +341,7 @@ requirements-benchmark.txt                # Benchmarking tools
   - **Pull-Requests Write**: Required for automatic PR commenting
   - **Security Events Write**: Required for SARIF upload to GitHub Code Scanning
   - **Environment Variables**: Added `SNYK_FAIL_ON_SEVERITY` for build failure control
-  - **Organization Settings**: Configured for `LucasSantana-Dev` organization with high severity threshold
+  - **Organization Settings**: Configured for `Forge-Space` organization with high severity threshold
 
 **Security Coverage Metrics**:
 - **100% PR Coverage**: Every pull request undergoes security scanning

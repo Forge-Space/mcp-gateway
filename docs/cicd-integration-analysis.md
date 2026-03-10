@@ -30,7 +30,7 @@ This document analyzes the current forge-mcp-gateway CI/CD workflows against the
   - Multi-language scanning (Python, Node.js, TypeScript)
   - Dependency scanning + code analysis + continuous monitoring
   - SARIF upload for GitHub Advanced Security
-  - Organization: LucasSantana-Dev (aligned)
+  - Organization: Forge-Space (aligned)
   - High severity threshold (aligned)
   - Daily scheduled scans + event-driven
   - Comprehensive summary reporting

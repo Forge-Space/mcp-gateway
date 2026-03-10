@@ -221,13 +221,23 @@ See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`,
 
 Phase 0 is enabled in warn-only mode for local flow and PR parity:
 
-- Local hooks (`.husky/pre-commit`, `.husky/pre-push`) run `forge-ai-init test-autogen` and always exit `0`.
+- Local hooks (`.husky/pre-commit`, `.husky/pre-push`) run `forge-ai-init test-autogen` only
+  when `FORGE_TENANT_ID` and `FORGE_TENANT_PROFILE_REF` are set, and always exit `0` in phase 0.
 - Pull requests run CI job `test-autogen-warn` with:
   - `command: test-autogen-check`
+  - `tenant: acme-sandbox`
+  - `tenant_profile_ref: .forge-tenant-profiles/tenants/acme-sandbox/profile.yaml`
   - `test_autogen_phase: warn`
   - PR feedback enabled (`comment: true`, `annotations: true`)
 
 This provides early feedback about missing tests without blocking merges during phase 0.
+
+## Tenant Decoupling Guardrail
+
+Platform paths are validated by `npm run check:tenant-decoupling` (also executed in CI):
+
+- Blocks tenant-specific or personal hardcodes in templates, shared workflows, scripts, and runtime paths.
+- Allows tenant references only in dedicated tenant profile repositories and explicit examples.
 
 ## Automated Maintenance
 

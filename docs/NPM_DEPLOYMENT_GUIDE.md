@@ -89,7 +89,7 @@ gh workflow run npm-release-core.yml \
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/lucassantana/forge-mcp-gateway.git"
+    "url": "https://github.com/Forge-Space/mcp-gateway.git"
   }
 }
 ```
@@ -244,7 +244,7 @@ npm pack --dry-run
 #### Branch Protection Issues
 ```bash
 # Check branch protection status
-gh api repos/lucassantana/forge-mcp-gateway/branches/release/core/protection
+gh api repos/Forge-Space/mcp-gateway/branches/release/core/protection
 
 # Remove branch protection (if needed)
 gh workflow run branch-protection-core.yml --field action=disable

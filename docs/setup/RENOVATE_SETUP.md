@@ -13,7 +13,7 @@ Renovate is a bot that automatically creates pull requests to update your depend
 1. **Install Renovate GitHub App**
    - Visit: https://github.com/apps/renovate
    - Click "Install" or "Configure"
-   - Select "LucasSantana-Dev" account
+   - Select "Forge-Space" account
    - Choose "Only select repositories"
    - Select `forge-mcp-gateway`
    - Click "Install" or "Save"
@@ -42,7 +42,7 @@ npm install -g renovate
 export GITHUB_TOKEN="your_github_token"
 
 # Run Renovate
-renovate --platform=github --token=$GITHUB_TOKEN LucasSantana-Dev/forge-mcp-gateway
+renovate --platform=github --token=$GITHUB_TOKEN Forge-Space/forge-mcp-gateway
 ```
 
 ## Current Configuration

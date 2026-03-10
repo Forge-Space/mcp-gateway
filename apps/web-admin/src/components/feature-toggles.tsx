@@ -304,7 +304,7 @@ export default function FeatureToggles() {
                 <h4 className="font-medium mb-2">Configuration</h4>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <div>• Environment: Development</div>
-                  <div>• CLI Path: /Users/lucassantana/Desenvolvimento/forge-patterns/scripts/forge-features</div>
+                  <div>• CLI Path: ./scripts/forge-features</div>
                   <div>• Config File: patterns/feature-toggles/config/centralized-config.yml</div>
                   <div>• Auto-sync: Enabled</div>
                 </div>

@@ -1,6 +1,6 @@
 # Forge Patterns Integration Guide
 
-This document describes how the [forge-patterns](https://github.com/LucasSantana-Dev/forge-patterns) shared code quality patterns are integrated into the MCP Gateway project, including what was adopted, what was customized, and how to maintain compliance.
+This document describes how the [forge-patterns](https://github.com/Forge-Space/core) shared code quality patterns are integrated into the MCP Gateway project, including what was adopted, what was customized, and how to maintain compliance.
 
 ## Overview
 
@@ -91,7 +91,7 @@ When `forge-patterns` releases updates:
 
 ## References
 
-- [forge-patterns repository](https://github.com/LucasSantana-Dev/forge-patterns)
+- [forge-patterns repository](https://github.com/Forge-Space/core)
 - [Assessment Report](./uiforge-patterns-assessment-report.md)
 - [Pattern validation script](../scripts/validation/validate-patterns.sh)
 - [ESLint base config](../patterns/code-quality/eslint/base.config.js)

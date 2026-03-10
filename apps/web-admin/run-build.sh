@@ -1,4 +1,9 @@
 #!/bin/bash
-cd /Users/lucassantana/Desenvolvimento/mcp-gateway/apps/web-admin
-npm run build > /Users/lucassantana/Desenvolvimento/mcp-gateway/apps/web-admin/build-result.txt 2>&1
-echo "EXIT:$?" >> /Users/lucassantana/Desenvolvimento/mcp-gateway/apps/web-admin/build-result.txt
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OUTPUT_FILE="$SCRIPT_DIR/build-result.txt"
+
+cd "$SCRIPT_DIR"
+npm run build >"$OUTPUT_FILE" 2>&1
+echo "EXIT:$?" >>"$OUTPUT_FILE"

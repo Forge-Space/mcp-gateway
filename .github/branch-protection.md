@@ -89,8 +89,8 @@
 ### 2. GitHub API Setup
 ```bash
 # Using GitHub CLI
-gh repo edit LucasSantana-Dev/mcp-gateway --enable-merge-commits
-gh api repos/LucasSantana-Dev/mcp-gateway/branches/main/protection
+gh repo edit Forge-Space/mcp-gateway --enable-merge-commits
+gh api repos/Forge-Space/mcp-gateway/branches/main/protection
 ```
 
 ### 3. CODEOWNERS File
@@ -99,7 +99,7 @@ Create `.github/CODEOWNERS`:
 # Code Owners Configuration
 
 # Core Maintainers
-* @LucasSantana-Dev
+* @Forge-Space
 
 # Security Team
 *.yml @security-team

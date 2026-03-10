@@ -89,7 +89,7 @@
 
   "vulnerabilityAlerts": {
     "labels": ["security"],
-    "assignees": ["@LucasSantana-Dev"],
+    "assignees": [],
     "schedule": ["at any time"]
   },
 

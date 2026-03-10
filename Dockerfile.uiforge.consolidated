@@ -10,7 +10,7 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-ARG UIFORGE_REPO=https://github.com/LucasSantana-Dev/uiforge-mcp.git
+ARG UIFORGE_REPO=https://github.com/Forge-Space/uiforge-mcp.git
 ARG UIFORGE_REF=v0.4.1
 
 # Clone repository with error handling
