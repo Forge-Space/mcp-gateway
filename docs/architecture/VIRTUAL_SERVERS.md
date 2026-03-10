@@ -204,22 +204,18 @@ curl -H "Authorization: Bearer <JWT>" \
 {
   "mcpServers": {
     "search-server": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@forge-mcp-gateway/client",
-        "--url=http://localhost:4444/servers/abc123/mcp",
-        "--token=<JWT>"
-      ]
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/abc123/mcp"
+      },
+      "timeout": 120000
     },
     "dev-server": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@forge-mcp-gateway/client",
-        "--url=http://localhost:4444/servers/def456/mcp",
-        "--token=<JWT>"
-      ]
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/def456/mcp"
+      },
+      "timeout": 120000
     }
   }
 }

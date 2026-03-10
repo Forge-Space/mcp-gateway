@@ -1,5 +1,9 @@
 # IDE-Agnostic Migration Guide
 
+> Legacy migration reference (historical). For active setup, use wrapper-first flow in
+> [README Connect Cursor](../../README.md#connect-cursor) and
+> `./scripts/setup-forge-space-mcp.sh`.
+
 ## Overview
 
 The MCP Gateway has been refactored to be IDE-agnostic. Previously, the codebase was tightly coupled to Cursor IDE with hardcoded paths, environment variables, and terminology. Now it supports any MCP-compatible IDE (Cursor, Windsurf, VS Code, etc.).

@@ -93,7 +93,7 @@ https://github.com/${GITHUB_REPO}/releases/tag/${LATEST_VERSION}
 ## Files to Update
 
 1. \`docker-compose.yml\` - Update gateway image tag
-2. \`scripts/cursor-mcp-wrapper.sh\` - Update wrapper image tag
+2. \`scripts/mcp-wrapper.sh\` - Update wrapper image tag
 3. \`.github/workflows/ci.yml\` - Update CI image references
 4. \`Makefile\` - Update cursor-pull target
 5. \`README.md\` - Update version references

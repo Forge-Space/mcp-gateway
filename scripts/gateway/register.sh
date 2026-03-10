@@ -275,7 +275,7 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
     tools_arr=$(echo "$tools_body" | jq -c 'if type == "array" then . else .tools? // [] end' 2>/dev/null)
     servers_code=""
     servers_body=""
-    fetch_servers_list
+    fetch_registered_servers_list
     if [[ "$servers_code" != "200" ]]; then
       if [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then
         log_warn "GET /servers returned $servers_code; attempting create-only (no update, possible duplicates if run again)."
@@ -338,7 +338,7 @@ if [[ "${REGISTER_VIRTUAL_SERVER:-true}" =~ ^(true|1|yes)$ ]] && command -v jq &
       tool_ids_json=$(echo "$tool_ids" | jq -R -s -c 'split("\n") | map(select(length > 0))')
       servers_code=""
       servers_body=""
-      fetch_servers_list
+      fetch_registered_servers_list
       if [[ "$servers_code" != "200" ]]; then
         if [[ "${REGISTER_VIRTUAL_SERVER_CREATE_WHEN_GET_FAILS:-}" =~ ^(true|1|yes)$ ]]; then
           log_warn "GET /servers returned $servers_code; attempting create-only (no update, possible duplicates if run again)."

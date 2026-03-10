@@ -13,7 +13,8 @@ detect_docker_compose_command() {
 
 generate_or_retrieve_jwt_token() {
   local jwt_token
-  jwt_token=$(python3 "$SCRIPT_DIR/create_jwt_token_standalone.py" 2>/dev/null) || true
+  jwt_token=$(JWT_EXP_MINUTES="${JWT_EXP_MINUTES:-10080}" \
+    python3 "$SCRIPT_DIR/utils/create-jwt.py" 2>/dev/null) || true
   jwt_token=$(echo "$jwt_token" | tr -d '[:space:]')
   if [[ -n "$jwt_token" ]] && [[ "$jwt_token" =~ ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$ ]]; then
     echo "$jwt_token"

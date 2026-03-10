@@ -112,23 +112,26 @@ See [TOOL_ROUTER_GUIDE.md](TOOL_ROUTER_GUIDE.md) for details.
 - playwright → http://playwright:8015/sse
 - snyk → http://snyk:8023/sse
 
-### 5. TypeScript Client
+### 5. IDE Client Bridge
 
-**Purpose:** NPX-compatible MCP client for connecting IDEs to the gateway.
+**Purpose:** Wrapper-based MCP bridge for connecting IDEs to the gateway.
 
 **Features:**
-- Standard MCP server pattern (`npx @forge-mcp-gateway/client`)
-- JWT authentication support
-- Configurable timeouts and retries
+- Wrapper-first command (`scripts/mcp-wrapper.sh`)
+- JWT generated per connection
+- Configurable timeout and explicit MCP URL fallback
 - Works with any MCP-compatible IDE
 
 **Usage:**
 ```json
 {
   "mcpServers": {
-    "forge-mcp-gateway": {
-      "command": "npx",
-      "args": ["-y", "@forge-mcp-gateway/client", "--url=http://localhost:4444/servers/<UUID>/mcp"]
+    "context-forge": {
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/<UUID>/mcp"
+      },
+      "timeout": 120000
     }
   }
 }
