@@ -20,6 +20,8 @@ Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context
 
 - Docker
 - Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
+- Tool-router Docker image currently targets Python 3.13 for
+  `mcp-contextforge-gateway` compatibility.
 
 **Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. Part of the [Forge Space Ecosystem](../../ECOSYSTEM_OVERVIEW.md) - Complete AI-powered development platform.
 
@@ -212,6 +214,8 @@ See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`,
 ## Automated Maintenance
 
 This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
+The `Container Security Scan` workflow builds `Dockerfile.tool-router` as the canonical container
+target for Trivy scanning.
 
 ### Dependency Updates (Renovate)
 
@@ -296,6 +300,7 @@ make n8n-secrets   # generate webhook secrets
 - Resource-limited: 0.5 CPU, 512MB RAM, 50 PIDs
 - Read-only GitHub API access (no merging, no deploying)
 - n8n data excluded from git (`n8n-data/`, `n8n-logs/`)
+- JSON-RPC and SSE error responses redact internal exception details; full traces stay server-side.
 
 ## API Documentation
 
@@ -312,6 +317,7 @@ Endpoints are grouped by tag: `rpc` (JSON-RPC tool execution), `audit` (governan
 - **Workflow and adding gateways/prompts:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - **Script index:** [scripts/README.md](scripts/README.md)
 - **Maintenance automation:** See [Automated Maintenance](#automated-maintenance) above
+- **Lint baseline:** `ruff check tool_router/ dribbble_mcp/` is enforced in CI and includes test files (import ordering and unused unpacked variables fail the lint job).
 
 ### Trunk Based Development Workflow
 

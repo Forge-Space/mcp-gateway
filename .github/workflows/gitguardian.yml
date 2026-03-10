@@ -24,6 +24,7 @@ env:
 jobs:
   gitguardian-scan:
     name: GitGuardian Security Scan
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
