@@ -4,6 +4,12 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **Phase 0 test-autogen rollout (warn-only)** — Added non-blocking local hooks and PR parity checks:
+  - `.husky/pre-commit` runs `forge-ai-init test-autogen --staged --write --json` (warn-only)
+  - `.husky/pre-push` runs `forge-ai-init test-autogen --check --json` (warn-only)
+  - New CI job `test-autogen-warn` posts PR feedback (comment + annotations) without blocking phase 0.
+
 ### Fixed
 - **Reusable workflow secret schema violation** — Removed reserved `GITHUB_TOKEN` from
   `workflow_call.secrets` in `.github/workflows/security-scan-shared.yml`, resolving

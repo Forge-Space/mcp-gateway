@@ -211,6 +211,18 @@ Use the wrapper script so no token is stored in mcp.json and no weekly refresh i
 
 See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, `AUTH_ENCRYPTION_SECRET` (each at least 32 chars; run `make generate-secrets`). Never commit `.env` or secrets.
 
+## Test Autogen — Phase 0 (Warn)
+
+Phase 0 is enabled in warn-only mode for local flow and PR parity:
+
+- Local hooks (`.husky/pre-commit`, `.husky/pre-push`) run `forge-ai-init test-autogen` and always exit `0`.
+- Pull requests run CI job `test-autogen-warn` with:
+  - `command: test-autogen-check`
+  - `test_autogen_phase: warn`
+  - PR feedback enabled (`comment: true`, `annotations: true`)
+
+This provides early feedback about missing tests without blocking merges during phase 0.
+
 ## Automated Maintenance
 
 This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.

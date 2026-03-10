@@ -1,6 +1,8 @@
 #!/bin/bash
-# pre-commit hook - forge-patterns gate (temporarily disabled for CI fixes)
 set -euo pipefail
-echo "⚠️  Pre-commit hooks temporarily disabled to fix CI issues"
-echo "🔧 Will re-enable after resolving linting and TypeScript errors"
+
+echo "⚙️  [test-autogen] pre-commit (phase0 warn)"
+if ! npx forge-ai-init test-autogen --staged --write --json; then
+  echo "⚠️  test-autogen falhou ou indisponivel; commit segue em modo warn."
+fi
 exit 0

@@ -86,3 +86,50 @@ jobs:
 
       - name: Bandit security scan
         run: pip install bandit && bandit -r tool_router/ -ll -ii || true
+
+  test-autogen-warn:
+    name: Test Autogen (Warn)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run test-autogen parity check
+        uses: Forge-Space/forge-ai-action@484c056b923dcd1b8f43c5a18dfa147c77bcb23b
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          command: test-autogen-check
+          test_autogen_phase: warn
+          comment: true
+          annotations: true
+
+  workflow-summary:
+    name: Workflow Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint, test, build, typecheck, security, test-autogen-warn]
+
+    steps:
+      - name: Summary
+        run: |
+          echo "## CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Check | ${{ needs.typecheck.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Autogen (Warn) | ${{ needs.test-autogen-warn.result }} |" >> $GITHUB_STEP_SUMMARY
