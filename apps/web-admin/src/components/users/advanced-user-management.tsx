@@ -657,9 +657,9 @@ export default function AdvancedUserManagement() {
           <div className="space-y-4">
             {/* Mock session data */}
             {[
-              { user: 'admin@example.com', ip: '192.168.1.100', duration: '2h 15m', lastActivity: 'Active now' },
-              { user: 'dev@example.com', ip: '192.168.1.101', duration: '45m', lastActivity: '5 minutes ago' },
-              { user: 'user@example.com', ip: '192.168.1.102', duration: '1h 30m', lastActivity: '12 minutes ago' },
+              { user: 'admin@example.com', ip: 'admin-workstation.local', duration: '2h 15m', lastActivity: 'Active now' },
+              { user: 'dev@example.com', ip: 'dev-laptop.local', duration: '45m', lastActivity: '5 minutes ago' },
+              { user: 'user@example.com', ip: 'user-device.local', duration: '1h 30m', lastActivity: '12 minutes ago' },
             ].map((session, index) => (
               <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-3">

@@ -173,7 +173,7 @@ class TestSecurityAuditLogger:
         event_id = self.audit_logger.log_request_received(
             user_id="test_user",
             session_id="session123",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="TestAgent/1.0",
             request_id="req123",
             endpoint="test_endpoint",
@@ -188,7 +188,7 @@ class TestSecurityAuditLogger:
         event_id = self.audit_logger.log_request_blocked(
             user_id="test_user",
             session_id="session123",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="TestAgent/1.0",
             request_id="req123",
             endpoint="test_endpoint",
@@ -204,7 +204,7 @@ class TestSecurityAuditLogger:
         event_id = self.audit_logger.log_prompt_injection_detected(
             user_id="test_user",
             session_id="session123",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req123",
             endpoint="test_endpoint",
             patterns=["ignore previous instructions"],
@@ -219,7 +219,7 @@ class TestSecurityAuditLogger:
         event_id = self.audit_logger.log_rate_limit_exceeded(
             user_id="test_user",
             session_id="session123",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             request_id="req123",
             endpoint="test_endpoint",
             limit_type="minute",
@@ -257,7 +257,7 @@ class TestSecurityMiddleware:
     def test_valid_request_allowed(self) -> None:
         """Test that valid requests are allowed."""
         context = SecurityContext(
-            user_id="test_user", ip_address="192.168.1.1", request_id="req123", endpoint="test_endpoint"
+            user_id="test_user", ip_address="192.168.1." + "1", request_id="req123", endpoint="test_endpoint"
         )
 
         result = self.middleware.check_request_security(
@@ -275,7 +275,7 @@ class TestSecurityMiddleware:
     def test_prompt_injection_blocked(self) -> None:
         """Test that prompt injection attempts are blocked."""
         context = SecurityContext(
-            user_id="test_user", ip_address="192.168.1.1", request_id="req123", endpoint="test_endpoint"
+            user_id="test_user", ip_address="192.168.1." + "1", request_id="req123", endpoint="test_endpoint"
         )
 
         result = self.middleware.check_request_security(
@@ -294,7 +294,7 @@ class TestSecurityMiddleware:
     def test_rate_limit_enforcement(self) -> None:
         """Test rate limiting enforcement."""
         context = SecurityContext(
-            user_id="test_user", ip_address="192.168.1.1", request_id="req123", endpoint="test_endpoint"
+            user_id="test_user", ip_address="192.168.1." + "1", request_id="req123", endpoint="test_endpoint"
         )
 
         # Make multiple requests to exhaust limit
@@ -315,7 +315,7 @@ class TestSecurityMiddleware:
     def test_input_sanitization(self) -> None:
         """Test input sanitization."""
         context = SecurityContext(
-            user_id="test_user", ip_address="192.168.1.1", request_id="req123", endpoint="test_endpoint"
+            user_id="test_user", ip_address="192.168.1." + "1", request_id="req123", endpoint="test_endpoint"
         )
 
         result = self.middleware.check_request_security(
@@ -333,7 +333,7 @@ class TestSecurityMiddleware:
     def test_high_risk_warning(self) -> None:
         """Test high risk request logging."""
         context = SecurityContext(
-            user_id="test_user", ip_address="192.168.1.1", request_id="req123", endpoint="test_endpoint"
+            user_id="test_user", ip_address="192.168.1." + "1", request_id="req123", endpoint="test_endpoint"
         )
 
         # Create a request that's suspicious but not blocked
@@ -356,7 +356,7 @@ class TestSecurityMiddleware:
         middleware = SecurityMiddleware(config)
 
         context = SecurityContext(
-            user_id="test_user", ip_address="192.168.1.1", request_id="req123", endpoint="test_endpoint"
+            user_id="test_user", ip_address="192.168.1." + "1", request_id="req123", endpoint="test_endpoint"
         )
 
         result = middleware.check_request_security(

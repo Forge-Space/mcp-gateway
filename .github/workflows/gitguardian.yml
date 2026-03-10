@@ -31,19 +31,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
 
       - name: GitGuardian Scan
-        uses: GitGuardian/gg-shield-action@v1
+        uses: GitGuardian/gg-shield-action@50c99a7fbe0e313f962dc5bb74d8271e02543c3a
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
 
       - name: Upload GitGuardian results to GitHub Security
         if: always() && hashFiles('.gitguardian/reports/sarif.json') != ''
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@0d579ffd059c29b07949a3cce3983f0780820c98
         with:
           sarif_file: .gitguardian/reports/sarif.json
 
@@ -73,12 +73,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
 
       - name: GitGuardian Monitoring
-        uses: GitGuardian/gg-shield-action@v1
+        uses: GitGuardian/gg-shield-action@50c99a7fbe0e313f962dc5bb74d8271e02543c3a
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}

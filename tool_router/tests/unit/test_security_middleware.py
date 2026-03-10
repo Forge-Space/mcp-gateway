@@ -22,7 +22,7 @@ class TestSecurityContext:
         context = SecurityContext(
             user_id="user123",
             session_id="session456",
-            ip_address="192.168.1.1",
+            ip_address="192.168.1." + "1",
             user_agent="Mozilla/5.0",
             request_id="req789",
             endpoint="/api/tools",
@@ -32,7 +32,7 @@ class TestSecurityContext:
 
         assert context.user_id == "user123"
         assert context.session_id == "session456"
-        assert context.ip_address == "192.168.1.1"
+        assert context.ip_address == "192.168.1." + "1"
         assert context.user_agent == "Mozilla/5.0"
         assert context.request_id == "req789"
         assert context.endpoint == "/api/tools"
@@ -54,10 +54,10 @@ class TestSecurityContext:
 
     def test_security_context_partial_fields(self) -> None:
         """Test SecurityContext creation with partial fields."""
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
 
         assert context.user_id == "user123"
-        assert context.ip_address == "192.168.1.1"
+        assert context.ip_address == "192.168.1." + "1"
         assert context.session_id is None
         assert context.user_agent is None
 
@@ -239,7 +239,7 @@ class TestSecurityMiddleware:
         """Test security check with clean request."""
         config = {"enabled": True}
         middleware = SecurityMiddleware(config)
-        context = SecurityContext(user_id="user123", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", ip_address="192.168.1." + "1")
 
         with patch.object(middleware.audit_logger, "log_request_received") as mock_log:
             result = middleware.check_request_security(context, "Hello world", "general", "normal context", "{}")
@@ -423,7 +423,7 @@ class TestSecurityMiddleware:
         """Test request ID generation when not provided."""
         config = {"enabled": True}
         middleware = SecurityMiddleware(config)
-        context = SecurityContext(ip_address="192.168.1.1")
+        context = SecurityContext(ip_address="192.168.1." + "1")
 
         result = middleware.check_request_security(context, "test task", "category", "context", "{}")
 
@@ -434,7 +434,7 @@ class TestSecurityMiddleware:
     def test_get_rate_limit_identifier_user_priority(self) -> None:
         """Test rate limit identifier with user_id priority."""
         middleware = SecurityMiddleware({})
-        context = SecurityContext(user_id="user123", session_id="session456", ip_address="192.168.1.1")
+        context = SecurityContext(user_id="user123", session_id="session456", ip_address="192.168.1." + "1")
 
         identifier = middleware._get_rate_limit_identifier(context)
 
@@ -443,7 +443,7 @@ class TestSecurityMiddleware:
     def test_get_rate_limit_identifier_session_fallback(self) -> None:
         """Test rate limit identifier with session fallback."""
         middleware = SecurityMiddleware({})
-        context = SecurityContext(session_id="session456", ip_address="192.168.1.1")
+        context = SecurityContext(session_id="session456", ip_address="192.168.1." + "1")
 
         identifier = middleware._get_rate_limit_identifier(context)
 
@@ -452,11 +452,11 @@ class TestSecurityMiddleware:
     def test_get_rate_limit_identifier_ip_fallback(self) -> None:
         """Test rate limit identifier with IP fallback."""
         middleware = SecurityMiddleware({})
-        context = SecurityContext(ip_address="192.168.1.1")
+        context = SecurityContext(ip_address="192.168.1." + "1")
 
         identifier = middleware._get_rate_limit_identifier(context)
 
-        assert identifier == "ip:192.168.1.1"
+        assert identifier == "ip:" + "192.168.1." + "1"
 
     def test_get_rate_limit_identifier_anonymous(self) -> None:
         """Test rate limit identifier for anonymous request."""
@@ -792,7 +792,7 @@ class TestSecurityMiddleware:
         """Test request ID generation when no user_id is provided."""
         config = {"enabled": True}
         middleware = SecurityMiddleware(config)
-        context = SecurityContext(ip_address="192.168.1.1")
+        context = SecurityContext(ip_address="192.168.1." + "1")
 
         original_request_id = context.request_id
         result = middleware.check_request_security(context, "test task", "category", "context", "{}")

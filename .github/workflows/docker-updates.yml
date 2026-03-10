@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Make script executable
         run: chmod +x scripts/utils/check-docker-updates.sh
@@ -45,7 +45,7 @@ jobs:
 
       - name: Upload update report
         if: steps.check.outputs.status == 'update-available'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: docker-update-report
           path: docker-update-report.md
@@ -69,12 +69,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download update report
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3
         with:
           name: docker-update-report
 
@@ -103,7 +103,7 @@ jobs:
           sed -i "s|ghcr.io/ibm/mcp-context-forge:[^ ]*|ghcr.io/ibm/mcp-context-forge:${{ needs.check-updates.outputs.latest_version }}|g" docs/DEVELOPMENT.md
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore(docker): update Context Forge to ${{ needs.check-updates.outputs.latest_version }}"

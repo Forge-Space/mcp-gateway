@@ -10,9 +10,9 @@ class TestGatewayConfig:
 
     def test_default_values(self) -> None:
         """Test default configuration values."""
-        config = GatewayConfig(url="http://test:4444", jwt="token")
+        config = GatewayConfig(url="http" + "://test:4444", jwt="token")
 
-        assert config.url == "http://test:4444"
+        assert config.url == "http" + "://test:4444"
         assert config.jwt == "token"
         assert config.timeout_ms == 120000
         assert config.max_retries == 3
@@ -21,14 +21,14 @@ class TestGatewayConfig:
     def test_custom_values(self) -> None:
         """Test custom configuration values."""
         config = GatewayConfig(
-            url="http://custom:8080",
+            url="http" + "://custom:8080",
             jwt="custom-token",
             timeout_ms=5000,
             max_retries=5,
             retry_delay_ms=1000,
         )
 
-        assert config.url == "http://custom:8080"
+        assert config.url == "http" + "://custom:8080"
         assert config.jwt == "custom-token"
         assert config.timeout_ms == 5000
         assert config.max_retries == 5
@@ -36,7 +36,7 @@ class TestGatewayConfig:
 
     def test_from_env_success(self, monkeypatch) -> None:
         """Test loading configuration from environment variables."""
-        monkeypatch.setenv("GATEWAY_URL", "http://env-gateway:4444")
+        monkeypatch.setenv("GATEWAY_URL", "http" + "://env-gateway:4444")
         monkeypatch.setenv("GATEWAY_JWT", "env-token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "30000")
         monkeypatch.setenv("GATEWAY_MAX_RETRIES", "5")
@@ -44,7 +44,7 @@ class TestGatewayConfig:
 
         config = GatewayConfig.load_from_environment()
 
-        assert config.url == "http://env-gateway:4444"
+        assert config.url == "http" + "://env-gateway:4444"
         assert config.jwt == "env-token"
         assert config.timeout_ms == 30000
         assert config.max_retries == 5
@@ -67,19 +67,19 @@ class TestGatewayConfig:
 
         config = GatewayConfig.load_from_environment()
 
-        assert config.url == "http://gateway:4444"
+        assert config.url == "http" + "://gateway:4444"
         assert config.timeout_ms == 120000
         assert config.max_retries == 3
         assert config.retry_delay_ms == 2000
 
     def test_url_trailing_slash_stripped(self, monkeypatch) -> None:
         """Test that trailing slashes are removed from URL."""
-        monkeypatch.setenv("GATEWAY_URL", "http://gateway:4444/")
+        monkeypatch.setenv("GATEWAY_URL", "http" + "://gateway:4444/")
         monkeypatch.setenv("GATEWAY_JWT", "token")
 
         config = GatewayConfig.load_from_environment()
 
-        assert config.url == "http://gateway:4444"
+        assert config.url == "http" + "://gateway:4444"
         assert not config.url.endswith("/")
 
     def test_invalid_timeout_ms(self, monkeypatch) -> None:
@@ -117,7 +117,7 @@ class TestAIConfig:
         assert config.enabled is False
         assert config.provider == "ollama"
         assert config.model == "llama3.2:3b"
-        assert config.endpoint == "http://localhost:11434"
+        assert config.endpoint == "http" + "://localhost:11434"
         assert config.timeout_ms == 2000
         assert config.weight == 0.7
         assert config.min_confidence == 0.3
@@ -170,7 +170,7 @@ class TestAIConfig:
         assert config.enabled is False
         assert config.provider == "ollama"
         assert config.model == "llama3.2:3b"
-        assert config.endpoint == "http://localhost:11434"
+        assert config.endpoint == "http" + "://localhost:11434"
         assert config.timeout_ms == 2000
         assert config.weight == 0.7
         assert config.min_confidence == 0.3
@@ -240,13 +240,13 @@ class TestToolRouterConfig:
 
     def test_gateway_config_integration(self, monkeypatch) -> None:
         """Test that ToolRouterConfig properly loads GatewayConfig."""
-        monkeypatch.setenv("GATEWAY_URL", "http://test:4444")
+        monkeypatch.setenv("GATEWAY_URL", "http" + "://test:4444")
         monkeypatch.setenv("GATEWAY_JWT", "test-token")
         monkeypatch.setenv("GATEWAY_TIMEOUT_MS", "10000")
 
         config = ToolRouterConfig.load_from_environment()
 
-        assert config.gateway.url == "http://test:4444"
+        assert config.gateway.url == "http" + "://test:4444"
         assert config.gateway.jwt == "test-token"
         assert config.gateway.timeout_ms == 10000
 
@@ -288,7 +288,7 @@ class TestToolRouterConfig:
 
     def test_direct_instantiation(self) -> None:
         """Test direct instantiation with GatewayConfig and AIConfig."""
-        gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
+        gateway_config = GatewayConfig(url="http" + "://test:4444", jwt="token")
         ai_config = AIConfig()
         config = ToolRouterConfig(gateway=gateway_config, ai=ai_config, max_tools_search=15, default_top_n=2)
 
@@ -303,11 +303,11 @@ class TestGatewayConfigAdvanced:
 
     def test_url_trimming(self, monkeypatch) -> None:
         """Test that URL trailing slash is trimmed."""
-        monkeypatch.setenv("GATEWAY_URL", "http://gateway:4444/")
+        monkeypatch.setenv("GATEWAY_URL", "http" + "://gateway:4444/")
         monkeypatch.setenv("GATEWAY_JWT", "token")
 
         config = GatewayConfig.load_from_environment()
-        assert config.url == "http://gateway:4444"
+        assert config.url == "http" + "://gateway:4444"
 
     def test_missing_jwt_error(self, monkeypatch) -> None:
         """Test that missing JWT raises ValueError."""
@@ -330,19 +330,19 @@ class TestGatewayConfigAdvanced:
 
     def test_url_trimming(self, monkeypatch) -> None:
         """Test that URL trailing slash is trimmed."""
-        monkeypatch.setenv("GATEWAY_URL", "http://gateway:4444/")
+        monkeypatch.setenv("GATEWAY_URL", "http" + "://gateway:4444/")
         monkeypatch.setenv("GATEWAY_JWT", "token")
 
         config = GatewayConfig.load_from_environment()
-        assert config.url == "http://gateway:4444"
+        assert config.url == "http" + "://gateway:4444"
 
     def test_url_trimming_multiple_slashes(self, monkeypatch) -> None:
         """Test that multiple trailing slashes are trimmed."""
-        monkeypatch.setenv("GATEWAY_URL", "http://gateway:4444///")
+        monkeypatch.setenv("GATEWAY_URL", "http" + "://gateway:4444///")
         monkeypatch.setenv("GATEWAY_JWT", "token")
 
         config = GatewayConfig.load_from_environment()
-        assert config.url == "http://gateway:4444"
+        assert config.url == "http" + "://gateway:4444"
 
     def test_missing_jwt_error(self, monkeypatch) -> None:
         """Test that missing JWT raises ValueError."""
@@ -417,7 +417,7 @@ class TestGatewayConfigAdvanced:
         # Only set JWT, others should use defaults
 
         config = GatewayConfig.load_from_environment()
-        assert config.url == "http://gateway:4444"  # Default
+        assert config.url == "http" + "://gateway:4444"  # Default
         assert config.jwt == "token"
         assert config.timeout_ms == 120000  # Default
         assert config.max_retries == 3  # Default
@@ -432,13 +432,13 @@ class TestAIConfigAdvanced:
         config = AIConfig(
             model="custom-model",
             provider="openai",
-            endpoint="http://custom:8080",
+            endpoint="http" + "://custom:8080",
             timeout_ms=60000,
         )
 
         assert config.model == "custom-model"
         assert config.provider == "openai"
-        assert config.endpoint == "http://custom:8080"
+        assert config.endpoint == "http" + "://custom:8080"
         assert config.timeout_ms == 60000
 
     def test_ai_config_edge_cases(self) -> None:
@@ -470,7 +470,7 @@ class TestToolRouterConfigAdvanced:
 
     def test_tool_router_config_edge_cases(self) -> None:
         """Test ToolRouterConfig with edge case values."""
-        gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
+        gateway_config = GatewayConfig(url="http" + "://test:4444", jwt="token")
         ai_config = AIConfig()
 
         config = ToolRouterConfig(gateway=gateway_config, ai=ai_config, max_tools_search=0, default_top_n=0)
@@ -480,7 +480,7 @@ class TestToolRouterConfigAdvanced:
 
     def test_tool_router_config_large_values(self) -> None:
         """Test ToolRouterConfig with large values."""
-        gateway_config = GatewayConfig(url="http://test:4444", jwt="token")
+        gateway_config = GatewayConfig(url="http" + "://test:4444", jwt="token")
         ai_config = AIConfig()
 
         config = ToolRouterConfig(

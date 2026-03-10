@@ -103,6 +103,12 @@ interface DeploymentConfig {
   }
 }
 
+const secureRandom = () => {
+  const randomValues = new Uint32Array(1)
+  crypto.getRandomValues(randomValues)
+  return randomValues[0] / 4294967295
+}
+
 export default function EnhancedServerManagement() {
   const [servers, setServers] = useState<VirtualServer[]>([])
   const [metrics, setMetrics] = useState<ServerMetrics | null>(null)
@@ -214,9 +220,9 @@ export default function EnhancedServerManagement() {
       // Simulate real-time updates
       setServers(prev => prev.map(server => ({
         ...server,
-        cpuUsage: Math.max(0, Math.min(100, server.cpuUsage + (Math.random() - 0.5) * 10)),
-        memoryUsage: Math.max(0, Math.min(100, server.memoryUsage + (Math.random() - 0.5) * 8)),
-        healthScore: Math.max(0, Math.min(100, server.healthScore + (Math.random() - 0.5) * 5))
+        cpuUsage: Math.max(0, Math.min(100, server.cpuUsage + (secureRandom() - 0.5) * 10)),
+        memoryUsage: Math.max(0, Math.min(100, server.memoryUsage + (secureRandom() - 0.5) * 8)),
+        healthScore: Math.max(0, Math.min(100, server.healthScore + (secureRandom() - 0.5) * 5))
       })))
     }, refreshInterval)
 

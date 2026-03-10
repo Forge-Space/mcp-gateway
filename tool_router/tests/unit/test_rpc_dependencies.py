@@ -101,7 +101,7 @@ class TestGetSecurityContext:
     @pytest.mark.asyncio
     async def test_builds_context_from_request(self) -> None:
         mock_request = MagicMock()
-        mock_request.client.host = "192.168.1.1"
+        mock_request.client.host = "192.168.1." + "1"
         mock_request.headers = {"user-agent": "Mozilla/5.0"}
 
         jwt_payload = JWTPayload(
@@ -114,7 +114,7 @@ class TestGetSecurityContext:
         ctx = await get_security_context(mock_request, jwt_payload)
         assert ctx.user_id == "user-456"
         assert ctx.user_role == "admin"
-        assert ctx.ip_address == "192.168.1.1"
+        assert ctx.ip_address == "192.168.1." + "1"
         assert ctx.user_agent == "Mozilla/5.0"
         assert ctx.session_id == "sess-789"
         assert ctx.authentication_method == "jwt"

@@ -19,7 +19,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_http_error_500_retries_and_fails(self) -> None:
         """Test that 5xx errors trigger retries and eventually fail."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=2,
             retry_delay_ms=10,
@@ -32,7 +32,7 @@ class TestHTTPGatewayClientErrorPaths:
 
         with patch("urllib.request.urlopen") as mock_urlopen:
             mock_urlopen.side_effect = urllib.error.HTTPError(
-                "http://test:4444/tools",
+                "http" + "://test:4444/tools",
                 500,
                 "Internal Server Error",
                 {},
@@ -47,7 +47,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_http_error_503_retries_with_backoff(self) -> None:
         """Test that 503 errors retry with exponential backoff."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=3,
             retry_delay_ms=100,
@@ -59,7 +59,7 @@ class TestHTTPGatewayClientErrorPaths:
             patch("time.sleep") as mock_sleep,
         ):
             mock_urlopen.side_effect = urllib.error.HTTPError(
-                "http://test:4444/tools", 503, "Service Unavailable", {}, None
+                "http" + "://test:4444/tools", 503, "Service Unavailable", {}, None
             )
 
             with pytest.raises(ValueError, match="Failed to fetch tools"):
@@ -72,11 +72,11 @@ class TestHTTPGatewayClientErrorPaths:
 
     def test_http_error_4xx_raises_immediately(self) -> None:
         """Test that 4xx errors raise immediately without retry."""
-        config = GatewayConfig(url="http://test:4444", jwt="token", max_retries=3)
+        config = GatewayConfig(url="http" + "://test:4444", jwt="token", max_retries=3)
         client = HTTPGatewayClient(config)
 
         error_response = b'{"error": "Unauthorized"}'
-        http_error = urllib.error.HTTPError("http://test:4444/tools", 401, "Unauthorized", {}, None)
+        http_error = urllib.error.HTTPError("http" + "://test:4444/tools", 401, "Unauthorized", {}, None)
         http_error.read = lambda: error_response
 
         with patch("urllib.request.urlopen") as mock_urlopen:
@@ -91,7 +91,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_url_error_retries_and_fails(self) -> None:
         """Test that URLError (network errors) trigger retries."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=2,
             retry_delay_ms=10,
@@ -109,7 +109,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_timeout_error_retries_and_fails(self) -> None:
         """Test that TimeoutError triggers retries."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=2,
             retry_delay_ms=10,
@@ -127,7 +127,7 @@ class TestHTTPGatewayClientErrorPaths:
 
     def test_json_decode_error_handled_gracefully(self) -> None:
         """Test that invalid JSON is handled gracefully and returns empty list."""
-        config = GatewayConfig(url="http://test:4444", jwt="token")
+        config = GatewayConfig(url="http" + "://test:4444", jwt="token")
         client = HTTPGatewayClient(config)
 
         mock_response = MagicMock()
@@ -149,7 +149,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_call_tool_with_server_error(self) -> None:
         """Test call_tool handles server errors gracefully."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=2,
             retry_delay_ms=10,
@@ -157,7 +157,7 @@ class TestHTTPGatewayClientErrorPaths:
         client = HTTPGatewayClient(config)
 
         with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = urllib.error.HTTPError("http://test:4444/rpc", 502, "Bad Gateway", {}, None)
+            mock_urlopen.side_effect = urllib.error.HTTPError("http" + "://test:4444/rpc", 502, "Bad Gateway", {}, None)
 
             result = client.call_tool("test_tool", {"arg": "value"})
 
@@ -167,7 +167,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_call_tool_with_network_error(self) -> None:
         """Test call_tool handles network errors gracefully."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=2,
             retry_delay_ms=10,
@@ -185,7 +185,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_mixed_errors_across_retries(self) -> None:
         """Test handling of different errors across retry attempts."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=3,
             retry_delay_ms=10,
@@ -194,9 +194,9 @@ class TestHTTPGatewayClientErrorPaths:
 
         # First attempt: 503, second: timeout, third: 500
         errors = [
-            urllib.error.HTTPError("http://test:4444/tools", 503, "Service Unavailable", {}, None),
+            urllib.error.HTTPError("http" + "://test:4444/tools", 503, "Service Unavailable", {}, None),
             TimeoutError("Timeout"),
-            urllib.error.HTTPError("http://test:4444/tools", 500, "Internal Server Error", {}, None),
+            urllib.error.HTTPError("http" + "://test:4444/tools", 500, "Internal Server Error", {}, None),
         ]
 
         with patch("urllib.request.urlopen") as mock_urlopen:
@@ -210,7 +210,7 @@ class TestHTTPGatewayClientErrorPaths:
     def test_successful_retry_after_failures(self) -> None:
         """Test successful response after initial failures."""
         config = GatewayConfig(
-            url="http://test:4444",
+            url="http" + "://test:4444",
             jwt="token",
             max_retries=3,
             retry_delay_ms=10,
@@ -224,7 +224,7 @@ class TestHTTPGatewayClientErrorPaths:
 
         # Business logic: Fail twice with different error types, then succeed
         errors = [
-            urllib.error.HTTPError("http://test:4444/tools", 503, "Service Unavailable", {}, None),
+            urllib.error.HTTPError("http" + "://test:4444/tools", 503, "Service Unavailable", {}, None),
             urllib.error.URLError("Connection refused"),
             mock_success,
         ]

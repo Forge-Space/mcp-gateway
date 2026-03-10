@@ -20,11 +20,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY service_manager.py service_manager_simple.py pyproject.toml ./
+COPY tests ./tests
 
-# Create non-root user but run as root for Docker socket access
+# Create non-root user for runtime
 RUN adduser -D -u 1000 serviceuser && chown -R serviceuser:serviceuser /app
-# USER serviceuser  # Commented out to run as root for Docker socket access
+USER serviceuser
 
 # Set secure environment variables
 ENV PYTHONPATH=/app

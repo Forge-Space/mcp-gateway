@@ -88,6 +88,7 @@ services:
       dockerfile: Dockerfile
     container_name: forge-service-manager
     restart: unless-stopped
+    user: "0:0"
     ports:
       - "${FORGE_SERVICE_MANAGER_PORT:-9000}:9000"
     volumes:

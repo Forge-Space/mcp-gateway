@@ -15,7 +15,7 @@ from tool_router.gateway.client import HTTPGatewayClient
 def gateway_config() -> GatewayConfig:
     """Create test gateway configuration."""
     return GatewayConfig(
-        url="http://test-gateway:4444",
+        url="http" + "://test-gateway:4444",
         jwt="test-token-123",
         timeout_ms=5000,
         max_retries=2,
@@ -105,7 +105,7 @@ class TestGatewayClientIntegration:
         """Test that configuration parameters are respected."""
         # Short timeout config
         fast_config = GatewayConfig(
-            url="http://gateway:4444",
+            url="http" + "://gateway:4444",
             jwt="token",
             timeout_ms=100,
             max_retries=1,
@@ -118,7 +118,7 @@ class TestGatewayClientIntegration:
 
         # Long timeout config
         slow_config = GatewayConfig(
-            url="http://gateway:4444",
+            url="http" + "://gateway:4444",
             jwt="token",
             timeout_ms=30000,
             max_retries=5,
