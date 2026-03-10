@@ -12,6 +12,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Release pipeline Docker compatibility** — Pinned `Dockerfile.tool-router` to `python:3.13-alpine`
   because `mcp-contextforge-gateway` currently supports Python `<3.14`, fixing release Docker build
   failures on `main`.
+- **Container scan workflow build target** — Updated `Container Security Scan` workflow to build
+  `Dockerfile.tool-router` explicitly, fixing main-branch scan failures caused by missing root
+  `Dockerfile`.
 
 ## [1.10.0] - 2026-03-08
 
