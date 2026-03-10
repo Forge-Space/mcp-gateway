@@ -216,6 +216,8 @@ See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`,
 This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
 The `Container Security Scan` workflow builds `Dockerfile.tool-router` as the canonical container
 target for Trivy scanning.
+Shared reusable workflows (`security-scan-shared.yml` and `branch-protection-core.yml`) are
+validated for `workflow_call` schema compatibility to prevent workflow-file failures on `main`.
 
 ### Dependency Updates (Renovate)
 

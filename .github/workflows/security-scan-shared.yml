@@ -36,8 +36,8 @@ on:
       timeout-minutes:
         description: "Default timeout for security jobs"
         required: false
-        default: "15"
-        type: string
+        default: 15
+        type: number
     secrets:
       GITHUB_TOKEN:
         description: "GitHub token"

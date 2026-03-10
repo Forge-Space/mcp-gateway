@@ -9,6 +9,11 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
   reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
   SonarCloud/CodeQL new-code requirements.
+- **Reusable workflow schema errors** — Fixed `workflow_call` input definitions in
+  `.github/workflows/branch-protection-core.yml` (removed unsupported `choice/options`, switched
+  to `string`, and corrected job conditions to `inputs.action`) and corrected
+  `.github/workflows/security-scan-shared.yml` timeout input to `number`, eliminating main-branch
+  workflow-file failures.
 - **Release pipeline Docker compatibility** — Pinned `Dockerfile.tool-router` to `python:3.13-alpine`
   because `mcp-contextforge-gateway` currently supports Python `<3.14`, fixing release Docker build
   failures on `main`.
