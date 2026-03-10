@@ -240,6 +240,7 @@ Platform paths are validated by `npm run check:tenant-decoupling` (also executed
 
 - Blocks tenant-specific or personal hardcodes in templates, shared workflows, scripts, and runtime paths.
 - Allows tenant references only in dedicated tenant profile repositories and explicit examples.
+- Uses `rg` when available and falls back to `grep` to keep CI checks deterministic across runners.
 
 ## Automated Maintenance
 

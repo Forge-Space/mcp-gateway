@@ -14,8 +14,6 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Tenant decoupling guardrail** — Added `scripts/security/validate-tenant-decoupling.sh`,
   wired into `npm run validate` and CI (`tenant-decoupling` job), and sanitized hardcoded
   tenant/personal values from templates, shared workflows, monitoring runbooks, and Docker defaults.
-- **Workflow dependency pinning** — Pinned security and CI workflow `uses:` dependencies to
-  full commit SHAs across `.github/workflows/*` to satisfy supply-chain hardening requirements.
 
 ### Fixed
 - **Main SonarCloud hotspot blockers** — Removed hotspot patterns across gateway/test assets by:
@@ -54,6 +52,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
   - pinning all CI action dependencies in `.github/workflows/ci.yml` to full commit SHAs,
   - removing inherited `PATH` usage from `apps/web-admin/run-build.mjs` by running npm via
     resolved Node CLI path.
+- **Tenant decoupling CI reliability** — Added `rg` installation in the CI job and `grep` fallback
+  inside `validate-tenant-decoupling.sh` so the guardrail does not fail on runners without ripgrep.
 
 ## [1.10.0] - 2026-03-08
 
