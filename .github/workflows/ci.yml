@@ -105,7 +105,7 @@ jobs:
           node-version: "22"
 
       - name: Run test-autogen parity check
-        uses: Forge-Space/forge-ai-action@d4b81b223bf1dfba5cc24884f57073031168c98f
+        uses: Forge-Space/forge-ai-action@c94c33a286c29faddb05cd4a0d0f1e08e390aa4b
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
