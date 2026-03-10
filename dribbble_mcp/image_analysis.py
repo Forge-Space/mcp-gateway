@@ -102,8 +102,7 @@ class ImageAnalyzer:
                 url,
                 headers={
                     "User-Agent": (
-                        "Mozilla/5.0 (compatible; DribbbleMCP/1.0; "
-                        "+https://github.com/Forge-Space/mcp-gateway)"
+                        "Mozilla/5.0 (compatible; DribbbleMCP/1.0; +https://github.com/Forge-Space/mcp-gateway)"
                     )
                 },
             )
