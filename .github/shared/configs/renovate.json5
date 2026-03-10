@@ -8,9 +8,6 @@
   // Enable dependency updates
   "enabled": true,
 
-  // Repository configuration
-  "repository": "LucasSantana-Dev/mcp-gateway",
-
   // Log level
   "logLevel": "info",
 
@@ -36,8 +33,8 @@
   "labels": ["dependencies"],
 
   // Assignees and reviewers
-  "assignees": ["lucassantana"],
-  "reviewers": ["lucassantana"],
+  "assignees": [],
+  "reviewers": [],
 
   // Auto-merge configuration
   "autoMerge": true,

@@ -38,8 +38,8 @@ class ImageAnalyzer:
             RuntimeError: If download or analysis fails.
         """
         parsed_url = urlparse(image_url) if image_url else None
-        if not image_url or parsed_url is None or parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
-            msg = "image_url must be a valid HTTP/HTTPS URL"
+        if not image_url or parsed_url is None or parsed_url.scheme != "https" or not parsed_url.netloc:
+            msg = "image_url must be a valid HTTPS URL"
             raise ValueError(msg)
 
         logger.info("Analyzing image: %s", image_url)
@@ -102,8 +102,7 @@ class ImageAnalyzer:
                 url,
                 headers={
                     "User-Agent": (
-                        "Mozilla/5.0 (compatible; DribbbleMCP/1.0; "
-                        "+https://github.com/LucasSantana-Dev/forge-mcp-gateway)"
+                        "Mozilla/5.0 (compatible; DribbbleMCP/1.0; +https://github.com/Forge-Space/mcp-gateway)"
                     )
                 },
             )

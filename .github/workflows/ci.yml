@@ -10,6 +10,25 @@ env:
   PYTHON_VERSION: "3.12"
 
 jobs:
+  tenant-decoupling:
+    name: Tenant Decoupling
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Ensure ripgrep
+        run: |
+          if ! command -v rg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ripgrep
+          fi
+      - name: Validate tenant decoupling
+        run: npm run check:tenant-decoupling
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -99,7 +118,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
@@ -119,7 +137,7 @@ jobs:
     name: Workflow Summary
     runs-on: ubuntu-latest
     if: always()
-    needs: [lint, test, build, typecheck, security, test-autogen-warn]
+    needs: [tenant-decoupling, lint, test, build, typecheck, security, test-autogen-warn]
 
     steps:
       - name: Summary
@@ -127,6 +145,7 @@ jobs:
           echo "## CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tenant Decoupling | ${{ needs.tenant-decoupling.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Test | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY

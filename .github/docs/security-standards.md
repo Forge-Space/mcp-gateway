@@ -61,7 +61,7 @@ All UIForge projects implement a standardized security toolchain:
 
 ```yaml
 severity-threshold: high
-organization: LucasSantana-Dev
+organization: Forge-Space
 monitor: true
 sarif-output: true
 ```

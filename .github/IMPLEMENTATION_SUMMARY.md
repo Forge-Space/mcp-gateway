@@ -63,7 +63,7 @@ Successfully implemented comprehensive GitHub standardization across Forge Space
   - Trufflehog (secret scanning)
   - npm audit (Node.js dependencies)
 - **Configuration**:
-  - Organization: LucasSantana-Dev
+  - Organization: Forge-Space
   - Severity threshold: High
   - Daily scheduled scans
   - Continuous monitoring
