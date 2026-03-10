@@ -8,9 +8,9 @@ To use the **MCP Gateway with the tool router** in Cursor (one connection that r
 
 1. **Prerequisites:** Docker, Docker Compose. Copy `.env.example` to `.env`, set `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, and `AUTH_ENCRYPTION_SECRET` (or run `make generate-secrets`).
 2. **Start the stack:** From the repo run `make start` (gateway + tool-router and other services).
-3. **Register gateways and virtual server:** Run `make register`. This registers the tool-router and creates the **cursor-router** virtual server; it writes `data/.cursor-mcp-url` for the wrapper. Do not set `REGISTER_CURSOR_MCP_SERVER_NAME` if you want the default cursor-router.
+3. **Register gateways and virtual server:** Run `make register`. This registers the tool-router and creates the **mcp-router** virtual server; it writes `data/.mcp-client-url` for the wrapper. Do not set `REGISTER_MCP_CLIENT_SERVER_NAME` if you want the default mcp-router.
 4. **Set GATEWAY_JWT:** Run `make jwt`, copy the token, and add `GATEWAY_JWT=<token>` to `.env`. The tool-router needs this to call the gateway API. Refresh periodically (e.g. weekly).
-5. **Point Cursor at the wrapper:** Run `make use-cursor-wrapper` so `~/.cursor/mcp.json` uses `scripts/cursor/mcp-wrapper.sh` (generates a fresh JWT per connection; no token in mcp.json; sets 2-minute MCP timeout).
+5. **Point Cursor at the wrapper:** Run `./scripts/setup-forge-space-mcp.sh` so `~/.cursor/mcp.json` uses `scripts/mcp-wrapper.sh` (generates a fresh JWT per connection; no token in mcp.json; sets 2-minute MCP timeout).
 6. **Pre-pull image (recommended):** Run `make cursor-pull` once so the first Cursor connection does not time out while the Context Forge image downloads.
 7. **Restart Cursor:** Fully quit Cursor (Cmd+Q / Alt+F4) and reopen.
 
@@ -30,7 +30,7 @@ If `virtual-servers.txt` is absent, the script creates a single virtual server (
 
 ### Single entry point (router)
 
-The **cursor-router** virtual server exposes only the **tool-router** gateway (1–2 tools: `execute_task`, optional `search_tools`). The Cursor wrapper uses cursor-router by default; ensure `GATEWAY_JWT` is set in `.env` (run `make jwt` and paste; refresh periodically) so the router can call the gateway API. When you call `execute_task` with a task description, the router fetches all tools from the gateway, picks the best match by keyword scoring (name + description), and invokes it via the gateway API. Use this when you want one Cursor connection that routes to the best tool without hitting the 60-tool limit. Tool selection in v1 is keyword-based (no LLM/embeddings).
+The **mcp-router** virtual server exposes only the **tool-router** gateway (1–2 tools: `execute_task`, optional `search_tools`). The wrapper uses mcp-router by default; ensure `GATEWAY_JWT` is set in `.env` (run `make jwt` and paste; refresh periodically) so the router can call the gateway API. When you call `execute_task` with a task description, the router fetches all tools from the gateway, picks the best match by keyword scoring (name + description), and invokes it via the gateway API. Use this when you want one Cursor connection that routes to the best tool without hitting the 60-tool limit. Tool selection in v1 is keyword-based (no LLM/embeddings).
 
 | Use case                                | Gateway / tool                                                                                            |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -49,8 +49,8 @@ Auth-required gateways (v0, apify-dribbble, Context7 API key, etc.) must be conf
 
 | If you want…                                         | Use this virtual server                   | Notes                                                                                                                                                                                                             |
 | ---------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **One connection that picks the right tool for you** | **cursor-router** (tool-router, ~2 tools) | Default for the Cursor wrapper. Set `GATEWAY_JWT` in `.env` (run `make jwt`). No 60-tool limit; router calls the gateway for you.                                                                                 |
-| **General dev: files, search, browser, reasoning**   | **cursor-default**                        | sequential-thinking, filesystem, tavily, playwright, desktop-commander, chrome-devtools (under 60 tools). Set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` and run `make register` to point the wrapper here. |
+| **One connection that picks the right tool for you** | **mcp-router** (tool-router, ~2 tools) | Default for the wrapper bridge. Set `GATEWAY_JWT` in `.env` (run `make jwt`). No 60-tool limit; router calls the gateway for you.                                                                                 |
+| **General dev: files, search, browser, reasoning**   | **cursor-default**                        | sequential-thinking, filesystem, tavily, playwright, desktop-commander, chrome-devtools (under 60 tools). Set `REGISTER_MCP_CLIENT_SERVER_NAME=cursor-default` and run `make register` to point the wrapper here. |
 | **Only web/search and docs**                         | **cursor-search**                         | tavily (and similar). Lightweight.                                                                                                                                                                                |
 | **Only browser and UI automation**                   | **cursor-browser**                        | playwright, puppeteer, browser-tools, chrome-devtools, desktop-commander (~80 tools; may hit limits in some clients).                                                                                             |
 
@@ -61,8 +61,9 @@ Server names in the Admin UI may differ if you changed them (e.g. custom-default
 **Option A – Wrapper (recommended, no JWT in mcp.json)**
 From the forge-mcp-gateway repo (with `.env` set and gateway running):
 
-1. Run `make register` so `data/.cursor-mcp-url` exists (optionally set `REGISTER_CURSOR_MCP_SERVER_NAME` for a server other than cursor-router).
-2. Run **`make use-cursor-wrapper`**. This sets the context-forge (or user-context-forge) entry in `~/.cursor/mcp.json` to use `scripts/cursor/mcp-wrapper.sh`; the wrapper reads the URL from `data/.cursor-mcp-url` and uses a fresh JWT.
+1. Run `make register` so `data/.mcp-client-url` exists (optionally set `REGISTER_MCP_CLIENT_SERVER_NAME` for a server other than mcp-router).
+2. Run **`./scripts/setup-forge-space-mcp.sh`**. This sets the context-forge (or user-context-forge) entry in `~/.cursor/mcp.json` to use `scripts/mcp-wrapper.sh`; the wrapper reads the URL from `data/.mcp-client-url` and uses a fresh JWT.
+   - If `make register` cannot write `data/.mcp-client-url` (for example minimal gateway mode), use: `./scripts/setup-forge-space-mcp.sh --mcp-url http://host.docker.internal:4444/servers/<UUID>/mcp`.
 3. For **cursor-router**: set `GATEWAY_JWT` in `.env` (run `make jwt`, paste the token). Refresh it periodically (e.g. weekly).
 4. Fully quit Cursor (Cmd+Q / Alt+F4) and reopen.
 
@@ -83,8 +84,9 @@ Refresh the token regularly (e.g. `make refresh-cursor-jwt` or paste a new `make
 
 Those messages mean the MCP client (Cursor) could not get server info from the gateway. Fix in order:
 
-1. **Check setup:** From the repo run `make verify-cursor-setup`. It checks gateway health, `data/.cursor-mcp-url`, server ID, Context Forge image, and gateway reachability from Docker.
-2. **Ensure URL file and server exist:** Run `make start` then `make register`. That (re)creates virtual servers and writes `data/.cursor-mcp-url`. If you ran `make reset-db` earlier, the old server UUID is gone—register again.
+1. **Check setup:** From the repo run `python3 scripts/ide-setup.py setup cursor --action verify`. It checks gateway health, `data/.mcp-client-url`, server ID, Context Forge image, and gateway reachability from Docker.
+2. **Ensure URL file and server exist:** Run `make start` then `make register`. That (re)creates virtual servers and writes `data/.mcp-client-url`. If you ran `make reset-db` earlier, the old server UUID is gone—register again.
+   - If register logs `GET /servers returned 404`, your gateway profile is minimal. Use an explicit URL with `--mcp-url` until full profile registration is available.
 3. **cursor-router only:** Set `GATEWAY_JWT` in `.env` (run `make jwt`, paste the token). Without it the server has 0 tools and the gateway can report no server info.
 4. **Reconnect Cursor:** Fully quit Cursor (Cmd+Q / Alt+F4) and reopen. Reload Window is not enough.
 
@@ -95,5 +97,5 @@ If it still fails: from the repo run `make verify-cursor-setup` and follow its o
 Cursor’s default MCP server-creation timeout is 60 seconds. The wrapper starts a Docker container that must connect to the gateway; if the Context Forge image is not cached, the first run can exceed 60s and Cursor reports -32001. Fix:
 
 1. **Pre-pull the image:** From the repo run `make cursor-pull` so the image is cached before Cursor starts the wrapper.
-2. **Increase client timeout:** Run `make use-cursor-wrapper` again; it sets `"timeout": 120000` (2 minutes) in `~/.cursor/mcp.json` for the context-forge entry. Optionally set `CURSOR_MCP_TIMEOUT_MS=180000` in `.env` before running it for 3 minutes.
+2. **Increase client timeout:** Run `./scripts/setup-forge-space-mcp.sh` again; it sets `"timeout": 120000` (2 minutes) in `~/.cursor/mcp.json` for the context-forge entry. Optionally set `CURSOR_MCP_TIMEOUT_MS=180000` in `.env` before running it for 3 minutes.
 3. **Fully restart Cursor:** Quit Cursor (Cmd+Q / Alt+F4) and reopen.

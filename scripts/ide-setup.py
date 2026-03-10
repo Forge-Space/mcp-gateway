@@ -12,6 +12,8 @@ Supported IDEs:
 - Claude Desktop (claude_desktop_config.json)
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -19,8 +21,10 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
+
+UTC = timezone.utc
 
 
 @dataclass
@@ -50,7 +54,7 @@ class IDEManager:
                 name="Cursor",
                 config_path="~/.cursor/mcp.json",
                 config_format="json",
-                wrapper_script="cursor-mcp-wrapper.sh",
+                wrapper_script="mcp-wrapper.sh",
                 env_vars={
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
@@ -63,7 +67,7 @@ class IDEManager:
                 name="Windsurf",
                 config_path="~/.windsurf/mcp.json",
                 config_format="json",
-                wrapper_script="cursor-mcp-wrapper.sh",
+                wrapper_script="mcp-wrapper.sh",
                 env_vars={
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
@@ -75,7 +79,7 @@ class IDEManager:
                 name="VSCode",
                 config_path=".vscode/settings.json",  # workspace relative
                 config_format="json",
-                wrapper_script="cursor-mcp-wrapper.sh",
+                wrapper_script="mcp-wrapper.sh",
                 env_vars={
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
@@ -87,7 +91,7 @@ class IDEManager:
                 name="Claude Desktop",
                 config_path="~/Library/Application Support/Claude/claude_desktop_config.json",
                 config_format="json",
-                wrapper_script="cursor-mcp-wrapper.sh",
+                wrapper_script="mcp-wrapper.sh",
                 env_vars={
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
                     "SNYK_TOKEN": "Snyk API token",
@@ -161,12 +165,14 @@ class IDEManager:
 
     def get_server_url(self, server_name: str) -> str | None:
         """Get the MCP URL for a specific server."""
-        url_file = self.data_dir / ".cursor-mcp-url"
+        explicit_url = os.environ.get("MCP_CLIENT_SERVER_URL", "").strip()
+        if explicit_url:
+            return explicit_url
+
+        url_file = self.data_dir / ".mcp-client-url"
         if not url_file.exists():
             return None
 
-        # For now, return the first URL found
-        # TODO: Implement server-specific URL mapping
         with open(url_file) as f:
             return f.read().strip()
 
@@ -178,43 +184,22 @@ class IDEManager:
         ide_config = self.ides[ide]
         wrapper_path = self.scripts_dir / ide_config.wrapper_script
         server_url = self.get_server_url(server_name)
+        timeout_ms = int(os.environ.get("CURSOR_MCP_TIMEOUT_MS", "120000"))
 
         if not server_url:
             raise ValueError(f"No URL found for server: {server_name}")
 
-        # Extract server UUID from URL
-        if "/servers/" in server_url and "/mcp" in server_url:
-            server_uuid = server_url.split("/servers/")[1].split("/mcp")[0]
-        else:
+        if "/servers/" not in server_url or "/mcp" not in server_url:
             raise ValueError(f"Invalid server URL format: {server_url}")
 
-        # Build configuration
-        if ide == "vscode":
-            config = {
-                "mcp.servers": {
-                    server_name: {
-                        "command": str(wrapper_path.absolute()),
-                        "args": ["--server-name", server_name],
-                        "env": {
-                            "GATEWAY_URL": server_url.replace(f"/servers/{server_uuid}/mcp", ""),
-                            "SERVER_ID": server_uuid,
-                        },
-                    }
-                }
-            }
-        else:
-            config = {
-                "mcpServers": {
-                    server_name: {
-                        "command": str(wrapper_path.absolute()),
-                        "args": ["--server-name", server_name],
-                        "env": {
-                            "GATEWAY_URL": server_url.replace(f"/servers/{server_uuid}/mcp", ""),
-                            "SERVER_ID": server_uuid,
-                        },
-                    }
-                }
-            }
+        entry = {
+            "command": str(wrapper_path.absolute()),
+            "env": {"MCP_CLIENT_SERVER_URL": server_url},
+            "timeout": timeout_ms,
+        }
+        config_key = "context-forge" if ide == "cursor" else server_name
+        container_key = "mcp.servers" if ide == "vscode" else "mcpServers"
+        config = {container_key: {config_key: entry}}
 
         # Add environment variables if available
         env_vars = {}
@@ -224,10 +209,7 @@ class IDEManager:
                 env_vars[var_name] = env_value
 
         if env_vars:
-            if ide == "vscode":
-                config["mcp.servers"][server_name]["env"].update(env_vars)
-            else:
-                config["mcpServers"][server_name]["env"].update(env_vars)
+            config[container_key][config_key]["env"].update(env_vars)
 
         return config
 
@@ -436,7 +418,7 @@ class IDEManager:
             return False
 
         config_path = Path.home() / ".cursor" / "mcp.json"
-        wrapper_path = self.repo_root / "scripts" / "cursor-mcp-wrapper.sh"
+        wrapper_path = self.repo_root / "scripts" / "mcp-wrapper.sh"
 
         if not config_path.exists():
             print(f"❌ {config_path} not found")
@@ -447,10 +429,15 @@ class IDEManager:
             return False
 
         try:
-            # Check for URL file
-            url_file = self.data_dir / ".cursor-mcp-url"
-            if not url_file.exists() or url_file.stat().st_size == 0:
-                print("❌ Run 'make register' first so data/.cursor-mcp-url exists")
+            explicit_url = os.environ.get("MCP_CLIENT_SERVER_URL", "").strip()
+            url_file = self.data_dir / ".mcp-client-url"
+            file_url = ""
+            if url_file.exists() and url_file.stat().st_size > 0:
+                with open(url_file) as f:
+                    file_url = f.read().strip()
+            mcp_url = explicit_url or file_url
+            if not mcp_url:
+                print("❌ Missing MCP URL. Run 'make register' or set MCP_CLIENT_SERVER_URL")
                 return False
 
             # Load configuration
@@ -471,6 +458,7 @@ class IDEManager:
             wrapper_config = {
                 "command": str(wrapper_path),
                 "timeout": 120000,  # 2 minutes
+                "env": {"MCP_CLIENT_SERVER_URL": mcp_url},
             }
 
             if "mcpServers" in config:
@@ -487,6 +475,7 @@ class IDEManager:
 
             print(f"✅ Set '{context_forge_key}' to use wrapper script in {config_path}")
             print(f"   Backup saved to {backup_path}")
+            print(f"   MCP URL source: {'MCP_CLIENT_SERVER_URL' if explicit_url else 'data/.mcp-client-url'}")
             print("   Fully quit Cursor (Cmd+Q / Alt+F4) and reopen to use automatic JWT")
             return True
 
@@ -501,6 +490,9 @@ class IDEManager:
             return False
 
         print("🔍 Verifying Cursor setup...")
+        gateway_base = os.environ.get("GATEWAY_URL", f"http://localhost:{os.environ.get('PORT', '4444')}")
+        gateway_base = gateway_base.rstrip("/")
+        health_url = f"{gateway_base}/health"
 
         # Check gateway reachability
         try:
@@ -514,7 +506,7 @@ class IDEManager:
                     "%{http_code}",
                     "--connect-timeout",
                     "3",
-                    "http://localhost:8080/health",
+                    health_url,
                 ],
                 capture_output=True,
                 text=True,
@@ -522,30 +514,12 @@ class IDEManager:
             )
 
             if result.returncode == 0 and result.stdout == "200":
-                print("✅ Gateway reachable at http://localhost:8080")
+                print(f"✅ Gateway reachable at {gateway_base}")
             else:
                 print("❌ Gateway not reachable. Run 'make start'")
                 return False
         except Exception:
             print("❌ Gateway not reachable. Run 'make start'")
-            return False
-
-        # Check URL file
-        url_file = self.data_dir / ".cursor-mcp-url"
-        if not url_file.exists() or url_file.stat().st_size == 0:
-            print("❌ data/.cursor-mcp-url missing or empty (run: make register)")
-            return False
-
-        with open(url_file) as f:
-            mcp_url = f.read().strip()
-
-        print(f"✅ data/.cursor-mcp-url exists: {mcp_url}")
-
-        # Check URL format
-        import re
-
-        if not re.search(r"/servers/([a-f0-9-]+)/mcp", mcp_url):
-            print("❌ URL does not look like .../servers/UUID/mcp")
             return False
 
         # Check configuration file
@@ -555,42 +529,86 @@ class IDEManager:
             return False
 
         try:
+            import re
+
             with open(config_path) as f:
                 config = json.load(f)
 
-            # Find context-forge entry
-            context_forge_key = None
-            for key in config.keys():
-                if "context-forge" in key.lower():
-                    context_forge_key = key
-                    break
-
-            if not context_forge_key:
-                print("❌ context-forge entry not found in configuration")
+            servers = config.get("mcpServers", {})
+            if not isinstance(servers, dict):
+                print("❌ Invalid Cursor config: mcpServers must be an object")
                 return False
 
-            print(f"✅ Found context-forge entry: {context_forge_key}")
+            entry_key = next((key for key in servers if "context-forge" in key.lower()), None)
+            if not entry_key:
+                entry_key = next(
+                    (
+                        key
+                        for key, value in servers.items()
+                        if isinstance(value, dict) and str(value.get("command", "")).endswith("mcp-wrapper.sh")
+                    ),
+                    None,
+                )
+            if not entry_key:
+                entry_key = next(
+                    (
+                        key
+                        for key, value in servers.items()
+                        if isinstance(value, dict)
+                        and isinstance(value.get("env"), dict)
+                        and bool(value["env"].get("MCP_CLIENT_SERVER_URL"))
+                    ),
+                    None,
+                )
+            if not entry_key:
+                print("❌ No wrapper-style MCP entry found in mcpServers")
+                return False
 
-            # Check if using wrapper or direct connection
-            if "mcpServers" in config and context_forge_key in config["mcpServers"]:
-                entry = config["mcpServers"][context_forge_key]
-            else:
-                entry = config[context_forge_key]
+            print(f"✅ Found MCP entry: {entry_key}")
+            entry = servers[entry_key]
+            if not isinstance(entry, dict):
+                print("❌ Invalid MCP entry format")
+                return False
 
-            if "command" in entry:
-                print("✅ Configured to use wrapper script")
-                wrapper_path = entry["command"]
-                if Path(wrapper_path).exists():
-                    print(f"✅ Wrapper script exists: {wrapper_path}")
-                else:
-                    print(f"❌ Wrapper script not found: {wrapper_path}")
-                    return False
+            wrapper_path = entry.get("command")
+            if not wrapper_path:
+                print("❌ MCP entry does not use command-based wrapper setup")
+                return False
+            if not str(wrapper_path).endswith("mcp-wrapper.sh"):
+                print(f"❌ MCP entry points to unexpected command: {wrapper_path}")
+                return False
+            if Path(wrapper_path).exists():
+                print(f"✅ Wrapper script exists: {wrapper_path}")
             else:
-                print("✅ Configured for direct connection")
-                if "headers" in entry and "Authorization" in entry["headers"]:
-                    print("✅ JWT token configured")
-                else:
-                    print("⚠️  No JWT token found - run 'make ide-setup IDE=cursor ACTION=refresh-jwt'")
+                print(f"❌ Wrapper script not found: {wrapper_path}")
+                return False
+
+            entry_env = entry.get("env", {})
+            if not isinstance(entry_env, dict):
+                print("❌ Invalid env configuration in MCP entry")
+                return False
+
+            entry_mcp_url = str(entry_env.get("MCP_CLIENT_SERVER_URL", "")).strip()
+            url_file = self.data_dir / ".mcp-client-url"
+            file_mcp_url = ""
+            if url_file.exists() and url_file.stat().st_size > 0:
+                with open(url_file) as f:
+                    file_mcp_url = f.read().strip()
+                print(f"✅ data/.mcp-client-url exists: {file_mcp_url}")
+            else:
+                print("ℹ️  data/.mcp-client-url is missing; relying on MCP_CLIENT_SERVER_URL in IDE config")
+
+            effective_url = entry_mcp_url or file_mcp_url
+            if not effective_url:
+                print("❌ No MCP URL source found. Run make register or set MCP_CLIENT_SERVER_URL")
+                return False
+
+            if not re.search(r"/servers/([a-f0-9-]+)/mcp", effective_url):
+                print(f"❌ URL does not look like .../servers/UUID/mcp: {effective_url}")
+                return False
+
+            if entry_mcp_url:
+                print("✅ Wrapper config includes MCP_CLIENT_SERVER_URL fallback")
 
             print("✅ Cursor setup verification completed successfully")
             return True
@@ -702,7 +720,15 @@ Examples:
 
     parser.add_argument(
         "--action",
-        choices=["install", "backup", "restore", "status"],
+        choices=[
+            "install",
+            "backup",
+            "restore",
+            "status",
+            "refresh-jwt",
+            "use-wrapper",
+            "verify",
+        ],
         default="install",
         help="Action for setup command (default: install)",
     )

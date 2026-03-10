@@ -4,56 +4,33 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
-### Changed
-- **Phase 0 test-autogen rollout (warn-only)** — Added non-blocking local hooks and PR parity checks:
-  - `.husky/pre-commit` runs `forge-ai-init test-autogen --staged --write --json` (warn-only)
-  - `.husky/pre-push` runs `forge-ai-init test-autogen --check --json` (warn-only)
-  - New CI job `test-autogen-warn` posts PR feedback (comment + annotations) without blocking phase 0.
-- **Workflow dependency pinning** — Pinned security and CI workflow `uses:` dependencies to
-  full commit SHAs across `.github/workflows/*` to satisfy supply-chain hardening requirements.
-- **Tenant decoupling guardrail** — Added `scripts/security/validate-tenant-decoupling.sh`,
-  wired into `npm run validate` and CI (`tenant-decoupling` job), and sanitized hardcoded
-  tenant/personal values from templates, shared workflows, monitoring runbooks, and Docker defaults.
+### Added
+- **Canonical Homelab bridge setup script** — Added `scripts/setup-forge-space-mcp.sh` to configure
+  IDE MCP entries with `scripts/mcp-wrapper.sh`, including preflight checks, config backup, and
+  idempotent merge behavior.
+- **Project skill for bridge remediation** — Added `.agents/skills/homelab-mcp-bridge/SKILL.md` to
+  standardize wrapper-first troubleshooting and verification steps.
+- **Bridge drift CI guard** — Added `scripts/utils/check-bridge-drift.sh` and wired it into CI lint
+  to block regressions to legacy wrapper/URL references in canonical setup surfaces.
 
 ### Fixed
-- **Main SonarCloud hotspot blockers** — Removed hotspot patterns across gateway/test assets by:
-  - replacing regex hotspot patterns in `scripts/utils/check-mcp-registry.py` and
-    `tool_router/api/quality_gates.py`,
-  - hardening Dockerfiles (`apps/web-admin/Dockerfile`, `service-manager/Dockerfile`) for COPY scope,
-    runtime file permissions, and non-root defaults,
-  - replacing flagged test/example literals for insecure protocol/IP patterns in affected
-    `tool_router/tests/*`, `tests/test_security.py`, and `dribbble_mcp/tests/test_image_analysis.py`,
-  - removing `/tmp` fixed paths in benchmark/audit tests with temporary-directory usage.
-- **Service-manager runtime compatibility** — Set `service-manager` compose service to run as root
-  (`user: \"0:0\"`) so Docker socket access behavior remains unchanged while Dockerfile defaults stay hardened.
-- **Reusable workflow secret schema violation** — Removed reserved `GITHUB_TOKEN` from
-  `workflow_call.secrets` in `.github/workflows/security-scan-shared.yml`, resolving
-  parser-level workflow-file failures on `main`.
 - **PR #157 lint gate regressions** — Fixed Ruff failures in new AI resilience tests (unused unpacked variable and import ordering/unused imports) so CI lint passes for circuit breaker, prompt optimizer, refinement loop, and streamable HTTP test modules.
 - **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
   reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
   SonarCloud/CodeQL new-code requirements.
-- **Reusable workflow schema errors** — Fixed `workflow_call` input definitions in
-  `.github/workflows/branch-protection-core.yml` (removed unsupported `choice/options`, switched
-  to `string`, and corrected job conditions to `inputs.action`) and corrected
-  `.github/workflows/security-scan-shared.yml` timeout input to `number`, eliminating main-branch
-  workflow-file failures.
-- **Shared security workflow parse scope** — Removed top-level `env` references to
-  `workflow_call` inputs in `.github/workflows/security-scan-shared.yml` to prevent parser-level
-  workflow-file failures on push events.
-- **Release pipeline Docker compatibility** — Pinned `Dockerfile.tool-router` to `python:3.13-alpine`
-  because `mcp-contextforge-gateway` currently supports Python `<3.14`, fixing release Docker build
-  failures on `main`.
-- **Container scan workflow build target** — Updated `Container Security Scan` workflow to build
-  `Dockerfile.tool-router` explicitly, fixing main-branch scan failures caused by missing root
-  `Dockerfile`.
-- **SonarCloud hotspot remediation (PR #169)** — Closed remaining hotspot findings by:
-  - enforcing HTTPS-only validation for external image URLs in `dribbble_mcp/image_analysis.py`,
-  - pinning all CI action dependencies in `.github/workflows/ci.yml` to full commit SHAs,
-  - removing inherited `PATH` usage from `apps/web-admin/run-build.mjs` by running npm via
-    resolved Node CLI path.
-- **Tenant decoupling CI reliability** — Added `rg` installation in the CI job and `grep` fallback
-  inside `validate-tenant-decoupling.sh` so the guardrail does not fail on runners without ripgrep.
+- **Wrapper path and URL-file drift in IDE setup** — `scripts/ide-setup.py` now uses
+  `mcp-wrapper.sh` and `data/.mcp-client-url`, and `--action verify/use-wrapper/refresh-jwt` are
+  available through CLI argument validation.
+- **Broken NPX bridge guidance** — Updated active setup surfaces (IDE web admin page, README, and
+  setup/operations docs) to wrapper-first configuration and marked `@forge-mcp-gateway/client` as
+  unavailable until publish is restored.
+- **Setup script/runtime compatibility regressions** — Fixed `scripts/lib/gateway.sh` JWT helper to
+  use `scripts/utils/create-jwt.py`, fixed stale function calls in `scripts/gateway/register.sh`,
+  and made `scripts/ide-setup.py` + `scripts/utils/create-jwt.py` Python 3.9 compatible.
+- **Homelab minimal-mode setup gap** — `scripts/setup-forge-space-mcp.sh` now supports explicit
+  MCP URL fallback via `--mcp-url`/`MCP_CLIENT_SERVER_URL`, and `scripts/ide-setup.py verify`
+  accepts wrapper setups that rely on config-provided URL fallback when `data/.mcp-client-url`
+  is unavailable.
 
 ## [1.10.0] - 2026-03-08
 
@@ -348,7 +325,7 @@ requirements-benchmark.txt                # Benchmarking tools
   - **Pull-Requests Write**: Required for automatic PR commenting
   - **Security Events Write**: Required for SARIF upload to GitHub Code Scanning
   - **Environment Variables**: Added `SNYK_FAIL_ON_SEVERITY` for build failure control
-  - **Organization Settings**: Configured for `Forge-Space` organization with high severity threshold
+  - **Organization Settings**: Configured for `LucasSantana-Dev` organization with high severity threshold
 
 **Security Coverage Metrics**:
 - **100% PR Coverage**: Every pull request undergoes security scanning

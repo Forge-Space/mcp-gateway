@@ -316,7 +316,7 @@ Configure required API keys in your IDE's mcp.json file:
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here",

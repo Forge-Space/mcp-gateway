@@ -80,7 +80,7 @@ my-monorepo/
 {
   "mcpServers": {
     "react-nextjs": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "react-nextjs"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"
@@ -104,7 +104,7 @@ my-monorepo/
 {
   "mcpServers": {
     "monorepo-universal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "monorepo-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx",
@@ -152,7 +152,7 @@ my-app/
 {
   "mcpServers": {
     "react-nextjs-minimal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "react-nextjs-minimal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"
@@ -191,7 +191,7 @@ my-workspace/
 {
   "mcpServers": {
     "monorepo-universal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "monorepo-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx",
@@ -232,7 +232,7 @@ my-turborepo/
 {
   "mcpServers": {
     "fullstack-universal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "fullstack-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx",
@@ -273,7 +273,7 @@ my-services/
 {
   "mcpServers": {
     "monorepo-universal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "monorepo-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx",
@@ -364,7 +364,7 @@ my-workspace/
 {
   "mcpServers": {
     "monorepo-universal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "monorepo-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx",
@@ -395,7 +395,7 @@ cd my-app
 {
   "mcpServers": {
     "react-nextjs": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "react-nextjs"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"
@@ -448,7 +448,7 @@ cd my-app
 {
   "mcpServers": {
     "monorepo-universal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "monorepo-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx",
@@ -469,7 +469,7 @@ cd my-app
 {
   "mcpServers": {
     "monorepo-universal-minimal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "monorepo-universal-minimal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"

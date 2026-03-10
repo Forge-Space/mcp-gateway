@@ -20,10 +20,12 @@ All shell scripts source `lib/bootstrap.sh` (sets `SCRIPT_DIR`, `REPO_ROOT`, `CO
 | `gateway/register.sh` | Register gateways from gateways.txt (+ virtual servers, prompts, resources) |
 | `virtual-servers/cleanup-duplicates.sh` | Remove duplicate virtual servers (CLEANUP_DRY_RUN=1 to report only) |
 | `mcp-wrapper.sh` | MCP command wrapper for IDE integration (JWT per connection) |
+| `setup-forge-space-mcp.sh` | Canonical Homelab IDE bridge setup (wrapper-first, backup + preflight checks, `--mcp-url` fallback) |
 | `setup-wizard.py` | Interactive project setup wizard |
 | `status.py` | Project status dashboard |
 | `ide-setup.py` | IDE integration setup and management |
 | `utils/create-jwt.py` | Generate JWT tokens for gateway auth |
+| `utils/check-bridge-drift.sh` | Fail CI when canonical setup surfaces regress to legacy bridge paths |
 | `utils/check-docker-updates.sh` | Check for Docker image updates (CI) |
 | `utils/check-mcp-registry.py` | Validate MCP server registry (CI) |
 

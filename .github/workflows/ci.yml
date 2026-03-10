@@ -37,6 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
+      - name: Bridge drift guard
+        run: bash scripts/utils/check-bridge-drift.sh
+
       - uses: Forge-Space/.github/.github/actions/setup-python@6fbe56bc610ddf84b70f213c752b95196bcadd95
 
       - name: Ruff check

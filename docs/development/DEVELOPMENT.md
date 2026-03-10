@@ -115,7 +115,7 @@ cat docker-update-report.md
 
 **Files updated by automation:**
 - `docker-compose.yml`
-- `scripts/cursor-mcp-wrapper.sh`
+- `scripts/mcp-wrapper.sh`
 - `.github/workflows/ci.yml`
 - `Makefile`
 - `README.md`
@@ -153,7 +153,7 @@ Run the same checks CI runs so failures are caught before push:
 | Trivy | `trivy image forge-mcp-gateway-tool-router:latest` (optional; install [Trivy](https://github.com/aquasecurity/trivy) or run in Dev Container) |
 | Secret scan | `pre-commit run --all-files` (includes secret checks), or run Trufflehog manually with base/head refs |
 
-Gateway smoke requires the gateway image to be pullable (see [docker-compose.yml](../docker-compose.yml)); if the image tag is missing or changed upstream, update the tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh`.
-- **Gateway updates:** Watch [IBM/mcp-gateway](https://github.com/IBM/mcp-gateway) releases; update the gateway image tag in `docker-compose.yml` and `scripts/cursor-mcp-wrapper.sh` when upgrading.
+Gateway smoke requires the gateway image to be pullable (see [docker-compose.yml](../docker-compose.yml)); if the image tag is missing or changed upstream, update the tag in `docker-compose.yml` and `scripts/mcp-wrapper.sh`.
+- **Gateway updates:** Watch [IBM/mcp-gateway](https://github.com/IBM/mcp-gateway) releases; update the gateway image tag in `docker-compose.yml` and `scripts/mcp-wrapper.sh` when upgrading.
 - **Python deps:** Bump versions in `requirements.txt` / `pyproject.toml` and run `make test`; rebuild tool-router image if needed.
 - **Cursor:** Keep `GATEWAY_JWT` set for cursor-router; run `make verify-cursor-setup` if the IDE shows "Error" or "No server info found".

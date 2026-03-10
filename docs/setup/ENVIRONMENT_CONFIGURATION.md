@@ -51,7 +51,7 @@ Stack-specific API keys go in your IDE's MCP configuration:
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token",
@@ -148,7 +148,7 @@ Add the API keys to your IDE's MCP configuration:
 {
   "mcpServers": {
     "your-stack-profile": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "your-stack-profile"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxxxx",
@@ -165,7 +165,7 @@ Add the API keys to your IDE's MCP configuration:
 {
   "mcp.servers": {
     "your-stack-profile": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "your-stack-profile"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}",
@@ -284,7 +284,7 @@ GATEWAY_JWT=<run make jwt>
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/Users/john/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/Users/john/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_johns_personal_token",
@@ -308,7 +308,7 @@ GATEWAY_JWT=<run make jwt>
 {
   "mcpServers": {
     "fullstack-universal": {
-      "command": "/Users/jane/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/Users/jane/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "fullstack-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_janes_token",

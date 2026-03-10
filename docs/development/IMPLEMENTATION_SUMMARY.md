@@ -151,7 +151,7 @@ make register
 {
   "mcpServers": {
     "nodejs-typescript-minimal": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript-minimal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"

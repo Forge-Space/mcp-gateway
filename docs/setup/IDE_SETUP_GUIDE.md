@@ -32,7 +32,7 @@ Step-by-step guide to configure MCP Gateway stack profiles in any IDE. All examp
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here",
@@ -51,7 +51,7 @@ Step-by-step guide to configure MCP Gateway stack profiles in any IDE. All examp
 {
   "mcpServers": {
     "react-nextjs-minimal": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "react-nextjs-minimal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here"
@@ -68,7 +68,7 @@ Step-by-step guide to configure MCP Gateway stack profiles in any IDE. All examp
 {
   "mcpServers": {
     "database-dev": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "database-dev"],
       "env": {
         "POSTGRES_CONNECTION_STRING": "postgresql://user:password@localhost:5432/dbname",
@@ -86,7 +86,7 @@ Step-by-step guide to configure MCP Gateway stack profiles in any IDE. All examp
 {
   "mcpServers": {
     "ui-design-dev": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "ui-design-dev"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here",
@@ -111,7 +111,7 @@ Step-by-step guide to configure MCP Gateway stack profiles in any IDE. All examp
    ```bash
    cd /path/to/forge-mcp-gateway
    pwd
-   # Use this path + /scripts/cursor-mcp-wrapper.sh
+   # Use this path + /scripts/mcp-wrapper.sh
    ```
 
 3. **Get your API keys:**
@@ -148,7 +148,7 @@ Open Cursor and check the MCP panel:
 {
   "mcp.servers": {
     "nodejs-typescript": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}",
@@ -166,7 +166,7 @@ Open Cursor and check the MCP panel:
 {
   "mcp.servers": {
     "python-dev-minimal": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "python-dev-minimal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
@@ -214,7 +214,7 @@ Check VSCode's Output panel (View → Output → MCP) for connection status.
 {
   "mcpServers": {
     "fullstack-universal": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "fullstack-universal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here",
@@ -235,7 +235,7 @@ Check VSCode's Output panel (View → Output → MCP) for connection status.
 {
   "mcpServers": {
     "monorepo-universal-minimal": {
-      "command": "/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh",
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "args": ["--server-name", "monorepo-universal-minimal"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here"
@@ -284,7 +284,7 @@ Check Windsurf's MCP panel for available tools.
   <component name="MCPSettings">
     <servers>
       <server name="java-spring">
-        <command>/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh</command>
+        <command>/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh</command>
         <args>--server-name java-spring</args>
         <env>
           <variable name="GITHUB_PERSONAL_ACCESS_TOKEN" value="ghp_your_token_here"/>
@@ -306,7 +306,7 @@ Check Windsurf's MCP panel for available tools.
   <component name="MCPSettings">
     <servers>
       <server name="testing-qa-minimal">
-        <command>/absolute/path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh</command>
+        <command>/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh</command>
         <args>--server-name testing-qa-minimal</args>
         <env>
           <variable name="GITHUB_PERSONAL_ACCESS_TOKEN" value="ghp_your_token_here"/>
@@ -346,10 +346,10 @@ Check IDE's MCP panel or settings for connection status.
 **Solution**:
 ```bash
 # Make script executable
-chmod +x /path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh
+chmod +x /path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh
 
 # Verify path is correct
-ls -la /path/to/forge-mcp-gateway/scripts/cursor-mcp-wrapper.sh
+ls -la /path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh
 ```
 
 ### Issue: "Gateway JWT not set"
@@ -430,17 +430,17 @@ You can configure multiple stack profiles in the same IDE:
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_..." }
     },
     "react-nextjs": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "react-nextjs"],
       "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_..." }
     },
     "database-dev": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "database-dev"],
       "env": {
         "POSTGRES_CONNECTION_STRING": "postgresql://...",

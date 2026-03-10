@@ -216,7 +216,7 @@ Configure your IDE to connect to the tool-router:
 {
   "mcpServers": {
     "nodejs-typescript": {
-      "command": "/path/to/cursor-mcp-wrapper.sh",
+      "command": "/path/to/mcp-wrapper.sh",
       "args": ["--server-name", "nodejs-typescript"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx"

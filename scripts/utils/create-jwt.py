@@ -11,8 +11,9 @@ from __future__ import annotations
 import os
 import sys
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
+UTC = timezone.utc
 
 try:
     import jwt

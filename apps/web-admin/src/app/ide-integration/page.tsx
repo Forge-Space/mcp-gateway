@@ -56,15 +56,18 @@ export default function IDEIntegrationPage() {
       configTemplate: `{
   "mcpServers": {
     "forge-mcp-gateway": {
-      "command": "npx -y @forge-mcp-gateway/client",
-      "args": ["--url", "http://localhost:4444/sse"]
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/<UUID>/mcp"
+      },
+      "timeout": 120000
     }
   }
 }`,
       instructions: [
-        'Open Cursor settings (Cmd+,)',
-        'Navigate to Extensions → MCP Servers',
-        'Add the configuration above',
+        'Run make register in forge-mcp-gateway',
+        'Run ./scripts/setup-forge-space-mcp.sh for automatic setup',
+        'Or copy the configuration above into ~/.cursor/mcp.json',
         'Restart Cursor to apply changes'
       ]
     },
@@ -76,8 +79,11 @@ export default function IDEIntegrationPage() {
       configTemplate: `{
   "mcpServers": {
     "forge-mcp-gateway": {
-      "command": "npx -y @forge-mcp-gateway/client",
-      "args": ["--url", "http://localhost:4444/sse"]
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/<UUID>/mcp"
+      },
+      "timeout": 120000
     }
   }
 }`,
@@ -96,8 +102,11 @@ export default function IDEIntegrationPage() {
       configTemplate: `{
   "mcpServers": {
     "forge-mcp-gateway": {
-      "command": "npx -y @forge-mcp-gateway/client",
-      "args": ["--url", "http://localhost:4444/sse"]
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/<UUID>/mcp"
+      },
+      "timeout": 120000
     }
   }
 }`,
@@ -116,8 +125,11 @@ export default function IDEIntegrationPage() {
       configTemplate: `{
   "mcpServers": {
     "forge-mcp-gateway": {
-      "command": "npx -y @forge-mcp-gateway/client",
-      "args": ["--url", "http://localhost:4444/sse"]
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/<UUID>/mcp"
+      },
+      "timeout": 120000
     }
   }
 }`,
@@ -184,11 +196,11 @@ export default function IDEIntegrationPage() {
     return `{
   "mcpServers": {
     "forge-mcp-gateway": {
-      "command": "npx -y @forge-mcp-gateway/client",
-      "args": ["--url", "${selectedServer.url}"],
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
       "env": {
-        "GATEWAY_URL": "http://localhost:4444"
-      }
+        "MCP_CLIENT_SERVER_URL": "${selectedServer.url}"
+      },
+      "timeout": 120000
     }
   }
 }`
@@ -376,14 +388,14 @@ export default function IDEIntegrationPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">NPX Client (Recommended)</CardTitle>
+                      <CardTitle className="text-sm">Wrapper Script (Recommended)</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-sm text-muted-foreground mb-2">
-                        Cross-platform client with automatic JWT handling
+                        Stable setup that avoids npm package resolution and refreshes JWT per connection
                       </p>
                       <code className="text-xs bg-muted p-1 rounded">
-                        npx -y @forge-mcp-gateway/client
+                        /absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh
                       </code>
                     </CardContent>
                   </Card>
@@ -394,10 +406,10 @@ export default function IDEIntegrationPage() {
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-sm text-muted-foreground mb-2">
-                        Direct SSE connection with manual JWT
+                        Direct URL with manual JWT token management
                       </p>
                       <code className="text-xs bg-muted p-1 rounded">
-                        http://localhost:4444/sse
+                        http://localhost:4444/servers/&lt;UUID&gt;/mcp
                       </code>
                     </CardContent>
                   </Card>

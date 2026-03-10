@@ -20,18 +20,8 @@ Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context
 
 - Docker
 - Docker Compose V2 (`docker compose`) or V1 (`docker-compose`)
-- Tool-router Docker image currently targets Python 3.13 for
-  `mcp-contextforge-gateway` compatibility.
 
 **Optional:** [Dev Container](https://code.visualstudio.com/docs/devcontainers/containers) for one-click lint/test (shellcheck, ruff, pytest) without installing them on the host. Part of the [Forge Space Ecosystem](../../ECOSYSTEM_OVERVIEW.md) - Complete AI-powered development platform.
-
-### Security and CI hardening
-
-- Security-sensitive workflow dependencies in `.github/workflows` are pinned to full commit SHAs.
-- Docker runtime templates avoid broad copy scope and writable runtime artifacts where possible.
-- Security-focused tests use temporary directories and non-literal insecure fixture construction to keep SonarCloud security hotspots actionable.
-- Dribbble image analysis enforces HTTPS-only remote image URLs.
-- Cross-repo tenant profile checkout in CI uses `FORGE_TENANT_PROFILES_READ_TOKEN` (fallback: `GITHUB_TOKEN`).
 
 ## Quick start
 
@@ -46,38 +36,19 @@ Then run `make register` to register gateways and get the Cursor URL.
 - **Admin UI:** http://localhost:4444/admin
 - **Stop:** `make stop` (or `./start.sh stop`)
 
-### NPX Client (Standard MCP Server Pattern)
+### Wrapper Bridge (Recommended)
 
-Use the gateway like any other MCP server with `npx`:
+Use the wrapper bridge as the stable MCP client entrypoint:
 
-**Local usage (no authentication needed):**
 ```json
 {
   "mcpServers": {
     "forge-mcp-gateway": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@forge-mcp-gateway/client",
-        "--url=http://localhost:4444/servers/<UUID>/mcp"
-      ]
-    }
-  }
-}
-```
-
-**Remote/secured usage (with JWT):**
-```json
-{
-  "mcpServers": {
-    "forge-mcp-gateway": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@forge-mcp-gateway/client",
-        "--url=https://gateway.example.com/servers/<UUID>/mcp",
-        "--token=<JWT>"
-      ]
+      "command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh",
+      "env": {
+        "MCP_CLIENT_SERVER_URL": "http://localhost:4444/servers/<UUID>/mcp"
+      },
+      "timeout": 120000
     }
   }
 }
@@ -85,10 +56,15 @@ Use the gateway like any other MCP server with `npx`:
 
 **Get your configuration:**
 1. Start gateway: `make start`
-2. Register servers: `make register` (saves URL to `data/.cursor-mcp-url`)
-3. Add to your IDE's `mcp.json` with the URL (token only needed if `AUTH_REQUIRED=true` in `.env`)
+2. Register servers: `make register` (saves URL to `data/.mcp-client-url`)
+3. Run `./scripts/setup-forge-space-mcp.sh` to configure your IDE mcp config safely
+   - If `make register` cannot produce `data/.mcp-client-url` (minimal mode), run:
+     `./scripts/setup-forge-space-mcp.sh --mcp-url http://host.docker.internal:4444/servers/<UUID>/mcp`
 
-See [NPM_PACKAGE_README.md](NPM_PACKAGE_README.md) for detailed NPX client documentation.
+### NPX Client Status
+
+`@forge-mcp-gateway/client` is currently not resolvable on npm, so `npx -y @forge-mcp-gateway/client`
+is not a supported setup path until package publishing is restored.
 
 Default `make start` (or `./start.sh`) starts the gateway and all local servers (e.g. sequential-thinking). Use `make gateway-only` (or `./start.sh gateway-only`) for the gateway alone. Data is stored in `./data` (SQLite). Add gateways in Admin UI or run `make register` after start; create a virtual server, attach tools, note its UUID.
 
@@ -158,7 +134,22 @@ After start, run `make register` to register them (or add in Admin UI with the U
 The gateway requires a **Bearer JWT** on every request.
 
 **Automatic JWT (recommended)**
-Use the wrapper script so no token is stored in mcp.json and no weekly refresh is needed. From the repo: ensure `.env` is set, run `make register` once (this writes `data/.cursor-mcp-url`), then run **`make use-cursor-wrapper`** to set the context-forge entry in `~/.cursor/mcp.json` to the wrapper (replacing any URL/headers or docker-args config). The wrapper config includes a 2-minute MCP timeout to avoid "Request timed out" (-32001); set `CURSOR_MCP_TIMEOUT_MS` in `.env` (e.g. `180000`) to change it. Before first use, run **`make cursor-pull`** so the Context Forge Docker image is cached and the first Cursor connection does not time out while the image downloads. Restart Cursor. The wrapper uses the **cursor-router** (tool-router) virtual server by default; set `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` in `.env` and run `make register` to use the full tool set instead. The wrapper generates a fresh JWT on each connection and runs the gateway Docker image. On Linux the script adds `--add-host=host.docker.internal:host-gateway` automatically. Optional: set `CURSOR_MCP_SERVER_URL` in `.env` if you prefer not to use `data/.cursor-mcp-url`. To configure manually instead, set the entry to `{"command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh", "timeout": 120000}` (use your clone path).
+Use the wrapper script so no token is stored in mcp.json and no weekly refresh is needed. From the
+repo: ensure `.env` is set, run `make register` once (this writes `data/.mcp-client-url`), then run
+`./scripts/setup-forge-space-mcp.sh` to set the context-forge entry in your IDE mcp config to the
+wrapper. The wrapper config includes a 2-minute MCP timeout to avoid "Request timed out" (-32001);
+set `CURSOR_MCP_TIMEOUT_MS` in `.env` (e.g. `180000`) to change it. Before first use, run
+`make cursor-pull` so the Context Forge Docker image is cached and the first IDE connection does not
+time out while the image downloads. Restart your IDE. The wrapper uses the **mcp-router**
+virtual server by default; set `REGISTER_MCP_CLIENT_SERVER_NAME=cursor-default` in `.env` and run
+`make register` to use the full tool set instead. The wrapper generates a fresh JWT on each
+connection and runs the gateway Docker image. On Linux the script adds
+`--add-host=host.docker.internal:host-gateway` automatically. Optional: set
+`MCP_CLIENT_SERVER_URL` in your IDE config if you prefer not to use `data/.mcp-client-url`, or pass
+`--mcp-url` directly to `./scripts/setup-forge-space-mcp.sh`.
+To configure manually instead, set the entry to
+`{"command": "/absolute/path/to/forge-mcp-gateway/scripts/mcp-wrapper.sh", "timeout": 120000}`
+(use your clone path).
 
 **Manual JWT (URL-based or docker args)**
 
@@ -219,40 +210,9 @@ Use the wrapper script so no token is stored in mcp.json and no weekly refresh i
 
 See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, `AUTH_ENCRYPTION_SECRET` (each at least 32 chars; run `make generate-secrets`). Never commit `.env` or secrets.
 
-## Test Autogen — Phase 0 (Warn)
-
-Phase 0 is enabled in warn-only mode for local flow and PR parity:
-
-- Local hooks (`.husky/pre-commit`, `.husky/pre-push`) run `forge-ai-init test-autogen` only
-  when `FORGE_TENANT_ID` and `FORGE_TENANT_PROFILE_REF` are set, and always exit `0` in phase 0.
-- Pull requests run CI job `test-autogen-warn` with:
-  - `command: test-autogen-check`
-  - `tenant: acme-sandbox`
-  - `tenant_profile_ref: .forge-tenant-profiles/tenants/acme-sandbox/profile.yaml`
-  - `test_autogen_phase: warn`
-  - PR feedback enabled (`comment: true`, `annotations: true`)
-
-This provides early feedback about missing tests without blocking merges during phase 0.
-
-## Tenant Decoupling Guardrail
-
-Platform paths are validated by `npm run check:tenant-decoupling` (also executed in CI):
-
-- Blocks tenant-specific or personal hardcodes in templates, shared workflows, scripts, and runtime paths.
-- Allows tenant references only in dedicated tenant profile repositories and explicit examples.
-- Uses `rg` when available and falls back to `grep` to keep CI checks deterministic across runners.
-
 ## Automated Maintenance
 
 This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
-The `Container Security Scan` workflow builds `Dockerfile.tool-router` as the canonical container
-target for Trivy scanning.
-Shared reusable workflows (`security-scan-shared.yml` and `branch-protection-core.yml`) are
-validated for `workflow_call` schema compatibility to prevent workflow-file failures on `main`.
-The shared security workflow intentionally does not redeclare reserved `GITHUB_TOKEN` in
-`workflow_call.secrets` to remain valid under GitHub Actions schema validation.
-For reusable workflows, input expressions are kept at job/step scope (not top-level `env`) to
-avoid parser-scope validation errors during push checks.
 
 ### Dependency Updates (Renovate)
 
@@ -469,9 +429,28 @@ When you add a server from the registry, the gateway validates it (connects and 
 **context-forge shows "Error" / "Needs authentication" / "Loading tools" forever, or logs "Server disconnected without sending a response" / "No server info found"**
 Often caused by **weak `JWT_SECRET_KEY` or `AUTH_ENCRYPTION_SECRET`** (gateway logs: "Secret has low entropy", "Secret should be at least 32 characters"). Fix: run `make generate-secrets`, add the two lines to `.env`, then `make stop`, `make start`, `make register`, and **fully quit Cursor (Cmd+Q / Alt+F4) and reopen**. Reload Window is not enough. If that’s not the cause:
 
-- **If you use the wrapper** (recommended): Run `make verify-cursor-setup` to check gateway, `data/.cursor-mcp-url`, server existence, Context Forge image, and gateway reachability from Docker. If any check fails, run `make start` then `make register`, then fully quit and reopen Cursor. Run **`make cursor-pull`** once so the first Cursor start does not timeout while the image downloads. **To use the default cursor-router (tool-router):** remove or comment out `REGISTER_CURSOR_MCP_SERVER_NAME` in `.env`, run `make register`, then fully quit Cursor (Cmd+Q / Alt+F4) and reopen. If you have `REGISTER_CURSOR_MCP_SERVER_NAME=cursor-default` in `.env`, the wrapper uses cursor-default; the URL in `data/.cursor-mcp-url` is only updated when you run `make register`. If logs show **"No server info found"**: (1) Ensure the gateway is running (`make start`) and reachable from Docker (the wrapper runs in a container and uses `host.docker.internal:4444`). (2) Run `make register` to refresh the URL, then fully quit and reopen Cursor. (3) For cursor-router, set `GATEWAY_JWT` in `.env` (run `make jwt` and paste) so the router can call the gateway. If logs show **"Request timed out" (MCP error -32001)**: (1) Run `make cursor-pull` so the Context Forge image is cached. (2) Run `make use-cursor-wrapper` again to set a 2-minute timeout in mcp.json (or set `CURSOR_MCP_TIMEOUT_MS=180000` in `.env` before running it). (3) Fully quit and reopen Cursor.
+- **If you use the wrapper** (recommended): Run
+  `python3 scripts/ide-setup.py setup cursor --action verify` to check gateway,
+  `data/.mcp-client-url`, server existence, Context Forge image, and gateway reachability from
+  Docker. If any check fails, run `make start` then `make register`, then rerun
+  `./scripts/setup-forge-space-mcp.sh` and fully restart your IDE. Run `make cursor-pull` once so
+  the first IDE start does not timeout while the image downloads. **To use the default
+  mcp-router (tool-router):** remove or comment out `REGISTER_MCP_CLIENT_SERVER_NAME` in `.env`,
+  run `make register`, then restart the IDE. If you have
+  `REGISTER_MCP_CLIENT_SERVER_NAME=cursor-default` in `.env`, the wrapper uses cursor-default;
+  the URL in `data/.mcp-client-url` is only updated when you run `make register`. If logs show
+  **"No server info found"**: (1) Ensure the gateway is running (`make start`) and reachable from
+  Docker (the wrapper runs in a container and uses `host.docker.internal:4444`). (2) Run
+  `make register` to refresh the URL, then restart the IDE. (3) For mcp-router, set `GATEWAY_JWT`
+  in `.env` (run `make jwt` and paste) so the router can call the gateway. If logs show
+  **"Request timed out" (MCP error -32001)**: (1) Run `make cursor-pull` so the Context Forge image
+  is cached. (2) Rerun `./scripts/setup-forge-space-mcp.sh` after setting
+  `CURSOR_MCP_TIMEOUT_MS=180000` in `.env` if needed. (3) Fully restart the IDE.
+  If `make register` reports `GET /servers returned 404`, the gateway is in minimal mode and
+  cannot write `data/.mcp-client-url`; run `./scripts/setup-forge-space-mcp.sh --mcp-url <server-url>`
+  and keep the URL in `MCP_CLIENT_SERVER_URL` in your IDE entry.
 
-- **If you use a manual JWT (URL in mcp.json):** (1) `make start` (ensure gateway is running). (2) `make refresh-cursor-jwt` (updates the Bearer token in `~/.cursor/mcp.json` for the context-forge entry; the script also finds `user-context-forge` if that’s the key Cursor uses). (3) Restart Cursor. Your URL must end with `/mcp` or `/sse`. If Cursor is on the host and the gateway runs in Docker, use `http://host.docker.internal:4444/servers/UUID/mcp`. Alternatively switch to the [wrapper](#connect-cursor) with `make use-cursor-wrapper`.
+- **If you use a manual JWT (URL in mcp.json):** (1) `make start` (ensure gateway is running). (2) `make refresh-cursor-jwt` (updates the Bearer token in `~/.cursor/mcp.json` for the context-forge entry; the script also finds `user-context-forge` if that’s the key Cursor uses). (3) Restart Cursor. Your URL must end with `/mcp` or `/sse`. If Cursor is on the host and the gateway runs in Docker, use `http://host.docker.internal:4444/servers/UUID/mcp`. Alternatively switch to the [wrapper](#connect-cursor) with `./scripts/setup-forge-space-mcp.sh`.
 
 **"Method Not Allowed" or "Invalid OAuth error response" when connecting Cursor to context-forge**
 You are using a URL like `http://localhost:4444/servers/UUID` without a transport path. Use `/sse` for SSE or `/mcp` for streamable HTTP (e.g. `.../servers/UUID/sse`). You must also send the JWT: use the [docker wrapper](#connect-cursor) with `MCP_SERVER_URL=.../servers/UUID/mcp` and `MCP_AUTH=Bearer YOUR_JWT_TOKEN`, or add `headers: { "Authorization": "Bearer YOUR_JWT_TOKEN" }` to the SSE URL config.
