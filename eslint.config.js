@@ -1,7 +1,6 @@
 // ESLint Configuration for forge-mcp-gateway
 // Uses shared UIForge patterns with project-specific overrides
 
-import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import sharedConfig from './config/shared/eslint.config.js';
@@ -9,12 +8,11 @@ import sharedConfig from './config/shared/eslint.config.js';
 export default [
   ...sharedConfig,
   ...tseslint.config(
-    eslint.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,
     {
       languageOptions: {
         parserOptions: {
-          project: './tsconfig.json',
+          project: './tsconfig.client.json',
           tsconfigRootDir: import.meta.dirname,
         },
       },
