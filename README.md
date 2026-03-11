@@ -73,8 +73,7 @@ is not a supported setup path until package publishing is restored.
    `gh workflow run npm-release-core.yml -f publish=true -f npm_tag=latest`
 3. Verify package availability:
    `npm view @forge-mcp-gateway/client version`
-4. Verify CLI entrypoint:
-   `npx -y @forge-mcp-gateway/client --help`
+4. Verify CLI entrypoint in the publish workflow logs (post-publish `npx --help` step).
 
 Default `make start` (or `./start.sh`) starts the gateway and all local servers (e.g. sequential-thinking). Use `make gateway-only` (or `./start.sh gateway-only`) for the gateway alone. Data is stored in `./data` (SQLite). Add gateways in Admin UI or run `make register` after start; create a virtual server, attach tools, note its UUID.
 
