@@ -33,9 +33,6 @@ concurrency:
   group: npm-release-core-${{ github.ref }}
   cancel-in-progress: false
 
-permissions:
-  contents: read
-
 env:
   NODE_VERSION: "22"
   NPM_REGISTRY: "https://registry.npmjs.org"
@@ -46,6 +43,8 @@ jobs:
     name: Validate package
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.meta.outputs.version }}
       is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
@@ -99,6 +98,8 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.publish != true)
     steps:
       - name: Checkout repository
@@ -132,6 +133,8 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish == true)
     environment:
       name: npm
