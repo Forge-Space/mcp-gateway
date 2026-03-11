@@ -14,6 +14,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
   to block regressions to legacy wrapper/URL references in canonical setup surfaces.
 
 ### Fixed
+- **Release smoke false-negative on npm publish** — Hardened post-publish CLI verification in
+  `npm-release-core.yml` to use explicit URL args and retry logic so successful publishes do not
+  fail due transient `npx` command resolution/runtime argument behavior.
 - **NPM release replay version bump** — Bumped package version to `1.28.2` to
   recover manual `workflow_dispatch` publish attempts blocked by already
   published `1.28.1`.

@@ -63,10 +63,10 @@ Use the wrapper bridge as the stable MCP client entrypoint:
 
 ### NPX Client Status
 
-`@forgespace/mcp-gateway-client` is currently not resolvable on npm, so `npx -y @forgespace/mcp-gateway-client`
-is not a supported setup path until package publishing is restored.
+`@forgespace/mcp-gateway-client` is resolvable on npm. Wrapper-first setup remains the recommended
+IDE path for homelab stability, while direct `npx` is available for smoke checks and manual use.
 
-**Maintainer release path (publish restoration):**
+**Maintainer release path:**
 1. Confirm scope/token access:
    `npm whoami && npm access list packages @forgespace --json`
    - `npm access ...` is advisory; definitive permission is validated by the publish step.
@@ -74,7 +74,9 @@ is not a supported setup path until package publishing is restored.
    `gh workflow run npm-release-core.yml -f publish=true -f npm_tag=latest`
 3. Verify package availability:
    `npm view @forgespace/mcp-gateway-client version`
-4. Verify CLI entrypoint in the publish workflow logs (post-publish `npx --help` step).
+4. Verify CLI entrypoint through workflow logs:
+   - check `Verify published package resolvability` in `npm-release-core.yml`
+   - the workflow runs a retried CLI smoke invocation after package resolvability succeeds.
 
 Default `make start` (or `./start.sh`) starts the gateway and all local servers (e.g. sequential-thinking). Use `make gateway-only` (or `./start.sh gateway-only`) for the gateway alone. Data is stored in `./data` (SQLite). Add gateways in Admin UI or run `make register` after start; create a virtual server, attach tools, note its UUID.
 
