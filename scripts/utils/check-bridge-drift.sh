@@ -38,7 +38,7 @@ check_forbidden 'cursor-mcp-wrapper\.sh' 'wrapper alias reference'
 check_forbidden '\.cursor-mcp-url' 'legacy URL file reference'
 check_forbidden 'make use-cursor-wrapper' 'legacy make target reference'
 
-npx_hits="$(grep -nH -E 'npx[[:space:]]+-y[[:space:]]+@forge-mcp-gateway/client' "${canonical_files[@]}" || true)"
+npx_hits="$(grep -nH -E 'npx[[:space:]]+-y[[:space:]]+@forgespace/mcp-gateway-client' "${canonical_files[@]}" || true)"
 if [[ -n "${npx_hits}" ]]; then
   unexpected="$(echo "${npx_hits}" | grep -vE 'not resolvable on npm|not a supported setup path|unavailable until' || true)"
   if [[ -n "${unexpected}" ]]; then

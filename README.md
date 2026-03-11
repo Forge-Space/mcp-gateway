@@ -63,17 +63,17 @@ Use the wrapper bridge as the stable MCP client entrypoint:
 
 ### NPX Client Status
 
-`@forge-mcp-gateway/client` is currently not resolvable on npm, so `npx -y @forge-mcp-gateway/client`
+`@forgespace/mcp-gateway-client` is currently not resolvable on npm, so `npx -y @forgespace/mcp-gateway-client`
 is not a supported setup path until package publishing is restored.
 
 **Maintainer release path (publish restoration):**
 1. Confirm scope/token access:
-   `npm whoami && npm access list packages @forge-mcp-gateway --json`
+   `npm whoami && npm access list packages @forgespace --json`
    - `npm access ...` is advisory; definitive permission is validated by the publish step.
 2. Run publish workflow:
    `gh workflow run npm-release-core.yml -f publish=true -f npm_tag=latest`
 3. Verify package availability:
-   `npm view @forge-mcp-gateway/client version`
+   `npm view @forgespace/mcp-gateway-client version`
 4. Verify CLI entrypoint in the publish workflow logs (post-publish `npx --help` step).
 
 Default `make start` (or `./start.sh`) starts the gateway and all local servers (e.g. sequential-thinking). Use `make gateway-only` (or `./start.sh gateway-only`) for the gateway alone. Data is stored in `./data` (SQLite). Add gateways in Admin UI or run `make register` after start; create a virtual server, attach tools, note its UUID.
