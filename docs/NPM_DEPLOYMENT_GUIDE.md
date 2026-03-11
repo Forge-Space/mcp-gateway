@@ -28,7 +28,7 @@ The workflow has three execution modes:
    - Runs lint/type/build and `npm publish --dry-run`.
    - Does not publish.
 2. Manual publish mode (`workflow_dispatch` with `publish=true`):
-   - Runs validation, verifies npm token and scope access, publishes, then verifies resolvability.
+   - Runs validation, verifies npm token, performs advisory scope preflight, publishes, then verifies resolvability.
 3. Tag publish mode (`push` on `core-v*` tags):
    - Runs publish automatically.
    - Uses `next` for prerelease versions and `latest` for stable versions.
@@ -57,7 +57,7 @@ Before publish:
 
 - Token exists (`NPM_TOKEN`)
 - Auth works (`npm whoami`)
-- Scope access works (`npm access list packages @forge-mcp-gateway --json`)
+- Scope access preflight warns if unavailable (`npm access list packages @forge-mcp-gateway --json`)
 - Target version is not already published
 
 After publish:
@@ -81,7 +81,8 @@ Then update setup docs/UI copy if they still show the temporary "npm unavailable
 ## Common failure modes
 
 1. `npm access list packages @forge-mcp-gateway --json` returns `E403`:
-   - Token user lacks org/package scope permission.
+   - Preflight warning only; workflow continues to publish step.
+   - If publish then fails with `E403`, token user lacks org/package scope permission.
    - Fix org membership/permissions and rotate `NPM_TOKEN`.
 2. `Version already exists on npm`:
    - Bump package version and retry.
