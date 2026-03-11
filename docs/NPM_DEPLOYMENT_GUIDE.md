@@ -1,19 +1,19 @@
-# NPM Publish Guide (`@forge-mcp-gateway/client`)
+# NPM Publish Guide (`@forgespace/mcp-gateway-client`)
 
 This guide is the canonical runbook for restoring and operating npm publication for the MCP client
 package.
 
 ## Scope
 
-- Package: `@forge-mcp-gateway/client`
+- Package: `@forgespace/mcp-gateway-client`
 - Workflow: `.github/workflows/npm-release-core.yml`
-- npm page: https://www.npmjs.com/package/@forge-mcp-gateway/client
+- npm page: https://www.npmjs.com/package/@forgespace/mcp-gateway-client
 
 ## Preconditions
 
 1. `package.json` has the intended `name` and `version`.
 2. Repository secret `NPM_TOKEN` exists and belongs to an account with write access to
-   `@forge-mcp-gateway`.
+   `@forgespace`.
 3. Local validation passes:
    - `npm ci --legacy-peer-deps --ignore-scripts`
    - `npm run lint:check`
@@ -57,13 +57,13 @@ Before publish:
 
 - Token exists (`NPM_TOKEN`)
 - Auth works (`npm whoami`)
-- Scope access preflight warns if unavailable (`npm access list packages @forge-mcp-gateway --json`)
+- Scope access preflight warns if unavailable (`npm access list packages @forgespace --json`)
 - Target version is not already published
 
 After publish:
 
-- `npm view @forge-mcp-gateway/client@<version> version` resolves
-- `npx -y @forge-mcp-gateway/client@<version> --help` executes
+- `npm view @forgespace/mcp-gateway-client@<version> version` resolves
+- `npx -y @forgespace/mcp-gateway-client@<version> --help` executes
 
 If any step fails, the workflow fails with explicit error messages.
 
@@ -72,15 +72,15 @@ If any step fails, the workflow fails with explicit error messages.
 After successful publish, verify locally:
 
 ```bash
-npm view @forge-mcp-gateway/client version
-npx -y @forge-mcp-gateway/client --help
+npm view @forgespace/mcp-gateway-client version
+npx -y @forgespace/mcp-gateway-client --help
 ```
 
 Then update setup docs/UI copy if they still show the temporary "npm unavailable" warning.
 
 ## Common failure modes
 
-1. `npm access list packages @forge-mcp-gateway --json` returns `E403`:
+1. `npm access list packages @forgespace --json` returns `E403`:
    - Preflight warning only; workflow continues to publish step.
    - If publish then fails with `E403`, token user lacks org/package scope permission.
    - Fix org membership/permissions and rotate `NPM_TOKEN`.

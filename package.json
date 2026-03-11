@@ -1,5 +1,5 @@
 {
-  "name": "@forge-mcp-gateway/client",
+  "name": "@forgespace/mcp-gateway-client",
   "version": "1.28.1",
   "description": "Forge MCP Gateway client - Connect to your Forge MCP Gateway instance via NPX",
   "main": "./build/index.js",

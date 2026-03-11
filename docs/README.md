@@ -80,7 +80,7 @@ CI/CD, code quality, and automation.
 
 - [IBM MCP Gateway](https://github.com/IBM/mcp-gateway) - Upstream project
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification
-- NPM package publish tracking: `@forge-mcp-gateway/client` (currently unavailable on npm; use wrapper bridge)
+- NPM package publish tracking: `@forgespace/mcp-gateway-client` (currently unavailable on npm; use wrapper bridge)
 
 ## 🤝 Contributing
 

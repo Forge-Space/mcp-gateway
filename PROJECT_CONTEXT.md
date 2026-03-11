@@ -116,7 +116,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ MONITORING SYSTEM IMPLEMENTED**: Complete health monitoring, usage metrics, and automated alerting system
 - **✅ AUTOMATION SYSTEMS**: Monthly pattern synchronization, bootstrap scripts, and validation tools
 - **✅ CORE FUNCTIONALITY UPDATED**: All scripts, documentation, and configuration files updated
-- **✅ NPX PACKAGE REFERENCES**: Updated to `@forge-mcp-gateway/client`
+- **✅ NPX PACKAGE REFERENCES**: Updated to `@forgespace/mcp-gateway-client`
 - **✅ DOCKER CONTAINERS**: Updated container names and image references
 - **✅ AI ROUTER IMPLEMENTATION COMPLETE**: Full Ollama integration with hybrid AI + keyword scoring
 - **✅ CONFIGURATION VALIDATION**: All YAML syntax and type validation issues resolved
@@ -179,7 +179,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
                              │ JWT Authentication
 ┌────────────────────────────▼─────────────────────────────────────┐
 │                       NPX Client Wrapper                          │
-│                  (@forge-mcp-gateway/client)                            │
+│                  (@forgespace/mcp-gateway-client)                            │
 │  - JWT generation                                                 │
 │  - Protocol translation                                           │
 │  - Timeout management (120s default)                              │
@@ -349,7 +349,7 @@ Forge MCP Gateway is a self-hosted aggregation gateway built on IBM Context Forg
 - **✅ Test Coverage**: 85%+ with comprehensive test suite
 
 #### IDE Integration
-- **✅ NPX Client**: `@forge-mcp-gateway/client` package
+- **✅ NPX Client**: `@forgespace/mcp-gateway-client` package
 - **✅ Multi-IDE Support**: Windsurf, Cursor, Claude, VS Code, Zed
 - **✅ JWT Management**: Token generation and refresh
 - **✅ Configuration**: JSON-based IDE configs

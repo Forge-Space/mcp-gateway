@@ -36,7 +36,7 @@ concurrency:
 env:
   NODE_VERSION: "22"
   NPM_REGISTRY: "https://registry.npmjs.org"
-  PACKAGE_NAME: "@forge-mcp-gateway/client"
+  PACKAGE_NAME: "@forgespace/mcp-gateway-client"
 
 jobs:
   validate:
@@ -138,7 +138,7 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish == true)
     environment:
       name: npm
-      url: https://www.npmjs.com/package/@forge-mcp-gateway/client
+      url: https://www.npmjs.com/package/@forgespace/mcp-gateway-client
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -177,9 +177,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if ! npm access list packages @forge-mcp-gateway --json >/tmp/npm-scope.json 2>/tmp/npm-scope.err; then
+          if ! npm access list packages @forgespace --json >/tmp/npm-scope.json 2>/tmp/npm-scope.err; then
             cat /tmp/npm-scope.err >&2
-            echo "::warning::Scope preflight could not confirm @forge-mcp-gateway access."
+            echo "::warning::Scope preflight could not confirm @forgespace access."
             echo "::warning::Continuing to publish step for definitive auth/publish error."
           else
             echo "Scope preflight succeeded."
