@@ -228,4 +228,22 @@ jobs:
             exit 1
           fi
 
-          npx -y "${PACKAGE_NAME}@${VERSION}" --help >/tmp/npx-help.txt
+          CLI_OK=0
+          CLI_ERROR_FILE="$(mktemp)"
+          for ATTEMPT in $(seq 1 6); do
+            if npx -y "${PACKAGE_NAME}@${VERSION}" \
+              --url="http://127.0.0.1:4444/servers/release-smoke/mcp" \
+              --help >/tmp/npx-help.txt 2>"${CLI_ERROR_FILE}"; then
+              CLI_OK=1
+              break
+            fi
+            sleep 5
+          done
+
+          if [[ "${CLI_OK}" -ne 1 ]]; then
+            if [[ -s "${CLI_ERROR_FILE}" ]]; then
+              cat "${CLI_ERROR_FILE}" >&2
+            fi
+            echo "::error::Published package CLI smoke check failed."
+            exit 1
+          fi
