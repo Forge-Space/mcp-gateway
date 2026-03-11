@@ -69,6 +69,7 @@ is not a supported setup path until package publishing is restored.
 **Maintainer release path (publish restoration):**
 1. Confirm scope/token access:
    `npm whoami && npm access list packages @forge-mcp-gateway --json`
+   - `npm access ...` is advisory; definitive permission is validated by the publish step.
 2. Run publish workflow:
    `gh workflow run npm-release-core.yml -f publish=true -f npm_tag=latest`
 3. Verify package availability:

@@ -179,9 +179,10 @@ jobs:
         run: |
           if ! npm access list packages @forge-mcp-gateway --json >/tmp/npm-scope.json 2>/tmp/npm-scope.err; then
             cat /tmp/npm-scope.err >&2
-            echo "::error::NPM token cannot publish to @forge-mcp-gateway scope."
-            echo "::error::Grant org package write access and retry."
-            exit 1
+            echo "::warning::Scope preflight could not confirm @forge-mcp-gateway access."
+            echo "::warning::Continuing to publish step for definitive auth/publish error."
+          else
+            echo "Scope preflight succeeded."
           fi
 
       - name: Fail if version already exists

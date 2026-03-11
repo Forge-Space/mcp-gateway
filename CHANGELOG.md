@@ -21,6 +21,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **NPM publish automation for MCP client** — Replaced stale `npm-release-core.yml` logic with a
   deterministic release flow: PR dry-run validation, publish-time npm scope/token preflight, and
   post-publish resolvability checks (`npm view` + `npx --help`) for `@forge-mcp-gateway/client`.
+- **NPM publish preflight behavior** — Scope check in `npm-release-core.yml` is now advisory (warning)
+  so publish attempts proceed to the definitive `npm publish` permission check, preventing false
+  blockers on tokens that cannot list org packages.
 - **Wrapper path and URL-file drift in IDE setup** — `scripts/ide-setup.py` now uses
   `mcp-wrapper.sh` and `data/.mcp-client-url`, and `--action verify/use-wrapper/refresh-jwt` are
   available through CLI argument validation.
