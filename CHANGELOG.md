@@ -14,6 +14,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
   to block regressions to legacy wrapper/URL references in canonical setup surfaces.
 
 ### Fixed
+- **NPM release replay version bump** — Bumped package version to `1.28.2` to
+  recover manual `workflow_dispatch` publish attempts blocked by already
+  published `1.28.1`.
 - **PR #157 lint gate regressions** — Fixed Ruff failures in new AI resilience tests (unused unpacked variable and import ordering/unused imports) so CI lint passes for circuit breaker, prompt optimizer, refinement loop, and streamable HTTP test modules.
 - **PR #157 quality gates** — Hardened RPC/streamable transport logging and JSON-RPC error redaction,
   reduced complexity in gateway request retry path, and updated FastAPI Header typing to satisfy
