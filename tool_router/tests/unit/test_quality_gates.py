@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from tool_router.api.quality_gates import run_quality_gates
 
 
@@ -93,9 +95,42 @@ class TestQualityReport:
         assert "score" in d
         assert "results" in d
         assert "timestamp" in d
+        assert "security_spoke" in d
         assert len(d["results"]) == 3
 
     def test_timestamp_populated(self) -> None:
         report = run_quality_gates(CLEAN_COMPONENT)
         assert report.timestamp != ""
         assert "T" in report.timestamp
+
+
+class TestSecuritySpokeReport:
+    def test_adds_security_spoke_payload(self) -> None:
+        report = run_quality_gates(CLEAN_COMPONENT)
+        assert report.security_spoke is not None
+        assert report.security_spoke["version"] == "v1"
+        assert report.security_spoke["scanner"]["execution"] == "success"
+        assert report.security_spoke["dast"]["status"] == "not_executed"
+
+    def test_maps_injection_rule_and_severity(self) -> None:
+        report = run_quality_gates(XSS_EVAL_CODE)
+        assert report.security_spoke is not None
+        findings = report.security_spoke["findings"]
+        assert len(findings) >= 1
+        injection_finding = next(f for f in findings if f["rule_id"] == "SEC-INJ-001")
+        assert injection_finding["severity"] == "high"
+        assert injection_finding["risk_level"] == "high"
+        assert injection_finding["category"] == "injection"
+
+    def test_fail_open_when_scanner_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from tool_router.api import quality_gates
+
+        def _raise(_: str) -> dict[str, object]:
+            raise RuntimeError("scanner down")
+
+        monkeypatch.setattr(quality_gates, "_scan_security_spoke", _raise)
+
+        report = quality_gates.run_quality_gates(CLEAN_COMPONENT)
+        assert report.security_spoke is not None
+        assert report.security_spoke["scanner"]["execution"] == "error"
+        assert report.security_spoke["summary"]["total_findings"] == 0
