@@ -292,6 +292,9 @@ class TestStreamToolCall:
         quality_events = [e for e in events if e["type"] == "quality"]
         assert len(quality_events) == 1
         assert "report" in quality_events[0]
+        assert "security_spoke" in quality_events[0]["report"]
+        assert quality_events[0]["report"]["security_spoke"]["version"] == "v1"
+        assert quality_events[0]["report"]["security_spoke"]["dast"]["status"] == "not_executed"
 
         complete = events[-1]
         assert complete["totalLength"] == 500

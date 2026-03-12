@@ -310,6 +310,7 @@ make n8n-secrets   # generate webhook secrets
 - Read-only GitHub API access (no merging, no deploying)
 - n8n data excluded from git (`n8n-data/`, `n8n-logs/`)
 - JSON-RPC and SSE error responses redact internal exception details; full traces stay server-side.
+- `/rpc/stream` quality events include an additive `security_spoke` report block (v1, advisory fail-open, DAST hooks telemetry only).
 
 ## API Documentation
 
