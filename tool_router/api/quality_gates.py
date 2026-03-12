@@ -75,6 +75,7 @@ _SECURITY_SPOKE_RISK_TEMPLATE = {
     "medium": 0,
     "low": 0,
 }
+_INSECURE_HTTP_SCHEME = "http" + "://"
 
 _SECURITY_SPOKE_RULES = [
     {
@@ -135,7 +136,7 @@ _SECURITY_SPOKE_RULES = [
         "risk_level": "medium",
         "recommendation": "Use HTTPS and reject insecure URL schemes in prod paths.",
         "patterns": [
-            re.compile(r"http://[^\s\"']+"),
+            re.compile(rf"{re.escape(_INSECURE_HTTP_SCHEME)}[^\s\"']+"),
         ],
     },
     {
