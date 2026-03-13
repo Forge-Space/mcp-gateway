@@ -124,14 +124,39 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          repository: Forge-Space/forge-tenant-profiles
+          path: .forge-tenant-profiles
+          token: ${{ secrets.FORGE_TENANT_PROFILES_READ_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Validate tenant context
+        shell: bash
+        env:
+          FORGE_TENANT_ID: ${{ vars.FORGE_TENANT_ID }}
+          FORGE_TENANT_PROFILE_REF: ${{ vars.FORGE_TENANT_PROFILE_REF }}
+        run: |
+          if [[ -z "${FORGE_TENANT_ID}" ]]; then
+            echo "::error::Missing required repo variable FORGE_TENANT_ID."
+            exit 1
+          fi
+          if [[ -z "${FORGE_TENANT_PROFILE_REF}" ]]; then
+            echo "::error::Missing required repo variable FORGE_TENANT_PROFILE_REF."
+            exit 1
+          fi
+          if [[ ! -f "${FORGE_TENANT_PROFILE_REF}" ]]; then
+            echo "::error::Tenant profile not found at ${FORGE_TENANT_PROFILE_REF}."
+            exit 1
+          fi
 
       - name: Run test-autogen parity check
-        uses: Forge-Space/forge-ai-action@484c056b923dcd1b8f43c5a18dfa147c77bcb23b
+        uses: Forge-Space/forge-ai-action@1db6524858b544cb8051a4510e835d67818b24a2
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           command: test-autogen-check
+          tenant: ${{ vars.FORGE_TENANT_ID }}
+          tenant_profile_ref: ${{ vars.FORGE_TENANT_PROFILE_REF }}
           test_autogen_phase: warn
           comment: true
           annotations: true

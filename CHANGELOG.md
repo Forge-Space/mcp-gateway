@@ -18,6 +18,13 @@ All notable changes to the MCP Gateway project will be documented in this file.
 - **Bridge drift CI guard** — Added `scripts/utils/check-bridge-drift.sh` and wired it into CI lint
   to block regressions to legacy wrapper/URL references in canonical setup surfaces.
 
+### Changed
+
+- **CI tenant contract for test-autogen parity** — `test-autogen-warn` now checks out
+  `forge-tenant-profiles`, validates `FORGE_TENANT_ID` and `FORGE_TENANT_PROFILE_REF`,
+  fails fast when tenant context is missing, and passes tenant inputs to
+  `Forge-Space/forge-ai-action`.
+
 ### Fixed
 - **Security scanner fail-open behavior** — Scanner execution errors now emit
   an advisory `security_spoke` report with `scanner.execution=error` without
