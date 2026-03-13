@@ -222,6 +222,16 @@ To configure manually instead, set the entry to
 
 See `.env.example`. Required: `PLATFORM_ADMIN_EMAIL`, `PLATFORM_ADMIN_PASSWORD`, `JWT_SECRET_KEY`, `AUTH_ENCRYPTION_SECRET` (each at least 32 chars; run `make generate-secrets`). Never commit `.env` or secrets.
 
+## CI Tenant Contract
+
+The `test-autogen-warn` workflow job requires these repository variables:
+
+- `FORGE_TENANT_ID`
+- `FORGE_TENANT_PROFILE_REF`
+
+CI checks out `Forge-Space/forge-tenant-profiles` and fails fast when either variable is missing
+or when `FORGE_TENANT_PROFILE_REF` does not resolve to a file in the runner workspace.
+
 ## Automated Maintenance
 
 This repository includes automated workflows for dependency updates, MCP server discovery, and Docker image updates.
