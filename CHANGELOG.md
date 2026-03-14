@@ -23,10 +23,10 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ### Changed
 
-- **CI tenant contract for test-autogen parity** — `test-autogen-warn` now checks out
-  `forge-tenant-profiles`, validates `FORGE_TENANT_ID` and `FORGE_TENANT_PROFILE_REF`,
-  fails fast when tenant context is missing, and passes tenant inputs to
-  `Forge-Space/forge-ai-action`.
+- **CI tenant contract for test-autogen parity** — `test-autogen-warn` now performs a
+  best-effort checkout of `forge-tenant-profiles`, skips warn-only parity when the
+  private profile repo or tenant context is unavailable, and still passes tenant
+  inputs to `Forge-Space/forge-ai-action` when the profile is present.
 
 ### Fixed
 - **Admin monitoring Sonar gate regressions** — Hardened the real-time monitoring
