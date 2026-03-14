@@ -36,6 +36,13 @@ Then run `make register` to register gateways and get the Cursor URL.
 - **Admin UI:** http://localhost:4444/admin
 - **Stop:** `make stop` (or `./start.sh stop`)
 
+Admin UI boot contract:
+
+- `NEXT_PUBLIC_SUPABASE_URL` must be a valid `http` or `https` URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present
+- if either value is missing or invalid, the admin shell stays bootable and
+  shows a configuration-required state instead of crashing at import time
+
 ### Wrapper Bridge (Recommended)
 
 Use the wrapper bridge as the stable MCP client entrypoint:

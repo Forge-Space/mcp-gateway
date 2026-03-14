@@ -1,11 +1,29 @@
 import { create } from 'zustand';
 
-import { supabase, type Database } from './supabase';
+import { type Database, getSupabaseClient } from './supabase';
+import { getSupabaseConfigError } from './supabase-config';
+
+function getConfigError() {
+  return getSupabaseConfigError();
+}
+
+function isSupabaseConfigured() {
+  return !getConfigError();
+}
 
 type User = Database['public']['Tables']['users']['Row'];
 type VirtualServer = Database['public']['Tables']['virtual_servers']['Row'];
 type ServerTemplate = Database['public']['Tables']['server_templates']['Row'];
 type UsageAnalytics = Database['public']['Tables']['usage_analytics']['Row'];
+
+function requireSupabaseClient() {
+  const client = getSupabaseClient();
+  if (!client) {
+    throw new Error(getConfigError() ?? 'Supabase is not configured.');
+  }
+
+  return client;
+}
 
 interface AuthState {
   user: User | null;
@@ -45,9 +63,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   users: [],
   loading: false,
   fetchUsers: async () => {
+    if (!isSupabaseConfigured()) {
+      set({ users: [], loading: false });
+      return;
+    }
+
     set({ loading: true });
     try {
-      const { data } = await supabase
+      const { data } = await requireSupabaseClient()
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
@@ -61,7 +84,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email: string, password: string) => {
     set({ loading: true });
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await requireSupabaseClient().auth.signInWithPassword({
         email,
         password,
       });
@@ -77,9 +100,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   signOut: async () => {
+    if (!isSupabaseConfigured()) {
+      set({ user: null, loading: false });
+      return;
+    }
+
     set({ loading: true });
     try {
-      await supabase.auth.signOut();
+      await requireSupabaseClient().auth.signOut();
       set({ user: null });
     } catch (error) {
       console.error('Sign out error:', error);
@@ -88,7 +116,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   refreshUser: async () => {
+    if (!isSupabaseConfigured()) {
+      set({ user: null });
+      return;
+    }
+
     try {
+      const supabase = requireSupabaseClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -111,9 +145,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
   templates: [],
   loading: false,
   fetchServers: async () => {
+    if (!isSupabaseConfigured()) {
+      set({ servers: [], loading: false });
+      return;
+    }
+
     set({ loading: true });
     try {
-      const { data } = await supabase
+      const { data } = await requireSupabaseClient()
         .from('virtual_servers')
         .select('*')
         .order('created_at', { ascending: false });
@@ -125,9 +164,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
     }
   },
   fetchTemplates: async () => {
+    if (!isSupabaseConfigured()) {
+      set({ templates: [], loading: false });
+      return;
+    }
+
     set({ loading: true });
     try {
-      const { data } = await supabase
+      const { data } = await requireSupabaseClient()
         .from('server_templates')
         .select('*')
         .order('name', { ascending: true });
@@ -140,7 +184,11 @@ export const useServerStore = create<ServerState>((set, get) => ({
   },
   createServer: async (server) => {
     try {
-      const { data } = await supabase.from('virtual_servers').insert(server).select().single();
+      const { data } = await requireSupabaseClient()
+        .from('virtual_servers')
+        .insert(server)
+        .select()
+        .single();
       if (data) {
         set((state) => ({ servers: [data, ...state.servers] }));
       }
@@ -151,7 +199,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
   },
   updateServer: async (id, updates) => {
     try {
-      const { data } = await supabase
+      const { data } = await requireSupabaseClient()
         .from('virtual_servers')
         .update(updates)
         .eq('id', id)
@@ -169,7 +217,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
   },
   deleteServer: async (id) => {
     try {
-      await supabase.from('virtual_servers').delete().eq('id', id);
+      await requireSupabaseClient().from('virtual_servers').delete().eq('id', id);
       set((state) => ({
         servers: state.servers.filter((server) => server.id !== id),
       }));
@@ -186,13 +234,18 @@ export const useServerStore = create<ServerState>((set, get) => ({
   },
 }));
 
-export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
+export const useAnalyticsStore = create<AnalyticsState>((set) => ({
   analytics: [],
   loading: false,
   fetchAnalytics: async (serverId?: string, timeframe?: string) => {
+    if (!isSupabaseConfigured()) {
+      set({ analytics: [], loading: false });
+      return;
+    }
+
     set({ loading: true });
     try {
-      let query = supabase.from('usage_analytics').select('*');
+      let query = requireSupabaseClient().from('usage_analytics').select('*');
 
       if (serverId) {
         query = query.eq('server_id', serverId);
@@ -228,7 +281,12 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
     }
   },
   trackUsage: async (serverId: string, action: string, metadata: Record<string, unknown> = {}) => {
+    if (!isSupabaseConfigured()) {
+      return;
+    }
+
     try {
+      const supabase = requireSupabaseClient();
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
         return;

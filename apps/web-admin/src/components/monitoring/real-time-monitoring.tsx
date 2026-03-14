@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,41 +10,29 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import {
-  Activity,
   AlertTriangle,
   CheckCircle,
   Clock,
   Cpu,
   Database,
-  Globe,
-  HardDrive,
-  Monitor,
   Network,
   Pause,
-  Play,
   RefreshCw,
   Settings,
-  TrendingDown,
-  TrendingUp,
   Zap,
   BarChart3,
-  LineChart,
   AlertCircle,
+  Info,
   Wifi,
   WifiOff,
   Server,
-  Shield,
   Eye,
   EyeOff,
-  Download,
-  Upload,
-  Filter,
+  XCircle,
   Search,
   Bell,
-  BellOff,
   Maximize2,
   Minimize2,
-  X
 } from 'lucide-react'
 
 interface RealTimeMetrics {
@@ -110,6 +98,9 @@ interface MonitoringConfig {
   services: string[]
 }
 
+type AlertLevel = MonitoringConfig['alertLevel']
+type TimeRange = MonitoringConfig['timeRange']
+
 export default function RealTimeMonitoring() {
   const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null)
   const [config, setConfig] = useState<MonitoringConfig>({
@@ -125,35 +116,6 @@ export default function RealTimeMonitoring() {
   const [showAlerts, setShowAlerts] = useState(true)
   const [expandedView, setExpandedView] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const wsRef = useRef<WebSocket | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Mock WebSocket connection for demonstration
-  useEffect(() => {
-    const connectWebSocket = () => {
-      // In a real implementation, this would connect to a WebSocket endpoint
-      // For now, we'll simulate the connection with polling
-      setIsConnected(true)
-
-      // Simulate real-time updates
-      if (config.autoRefresh) {
-        const interval = setInterval(() => {
-          generateMockMetrics()
-        }, config.refreshRate)
-
-        return () => clearInterval(interval)
-      }
-    }
-
-    const cleanup = connectWebSocket()
-
-    return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
-      }
-      cleanup?.()
-    }
-  }, [config.autoRefresh, config.refreshRate])
 
   const generateMockMetrics = useCallback(() => {
     const mockServices: ServiceMetrics[] = [
@@ -335,7 +297,32 @@ export default function RealTimeMonitoring() {
         throughput: filteredServices.reduce((sum, s) => sum + s.requests, 0)
       }
     })
-  }, [config.services, config.alertLevel])
+  }, [config.alertLevel, config.services])
+
+  // Mock WebSocket connection for demonstration
+  useEffect(() => {
+    const connectWebSocket = () => {
+      // In a real implementation, this would connect to a WebSocket endpoint
+      // For now, we'll simulate the connection with polling
+      setIsConnected(true)
+
+      // Simulate real-time updates
+      if (config.autoRefresh) {
+        const interval = setInterval(() => {
+          generateMockMetrics()
+        }, config.refreshRate)
+
+        return () => clearInterval(interval)
+      }
+
+      generateMockMetrics()
+    }
+
+    const cleanup = connectWebSocket()
+    return () => {
+      cleanup?.()
+    }
+  }, [config.autoRefresh, config.refreshRate, generateMockMetrics])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -352,24 +339,6 @@ export default function RealTimeMonitoring() {
         return <Pause className="w-4 h-4 text-yellow-500" />
       default:
         return <Clock className="w-4 h-4 text-gray-400" />
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'running':
-        return 'bg-green-500'
-      case 'stopped':
-        return 'bg-gray-500'
-      case 'error':
-        return 'bg-red-500'
-      case 'starting':
-      case 'stopping':
-        return 'bg-blue-500'
-      case 'sleeping':
-        return 'bg-yellow-500'
-      default:
-        return 'bg-gray-400'
     }
   }
 
@@ -540,8 +509,8 @@ export default function RealTimeMonitoring() {
                   </div>
                 )}
               </div>
-            )}
           </CardContent>
+            )}
         </Card>
       )}
 
@@ -650,10 +619,12 @@ export default function RealTimeMonitoring() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="alert-level">Alert Level</Label>
+                <Label htmlFor="alert-level">Alert Level</Label>
               <Select
                 value={config.alertLevel}
-                onValueChange={(value) => setConfig(prev => ({ ...prev, alertLevel: value as any }))}
+                onValueChange={(value) => {
+                  setConfig(prev => ({ ...prev, alertLevel: value as AlertLevel }))
+                }}
               >
                 <option value="all">All Alerts</option>
                 <option value="warning">Warning & Above</option>
@@ -662,10 +633,12 @@ export default function RealTimeMonitoring() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="time-range">Time Range</Label>
+                <Label htmlFor="time-range">Time Range</Label>
               <Select
                 value={config.timeRange}
-                onValueChange={(value) => setConfig(prev => ({ ...prev, timeRange: value as any }))}
+                onValueChange={(value) => {
+                  setConfig(prev => ({ ...prev, timeRange: value as TimeRange }))
+                }}
               >
                 <option value="1m">Last Minute</option>
                 <option value="5m">Last 5 Minutes</option>
@@ -806,6 +779,3 @@ export default function RealTimeMonitoring() {
     </div>
   )
 }
-
-// Import missing icon
-import { Info } from 'lucide-react'

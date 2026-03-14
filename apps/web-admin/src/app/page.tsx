@@ -3,22 +3,27 @@
 import { useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { useServerStore, useAnalyticsStore } from '@/lib/store'
+import { getSupabaseConfigError } from '@/lib/supabase-config'
 import { Activity, Server, Settings, BarChart3, Users, Zap, Rocket } from 'lucide-react'
 import { GatewayStatus } from '@/components/dashboard/gateway-status'
 import { ServerMetrics } from '@/components/dashboard/server-metrics'
 import Link from 'next/link'
 
 export default function Dashboard() {
-  const { servers, templates, loading, fetchServers, fetchTemplates } = useServerStore()
+  const { servers, templates, fetchServers, fetchTemplates } = useServerStore()
   const { analytics, fetchAnalytics } = useAnalyticsStore()
+  const configError = getSupabaseConfigError()
 
   useEffect(() => {
+    if (configError) {
+      return
+    }
+
     fetchServers()
     fetchTemplates()
     fetchAnalytics('24h')
-  }, [fetchServers, fetchTemplates, fetchAnalytics])
+  }, [configError, fetchServers, fetchTemplates, fetchAnalytics])
 
   const stats = [
     {
@@ -50,6 +55,31 @@ export default function Dashboard() {
       color: 'text-orange-600'
     }
   ]
+
+  if (configError) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuration required</CardTitle>
+            <CardDescription>
+              Add the public Supabase variables before using the admin dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              {configError}
+            </div>
+            <div className="rounded-md border border-border bg-muted/30 px-4 py-3 font-mono text-xs text-foreground">
+              NEXT_PUBLIC_SUPABASE_URL
+              <br />
+              NEXT_PUBLIC_SUPABASE_ANON_KEY
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
