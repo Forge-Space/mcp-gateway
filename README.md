@@ -42,6 +42,8 @@ Admin UI boot contract:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present
 - if either value is missing or invalid, the admin shell stays bootable and
   shows a configuration-required state instead of crashing at import time
+- monitoring dashboard service rows are keyboard-operable and do not rely on
+  clickable non-semantic containers
 
 ### Wrapper Bridge (Recommended)
 

@@ -29,6 +29,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
   `Forge-Space/forge-ai-action`.
 
 ### Fixed
+- **Admin monitoring Sonar gate regressions** — Hardened the real-time monitoring
+  view by using explicit decimal parsing for refresh rates, extracting alert
+  state styling, and making service-row expansion keyboard-accessible.
 - **Security scanner fail-open behavior** — Scanner execution errors now emit
   an advisory `security_spoke` report with `scanner.execution=error` without
   blocking generation output.

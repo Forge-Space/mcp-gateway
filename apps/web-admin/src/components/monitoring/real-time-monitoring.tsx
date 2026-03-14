@@ -101,6 +101,18 @@ interface MonitoringConfig {
 type AlertLevel = MonitoringConfig['alertLevel']
 type TimeRange = MonitoringConfig['timeRange']
 
+const getAlertContainerClassName = (level: Alert['level']) => {
+  if (level === 'critical' || level === 'error') {
+    return 'border-red-200 bg-red-50'
+  }
+
+  if (level === 'warning') {
+    return 'border-yellow-200 bg-yellow-50'
+  }
+
+  return 'border-blue-200 bg-blue-50'
+}
+
 export default function RealTimeMonitoring() {
   const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null)
   const [config, setConfig] = useState<MonitoringConfig>({
@@ -118,24 +130,32 @@ export default function RealTimeMonitoring() {
   const [searchTerm, setSearchTerm] = useState('')
 
   const generateMockMetrics = useCallback(() => {
+    const tick = Math.floor(Date.now() / Math.max(config.refreshRate, 1000))
+    const getStepValue = (step: number, modulo = 100) => ((tick + step * 17) % modulo) / modulo
+    const getMetricValue = (base: number, spread: number, step: number) =>
+      Number((base + getStepValue(step) * spread).toFixed(1))
+    const getCountValue = (base: number, spread: number, step: number) =>
+      base + ((tick + step * 17) % (spread + 1))
+    const cursorDefaultSleeping = (tick + 5) % 6 === 0
+
     const mockServices: ServiceMetrics[] = [
       {
         id: 'gateway',
         name: 'Gateway',
         status: 'running',
-        cpu: 25 + Math.random() * 15,
-        memory: 35 + Math.random() * 20,
-        disk: 15 + Math.random() * 10,
+        cpu: getMetricValue(25, 15, 1),
+        memory: getMetricValue(35, 20, 2),
+        disk: getMetricValue(15, 10, 3),
         network: {
-          inbound: 1000 + Math.random() * 500,
-          outbound: 800 + Math.random() * 400
+          inbound: getMetricValue(1000, 500, 4),
+          outbound: getMetricValue(800, 400, 5)
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: 95 + Math.random() * 5,
-        requests: 15420 + Math.floor(Math.random() * 1000),
-        errors: Math.floor(Math.random() * 10),
-        avgResponseTime: 200 + Math.random() * 100,
+        healthScore: getMetricValue(95, 5, 6),
+        requests: getCountValue(15420, 1000, 7),
+        errors: getCountValue(0, 10, 8),
+        avgResponseTime: getMetricValue(200, 100, 9),
         replicas: 1,
         autoScaling: false
       },
@@ -143,19 +163,19 @@ export default function RealTimeMonitoring() {
         id: 'service-manager',
         name: 'Service Manager',
         status: 'running',
-        cpu: 15 + Math.random() * 10,
-        memory: 25 + Math.random() * 15,
-        disk: 5 + Math.random() * 5,
+        cpu: getMetricValue(15, 10, 10),
+        memory: getMetricValue(25, 15, 11),
+        disk: getMetricValue(5, 5, 12),
         network: {
-          inbound: 500 + Math.random() * 200,
-          outbound: 400 + Math.random() * 200
+          inbound: getMetricValue(500, 200, 13),
+          outbound: getMetricValue(400, 200, 14)
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: 98 + Math.random() * 2,
-        requests: 8200 + Math.floor(Math.random() * 500),
-        errors: Math.floor(Math.random() * 5),
-        avgResponseTime: 150 + Math.random() * 50,
+        healthScore: getMetricValue(98, 2, 15),
+        requests: getCountValue(8200, 500, 16),
+        errors: getCountValue(0, 5, 17),
+        avgResponseTime: getMetricValue(150, 50, 18),
         replicas: 1,
         autoScaling: false
       },
@@ -163,19 +183,19 @@ export default function RealTimeMonitoring() {
         id: 'tool-router',
         name: 'Tool Router',
         status: 'running',
-        cpu: 30 + Math.random() * 20,
-        memory: 40 + Math.random() * 25,
-        disk: 10 + Math.random() * 8,
+        cpu: getMetricValue(30, 20, 19),
+        memory: getMetricValue(40, 25, 20),
+        disk: getMetricValue(10, 8, 21),
         network: {
-          inbound: 2000 + Math.random() * 800,
-          outbound: 1800 + Math.random() * 600
+          inbound: getMetricValue(2000, 800, 22),
+          outbound: getMetricValue(1800, 600, 23)
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: 92 + Math.random() * 8,
-        requests: 25800 + Math.floor(Math.random() * 2000),
-        errors: Math.floor(Math.random() * 20),
-        avgResponseTime: 250 + Math.random() * 150,
+        healthScore: getMetricValue(92, 8, 24),
+        requests: getCountValue(25800, 2000, 25),
+        errors: getCountValue(0, 20, 26),
+        avgResponseTime: getMetricValue(250, 150, 27),
         replicas: 2,
         autoScaling: true
       },
@@ -183,39 +203,39 @@ export default function RealTimeMonitoring() {
         id: 'translate',
         name: 'Translate Services',
         status: 'running',
-        cpu: 20 + Math.random() * 15,
-        memory: 30 + Math.random() * 20,
-        disk: 8 + Math.random() * 6,
+        cpu: getMetricValue(20, 15, 28),
+        memory: getMetricValue(30, 20, 29),
+        disk: getMetricValue(8, 6, 30),
         network: {
-          inbound: 800 + Math.random() * 300,
-          outbound: 600 + Math.random() * 250
+          inbound: getMetricValue(800, 300, 31),
+          outbound: getMetricValue(600, 250, 32)
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: 88 + Math.random() * 10,
-        requests: 12000 + Math.floor(Math.random() * 1000),
-        errors: Math.floor(Math.random() * 15),
-        avgResponseTime: 180 + Math.random() * 80,
+        healthScore: getMetricValue(88, 10, 33),
+        requests: getCountValue(12000, 1000, 34),
+        errors: getCountValue(0, 15, 35),
+        avgResponseTime: getMetricValue(180, 80, 36),
         replicas: 3,
         autoScaling: true
       },
       {
         id: 'cursor-default',
         name: 'Cursor Default',
-        status: Math.random() > 0.8 ? 'sleeping' : 'running',
-        cpu: Math.random() > 0.8 ? 2 : 35 + Math.random() * 20,
-        memory: Math.random() > 0.8 ? 8 : 45 + Math.random() * 25,
-        disk: 12 + Math.random() * 8,
+        status: cursorDefaultSleeping ? 'sleeping' : 'running',
+        cpu: cursorDefaultSleeping ? 2 : getMetricValue(35, 20, 37),
+        memory: cursorDefaultSleeping ? 8 : getMetricValue(45, 25, 38),
+        disk: getMetricValue(12, 8, 39),
         network: {
-          inbound: 600 + Math.random() * 200,
-          outbound: 500 + Math.random() * 200
+          inbound: getMetricValue(600, 200, 40),
+          outbound: getMetricValue(500, 200, 41)
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: Math.random() > 0.8 ? 85 : 94 + Math.random() * 6,
-        requests: 9800 + Math.floor(Math.random() * 800),
-        errors: Math.floor(Math.random() * 10),
-        avgResponseTime: 220 + Math.random() * 100,
+        healthScore: cursorDefaultSleeping ? 85 : getMetricValue(94, 6, 42),
+        requests: getCountValue(9800, 800, 43),
+        errors: getCountValue(0, 10, 44),
+        avgResponseTime: getMetricValue(220, 100, 45),
         replicas: 2,
         autoScaling: true
       },
@@ -223,19 +243,19 @@ export default function RealTimeMonitoring() {
         id: 'cursor-router',
         name: 'Cursor Router',
         status: 'running',
-        cpu: 25 + Math.random() * 15,
-        memory: 35 + Math.random() * 20,
-        disk: 10 + Math.random() * 6,
+        cpu: getMetricValue(25, 15, 46),
+        memory: getMetricValue(35, 20, 47),
+        disk: getMetricValue(10, 6, 48),
         network: {
-          inbound: 400 + Math.random() * 150,
-          outbound: 350 + Math.random() * 150
+          inbound: getMetricValue(400, 150, 49),
+          outbound: getMetricValue(350, 150, 50)
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: 90 + Math.random() * 8,
-        requests: 6500 + Math.floor(Math.random() * 500),
-        errors: Math.floor(Math.random() * 8),
-        avgResponseTime: 190 + Math.random() * 90,
+        healthScore: getMetricValue(90, 8, 51),
+        requests: getCountValue(6500, 500, 52),
+        errors: getCountValue(0, 8, 53),
+        avgResponseTime: getMetricValue(190, 90, 54),
         replicas: 1,
         autoScaling: false
       }
@@ -297,7 +317,7 @@ export default function RealTimeMonitoring() {
         throughput: filteredServices.reduce((sum, s) => sum + s.requests, 0)
       }
     })
-  }, [config.alertLevel, config.services])
+  }, [config.alertLevel, config.refreshRate, config.services])
 
   // Mock WebSocket connection for demonstration
   useEffect(() => {
@@ -401,7 +421,12 @@ export default function RealTimeMonitoring() {
             <Label htmlFor="refresh-rate" className="text-sm">Refresh:</Label>
             <Select
               value={config.refreshRate.toString()}
-              onValueChange={(value) => setConfig(prev => ({ ...prev, refreshRate: parseInt(value) }))}
+              onChange={(event) =>
+                setConfig(prev => ({
+                  ...prev,
+                  refreshRate: Number.parseInt(event.target.value, 10)
+                }))
+              }
             >
               <option value="1000">1s</option>
               <option value="5000">5s</option>
@@ -455,12 +480,7 @@ export default function RealTimeMonitoring() {
                 {activeAlerts.slice(0, 5).map((alert) => (
                   <div
                     key={alert.id}
-                    className={`flex items-start space-x-3 p-3 rounded-lg border ${
-                      alert.level === 'critical' ? 'border-red-200 bg-red-50' :
-                      alert.level === 'error' ? 'border-red-200 bg-red-50' :
-                      alert.level === 'warning' ? 'border-yellow-200 bg-yellow-50' :
-                      'border-blue-200 bg-blue-50'
-                    }`}
+                    className={`flex items-start space-x-3 rounded-lg border p-3 ${getAlertContainerClassName(alert.level)}`}
                   >
                     {getAlertIcon(alert.level)}
                     <div className="flex-1">
@@ -509,8 +529,8 @@ export default function RealTimeMonitoring() {
                   </div>
                 )}
               </div>
-          </CardContent>
-            )}
+            </CardContent>
+          )}
         </Card>
       )}
 
@@ -619,11 +639,11 @@ export default function RealTimeMonitoring() {
               />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="alert-level">Alert Level</Label>
+              <Label htmlFor="alert-level">Alert Level</Label>
               <Select
                 value={config.alertLevel}
-                onValueChange={(value) => {
-                  setConfig(prev => ({ ...prev, alertLevel: value as AlertLevel }))
+                onChange={(event) => {
+                  setConfig(prev => ({ ...prev, alertLevel: event.target.value as AlertLevel }))
                 }}
               >
                 <option value="all">All Alerts</option>
@@ -633,11 +653,11 @@ export default function RealTimeMonitoring() {
               </Select>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="time-range">Time Range</Label>
+              <Label htmlFor="time-range">Time Range</Label>
               <Select
                 value={config.timeRange}
-                onValueChange={(value) => {
-                  setConfig(prev => ({ ...prev, timeRange: value as TimeRange }))
+                onChange={(event) => {
+                  setConfig(prev => ({ ...prev, timeRange: event.target.value as TimeRange }))
                 }}
               >
                 <option value="1m">Last Minute</option>
@@ -691,59 +711,65 @@ export default function RealTimeMonitoring() {
             {filteredServices.map((service) => (
               <div
                 key={service.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                onClick={() => setSelectedService(service.id === selectedService ? null : service.id)}
+                className="rounded-lg border"
               >
-                <div className="flex items-center space-x-4">
-                  {getStatusIcon(service.status)}
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-medium">{service.name}</h3>
-                      <Badge variant={service.status === 'running' ? 'default' : 'secondary'}>
-                        {service.status}
-                      </Badge>
-                      {service.autoScaling && (
-                        <Badge variant="outline" className="text-purple-600">
-                          <Zap className="w-3 h-3 mr-1" />
-                          Auto-scaling
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50"
+                  onClick={() => setSelectedService(service.id === selectedService ? null : service.id)}
+                  aria-pressed={service.id === selectedService}
+                >
+                  <div className="flex items-center space-x-4">
+                    {getStatusIcon(service.status)}
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium">{service.name}</h3>
+                        <Badge variant={service.status === 'running' ? 'default' : 'secondary'}>
+                          {service.status}
                         </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
-                      <span>Replicas: {service.replicas}</span>
-                      <span>Uptime: {service.uptime}</span>
-                      <span>Health: <span className={getHealthColor(service.healthScore)}>{service.healthScore}%</span></span>
+                        {service.autoScaling && (
+                          <Badge variant="outline" className="text-purple-600">
+                            <Zap className="w-3 h-3 mr-1" />
+                            Auto-scaling
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
+                        <span>Replicas: {service.replicas}</span>
+                        <span>Uptime: {service.uptime}</span>
+                        <span>Health: <span className={getHealthColor(service.healthScore)}>{service.healthScore}%</span></span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm">CPU:</span>
-                      <Progress value={service.cpu} className="w-16 h-2" />
-                      <span className="text-sm w-8">{service.cpu.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm">Memory:</span>
-                      <Progress value={service.memory} className="w-16 h-2" />
-                      <span className="text-sm w-8">{service.memory.toFixed(1)}%</span>
-                    </div>
+                  <div className="flex items-center space-x-6">
                     <div className="text-right">
-                      <div className="text-sm font-medium">
-                        R/s: {(service.requests / 60).toFixed(1)}
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-sm">CPU:</span>
+                        <Progress value={service.cpu} className="w-16 h-2" />
+                        <span className="text-sm w-8">{service.cpu.toFixed(1)}%</span>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {service.avgResponseTime.toFixed(0)}ms avg
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-sm">Memory:</span>
+                        <Progress value={service.memory} className="w-16 h-2" />
+                        <span className="text-sm w-8">{service.memory.toFixed(1)}%</span>
                       </div>
-                      {service.errors > 0 && (
-                        <div className="text-xs text-red-500">
-                          {service.errors} errors
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          R/s: {(service.requests / 60).toFixed(1)}
                         </div>
-                      )}
+                        <div className="text-xs text-muted-foreground">
+                          {service.avgResponseTime.toFixed(0)}ms avg
+                        </div>
+                        {service.errors > 0 && (
+                          <div className="text-xs text-red-500">
+                            {service.errors} errors
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </button>
 
                 {selectedService === service.id && (
                   <div className="col-span-full mt-4 p-4 bg-gray-50 rounded-lg">
