@@ -4,6 +4,17 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-03-15
+
+### Added
+- **OTel spans for gateway client** — `HTTPGatewayClient.get_tools()` emits `gateway.get_tools` span (attrs: `gateway.url`, `rpc.method`, `outcome`, `tools.count`, `error.message`); `call_tool()` emits `gateway.call_tool` span (attrs: `gateway.url`, `tool.name`, `outcome`, `error.message`).
+- **OTel spans for tool scoring** — `select_top_matching_tools()` emits `scoring.select_top_matching_tools` span; `select_top_matching_tools_hybrid()` emits `scoring.select_top_matching_tools_hybrid` span; `select_top_matching_tools_enhanced()` emits `scoring.select_top_matching_tools_enhanced` span — all with strategy, tools_count, top_n, matched_count, and AI selector attributes.
+- **OTel spans for security middleware** — `SecurityMiddleware.check_request_security()` emits `security.check_request` span with `security.user_id`, `security.endpoint`, `security.strict_mode`, `security.outcome`, `security.risk_score`, and `security.blocked` attributes.
+- **33 new tests** in `tool_router/tests/unit/test_otel_spans.py` covering gateway client spans, scoring matcher spans, and security middleware spans in no-op mode. (#210)
+
+### Fixed
+- Circular import between `gateway/client.py` and `observability/tracing.py` resolved via lazy imports inside method bodies.
+
 ## [1.15.0] - 2026-03-15
 
 ### Added
