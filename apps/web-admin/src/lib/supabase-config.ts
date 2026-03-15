@@ -32,14 +32,20 @@ export function getSupabaseConfigError() {
   return null;
 }
 
+let _cachedConfig: SupabasePublicConfig | null | undefined;
+
 export function getSupabasePublicConfig(): SupabasePublicConfig | null {
+  if (_cachedConfig !== undefined) return _cachedConfig;
+
   const error = getSupabaseConfigError();
   if (error) {
+    _cachedConfig = null;
     return null;
   }
 
-  return {
+  _cachedConfig = {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
   };
+  return _cachedConfig;
 }

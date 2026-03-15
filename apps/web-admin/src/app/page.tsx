@@ -67,7 +67,7 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
               {configError}
             </div>
             <div className="rounded-md border border-border bg-muted/30 px-4 py-3 font-mono text-xs text-foreground">

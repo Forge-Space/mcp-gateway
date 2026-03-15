@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@/lib/utils'
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -101,17 +102,13 @@ interface MonitoringConfig {
 type AlertLevel = MonitoringConfig['alertLevel']
 type TimeRange = MonitoringConfig['timeRange']
 
-const getAlertContainerClassName = (level: Alert['level']) => {
-  if (level === 'critical' || level === 'error') {
-    return 'border-red-200 bg-red-50'
-  }
-
-  if (level === 'warning') {
-    return 'border-yellow-200 bg-yellow-50'
-  }
-
-  return 'border-blue-200 bg-blue-50'
-}
+const getAlertContainerClassName = (level: Alert['level']) =>
+  cn({
+    'border-red-200 bg-red-50': level === 'critical' || level === 'error',
+    'border-yellow-200 bg-yellow-50': level === 'warning',
+    'border-blue-200 bg-blue-50':
+      level !== 'critical' && level !== 'error' && level !== 'warning',
+  })
 
 export default function RealTimeMonitoring() {
   const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null)
@@ -320,28 +317,21 @@ export default function RealTimeMonitoring() {
   }, [config.alertLevel, config.refreshRate, config.services])
 
   // Mock WebSocket connection for demonstration
+  // In a real implementation this would connect to a WebSocket endpoint.
+  // For now we simulate with polling when autoRefresh is enabled.
   useEffect(() => {
-    const connectWebSocket = () => {
-      // In a real implementation, this would connect to a WebSocket endpoint
-      // For now, we'll simulate the connection with polling
-      setIsConnected(true)
+    setIsConnected(true)
+    generateMockMetrics()
 
-      // Simulate real-time updates
-      if (config.autoRefresh) {
-        const interval = setInterval(() => {
-          generateMockMetrics()
-        }, config.refreshRate)
+    if (!config.autoRefresh) {
+      return
+    }
 
-        return () => clearInterval(interval)
-      }
-
+    const interval = setInterval(() => {
       generateMockMetrics()
-    }
+    }, config.refreshRate)
 
-    const cleanup = connectWebSocket()
-    return () => {
-      cleanup?.()
-    }
+    return () => clearInterval(interval)
   }, [config.autoRefresh, config.refreshRate, generateMockMetrics])
 
   const getStatusIcon = (status: string) => {

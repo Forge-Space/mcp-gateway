@@ -16,7 +16,7 @@ export default function AppShellServer({ children }: { children: React.ReactNode
         </div>
       </header>
       {configError ? (
-        <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+        <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
           <strong className="font-semibold">Configuration required.</strong>{' '}
           {configError}
         </div>

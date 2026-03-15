@@ -51,7 +51,7 @@ export default function LoginPage() {
           <CardContent>
             {configError ? (
               <div className="space-y-4 text-sm text-muted-foreground">
-                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-amber-100">
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-amber-700 dark:text-amber-100">
                   {configError}
                 </div>
                 <div className="rounded-md border border-border bg-muted/30 px-3 py-3 font-mono text-xs text-foreground">

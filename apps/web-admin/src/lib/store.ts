@@ -3,14 +3,6 @@ import { create } from 'zustand';
 import { type Database, getSupabaseClient } from './supabase';
 import { getSupabaseConfigError } from './supabase-config';
 
-function getConfigError() {
-  return getSupabaseConfigError();
-}
-
-function isSupabaseConfigured() {
-  return !getConfigError();
-}
-
 type User = Database['public']['Tables']['users']['Row'];
 type VirtualServer = Database['public']['Tables']['virtual_servers']['Row'];
 type ServerTemplate = Database['public']['Tables']['server_templates']['Row'];
@@ -19,7 +11,7 @@ type UsageAnalytics = Database['public']['Tables']['usage_analytics']['Row'];
 function requireSupabaseClient() {
   const client = getSupabaseClient();
   if (!client) {
-    throw new Error(getConfigError() ?? 'Supabase is not configured.');
+    throw new Error(getSupabaseConfigError() ?? 'Supabase is not configured.');
   }
 
   return client;
@@ -63,7 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   users: [],
   loading: false,
   fetchUsers: async () => {
-    if (!isSupabaseConfigured()) {
+    if (getSupabaseConfigError()) {
       set({ users: [], loading: false });
       return;
     }
@@ -100,7 +92,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   signOut: async () => {
-    if (!isSupabaseConfigured()) {
+    if (getSupabaseConfigError()) {
       set({ user: null, loading: false });
       return;
     }
@@ -116,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   refreshUser: async () => {
-    if (!isSupabaseConfigured()) {
+    if (getSupabaseConfigError()) {
       set({ user: null });
       return;
     }
@@ -145,7 +137,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
   templates: [],
   loading: false,
   fetchServers: async () => {
-    if (!isSupabaseConfigured()) {
+    if (getSupabaseConfigError()) {
       set({ servers: [], loading: false });
       return;
     }
@@ -164,7 +156,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
     }
   },
   fetchTemplates: async () => {
-    if (!isSupabaseConfigured()) {
+    if (getSupabaseConfigError()) {
       set({ templates: [], loading: false });
       return;
     }
@@ -183,6 +175,11 @@ export const useServerStore = create<ServerState>((set, get) => ({
     }
   },
   createServer: async (server) => {
+    const configErr = getSupabaseConfigError();
+    if (configErr) {
+      throw new Error(configErr);
+    }
+
     try {
       const { data } = await requireSupabaseClient()
         .from('virtual_servers')
@@ -238,7 +235,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
   analytics: [],
   loading: false,
   fetchAnalytics: async (serverId?: string, timeframe?: string) => {
-    if (!isSupabaseConfigured()) {
+    if (getSupabaseConfigError()) {
       set({ analytics: [], loading: false });
       return;
     }
@@ -281,7 +278,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
     }
   },
   trackUsage: async (serverId: string, action: string, metadata: Record<string, unknown> = {}) => {
-    if (!isSupabaseConfigured()) {
+    if (getSupabaseConfigError()) {
       return;
     }
 
