@@ -329,8 +329,13 @@ class TestStructuredFormatterExtra:
 
         fmt = StructuredFormatter()
         record = __import__("logging").LogRecord(
-            name="test", level=__import__("logging").INFO,
-            pathname="", lineno=0, msg="hello", args=(), exc_info=None,
+            name="test",
+            level=__import__("logging").INFO,
+            pathname="",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         output = fmt.format(record)
         assert "hello" in output
@@ -340,8 +345,13 @@ class TestStructuredFormatterExtra:
 
         fmt = StructuredFormatter()
         record = __import__("logging").LogRecord(
-            name="test.module", level=__import__("logging").WARNING,
-            pathname="test.py", lineno=42, msg="warn msg", args=(), exc_info=None,
+            name="test.module",
+            level=__import__("logging").WARNING,
+            pathname="test.py",
+            lineno=42,
+            msg="warn msg",
+            args=(),
+            exc_info=None,
         )
         output = fmt.format(record)
         assert "warn msg" in output
