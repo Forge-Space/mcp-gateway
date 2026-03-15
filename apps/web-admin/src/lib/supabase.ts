@@ -1,9 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { getSupabasePublicConfig } from './supabase-config';
 
 export type Database = {
   public: {
@@ -189,3 +185,15 @@ export type Database = {
     };
   };
 };
+
+let supabase: SupabaseClient<Database> | null | undefined;
+
+export function getSupabaseClient() {
+  if (supabase !== undefined) {
+    return supabase;
+  }
+
+  const config = getSupabasePublicConfig();
+  supabase = config ? createClient<Database>(config.url, config.anonKey) : null;
+  return supabase;
+}

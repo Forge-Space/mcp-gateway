@@ -36,6 +36,15 @@ Then run `make register` to register gateways and get the Cursor URL.
 - **Admin UI:** http://localhost:4444/admin
 - **Stop:** `make stop` (or `./start.sh stop`)
 
+Admin UI boot contract:
+
+- `NEXT_PUBLIC_SUPABASE_URL` must be a valid `http` or `https` URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present
+- if either value is missing or invalid, the admin shell stays bootable and
+  shows a configuration-required state instead of crashing at import time
+- monitoring dashboard service rows are keyboard-operable and do not rely on
+  clickable non-semantic containers
+
 ### Wrapper Bridge (Recommended)
 
 Use the wrapper bridge as the stable MCP client entrypoint:
@@ -229,8 +238,10 @@ The `test-autogen-warn` workflow job requires these repository variables:
 - `FORGE_TENANT_ID`
 - `FORGE_TENANT_PROFILE_REF`
 
-CI checks out `Forge-Space/forge-tenant-profiles` and fails fast when either variable is missing
-or when `FORGE_TENANT_PROFILE_REF` does not resolve to a file in the runner workspace.
+CI attempts a best-effort checkout of `Forge-Space/forge-tenant-profiles` for warn-only parity.
+For private profile access, configure `FORGE_TENANT_PROFILES_READ_TOKEN`.
+If the profile repo, repository variables, or resolved profile path are unavailable, parity is
+skipped and the warn-only flow remains non-blocking.
 
 ## Automated Maintenance
 

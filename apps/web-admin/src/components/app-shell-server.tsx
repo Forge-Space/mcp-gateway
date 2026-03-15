@@ -1,4 +1,7 @@
+import { getSupabaseConfigError } from '@/lib/supabase-config'
+
 export default function AppShellServer({ children }: { children: React.ReactNode }) {
+  const configError = getSupabaseConfigError()
 
   return (
     <div className="min-h-screen bg-background">
@@ -12,6 +15,12 @@ export default function AppShellServer({ children }: { children: React.ReactNode
           </div>
         </div>
       </header>
+      {configError ? (
+        <div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
+          <strong className="font-semibold">Configuration required.</strong>{' '}
+          {configError}
+        </div>
+      ) : null}
       <main className="flex-1">
         {children}
       </main>

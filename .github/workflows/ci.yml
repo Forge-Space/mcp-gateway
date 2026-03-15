@@ -125,30 +125,43 @@ jobs:
         with:
           node-version: "22"
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        continue-on-error: true
         with:
           repository: Forge-Space/forge-tenant-profiles
           path: .forge-tenant-profiles
           token: ${{ secrets.FORGE_TENANT_PROFILES_READ_TOKEN || secrets.GITHUB_TOKEN }}
-      - name: Validate tenant context
+      - name: Detect tenant profile availability
+        id: tenant_profile_check
         shell: bash
         env:
           FORGE_TENANT_ID: ${{ vars.FORGE_TENANT_ID }}
           FORGE_TENANT_PROFILE_REF: ${{ vars.FORGE_TENANT_PROFILE_REF }}
         run: |
+          if [[ ! -d .forge-tenant-profiles ]]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "reason=tenant-profile-repo-unavailable" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [[ -z "${FORGE_TENANT_ID}" ]]; then
-            echo "::error::Missing required repo variable FORGE_TENANT_ID."
-            exit 1
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "reason=missing-forge-tenant-id" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           if [[ -z "${FORGE_TENANT_PROFILE_REF}" ]]; then
-            echo "::error::Missing required repo variable FORGE_TENANT_PROFILE_REF."
-            exit 1
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "reason=missing-forge-tenant-profile-ref" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          if [[ ! -f "${FORGE_TENANT_PROFILE_REF}" ]]; then
-            echo "::error::Tenant profile not found at ${FORGE_TENANT_PROFILE_REF}."
-            exit 1
+          if [[ ! -f ".forge-tenant-profiles/${FORGE_TENANT_PROFILE_REF#./}" ]]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "reason=tenant-profile-not-found" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "available=true" >> "$GITHUB_OUTPUT"
+          echo "reason=available" >> "$GITHUB_OUTPUT"
 
       - name: Run test-autogen parity check
+        if: steps.tenant_profile_check.outputs.available == 'true'
         uses: Forge-Space/forge-ai-action@1db6524858b544cb8051a4510e835d67818b24a2
         continue-on-error: true
         env:
@@ -160,6 +173,10 @@ jobs:
           test_autogen_phase: warn
           comment: true
           annotations: true
+      - name: Skip parity when tenant profile context is unavailable
+        if: steps.tenant_profile_check.outputs.available != 'true'
+        run: |
+          echo "Skipping test-autogen parity: ${{ steps.tenant_profile_check.outputs.reason }}."
 
   workflow-summary:
     name: Workflow Summary

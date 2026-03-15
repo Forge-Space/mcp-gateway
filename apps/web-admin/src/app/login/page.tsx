@@ -6,11 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/lib/store'
+import { getSupabaseConfigError } from '@/lib/supabase-config'
 import { Shield, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const { signIn, loading } = useAuthStore()
+  const configError = getSupabaseConfigError()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -39,12 +41,26 @@ export default function LoginPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>{configError ? 'Configuration required' : 'Sign In'}</CardTitle>
             <CardDescription>
-              Enter your credentials to access the admin dashboard
+              {configError
+                ? 'Set the public Supabase variables before using the admin dashboard.'
+                : 'Enter your credentials to access the admin dashboard'}
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {configError ? (
+              <div className="space-y-4 text-sm text-muted-foreground">
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-amber-700 dark:text-amber-100">
+                  {configError}
+                </div>
+                <div className="rounded-md border border-border bg-muted/30 px-3 py-3 font-mono text-xs text-foreground">
+                  NEXT_PUBLIC_SUPABASE_URL
+                  <br />
+                  NEXT_PUBLIC_SUPABASE_ANON_KEY
+                </div>
+              </div>
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
@@ -92,6 +108,7 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+            )}
           </CardContent>
         </Card>
 
