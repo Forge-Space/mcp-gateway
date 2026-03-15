@@ -15,13 +15,13 @@ from scalar_fastapi import get_scalar_api_reference
 
 from tool_router.api.audit import router as audit_router
 from tool_router.api.cache_dashboard import router as cache_dashboard_router
+from tool_router.api.cloud import router as cloud_router
 from tool_router.api.health import router as health_router
 from tool_router.api.metrics_export import metrics
 from tool_router.api.metrics_export import router as metrics_router
 from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
-from tool_router.api.cloud import router as cloud_router
 from tool_router.api.server_mgmt import ide_router
 from tool_router.api.server_mgmt import router as server_mgmt_router
 from tool_router.api.streamable_http import router as mcp_router
