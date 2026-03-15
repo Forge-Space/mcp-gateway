@@ -125,41 +125,25 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        continue-on-error: true
-        with:
-          repository: Forge-Space/forge-tenant-profiles
-          path: .forge-tenant-profiles
-          token: ${{ secrets.FORGE_TENANT_PROFILES_READ_TOKEN || secrets.GITHUB_TOKEN }}
       - name: Detect tenant profile availability
         id: tenant_profile_check
         shell: bash
-        env:
-          FORGE_TENANT_ID: ${{ vars.FORGE_TENANT_ID }}
-          FORGE_TENANT_PROFILE_REF: ${{ vars.FORGE_TENANT_PROFILE_REF }}
         run: |
-          if [[ ! -d .forge-tenant-profiles ]]; then
+          PROFILE=".forge/tenant-profile.yml"
+          if [[ ! -f "${PROFILE}" ]]; then
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "reason=tenant-profile-repo-unavailable" >> "$GITHUB_OUTPUT"
+            echo "reason=inline-tenant-profile-missing" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if [[ -z "${FORGE_TENANT_ID}" ]]; then
+          TENANT_ID=$(grep '^tenant_id:' "${PROFILE}" | awk '{print $2}')
+          if [[ -z "${TENANT_ID}" ]]; then
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "reason=missing-forge-tenant-id" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ -z "${FORGE_TENANT_PROFILE_REF}" ]]; then
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "reason=missing-forge-tenant-profile-ref" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ ! -f ".forge-tenant-profiles/${FORGE_TENANT_PROFILE_REF#./}" ]]; then
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "reason=tenant-profile-not-found" >> "$GITHUB_OUTPUT"
+            echo "reason=tenant-id-not-found-in-profile" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "available=true" >> "$GITHUB_OUTPUT"
           echo "reason=available" >> "$GITHUB_OUTPUT"
+          echo "tenant_id=${TENANT_ID}" >> "$GITHUB_OUTPUT"
 
       - name: Run test-autogen parity check
         if: steps.tenant_profile_check.outputs.available == 'true'
@@ -169,8 +153,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           command: test-autogen-check
-          tenant: ${{ vars.FORGE_TENANT_ID }}
-          tenant_profile_ref: ${{ vars.FORGE_TENANT_PROFILE_REF }}
+          tenant: ${{ steps.tenant_profile_check.outputs.tenant_id }}
+          tenant_profile_ref: .forge/tenant-profile.yml
           test_autogen_phase: warn
           comment: true
           annotations: true
