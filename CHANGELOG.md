@@ -4,6 +4,17 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-03-15
+
+### Added
+- **Phase 8 Cache Layer OTel Spans** — added OpenTelemetry spans to `tool_router/cache/cache_manager.py` for all cache operations.
+- **`cache.hit` span** — emitted by `CacheManager.record_hit()` with attributes `cache.name` and `cache.outcome=hit`.
+- **`cache.miss` span** — emitted by `CacheManager.record_miss()` with attributes `cache.name` and `cache.outcome=miss`.
+- **`cache.eviction` span** — emitted by `CacheManager.record_eviction()` with attribute `cache.name`.
+- **`cache.lookup` span** — emitted by the `cached` decorator wrapper with attributes `cache.name`, `cache.function`, and `cache.outcome` (hit/miss).
+- **Bug fix** — fixed pre-existing `UnboundLocalError` in `cached` decorator where `cache_name` parameter was shadowed by local assignment; renamed inner variable to `_cache_name`.
+- **19 new tests** — `tool_router/tests/unit/test_cache_otel_spans.py` covering all 4 span types, attribute verification, no-op mode (SpanContext=None), and exception safety.
+
 ## [1.19.0] - 2026-03-15
 
 ### Added

@@ -14,6 +14,12 @@ from .redis_cache import RedisCache, RedisConfig, create_redis_cache
 from .types import CacheConfig, CacheMetrics
 
 
+try:
+    from tool_router.observability.tracing import SpanContext
+except ImportError:
+    SpanContext = None  # type: ignore[assignment,misc]
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,6 +94,15 @@ class CacheManager:
 
     def record_hit(self, cache_name: str) -> None:
         """Record a cache hit for metrics."""
+        if SpanContext is not None:
+            with SpanContext("cache.hit") as span:
+                span.set_attribute("cache.name", cache_name)
+                span.set_attribute("cache.outcome", "hit")
+                self._record_hit_inner(cache_name)
+        else:
+            self._record_hit_inner(cache_name)
+
+    def _record_hit_inner(self, cache_name: str) -> None:
         with self._lock:
             if cache_name in self._metrics:
                 self._metrics[cache_name].hits += 1
@@ -100,6 +115,15 @@ class CacheManager:
 
     def record_miss(self, cache_name: str) -> None:
         """Record a cache miss for metrics."""
+        if SpanContext is not None:
+            with SpanContext("cache.miss") as span:
+                span.set_attribute("cache.name", cache_name)
+                span.set_attribute("cache.outcome", "miss")
+                self._record_miss_inner(cache_name)
+        else:
+            self._record_miss_inner(cache_name)
+
+    def _record_miss_inner(self, cache_name: str) -> None:
         with self._lock:
             if cache_name in self._metrics:
                 self._metrics[cache_name].misses += 1
@@ -112,6 +136,14 @@ class CacheManager:
 
     def record_eviction(self, cache_name: str) -> None:
         """Record a cache eviction for metrics."""
+        if SpanContext is not None:
+            with SpanContext("cache.eviction") as span:
+                span.set_attribute("cache.name", cache_name)
+                self._record_eviction_inner(cache_name)
+        else:
+            self._record_eviction_inner(cache_name)
+
+    def _record_eviction_inner(self, cache_name: str) -> None:
         with self._lock:
             if cache_name in self._metrics:
                 self._metrics[cache_name].evictions += 1
@@ -297,8 +329,8 @@ def cached(ttl: int = 3600, max_size: int = 1000, cache_name: str | None = None)
     """Decorator factory for caching function results."""
 
     def decorator(func):
-        cache_name = cache_name or f"function_{func.__name__}"
-        cache = create_ttl_cache(cache_name, max_size=max_size, ttl=ttl)
+        _cache_name = cache_name or f"function_{func.__name__}"
+        cache = create_ttl_cache(_cache_name, max_size=max_size, ttl=ttl)
 
         def wrapper(*args, **kwargs):
             # Create cache key from args and kwargs
@@ -309,19 +341,32 @@ def cached(ttl: int = 3600, max_size: int = 1000, cache_name: str | None = None)
                 # Fallback for unhashable arguments
                 key = str(args) + str(sorted(kwargs.items()))
 
-            # Check cache
+            # Check cache with OTel span
+            _span_ctx = SpanContext("cache.lookup") if SpanContext is not None else None
+            _span = _span_ctx.__enter__() if _span_ctx is not None else None
             try:
-                result = cache[key]
-                cache_manager.record_hit(cache_name)
-                return result
-            except KeyError:
-                cache_manager.record_miss(cache_name)
-                result = func(*args, **kwargs)
-                cache[key] = result
-                return result
+                if _span is not None:
+                    _span.set_attribute("cache.name", _cache_name)
+                    _span.set_attribute("cache.function", func.__name__)
+                try:
+                    result = cache[key]
+                    cache_manager.record_hit(_cache_name)
+                    if _span is not None:
+                        _span.set_attribute("cache.outcome", "hit")
+                    return result
+                except KeyError:
+                    cache_manager.record_miss(_cache_name)
+                    if _span is not None:
+                        _span.set_attribute("cache.outcome", "miss")
+                    result = func(*args, **kwargs)
+                    cache[key] = result
+                    return result
+            finally:
+                if _span_ctx is not None:
+                    _span_ctx.__exit__(None, None, None)
 
         wrapper.cache = cache
-        wrapper.cache_name = cache_name
+        wrapper.cache_name = _cache_name
         wrapper.cache_manager = cache_manager
         return wrapper
 
