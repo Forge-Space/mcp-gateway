@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from scalar_fastapi import get_scalar_api_reference
 
 from tool_router.api.audit import router as audit_router
+from tool_router.api.cache_dashboard import router as cache_dashboard_router
 from tool_router.api.health import router as health_router
 from tool_router.api.metrics_export import metrics
 from tool_router.api.metrics_export import router as metrics_router
@@ -54,6 +55,7 @@ app = FastAPI(
         {"name": "health", "description": "Health, readiness, and liveness probes"},
         {"name": "monitoring", "description": "Performance metrics and system stats"},
         {"name": "metrics", "description": "Prometheus-compatible metrics export"},
+        {"name": "cache-dashboard", "description": "Cache performance analytics and alerts"},
     ],
 )
 
@@ -81,6 +83,7 @@ app.include_router(health_router)
 app.include_router(performance_router)
 app.include_router(metrics_router)
 app.include_router(mcp_router)
+app.include_router(cache_dashboard_router)
 
 
 @app.middleware("http")

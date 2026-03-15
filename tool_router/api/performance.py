@@ -9,7 +9,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from ..cache import cache_manager, get_cache_metrics
+from ..cache import cache_manager
+from ..cache import get_cache_metrics as _get_cache_metrics_data
+from ..cache import reset_cache_metrics as _reset_cache_metrics_data
 from ..database.query_cache import get_query_cache
 
 
@@ -117,7 +119,7 @@ async def health_check() -> MonitoringHealthResponse:
 )
 async def get_cache_metrics() -> CacheMetricsResponse:
     try:
-        metrics = get_cache_metrics()
+        metrics = _get_cache_metrics_data()
 
         return CacheMetricsResponse(
             cache_hit_rate=metrics.get("global", {}).get("hit_rate", 0.0),
@@ -145,7 +147,7 @@ async def get_system_metrics() -> SystemMetricsResponse:
 
     try:
         # Get cache metrics
-        cache_metrics_data = get_cache_metrics()
+        cache_metrics_data = _get_cache_metrics_data()
         cache_metrics = CacheMetricsResponse(
             cache_hit_rate=cache_metrics_data.get("global", {}).get("hit_rate", 0.0),
             total_hits=cache_metrics_data.get("global", {}).get("hits", 0),
@@ -196,7 +198,7 @@ async def get_system_metrics() -> SystemMetricsResponse:
 )
 async def reset_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
     try:
-        reset_cache_metrics(cache_name)
+        _reset_cache_metrics_data(cache_name)
 
         message = f"Reset metrics for cache: {cache_name}" if cache_name else "Reset all cache metrics"
         logger.info(message)
@@ -296,7 +298,7 @@ async def get_performance_summary() -> dict[str, Any]:
         uptime = current_time - _start_time
 
         # Get cache metrics
-        cache_metrics_data = get_cache_metrics()
+        cache_metrics_data = _get_cache_metrics_data()
         global_metrics = cache_metrics_data.get("global", {})
 
         # Get query cache metrics

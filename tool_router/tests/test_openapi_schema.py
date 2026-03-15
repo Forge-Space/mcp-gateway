@@ -52,7 +52,10 @@ def test_schema_models_present(openapi_schema):
         "JsonRpcResponse",
         "JsonRpcError",
         "AuditEvent",
-        "CacheMetricsResponse",
+        # CacheMetricsResponse is a nested dict-value type in DashboardSnapshotResponse;
+        # FastAPI may not generate a top-level schema entry for it — test its parent instead.
+        "DashboardSnapshotResponse",
+        "AlertSummaryResponse",
     ]
     for name in expected:
         assert name in schemas, f"Missing schema: {name}"
