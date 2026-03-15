@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -140,3 +140,77 @@ class ToolRouterConfig:
             max_tools_search=max_tools_search,
             default_top_n=default_top_n,
         )
+
+
+@dataclass
+class CloudProviderConfig:
+    """Configuration for a single cloud provider endpoint."""
+
+    name: str
+    cloud_type: str  # "aws" | "azure" | "gcp" | "custom"
+    region: str
+    url: str
+    jwt: str | None = None
+    priority: int = 0
+    weight: float = 1.0
+    enabled: bool = True
+    timeout_ms: int = 30000
+    max_retries: int = 3
+    retry_delay_ms: int = 2000
+    tags: dict[str, str] = field(default_factory=dict)
+
+    def to_gateway_config(self) -> GatewayConfig:
+        """Convert to GatewayConfig for HTTPGatewayClient."""
+        return GatewayConfig(
+            url=self.url,
+            jwt=self.jwt or "",
+            timeout_ms=self.timeout_ms,
+            max_retries=self.max_retries,
+            retry_delay_ms=self.retry_delay_ms,
+        )
+
+
+@dataclass
+class MultiCloudConfig:
+    """Configuration for the multi-cloud routing layer."""
+
+    providers: list[CloudProviderConfig] = field(default_factory=list)
+    strategy: str = "failover"  # failover | round_robin | latency_weighted | random
+    enabled: bool = False  # Off by default; single-gateway mode when disabled
+
+    @classmethod
+    def load_from_environment(cls) -> MultiCloudConfig:
+        """Load multi-cloud config from environment variables.
+
+        Providers are configured via numbered env vars:
+          CLOUD_PROVIDER_0_NAME, CLOUD_PROVIDER_0_TYPE, CLOUD_PROVIDER_0_REGION,
+          CLOUD_PROVIDER_0_URL, CLOUD_PROVIDER_0_JWT, CLOUD_PROVIDER_0_PRIORITY, ...
+        """
+        enabled = os.getenv("MULTI_CLOUD_ENABLED", "false").lower() == "true"
+        strategy = os.getenv("MULTI_CLOUD_STRATEGY", "failover")
+
+        providers: list[CloudProviderConfig] = []
+        idx = 0
+        while True:
+            prefix = f"CLOUD_PROVIDER_{idx}_"
+            name = os.getenv(f"{prefix}NAME")
+            if not name:
+                break
+            providers.append(
+                CloudProviderConfig(
+                    name=name,
+                    cloud_type=os.getenv(f"{prefix}TYPE", "custom"),
+                    region=os.getenv(f"{prefix}REGION", "us-east-1"),
+                    url=os.getenv(f"{prefix}URL", ""),
+                    jwt=os.getenv(f"{prefix}JWT"),
+                    priority=int(os.getenv(f"{prefix}PRIORITY", "0")),
+                    weight=float(os.getenv(f"{prefix}WEIGHT", "1.0")),
+                    enabled=os.getenv(f"{prefix}ENABLED", "true").lower() == "true",
+                    timeout_ms=int(os.getenv(f"{prefix}TIMEOUT_MS", "30000")),
+                    max_retries=int(os.getenv(f"{prefix}MAX_RETRIES", "3")),
+                    retry_delay_ms=int(os.getenv(f"{prefix}RETRY_DELAY_MS", "2000")),
+                )
+            )
+            idx += 1
+
+        return cls(providers=providers, strategy=strategy, enabled=enabled)

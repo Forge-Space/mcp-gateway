@@ -15,6 +15,7 @@ from scalar_fastapi import get_scalar_api_reference
 
 from tool_router.api.audit import router as audit_router
 from tool_router.api.cache_dashboard import router as cache_dashboard_router
+from tool_router.api.cloud import router as cloud_router
 from tool_router.api.health import router as health_router
 from tool_router.api.metrics_export import metrics
 from tool_router.api.metrics_export import router as metrics_router
@@ -60,6 +61,7 @@ app = FastAPI(
         {"name": "cache-dashboard", "description": "Cache performance analytics and alerts"},
         {"name": "Server Management", "description": "Virtual server enable/disable and listing"},
         {"name": "IDE Detection", "description": "Detect installed IDEs and their config paths"},
+        {"name": "Multi-Cloud", "description": "Multi-cloud provider registry and routing strategy"},
     ],
 )
 
@@ -90,6 +92,7 @@ app.include_router(mcp_router)
 app.include_router(cache_dashboard_router)
 app.include_router(server_mgmt_router)
 app.include_router(ide_router)
+app.include_router(cloud_router)
 
 
 @app.middleware("http")
