@@ -11,6 +11,7 @@ from typing import Any
 import httpx
 
 from tool_router.ai.prompts import PromptTemplates
+from tool_router.observability.tracing import SpanContext
 
 
 logger = logging.getLogger(__name__)
@@ -559,6 +560,31 @@ class EnhancedAISelector:
         max_cost_per_request: float | None = None,
     ) -> dict[str, Any] | None:
         """Select tool with cost optimization and hardware awareness."""
+        with SpanContext(
+            "ai.tool_selection",
+            task_length=len(task),
+            tool_count=len(tools),
+            cost_preference=user_cost_preference,
+        ):
+            return self._select_tool_with_cost_optimization_impl(
+                task=task,
+                tools=tools,
+                context=context,
+                similar_tools=similar_tools,
+                user_cost_preference=user_cost_preference,
+                max_cost_per_request=max_cost_per_request,
+            )
+
+    def _select_tool_with_cost_optimization_impl(
+        self,
+        task: str,
+        tools: list[dict[str, Any]],
+        context: str = "",
+        similar_tools: list[str] | None = None,
+        user_cost_preference: str = "balanced",
+        max_cost_per_request: float | None = None,
+    ) -> dict[str, Any] | None:
+        """Internal implementation — wrapped by traced select_tool_with_cost_optimization."""
         if not tools or not self.providers:
             return None
 

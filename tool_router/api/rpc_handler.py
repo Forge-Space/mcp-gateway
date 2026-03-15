@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from tool_router.observability.otel_setup import get_tracer
 from tool_router.security.audit_logger import SecurityAuditLogger
 from tool_router.security.security_middleware import (
     SecurityContext,
@@ -23,6 +24,8 @@ from .dependencies import get_security_context
 
 
 logger = logging.getLogger(__name__)
+
+_tracer = get_tracer("forge.mcp.gateway.rpc")
 
 router = APIRouter(tags=["rpc"])
 
@@ -300,42 +303,55 @@ async def json_rpc_endpoint(
     security_context: Annotated[SecurityContext, Depends(get_security_context)],
     response: Response,
 ) -> JsonRpcResponse:
-    for key, value in _get_rate_limit_headers(security_context).items():
-        response.headers[key] = value
+    with _tracer.start_as_current_span(
+        "rpc.request",
+        attributes={
+            "rpc.method": request.method,
+            "rpc.id": str(request.id),
+            "user.id": security_context.user_id or "anonymous",
+        },
+    ) as span:
+        for key, value in _get_rate_limit_headers(security_context).items():
+            response.headers[key] = value
 
-    handler = RPC_METHOD_HANDLERS.get(request.method)
-    if handler is None:
-        return JsonRpcResponse(
-            id=request.id,
-            error=JsonRpcError(
-                code=-32601,
-                message=f"Method not found: {request.method}",
-            ),
-        )
+        handler = RPC_METHOD_HANDLERS.get(request.method)
+        if handler is None:
+            span.set_attribute("rpc.error", "method_not_found")
+            return JsonRpcResponse(
+                id=request.id,
+                error=JsonRpcError(
+                    code=-32601,
+                    message=f"Method not found: {request.method}",
+                ),
+            )
 
-    try:
-        result = handler(request.params, security_context)
-        return JsonRpcResponse(id=request.id, result=result)
-    except HTTPException as exc:
-        error_code = -32001 if exc.status_code == 401 else -32003
-        if exc.status_code == 400:
-            error_code = -32602
-        return JsonRpcResponse(
-            id=request.id,
-            error=JsonRpcError(
-                code=error_code,
-                message=exc.detail if isinstance(exc.detail, str) else str(exc.detail),
-            ),
-        )
-    except Exception:
-        logger.exception("RPC handler error")
-        return JsonRpcResponse(
-            id=request.id,
-            error=JsonRpcError(
-                code=-32603,
-                message="Internal error",
-            ),
-        )
+        try:
+            result = handler(request.params, security_context)
+            span.set_attribute("rpc.success", True)
+            return JsonRpcResponse(id=request.id, result=result)
+        except HTTPException as exc:
+            error_code = -32001 if exc.status_code == 401 else -32003
+            if exc.status_code == 400:
+                error_code = -32602
+            span.set_attribute("rpc.error", str(exc.detail))
+            span.set_attribute("rpc.error_code", error_code)
+            return JsonRpcResponse(
+                id=request.id,
+                error=JsonRpcError(
+                    code=error_code,
+                    message=exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+                ),
+            )
+        except Exception as exc:
+            logger.exception("RPC handler error")
+            span.record_exception(exc)
+            return JsonRpcResponse(
+                id=request.id,
+                error=JsonRpcError(
+                    code=-32603,
+                    message="Internal error",
+                ),
+            )
 
 
 def _sse_event(data: dict[str, Any]) -> str:
