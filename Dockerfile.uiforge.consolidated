@@ -62,7 +62,7 @@ RUN echo "Building application..." && \
 RUN cp -r src/assets dist/assets 2>/dev/null || echo "⚠️ Asset copy completed"
 
 # ── Stage 2: Runtime with Python Context Forge Gateway ───────────────
-FROM python:3.12-alpine
+FROM python:3.14-alpine
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
