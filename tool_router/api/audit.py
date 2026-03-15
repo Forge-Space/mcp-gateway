@@ -24,7 +24,22 @@ _rbac = RBACEvaluator()
 def _require_audit_read(
     ctx: Annotated[SecurityContext, Depends(get_security_context)],
 ) -> SecurityContext:
-    """Enforce AUDIT_READ permission — admin role only."""
+    """Validate that the caller has ``AUDIT_READ`` permission.
+
+    Roles granted this permission: ``admin``, ``developer``.
+    Roles denied: ``user``, ``guest``.
+
+    Args:
+        ctx: Resolved security context from the JWT bearer token.
+
+    Returns:
+        The validated ``SecurityContext`` when permission is granted.
+
+    Raises:
+        HTTPException(403): When the caller's role lacks ``AUDIT_READ``.
+        HTTPException(401): When no valid JWT is present (raised upstream
+            by ``get_security_context``).
+    """
     role: Role = _rbac.resolve_role(ctx.user_role)
     if not _rbac.check_permission(role, Permission.AUDIT_READ):
         raise HTTPException(

@@ -406,15 +406,20 @@ class TestJsonRpcHttpEndpoint:
         def _raise(*_a, **_kw):
             raise RuntimeError("unexpected failure")
 
-        with patch("tool_router.api.rpc_handler._handle_tools_list", side_effect=_raise):
+        # Patch the dispatch table directly to guarantee the exception fires
+        with patch(
+            "tool_router.api.rpc_handler.RPC_METHOD_HANDLERS",
+            {"tools/list": _raise},
+        ):
             with patch("tool_router.api.rpc_handler._get_available_tools", return_value=[]):
                 app = self._make_app(self._ctx())
                 client = TestClient(app, raise_server_exceptions=False)
                 resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "tools/list", "id": 4})
         assert resp.status_code == 200
         data = resp.json()
-        # Either internal error -32603 or success if patch didn't intercept
         assert data["id"] == 4
+        assert data["error"] is not None
+        assert data["error"]["code"] == -32603
 
     def test_rate_limit_headers_set(self) -> None:
         with patch("tool_router.api.rpc_handler._get_available_tools", return_value=[]):
@@ -422,14 +427,20 @@ class TestJsonRpcHttpEndpoint:
             client = TestClient(app, raise_server_exceptions=False)
             resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "tools/list", "id": 5})
         assert resp.status_code == 200
-        # Rate limit headers are set when security middleware is not initialized
-        # (no assertion on specific headers — just verifying the endpoint returns)
+        assert "X-RateLimit-Limit" in resp.headers
+        assert "X-RateLimit-Remaining" in resp.headers
+        assert "X-RateLimit-Reset" in resp.headers
 
     def test_register_tool_dispatch(self) -> None:
         from tool_router.api.rpc_handler import TOOL_DISPATCH, register_tool_dispatch
 
-        register_tool_dispatch({"my_tool": lambda: "ok"})
-        assert "my_tool" in TOOL_DISPATCH
+        original = dict(TOOL_DISPATCH)
+        try:
+            register_tool_dispatch({"my_tool": lambda: "ok"})
+            assert "my_tool" in TOOL_DISPATCH
+        finally:
+            TOOL_DISPATCH.clear()
+            TOOL_DISPATCH.update(original)
 
     def test_get_available_tools_returns_list(self) -> None:
         from tool_router.api.rpc_handler import _get_available_tools
