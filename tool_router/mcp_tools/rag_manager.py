@@ -73,6 +73,21 @@ class RAGManagerTool:
         self.conn = None
         self._init_database()
 
+    def close(self) -> None:
+        """Close the database connection and release resources."""
+        if self.conn is not None:
+            self.conn.close()
+            self.conn = None
+
+    def __enter__(self) -> "RAGManagerTool":
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        self.close()
+
     def _init_database(self) -> None:
         """Initialize database connection"""
         try:
