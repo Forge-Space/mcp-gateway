@@ -4,6 +4,13 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-03-15
+
+### Added
+- **Phase 7 Wire Monitoring Page** — replaced all mock data in the Admin UI real-time monitoring page with live API calls to the gateway.
+- **Next.js proxy routes** — `apps/web-admin/src/app/api/monitoring/performance/route.ts` proxies to `GET /monitoring/performance`; `apps/web-admin/src/app/api/monitoring/system/route.ts` proxies to `GET /monitoring/metrics/system`.
+- **Real-time metrics** — `real-time-monitoring.tsx` now fetches from `/api/monitoring/performance`, `/api/monitoring/system`, `/api/cloud/health`, and `/api/ai/performance` in parallel; maps cloud providers and AI providers to `ServiceMetrics`; derives alerts from performance recommendations and cloud health warnings; computes uptime, requests/s, and error rate from real data.
+
 ## [1.18.0] - 2026-03-15
 
 ### Added
