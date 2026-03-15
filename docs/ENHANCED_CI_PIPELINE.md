@@ -1,5 +1,10 @@
 # Enhanced CI Pipeline Documentation
 
+> **⚠️ HISTORICAL DOCUMENT**: `ci-enhanced.yml` no longer exists. The active CI pipeline
+> is `.github/workflows/ci.yml` with jobs: Lint, Test, Build, Type Check, Security, and
+> optional Test Autogen (warn-only). This document describes planned enhancements that
+> were partially integrated into the main CI. Treat as background reference only.
+
 ## Overview
 
 The enhanced CI pipeline (`ci-enhanced.yml`) provides comprehensive testing, security scanning, and performance benchmarking for the MCP Gateway project. This pipeline goes beyond basic linting and testing to ensure enterprise-grade quality and security standards.

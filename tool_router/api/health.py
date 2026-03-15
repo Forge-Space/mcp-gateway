@@ -6,6 +6,7 @@ Provides health check endpoints for Supabase PostgreSQL connection.
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -159,7 +160,7 @@ async def readiness_check() -> dict[str, Any]:
 async def liveness_check() -> dict[str, Any]:
     return {
         "alive": True,
-        "timestamp": "2025-01-20T00:00:00Z",  # Will be updated with actual timestamp
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
