@@ -1,6 +1,6 @@
 ---
 name: virtual-server-mgmt
-description: Guide for managing virtual servers in the MCP Gateway. Use when enabling/disabling servers, listing server status, or understanding the virtual server config format. Also covers Phase 1 FR-2 implementation details.
+description: Guide for managing virtual servers in the MCP Gateway. Use when enabling/disabling servers, listing server status, or understanding the virtual server config format. Covers CLI (make targets), REST API endpoints, and the Admin UI toggle.
 ---
 
 # Virtual Server Management
@@ -14,12 +14,35 @@ make list-servers
 # Enable a disabled server
 make enable-server SERVER=cursor-search
 
-# Disable an enabled server  
+# Disable an enabled server
 make disable-server SERVER=database-dev
 
 # Apply changes to the running gateway
 make register
 ```
+
+## REST API (v1.12.0+)
+
+All endpoints require **admin role** (`Authorization: Bearer <jwt>`).
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/servers` | List all virtual servers |
+| `GET` | `/servers/{name}` | Get a single server |
+| `PATCH` | `/servers/{name}/enabled` | Toggle enabled flag |
+| `GET` | `/ide/detect` | Detect installed IDEs |
+
+```bash
+# Example: disable cursor-browser via API
+curl -X PATCH http://localhost:4444/servers/cursor-browser/enabled \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": false}'
+```
+
+After toggling via API, run `make register` to apply changes to the gateway routing layer.
+
+The Admin UI at `http://localhost:3000/server-management` provides a one-click toggle backed by this API.
 
 ## Config Format
 
@@ -48,7 +71,9 @@ if [[ "$enabled_flag" != "true" && "$enabled_flag" != "1" && "$enabled_flag" != 
 fi
 ```
 
-The Makefile targets delegate to `scripts/utils/manage-servers.py` which does regex-based in-place editing.
+The Makefile targets delegate to `scripts/utils/manage-servers.py` (regex-based in-place editing).
+
+The REST API is implemented in `tool_router/api/server_mgmt.py` and registered in `tool_router/http_server.py`.
 
 ## Scripts
 
@@ -71,12 +96,15 @@ make disable-server SERVER=java-spring
 make register
 
 # 4. Re-enable when needed
-make enable-server SERVER=java-spring
-make register
+make enable-server SERVER=java-spring && make register
 ```
 
 ## Tests
 
 ```bash
+# CLI utility tests
 pytest tests/test_manage_servers.py -v --no-cov
+
+# API endpoint tests
+pytest tool_router/tests/unit/test_server_mgmt_api.py -v --no-cov
 ```

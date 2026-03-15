@@ -4,6 +4,19 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Release automation script** (`scripts/release.py`) — single command to bump version, update CHANGELOG, open PR, poll CI, merge, tag, and create GitHub Release. `make release BUMP=patch|minor|major|--detect`. (#203)
+- **`virtual-server-mgmt` skill updated** — REST API endpoints and Admin UI toggle documented. (#204)
+
+### Fixed
+- **Stale security tests restored** — 24 `tests/test_security.py` assertions updated for advisory-mode `InputValidator` behavior; removed from CI ignore list. (#203)
+- **Specialist integration tests restored** — 3 stale assertions fixed for multi-step routing, cache API contract, and token metrics; removed from CI ignore list. (#203, #204)
+- **`TestConfig` collection warning** — renamed to `ArchTestConfig` in `test_scalable_architecture.py` to prevent pytest false-positive collection. (#204)
+
+### Changed
+- **Admin UI server management** — replaced mock data with live `GET /api/servers` + `PATCH /api/servers/{name}/enabled` + `GET /api/ides/detect` proxy calls to the Python gateway. (#202)
+- **CI test count** — 2128 → 2140 tests after restoring all previously-ignored suites. (#203, #204)
+
 ## [1.12.0] - 2026-03-15
 
 ### Added
