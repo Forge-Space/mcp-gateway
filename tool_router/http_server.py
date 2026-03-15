@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 import os
 from datetime import UTC, datetime
-from importlib.metadata import PackageNotFoundError, version as pkg_version
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as pkg_version
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
