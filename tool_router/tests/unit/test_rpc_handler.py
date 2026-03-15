@@ -332,6 +332,7 @@ class TestStreamToolCall:
 # Tests: json_rpc_endpoint HTTP handler (lines 303-338)
 # ---------------------------------------------------------------------------
 
+
 class TestJsonRpcHttpEndpoint:
     """Test the JSON-RPC HTTP endpoint via TestClient."""
 
@@ -386,6 +387,7 @@ class TestJsonRpcHttpEndpoint:
 
         # Patch at the RPC_METHOD_HANDLERS level
         from tool_router.api.rpc_handler import RPC_METHOD_HANDLERS
+
         original = RPC_METHOD_HANDLERS.get("tools/call")
         try:
             RPC_METHOD_HANDLERS["tools/call"] = _raise
