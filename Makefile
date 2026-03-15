@@ -128,11 +128,18 @@ test: ## Run tests (replaces test, test-coverage)
 	pytest tool_router/tests/ dribbble_mcp/tests/ tests/ \
 		--ignore=tool_router/tests/performance \
 		--ignore=tests/test_rag_manager.py \
-		--ignore=tests/test_security.py \
 		--ignore=tests/test_specialist_integration.py \
 		--ignore=tests/test_github_workflows.py \
 		--ignore=tests/test_scalable_architecture.py \
 		--timeout=30 --maxfail=10
+
+release: ## Automated release — usage: make release BUMP=patch|minor|major|--detect
+	@if [ -z "$(BUMP)" ]; then \
+		echo "Usage: make release BUMP=patch|minor|major"; \
+		echo "       make release BUMP=--detect   # auto-detect from commits"; \
+		exit 1; \
+	fi
+	python3 scripts/release.py $(BUMP)
 
 deps: ## Dependency management (replaces deps-check, deps-update, pre-commit-install)
 	@if [ -z "$(ACTION)" ]; then \
