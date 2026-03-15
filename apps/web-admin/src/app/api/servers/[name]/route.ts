@@ -9,18 +9,17 @@ function gatewayHeaders(req: NextRequest): HeadersInit {
   return auth ? { authorization: auth } : {};
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, { params }: { params: { name: string } }) {
   try {
-    const response = await fetch(`${GATEWAY_URL}/servers`, {
+    const response = await fetch(`${GATEWAY_URL}/servers/${params.name}`, {
       headers: gatewayHeaders(request),
     });
     if (!response.ok) {
       return NextResponse.json({ error: 'Gateway error' }, { status: response.status });
     }
-    const servers = await response.json();
-    return NextResponse.json(servers);
+    return NextResponse.json(await response.json());
   } catch (error) {
-    console.error('Failed to fetch servers from gateway:', error);
-    return NextResponse.json({ error: 'Failed to fetch servers' }, { status: 500 });
+    console.error('Failed to fetch server:', error);
+    return NextResponse.json({ error: 'Failed to fetch server' }, { status: 500 });
   }
 }

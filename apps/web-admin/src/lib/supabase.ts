@@ -2,6 +2,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-config';
 
 export type Database = {
+  // Required by @supabase/supabase-js ≥ 2.45 for Insert/Update type inference
+  PostgrestVersion: '12';
   public: {
     Tables: {
       users: {

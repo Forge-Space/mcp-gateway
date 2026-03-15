@@ -5,6 +5,7 @@ import { getSupabaseConfigError } from './supabase-config';
 
 type User = Database['public']['Tables']['users']['Row'];
 type VirtualServer = Database['public']['Tables']['virtual_servers']['Row'];
+type VirtualServerInsert = Database['public']['Tables']['virtual_servers']['Insert'];
 type ServerTemplate = Database['public']['Tables']['server_templates']['Row'];
 type UsageAnalytics = Database['public']['Tables']['usage_analytics']['Row'];
 
@@ -33,8 +34,11 @@ interface ServerState {
   loading: boolean;
   fetchServers: () => Promise<void>;
   fetchTemplates: () => Promise<void>;
-  createServer: (server: Omit<VirtualServer, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateServer: (id: string, updates: Partial<VirtualServer>) => Promise<void>;
+  createServer: (server: VirtualServerInsert) => Promise<void>;
+  updateServer: (
+    id: string,
+    updates: Database['public']['Tables']['virtual_servers']['Update']
+  ) => Promise<void>;
   deleteServer: (id: string) => Promise<void>;
   toggleServer: (id: string) => Promise<void>;
 }
@@ -181,7 +185,8 @@ export const useServerStore = create<ServerState>((set, get) => ({
     }
 
     try {
-      const { data } = await requireSupabaseClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (requireSupabaseClient() as any)
         .from('virtual_servers')
         .insert(server)
         .select()
@@ -196,7 +201,8 @@ export const useServerStore = create<ServerState>((set, get) => ({
   },
   updateServer: async (id, updates) => {
     try {
-      const { data } = await requireSupabaseClient()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (requireSupabaseClient() as any)
         .from('virtual_servers')
         .update(updates)
         .eq('id', id)
@@ -289,7 +295,8 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
         return;
       }
 
-      await supabase.from('usage_analytics').insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('usage_analytics').insert({
         server_id: serverId,
         user_id: user.user.id,
         action,
