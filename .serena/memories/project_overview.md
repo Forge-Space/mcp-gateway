@@ -76,4 +76,8 @@ mcp-gateway/
 - v1.8.1+ (2026-03-07): PR #103 webapp routing, #129 OpenAPI enrichment, #132 rate limit headers, #133 ARCHITECTURE.md — all MERGED
 - Issue templates added (PR #131 MERGED). 3 good-first-issues created (#134-#136)
 - Tooling analysis: P0 gaps identified — security scans non-blocking, FastAPI/uvicorn not pinned, Dockerfile uses Python 3.14 (should be 3.12)
-- Recommended additions: OpenTelemetry (P1), Semgrep+Trivy (P1), prometheus-client (P2)
+- Recommended additions: OpenTelemetry (P1), Semgrep+Trivy (P1), prometheus-client (P2)- v1.12.0 released (2026-03-15 session 7): PRs #199-#202
+  - GET/PATCH /servers*, GET /ide/detect API (38 tests; 1860 total)
+  - SQLite conn leak fix in RAGManagerTool; fastapi-common-bugs skill +2 patterns
+  - Admin UI wired to real gateway API (PR #202 open; build passes)
+  - Next: merge PR #202 → Phase 3 Advanced Features or Phase 4 Multi-Cloud

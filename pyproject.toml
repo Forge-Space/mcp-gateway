@@ -349,8 +349,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "PTH108",  # os.unlink (test cleanup)
 ]
 "scripts/**/*.py" = [
-    "S607",    # Partial executable path (CLI scripts)
+    "S602",    # shell=True in release/utility scripts is intentional
     "S603",    # subprocess call check (CLI scripts)
+    "S607",    # Partial executable path (CLI scripts)
     "PLW1510", # subprocess.run without check (scripts handle errors)
     "S113",    # requests timeout (scripts are interactive)
     "ANN",     # Don't require type hints in scripts
