@@ -3,15 +3,35 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+
+from tool_router.security.authorization import Permission, RBACEvaluator, Role
+from tool_router.security.security_middleware import SecurityContext
+
+from .dependencies import get_security_context
 
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/audit", tags=["audit"])
+
+_rbac = RBACEvaluator()
+
+
+def _require_audit_read(
+    ctx: Annotated[SecurityContext, Depends(get_security_context)],
+) -> SecurityContext:
+    """Enforce AUDIT_READ permission — admin role only."""
+    role: Role = _rbac.resolve_role(ctx.user_role)
+    if not _rbac.check_permission(role, Permission.AUDIT_READ):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Role '{role.value}' does not have audit read permission.",
+        )
+    return ctx
 
 
 class AuditEvent(BaseModel):
@@ -58,6 +78,7 @@ def _get_audit_logger():
     description="Retrieve paginated audit trail with optional filters. Requires admin role.",
 )
 async def get_audit_events(
+    _ctx: Annotated[SecurityContext, Depends(_require_audit_read)],
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=200, description="Events per page"),
     event_type: str | None = Query(None, description="Filter by event type"),
@@ -112,7 +133,9 @@ async def get_audit_events(
     summary="Get audit summary",
     description="Aggregate audit statistics. Requires admin role.",
 )
-async def get_audit_summary() -> dict[str, Any]:
+async def get_audit_summary(
+    _ctx: Annotated[SecurityContext, Depends(_require_audit_read)],
+) -> dict[str, Any]:
     audit_logger = _get_audit_logger()
     try:
         return audit_logger.get_security_summary()
