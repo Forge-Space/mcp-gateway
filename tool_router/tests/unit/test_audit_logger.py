@@ -629,3 +629,77 @@ class TestSecurityAuditLogger:
             assert event_id1 != event_id2
             assert len(event_id1) > 0
             assert len(event_id2) > 0
+
+
+class TestAuditLoggerAdvanced:
+    """Additional tests for advanced SecurityAuditLogger behaviour.
+
+    Migrated from test_security/test_audit_logger.py — covers log file
+    rotation and concurrent-logging thread safety, neither of which
+    appears in the main TestSecurityAuditLogger class.
+    """
+
+    def _make_event(self, **kwargs) -> SecurityEvent:
+        from datetime import UTC, datetime
+
+        defaults = {
+            "event_id": "evt_adv_001",
+            "event_type": SecurityEventType.REQUEST_RECEIVED,
+            "severity": SecuritySeverity.LOW,
+            "user_id": "user1",
+            "session_id": None,
+            "ip_address": "127.0.0.1",
+            "user_agent": None,
+            "endpoint": "/test",
+            "request_id": "req_adv_001",
+            "timestamp": datetime.now(UTC),
+            "details": {},
+            "risk_score": 0.0,
+            "blocked": False,
+            "metadata": {},
+        }
+        defaults.update(kwargs)
+        return SecurityEvent(**defaults)
+
+    def test_log_file_rotation(self, tmp_path: Path) -> None:
+        """Logger should write to a file-backed handler without error."""
+        from unittest.mock import Mock
+
+        log_file = tmp_path / "security.log"
+        audit = SecurityAuditLogger(log_file=str(log_file))
+        audit.logger = Mock()
+        event = self._make_event(
+            event_type=SecurityEventType.SUSPICIOUS_ACTIVITY,
+            severity=SecuritySeverity.MEDIUM,
+        )
+        audit.log_security_event(event)
+        # MEDIUM severity uses logger.warning
+        assert audit.logger.warning.called
+
+    def test_concurrent_logging(self, tmp_path: Path) -> None:
+        """Multiple threads logging simultaneously must not corrupt state."""
+        import threading
+        from unittest.mock import Mock
+
+        log_file = tmp_path / "security.log"
+        audit = SecurityAuditLogger(log_file=str(log_file))
+        audit.logger = Mock()
+
+        def log_events():
+            for i in range(10):
+                event = self._make_event(
+                    event_id=f"evt_{threading.current_thread().name}_{i}",
+                    event_type=SecurityEventType.REQUEST_RECEIVED,
+                    severity=SecuritySeverity.LOW,
+                    user_id=f"user{i}",
+                )
+                audit.log_security_event(event)
+
+        threads = [threading.Thread(target=log_events) for _ in range(3)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        # LOW severity -> logger.info; 3 threads x 10 events = 30 calls
+        assert audit.logger.info.call_count == 30

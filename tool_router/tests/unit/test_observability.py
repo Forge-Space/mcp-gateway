@@ -314,3 +314,147 @@ class TestGlobalMetrics:
             t.join()
 
         assert all(m is results[0] for m in results)
+
+
+# ---------------------------------------------------------------------------
+# Tests migrated from test_observability.py (root) — unique coverage
+# ---------------------------------------------------------------------------
+
+
+class TestStructuredFormatterExtra:
+    """Extra StructuredFormatter tests not covered in TestLogging."""
+
+    def test_format_record_basic(self) -> None:
+        from tool_router.observability.logger import StructuredFormatter
+
+        fmt = StructuredFormatter()
+        record = __import__("logging").LogRecord(
+            name="test",
+            level=__import__("logging").INFO,
+            pathname="",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
+        )
+        output = fmt.format(record)
+        assert "hello" in output
+
+    def test_format_includes_level_and_message(self) -> None:
+        from tool_router.observability.logger import StructuredFormatter
+
+        fmt = StructuredFormatter()
+        record = __import__("logging").LogRecord(
+            name="test.module",
+            level=__import__("logging").WARNING,
+            pathname="test.py",
+            lineno=42,
+            msg="warn msg",
+            args=(),
+            exc_info=None,
+        )
+        output = fmt.format(record)
+        assert "warn msg" in output
+
+
+class TestGetLoggerExtra:
+    """Additional get_logger tests."""
+
+    def test_returns_logger_instance(self) -> None:
+        lg = get_logger("mylogger_x")
+        assert hasattr(lg, "info") and hasattr(lg, "error")
+
+    def test_same_name_returns_same_logger(self) -> None:
+        lg1 = get_logger("shared_x")
+        lg2 = get_logger("shared_x")
+        assert lg1 is lg2
+
+
+class TestSetupLoggingExtra:
+    """Additional setup_logging tests."""
+
+    def test_setup_default_no_error(self) -> None:
+        setup_logging()
+
+    def test_setup_with_debug_level(self) -> None:
+        setup_logging(level="DEBUG")
+
+    def test_setup_without_structured(self) -> None:
+        setup_logging(structured=False)
+
+
+class TestLogContextExtra:
+    """Additional LogContext tests."""
+
+    def test_log_context_returns_adapter(self) -> None:
+        import logging as _logging
+
+        from tool_router.observability.logger import ContextLoggerAdapter
+
+        lg = _logging.getLogger("ctx_test_x")
+        with LogContext(lg, request_id="abc") as adapter:
+            assert isinstance(adapter, ContextLoggerAdapter)
+
+    def test_log_context_extra_fields(self) -> None:
+        import logging as _logging
+
+        lg = _logging.getLogger("ctx_test2_x")
+        with LogContext(lg, user="bob", action="login") as adapter:
+            assert adapter.extra["user"] == "bob"
+            assert adapter.extra["action"] == "login"
+
+
+class TestMetricValueAndStats:
+    """Tests for MetricValue and MetricStats dataclasses."""
+
+    def test_create_metric_value(self) -> None:
+        from tool_router.observability.metrics import MetricValue
+
+        mv = MetricValue(value=42.5, timestamp=1000.0)
+        assert mv.value == 42.5
+        assert mv.timestamp == 1000.0
+
+    def test_create_metric_stats(self) -> None:
+        ms = MetricStats(count=10, sum=100.0, min=5.0, max=20.0, avg=10.0)
+        assert ms.count == 10
+        assert ms.avg == 10.0
+
+
+class TestTimingContextExtra:
+    """Additional TimingContext tests."""
+
+    def test_timing_records_metric(self) -> None:
+        import time as _time
+
+        from tool_router.observability.metrics import TimingContext
+
+        mc = MetricsCollector()
+        with TimingContext("my_op_x", mc):
+            _time.sleep(0.01)
+        stats = mc.get_stats("my_op_x")
+        assert stats is not None
+        assert stats.count == 1
+        assert stats.min > 0
+
+    def test_timing_context_returns_self(self) -> None:
+        from tool_router.observability.metrics import TimingContext
+
+        mc = MetricsCollector()
+        with TimingContext("op_x", mc) as ctx:
+            assert ctx is not None
+
+
+# ---------------------------------------------------------------------------
+# Tests migrated from test_observability/test_health.py — unique test
+# ---------------------------------------------------------------------------
+
+
+class TestHealthCheckLivenessExtra:
+    """Extra liveness check tests."""
+
+    def test_check_liveness_no_jwt(self) -> None:
+        from tool_router.core.config import GatewayConfig
+
+        config = GatewayConfig(url="http://localhost:4444", jwt="")
+        hc = HealthCheck(config=config)
+        assert hc.check_liveness() is False

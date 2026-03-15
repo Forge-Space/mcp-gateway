@@ -64,7 +64,13 @@ mcp-gateway/
 - v1.7.7 released (2026-02-28): Python 3.14 deprecation cleanup + coverage 91→94%
 - v1.7.6: Docker/scripts cleanup, v1.7.5: hono IP spoofing fix
 - v1.7.7+: PR #93 merged (2026-03-01) — all 1188 ruff lint errors fixed, per-file-ignores for non-source dirs
-- Current state: 0 open PRs, CI green, main branch clean, ruff 0 errors ecosystem-wide
+- Current state (2026-03-15): 0 open PRs; CI green; main at commit 62ceb99
+  - PRs #182-#190 all merged; version 1.11.0; 1994 tests; coverage 91.30%
+  - Phase 1 FR-2: make list-servers / enable-server / disable-server (scripts/utils/manage-servers.py)
+  - Phase 2 IDE Integration: all 5 IDEs (Zed added), mcp-wrapper.sh fixed, cross-platform detection
+  - Security: audit endpoints RBAC enforced (AUDIT_READ required)
+  - Coverage: api/gateway/observability unblinded from omit list
+  - tests/ dir added to CI (excluding stale infrastructure/ and integration files)
 - Remaining excluded: performance/ only (via --ignore). Zero conftest exclusions.
 - Known: repository-dispatch needs PAT, GitGuardian API key expired (non-blocking)
 - v1.8.1+ (2026-03-07): PR #103 webapp routing, #129 OpenAPI enrichment, #132 rate limit headers, #133 ARCHITECTURE.md — all MERGED
