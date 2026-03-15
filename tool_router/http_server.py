@@ -20,9 +20,13 @@ from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
 from tool_router.api.streamable_http import router as mcp_router
 from tool_router.middleware.request_logger import RequestLoggingMiddleware
+from tool_router.observability.otel_setup import init_otel, instrument_fastapi
 
 
 logger = logging.getLogger(__name__)
+
+# Bootstrap OpenTelemetry (no-op when packages are absent)
+init_otel()
 
 # Create FastAPI app
 app = FastAPI(
@@ -58,6 +62,9 @@ app.add_middleware(
 
 # Register request logging middleware (before routers, toggled via REQUEST_LOGGING env)
 app.add_middleware(RequestLoggingMiddleware)
+
+# Instrument FastAPI with OpenTelemetry (no-op when packages are absent)
+instrument_fastapi(app)
 
 # Register routers
 app.include_router(rpc_router)

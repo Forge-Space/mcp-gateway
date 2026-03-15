@@ -26,6 +26,16 @@ class StructuredFormatter(logging.Formatter):
         if hasattr(record, "extra_fields"):
             log_data.update(record.extra_fields)
 
+        # Inject OpenTelemetry trace context when available
+        try:
+            from tool_router.observability.otel_setup import get_trace_context
+
+            trace_ctx = get_trace_context()
+            if trace_ctx:
+                log_data.update(trace_ctx)
+        except ImportError:
+            pass
+
         # Format as key=value pairs for easy parsing
         parts = [f"{k}={v}" for k, v in log_data.items()]
         return " ".join(parts)
