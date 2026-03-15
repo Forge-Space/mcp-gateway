@@ -4,6 +4,8 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-03-15
+
 ### Added
 - **Admin UI configuration-required state** — The web admin now stays bootable
   and shows a clear setup message when Supabase public env vars are missing or
