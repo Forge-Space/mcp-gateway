@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { cn } from '@/lib/utils'
-import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Switch } from '@/components/ui/switch'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { cn } from '@/lib/utils';
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import {
   AlertTriangle,
   CheckCircle,
@@ -34,106 +34,105 @@ import {
   Bell,
   Maximize2,
   Minimize2,
-} from 'lucide-react'
+} from 'lucide-react';
 
 interface RealTimeMetrics {
-  timestamp: string
+  timestamp: string;
   system: {
-    cpu: number
-    memory: number
-    disk: number
+    cpu: number;
+    memory: number;
+    disk: number;
     network: {
-      inbound: number
-      outbound: number
-    }
-    uptime: string
-  }
-  services: ServiceMetrics[]
-  alerts: Alert[]
+      inbound: number;
+      outbound: number;
+    };
+    uptime: string;
+  };
+  services: ServiceMetrics[];
+  alerts: Alert[];
   performance: {
-    avgResponseTime: number
-    requestsPerSecond: number
-    errorRate: number
-    throughput: number
-  }
+    avgResponseTime: number;
+    requestsPerSecond: number;
+    errorRate: number;
+    throughput: number;
+  };
 }
 
 interface ServiceMetrics {
-  id: string
-  name: string
-  status: 'running' | 'stopped' | 'error' | 'starting' | 'stopping' | 'sleeping'
-  cpu: number
-  memory: number
-  disk: number
+  id: string;
+  name: string;
+  status: 'running' | 'stopped' | 'error' | 'starting' | 'stopping' | 'sleeping';
+  cpu: number;
+  memory: number;
+  disk: number;
   network: {
-    inbound: number
-    outbound: number
-  }
-  uptime: string
-  lastRestart: string
-  healthScore: number
-  requests: number
-  errors: number
-  avgResponseTime: number
-  replicas: number
-  autoScaling: boolean
+    inbound: number;
+    outbound: number;
+  };
+  uptime: string;
+  lastRestart: string;
+  healthScore: number;
+  requests: number;
+  errors: number;
+  avgResponseTime: number;
+  replicas: number;
+  autoScaling: boolean;
 }
 
 interface Alert {
-  id: string
-  timestamp: string
-  level: 'info' | 'warning' | 'error' | 'critical'
-  title: string
-  message: string
-  service?: string
-  resolved: boolean
-  acknowledged: boolean
+  id: string;
+  timestamp: string;
+  level: 'info' | 'warning' | 'error' | 'critical';
+  title: string;
+  message: string;
+  service?: string;
+  resolved: boolean;
+  acknowledged: boolean;
 }
 
 interface MonitoringConfig {
-  refreshRate: number
-  autoRefresh: boolean
-  showOnlyActive: boolean
-  alertLevel: 'all' | 'warning' | 'error' | 'critical'
-  timeRange: '1m' | '5m' | '15m' | '1h' | '6h' | '24h'
-  services: string[]
+  refreshRate: number;
+  autoRefresh: boolean;
+  showOnlyActive: boolean;
+  alertLevel: 'all' | 'warning' | 'error' | 'critical';
+  timeRange: '1m' | '5m' | '15m' | '1h' | '6h' | '24h';
+  services: string[];
 }
 
-type AlertLevel = MonitoringConfig['alertLevel']
-type TimeRange = MonitoringConfig['timeRange']
+type AlertLevel = MonitoringConfig['alertLevel'];
+type TimeRange = MonitoringConfig['timeRange'];
 
 const getAlertContainerClassName = (level: Alert['level']) =>
   cn({
     'border-red-200 bg-red-50': level === 'critical' || level === 'error',
     'border-yellow-200 bg-yellow-50': level === 'warning',
-    'border-blue-200 bg-blue-50':
-      level !== 'critical' && level !== 'error' && level !== 'warning',
-  })
+    'border-blue-200 bg-blue-50': level !== 'critical' && level !== 'error' && level !== 'warning',
+  });
 
 export default function RealTimeMonitoring() {
-  const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null)
+  const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null);
   const [config, setConfig] = useState<MonitoringConfig>({
     refreshRate: 5000,
     autoRefresh: true,
     showOnlyActive: false,
     alertLevel: 'warning',
     timeRange: '15m',
-    services: []
-  })
-  const [isConnected, setIsConnected] = useState(false)
-  const [selectedService, setSelectedService] = useState<string | null>(null)
-  const [showAlerts, setShowAlerts] = useState(true)
-  const [expandedView, setExpandedView] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
+    services: [],
+  });
+  const [isConnected, setIsConnected] = useState(false);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [showAlerts, setShowAlerts] = useState(true);
+  const [expandedView, setExpandedView] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const generateMockMetrics = useCallback(() => {
-    const tick = Math.floor(Date.now() / Math.max(config.refreshRate, 1000))
-    const getStepValue = (step: number, modulo = 100) => ((tick + step * 17) % modulo) / modulo
+    const tick = Math.floor(Date.now() / Math.max(config.refreshRate, 1000));
+    const getStepValue = (step: number, modulo = 100) => ((tick + step * 17) % modulo) / modulo;
     const getMetricValue = (base: number, spread: number, step: number) =>
-      Number((base + getStepValue(step) * spread).toFixed(1))
+      Number((base + getStepValue(step) * spread).toFixed(1));
     const getCountValue = (base: number, spread: number, step: number) =>
-      base + ((tick + step * 17) % (spread + 1))
-    const cursorDefaultSleeping = (tick + 5) % 6 === 0
+      base + ((tick + step * 17) % (spread + 1));
+    const cursorDefaultSleeping = (tick + 5) % 6 === 0;
 
     const mockServices: ServiceMetrics[] = [
       {
@@ -145,7 +144,7 @@ export default function RealTimeMonitoring() {
         disk: getMetricValue(15, 10, 3),
         network: {
           inbound: getMetricValue(1000, 500, 4),
-          outbound: getMetricValue(800, 400, 5)
+          outbound: getMetricValue(800, 400, 5),
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
@@ -154,7 +153,7 @@ export default function RealTimeMonitoring() {
         errors: getCountValue(0, 10, 8),
         avgResponseTime: getMetricValue(200, 100, 9),
         replicas: 1,
-        autoScaling: false
+        autoScaling: false,
       },
       {
         id: 'service-manager',
@@ -165,7 +164,7 @@ export default function RealTimeMonitoring() {
         disk: getMetricValue(5, 5, 12),
         network: {
           inbound: getMetricValue(500, 200, 13),
-          outbound: getMetricValue(400, 200, 14)
+          outbound: getMetricValue(400, 200, 14),
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
@@ -174,7 +173,7 @@ export default function RealTimeMonitoring() {
         errors: getCountValue(0, 5, 17),
         avgResponseTime: getMetricValue(150, 50, 18),
         replicas: 1,
-        autoScaling: false
+        autoScaling: false,
       },
       {
         id: 'tool-router',
@@ -185,7 +184,7 @@ export default function RealTimeMonitoring() {
         disk: getMetricValue(10, 8, 21),
         network: {
           inbound: getMetricValue(2000, 800, 22),
-          outbound: getMetricValue(1800, 600, 23)
+          outbound: getMetricValue(1800, 600, 23),
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
@@ -194,7 +193,7 @@ export default function RealTimeMonitoring() {
         errors: getCountValue(0, 20, 26),
         avgResponseTime: getMetricValue(250, 150, 27),
         replicas: 2,
-        autoScaling: true
+        autoScaling: true,
       },
       {
         id: 'translate',
@@ -205,7 +204,7 @@ export default function RealTimeMonitoring() {
         disk: getMetricValue(8, 6, 30),
         network: {
           inbound: getMetricValue(800, 300, 31),
-          outbound: getMetricValue(600, 250, 32)
+          outbound: getMetricValue(600, 250, 32),
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
@@ -214,7 +213,7 @@ export default function RealTimeMonitoring() {
         errors: getCountValue(0, 15, 35),
         avgResponseTime: getMetricValue(180, 80, 36),
         replicas: 3,
-        autoScaling: true
+        autoScaling: true,
       },
       {
         id: 'cursor-default',
@@ -225,7 +224,7 @@ export default function RealTimeMonitoring() {
         disk: getMetricValue(12, 8, 39),
         network: {
           inbound: getMetricValue(600, 200, 40),
-          outbound: getMetricValue(500, 200, 41)
+          outbound: getMetricValue(500, 200, 41),
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
@@ -234,7 +233,7 @@ export default function RealTimeMonitoring() {
         errors: getCountValue(0, 10, 44),
         avgResponseTime: getMetricValue(220, 100, 45),
         replicas: 2,
-        autoScaling: true
+        autoScaling: true,
       },
       {
         id: 'cursor-router',
@@ -245,7 +244,7 @@ export default function RealTimeMonitoring() {
         disk: getMetricValue(10, 6, 48),
         network: {
           inbound: getMetricValue(400, 150, 49),
-          outbound: getMetricValue(350, 150, 50)
+          outbound: getMetricValue(350, 150, 50),
         },
         uptime: '2d 14h 32m',
         lastRestart: '2025-02-16T10:30:00Z',
@@ -254,9 +253,9 @@ export default function RealTimeMonitoring() {
         errors: getCountValue(0, 8, 53),
         avgResponseTime: getMetricValue(190, 90, 54),
         replicas: 1,
-        autoScaling: false
-      }
-    ]
+        autoScaling: false,
+      },
+    ];
 
     const mockAlerts: Alert[] = [
       {
@@ -267,7 +266,7 @@ export default function RealTimeMonitoring() {
         message: 'Tool Router CPU usage exceeded 80%',
         service: 'tool-router',
         resolved: false,
-        acknowledged: false
+        acknowledged: false,
       },
       {
         id: '2',
@@ -277,21 +276,24 @@ export default function RealTimeMonitoring() {
         message: 'Translate Services auto-scaled to 3 replicas',
         service: 'translate',
         resolved: true,
-        acknowledged: true
-      }
-    ]
+        acknowledged: true,
+      },
+    ];
 
-    const filteredServices = config.services.length > 0
-      ? mockServices.filter(s => config.services.includes(s.id))
-      : mockServices
+    const filteredServices =
+      config.services.length > 0
+        ? mockServices.filter((s) => config.services.includes(s.id))
+        : mockServices;
 
-    const filteredAlerts = mockAlerts.filter(alert => {
-      if (config.alertLevel === 'all') return true
-      if (config.alertLevel === 'warning') return alert.level === 'warning' || alert.level === 'error' || alert.level === 'critical'
-      if (config.alertLevel === 'error') return alert.level === 'error' || alert.level === 'critical'
-      if (config.alertLevel === 'critical') return alert.level === 'critical'
-      return true
-    })
+    const filteredAlerts = mockAlerts.filter((alert) => {
+      if (config.alertLevel === 'all') return true;
+      if (config.alertLevel === 'warning')
+        return alert.level === 'warning' || alert.level === 'error' || alert.level === 'critical';
+      if (config.alertLevel === 'error')
+        return alert.level === 'error' || alert.level === 'critical';
+      if (config.alertLevel === 'critical') return alert.level === 'critical';
+      return true;
+    });
 
     setMetrics({
       timestamp: new Date().toISOString(),
@@ -301,86 +303,91 @@ export default function RealTimeMonitoring() {
         disk: filteredServices.reduce((sum, s) => sum + s.disk, 0) / filteredServices.length,
         network: {
           inbound: filteredServices.reduce((sum, s) => sum + s.network.inbound, 0),
-          outbound: filteredServices.reduce((sum, s) => sum + s.network.outbound, 0)
+          outbound: filteredServices.reduce((sum, s) => sum + s.network.outbound, 0),
         },
-        uptime: '2d 14h 32m'
+        uptime: '2d 14h 32m',
       },
       services: filteredServices,
       alerts: filteredAlerts,
       performance: {
-        avgResponseTime: filteredServices.reduce((sum, s) => sum + s.avgResponseTime, 0) / filteredServices.length,
+        avgResponseTime:
+          filteredServices.reduce((sum, s) => sum + s.avgResponseTime, 0) / filteredServices.length,
         requestsPerSecond: filteredServices.reduce((sum, s) => sum + s.requests, 0) / 60,
-        errorRate: filteredServices.reduce((sum, s) => sum + s.errors, 0) / filteredServices.reduce((sum, s) => sum + s.requests, 0) * 100,
-        throughput: filteredServices.reduce((sum, s) => sum + s.requests, 0)
-      }
-    })
-  }, [config.alertLevel, config.refreshRate, config.services])
+        errorRate:
+          (filteredServices.reduce((sum, s) => sum + s.errors, 0) /
+            filteredServices.reduce((sum, s) => sum + s.requests, 0)) *
+          100,
+        throughput: filteredServices.reduce((sum, s) => sum + s.requests, 0),
+      },
+    });
+  }, [config.alertLevel, config.refreshRate, config.services]);
 
   // Mock WebSocket connection for demonstration
   // In a real implementation this would connect to a WebSocket endpoint.
   // For now we simulate with polling when autoRefresh is enabled.
   useEffect(() => {
-    setIsConnected(true)
-    generateMockMetrics()
+    setIsConnected(true);
+    generateMockMetrics();
 
     if (!config.autoRefresh) {
-      return
+      return;
     }
 
     const interval = setInterval(() => {
-      generateMockMetrics()
-    }, config.refreshRate)
+      generateMockMetrics();
+    }, config.refreshRate);
 
-    return () => clearInterval(interval)
-  }, [config.autoRefresh, config.refreshRate, generateMockMetrics])
+    return () => clearInterval(interval);
+  }, [config.autoRefresh, config.refreshRate, generateMockMetrics]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'running':
-        return <CheckCircle className="w-4 h-4 text-green-500" />
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'stopped':
-        return <XCircle className="w-4 h-4 text-gray-500" />
+        return <XCircle className="w-4 h-4 text-gray-500" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'starting':
       case 'stopping':
-        return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+        return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />;
       case 'sleeping':
-        return <Pause className="w-4 h-4 text-yellow-500" />
+        return <Pause className="w-4 h-4 text-yellow-500" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-400" />
+        return <Clock className="w-4 h-4 text-gray-400" />;
     }
-  }
+  };
 
   const getAlertIcon = (level: string) => {
     switch (level) {
       case 'info':
-        return <Info className="w-4 h-4 text-blue-500" />
+        return <Info className="w-4 h-4 text-blue-500" />;
       case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'critical':
-        return <AlertCircle className="w-4 h-4 text-red-600" />
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
       default:
-        return <Bell className="w-4 h-4 text-gray-500" />
+        return <Bell className="w-4 h-4 text-gray-500" />;
     }
-  }
+  };
 
   const getHealthColor = (score: number) => {
-    if (score >= 90) return 'text-green-600'
-    if (score >= 70) return 'text-yellow-600'
-    return 'text-red-600'
-  }
+    if (score >= 90) return 'text-green-600';
+    if (score >= 70) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
-  const filteredServices = metrics?.services?.filter(service =>
-    !config.showOnlyActive || service.status === 'running'
-  ).filter(service =>
-    !searchTerm || service.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || []
+  const filteredServices =
+    metrics?.services
+      ?.filter((service) => !config.showOnlyActive || service.status === 'running')
+      .filter(
+        (service) => !searchTerm || service.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ) || [];
 
-  const activeAlerts = metrics?.alerts?.filter(alert => !alert.resolved) || []
-  const criticalAlerts = activeAlerts.filter(alert => alert.level === 'critical')
+  const activeAlerts = metrics?.alerts?.filter((alert) => !alert.resolved) || [];
+  const criticalAlerts = activeAlerts.filter((alert) => alert.level === 'critical');
 
   return (
     <div className="space-y-6">
@@ -395,26 +402,29 @@ export default function RealTimeMonitoring() {
               <WifiOff className="w-5 h-5 text-red-500" />
             )}
           </h2>
-          <p className="text-muted-foreground">
-            Live system metrics and performance monitoring
-          </p>
+          <p className="text-muted-foreground">Live system metrics and performance monitoring</p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <Switch
               checked={config.autoRefresh}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, autoRefresh: checked }))}
+              onCheckedChange={(checked) =>
+                setConfig((prev) => ({ ...prev, autoRefresh: checked }))
+              }
             />
             <span className="text-sm">Auto-refresh</span>
           </div>
           <div className="flex items-center space-x-2">
-            <Label htmlFor="refresh-rate" className="text-sm">Refresh:</Label>
+            <Label htmlFor="refresh-rate" className="text-sm">
+              Refresh:
+            </Label>
             <Select
+              id="refresh-rate"
               value={config.refreshRate.toString()}
               onChange={(event) =>
-                setConfig(prev => ({
+                setConfig((prev) => ({
                   ...prev,
-                  refreshRate: Number.parseInt(event.target.value, 10)
+                  refreshRate: Number.parseInt(event.target.value, 10),
                 }))
               }
             >
@@ -455,11 +465,7 @@ export default function RealTimeMonitoring() {
                   {activeAlerts.length}
                 </Badge>
               </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAlerts(!showAlerts)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowAlerts(!showAlerts)}>
                 {showAlerts ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </Button>
             </div>
@@ -480,9 +486,7 @@ export default function RealTimeMonitoring() {
                           {alert.service || 'System'}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {alert.message}
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">{alert.message}</p>
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-xs text-muted-foreground">
                           {new Date(alert.timestamp).toLocaleTimeString()}
@@ -493,7 +497,7 @@ export default function RealTimeMonitoring() {
                             size="sm"
                             onClick={() => {
                               // In a real implementation, this would acknowledge the alert
-                              console.log('Acknowledge alert:', alert.id)
+                              console.log('Acknowledge alert:', alert.id);
                             }}
                           >
                             Acknowledge
@@ -503,7 +507,7 @@ export default function RealTimeMonitoring() {
                             size="sm"
                             onClick={() => {
                               // In a real implementation, this would resolve the alert
-                              console.log('Resolve alert:', alert.id)
+                              console.log('Resolve alert:', alert.id);
                             }}
                           >
                             Resolve
@@ -570,11 +574,15 @@ export default function RealTimeMonitoring() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Inbound</span>
-                  <span className="text-sm font-medium">{(metrics.system.network.inbound / 1000).toFixed(1)}K/s</span>
+                  <span className="text-sm font-medium">
+                    {(metrics.system.network.inbound / 1000).toFixed(1)}K/s
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Outbound</span>
-                  <span className="text-sm font-medium">{(metrics.system.network.outbound / 1000).toFixed(1)}K/s</span>
+                  <span className="text-sm font-medium">
+                    {(metrics.system.network.outbound / 1000).toFixed(1)}K/s
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -589,15 +597,21 @@ export default function RealTimeMonitoring() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Avg Response</span>
-                  <span className="text-sm font-medium">{metrics.performance.avgResponseTime.toFixed(0)}ms</span>
+                  <span className="text-sm font-medium">
+                    {metrics.performance.avgResponseTime.toFixed(0)}ms
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Requests/s</span>
-                  <span className="text-sm font-medium">{metrics.performance.requestsPerSecond.toFixed(1)}</span>
+                  <span className="text-sm font-medium">
+                    {metrics.performance.requestsPerSecond.toFixed(1)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Error Rate</span>
-                  <span className={`text-sm font-medium ${metrics.performance.errorRate > 5 ? 'text-red-500' : 'text-green-500'}`}>
+                  <span
+                    className={`text-sm font-medium ${metrics.performance.errorRate > 5 ? 'text-red-500' : 'text-green-500'}`}
+                  >
                     {metrics.performance.errorRate.toFixed(1)}%
                   </span>
                 </div>
@@ -614,9 +628,7 @@ export default function RealTimeMonitoring() {
             <Settings className="h-5 w-5" />
             Monitoring Controls
           </CardTitle>
-          <CardDescription>
-            Configure monitoring display and alert settings
-          </CardDescription>
+          <CardDescription>Configure monitoring display and alert settings</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -625,15 +637,18 @@ export default function RealTimeMonitoring() {
               <Switch
                 id="show-only-active"
                 checked={config.showOnlyActive}
-                onCheckedChange={(checked) => setConfig(prev => ({ ...prev, showOnlyActive: checked }))}
+                onCheckedChange={(checked) =>
+                  setConfig((prev) => ({ ...prev, showOnlyActive: checked }))
+                }
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="alert-level">Alert Level</Label>
               <Select
+                id="alert-level"
                 value={config.alertLevel}
                 onChange={(event) => {
-                  setConfig(prev => ({ ...prev, alertLevel: event.target.value as AlertLevel }))
+                  setConfig((prev) => ({ ...prev, alertLevel: event.target.value as AlertLevel }));
                 }}
               >
                 <option value="all">All Alerts</option>
@@ -645,9 +660,10 @@ export default function RealTimeMonitoring() {
             <div className="space-y-2">
               <Label htmlFor="time-range">Time Range</Label>
               <Select
+                id="time-range"
                 value={config.timeRange}
                 onChange={(event) => {
-                  setConfig(prev => ({ ...prev, timeRange: event.target.value as TimeRange }))
+                  setConfig((prev) => ({ ...prev, timeRange: event.target.value as TimeRange }));
                 }}
               >
                 <option value="1m">Last Minute</option>
@@ -683,31 +699,25 @@ export default function RealTimeMonitoring() {
                   className="pl-10 w-64"
                 />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => generateMockMetrics()}
-              >
+              <Button variant="outline" size="sm" onClick={() => generateMockMetrics()}>
                 <RefreshCw className="w-4 h-4" />
               </Button>
             </div>
           </CardTitle>
-          <CardDescription>
-            Real-time service metrics and health status
-          </CardDescription>
+          <CardDescription>Real-time service metrics and health status</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredServices.map((service) => (
-              <div
-                key={service.id}
-                className="rounded-lg border"
-              >
+              <div key={service.id} className="rounded-lg border">
                 <button
                   type="button"
                   className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50"
-                  onClick={() => setSelectedService(service.id === selectedService ? null : service.id)}
-                  aria-pressed={service.id === selectedService}
+                  onClick={() =>
+                    setSelectedService(service.id === selectedService ? null : service.id)
+                  }
+                  aria-expanded={service.id === selectedService}
+                  aria-controls={`service-details-${service.id}`}
                 >
                   <div className="flex items-center space-x-4">
                     {getStatusIcon(service.status)}
@@ -727,7 +737,12 @@ export default function RealTimeMonitoring() {
                       <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
                         <span>Replicas: {service.replicas}</span>
                         <span>Uptime: {service.uptime}</span>
-                        <span>Health: <span className={getHealthColor(service.healthScore)}>{service.healthScore}%</span></span>
+                        <span>
+                          Health:{' '}
+                          <span className={getHealthColor(service.healthScore)}>
+                            {service.healthScore}%
+                          </span>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -752,9 +767,7 @@ export default function RealTimeMonitoring() {
                           {service.avgResponseTime.toFixed(0)}ms avg
                         </div>
                         {service.errors > 0 && (
-                          <div className="text-xs text-red-500">
-                            {service.errors} errors
-                          </div>
+                          <div className="text-xs text-red-500">{service.errors} errors</div>
                         )}
                       </div>
                     </div>
@@ -762,7 +775,10 @@ export default function RealTimeMonitoring() {
                 </button>
 
                 {selectedService === service.id && (
-                  <div className="col-span-full mt-4 p-4 bg-gray-50 rounded-lg">
+                  <div
+                    id={`service-details-${service.id}`}
+                    className="col-span-full mt-4 p-4 bg-gray-50 rounded-lg"
+                  >
                     <h4 className="font-medium mb-2">Service Details: {service.name}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
@@ -793,5 +809,5 @@ export default function RealTimeMonitoring() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

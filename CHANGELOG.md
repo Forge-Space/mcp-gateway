@@ -29,6 +29,7 @@ All notable changes to the MCP Gateway project will be documented in this file.
   inputs to `Forge-Space/forge-ai-action` when the profile is present.
 
 ### Fixed
+
 - **Admin monitoring Sonar gate regressions** — Hardened the real-time monitoring
   view by using explicit decimal parsing for refresh rates, extracting alert
   state styling, and making service-row expansion keyboard-accessible.
