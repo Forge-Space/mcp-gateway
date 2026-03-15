@@ -125,220 +125,201 @@ export default function RealTimeMonitoring() {
   const [expandedView, setExpandedView] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const generateMockMetrics = useCallback(() => {
-    const tick = Math.floor(Date.now() / Math.max(config.refreshRate, 1000));
-    const getStepValue = (step: number, modulo = 100) => ((tick + step * 17) % modulo) / modulo;
-    const getMetricValue = (base: number, spread: number, step: number) =>
-      Number((base + getStepValue(step) * spread).toFixed(1));
-    const getCountValue = (base: number, spread: number, step: number) =>
-      base + ((tick + step * 17) % (spread + 1));
-    const cursorDefaultSleeping = (tick + 5) % 6 === 0;
+  const formatUptime = (seconds: number): string => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
 
-    const mockServices: ServiceMetrics[] = [
-      {
-        id: 'gateway',
-        name: 'Gateway',
-        status: 'running',
-        cpu: getMetricValue(25, 15, 1),
-        memory: getMetricValue(35, 20, 2),
-        disk: getMetricValue(15, 10, 3),
-        network: {
-          inbound: getMetricValue(1000, 500, 4),
-          outbound: getMetricValue(800, 400, 5),
-        },
-        uptime: '2d 14h 32m',
-        lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: getMetricValue(95, 5, 6),
-        requests: getCountValue(15420, 1000, 7),
-        errors: getCountValue(0, 10, 8),
-        avgResponseTime: getMetricValue(200, 100, 9),
-        replicas: 1,
-        autoScaling: false,
-      },
-      {
-        id: 'service-manager',
-        name: 'Service Manager',
-        status: 'running',
-        cpu: getMetricValue(15, 10, 10),
-        memory: getMetricValue(25, 15, 11),
-        disk: getMetricValue(5, 5, 12),
-        network: {
-          inbound: getMetricValue(500, 200, 13),
-          outbound: getMetricValue(400, 200, 14),
-        },
-        uptime: '2d 14h 32m',
-        lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: getMetricValue(98, 2, 15),
-        requests: getCountValue(8200, 500, 16),
-        errors: getCountValue(0, 5, 17),
-        avgResponseTime: getMetricValue(150, 50, 18),
-        replicas: 1,
-        autoScaling: false,
-      },
-      {
-        id: 'tool-router',
-        name: 'Tool Router',
-        status: 'running',
-        cpu: getMetricValue(30, 20, 19),
-        memory: getMetricValue(40, 25, 20),
-        disk: getMetricValue(10, 8, 21),
-        network: {
-          inbound: getMetricValue(2000, 800, 22),
-          outbound: getMetricValue(1800, 600, 23),
-        },
-        uptime: '2d 14h 32m',
-        lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: getMetricValue(92, 8, 24),
-        requests: getCountValue(25800, 2000, 25),
-        errors: getCountValue(0, 20, 26),
-        avgResponseTime: getMetricValue(250, 150, 27),
-        replicas: 2,
-        autoScaling: true,
-      },
-      {
-        id: 'translate',
-        name: 'Translate Services',
-        status: 'running',
-        cpu: getMetricValue(20, 15, 28),
-        memory: getMetricValue(30, 20, 29),
-        disk: getMetricValue(8, 6, 30),
-        network: {
-          inbound: getMetricValue(800, 300, 31),
-          outbound: getMetricValue(600, 250, 32),
-        },
-        uptime: '2d 14h 32m',
-        lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: getMetricValue(88, 10, 33),
-        requests: getCountValue(12000, 1000, 34),
-        errors: getCountValue(0, 15, 35),
-        avgResponseTime: getMetricValue(180, 80, 36),
-        replicas: 3,
-        autoScaling: true,
-      },
-      {
-        id: 'cursor-default',
-        name: 'Cursor Default',
-        status: cursorDefaultSleeping ? 'sleeping' : 'running',
-        cpu: cursorDefaultSleeping ? 2 : getMetricValue(35, 20, 37),
-        memory: cursorDefaultSleeping ? 8 : getMetricValue(45, 25, 38),
-        disk: getMetricValue(12, 8, 39),
-        network: {
-          inbound: getMetricValue(600, 200, 40),
-          outbound: getMetricValue(500, 200, 41),
-        },
-        uptime: '2d 14h 32m',
-        lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: cursorDefaultSleeping ? 85 : getMetricValue(94, 6, 42),
-        requests: getCountValue(9800, 800, 43),
-        errors: getCountValue(0, 10, 44),
-        avgResponseTime: getMetricValue(220, 100, 45),
-        replicas: 2,
-        autoScaling: true,
-      },
-      {
-        id: 'cursor-router',
-        name: 'Cursor Router',
-        status: 'running',
-        cpu: getMetricValue(25, 15, 46),
-        memory: getMetricValue(35, 20, 47),
-        disk: getMetricValue(10, 6, 48),
-        network: {
-          inbound: getMetricValue(400, 150, 49),
-          outbound: getMetricValue(350, 150, 50),
-        },
-        uptime: '2d 14h 32m',
-        lastRestart: '2025-02-16T10:30:00Z',
-        healthScore: getMetricValue(90, 8, 51),
-        requests: getCountValue(6500, 500, 52),
-        errors: getCountValue(0, 8, 53),
-        avgResponseTime: getMetricValue(190, 90, 54),
-        replicas: 1,
-        autoScaling: false,
-      },
-    ];
+  const fetchRealMetrics = useCallback(async () => {
+    try {
+      const [perfRes, systemRes, cloudRes, aiRes] = await Promise.allSettled([
+        fetch('/api/monitoring/performance'),
+        fetch('/api/monitoring/system'),
+        fetch('/api/cloud/health'),
+        fetch('/api/ai/performance'),
+      ]);
 
-    const mockAlerts: Alert[] = [
-      {
-        id: '1',
+      const perf =
+        perfRes.status === 'fulfilled' && perfRes.value.ok ? await perfRes.value.json() : null;
+      const system =
+        systemRes.status === 'fulfilled' && systemRes.value.ok
+          ? await systemRes.value.json()
+          : null;
+      const cloud =
+        cloudRes.status === 'fulfilled' && cloudRes.value.ok ? await cloudRes.value.json() : null;
+      const ai = aiRes.status === 'fulfilled' && aiRes.value.ok ? await aiRes.value.json() : null;
+
+      const uptimeSeconds: number = perf?.uptime_seconds ?? 0;
+      const cacheHitRate: number = system?.cache_metrics?.cache_hit_rate ?? 0;
+      const totalRequests: number = system?.cache_metrics?.total_requests ?? 0;
+      const avgResponseTime: number = ai?.ai_selector?.average_response_time ?? 0;
+
+      const services: ServiceMetrics[] = [];
+
+      if (cloud?.providers) {
+        for (const provider of cloud.providers) {
+          const isHealthy = provider.status === 'healthy';
+          const isDegraded = provider.status === 'degraded';
+          services.push({
+            id: `cloud-${provider.name}`,
+            name: `Cloud: ${provider.name}`,
+            status: isHealthy ? 'running' : isDegraded ? 'sleeping' : 'error',
+            cpu: provider.metrics?.error_rate != null ? provider.metrics.error_rate * 100 : 0,
+            memory: cacheHitRate * 100,
+            disk: 0,
+            network: {
+              inbound: provider.metrics?.total_requests ?? 0,
+              outbound: provider.metrics?.total_requests ?? 0,
+            },
+            uptime: formatUptime(uptimeSeconds),
+            lastRestart: new Date(Date.now() - uptimeSeconds * 1000).toISOString(),
+            healthScore: isHealthy ? 99 : isDegraded ? 70 : 30,
+            requests: provider.metrics?.total_requests ?? 0,
+            errors: provider.metrics?.total_failures ?? 0,
+            avgResponseTime: provider.metrics?.avg_latency_ms ?? 0,
+            replicas: 1,
+            autoScaling: false,
+          });
+        }
+      }
+
+      if (ai?.providers) {
+        for (const provider of ai.providers) {
+          const isHealthy = provider.status === 'healthy';
+          const isWarning = provider.status === 'warning';
+          services.push({
+            id: `ai-${provider.name}`,
+            name: `AI: ${provider.name}`,
+            status: isHealthy ? 'running' : isWarning ? 'sleeping' : 'error',
+            cpu: 0,
+            memory: 0,
+            disk: 0,
+            network: { inbound: provider.total_requests ?? 0, outbound: 0 },
+            uptime: formatUptime(uptimeSeconds),
+            lastRestart: new Date(Date.now() - uptimeSeconds * 1000).toISOString(),
+            healthScore: isHealthy ? 99 : isWarning ? 80 : 50,
+            requests: provider.total_requests ?? 0,
+            errors: Math.round((provider.total_requests ?? 0) * (1 - (provider.success_rate ?? 1))),
+            avgResponseTime: provider.average_response_time ?? 0,
+            replicas: 1,
+            autoScaling: false,
+          });
+        }
+      }
+
+      if (services.length === 0) {
+        services.push({
+          id: 'gateway',
+          name: 'MCP Gateway',
+          status: 'running',
+          cpu: cacheHitRate * 100,
+          memory: cacheHitRate * 100,
+          disk: 0,
+          network: { inbound: totalRequests, outbound: totalRequests },
+          uptime: formatUptime(uptimeSeconds),
+          lastRestart: new Date(Date.now() - uptimeSeconds * 1000).toISOString(),
+          healthScore: cacheHitRate >= 0.9 ? 99 : cacheHitRate >= 0.7 ? 80 : 60,
+          requests: totalRequests,
+          errors: 0,
+          avgResponseTime: avgResponseTime,
+          replicas: 1,
+          autoScaling: false,
+        });
+      }
+
+      const recommendations: string[] = perf?.recommendations ?? [];
+      const cloudWarnings: string[] =
+        cloud?.providers
+          ?.filter((p: { status: string }) => p.status !== 'healthy')
+          .map(
+            (p: { name: string; status: string }) => `Cloud provider ${p.name} is ${p.status}`
+          ) ?? [];
+
+      const allAlerts: Alert[] = [
+        ...recommendations.map((rec: string, i: number) => ({
+          id: `rec-${i}`,
+          timestamp: new Date().toISOString(),
+          level: 'warning' as const,
+          title: 'Performance Recommendation',
+          message: rec,
+          service: 'gateway',
+          resolved: false,
+          acknowledged: false,
+        })),
+        ...cloudWarnings.map((warn: string, i: number) => ({
+          id: `cloud-warn-${i}`,
+          timestamp: new Date().toISOString(),
+          level: 'warning' as const,
+          title: 'Cloud Provider Warning',
+          message: warn,
+          service: 'cloud',
+          resolved: false,
+          acknowledged: false,
+        })),
+      ];
+
+      const filteredAlerts = allAlerts.filter((alert) => {
+        if (config.alertLevel === 'all') return true;
+        if (config.alertLevel === 'warning')
+          return alert.level === 'warning' || alert.level === 'error' || alert.level === 'critical';
+        if (config.alertLevel === 'error')
+          return alert.level === 'error' || alert.level === 'critical';
+        if (config.alertLevel === 'critical') return alert.level === 'critical';
+        return true;
+      });
+
+      const filteredServices =
+        config.services.length > 0
+          ? services.filter((s) => config.services.includes(s.id))
+          : services;
+
+      const totalReqs = filteredServices.reduce((sum, s) => sum + s.requests, 0);
+      const totalErrs = filteredServices.reduce((sum, s) => sum + s.errors, 0);
+
+      setMetrics({
         timestamp: new Date().toISOString(),
-        level: 'warning',
-        title: 'High CPU Usage',
-        message: 'Tool Router CPU usage exceeded 80%',
-        service: 'tool-router',
-        resolved: false,
-        acknowledged: false,
-      },
-      {
-        id: '2',
-        timestamp: new Date().toISOString(),
-        level: 'info',
-        title: 'Service Auto-scaled',
-        message: 'Translate Services auto-scaled to 3 replicas',
-        service: 'translate',
-        resolved: true,
-        acknowledged: true,
-      },
-    ];
-
-    const filteredServices =
-      config.services.length > 0
-        ? mockServices.filter((s) => config.services.includes(s.id))
-        : mockServices;
-
-    const filteredAlerts = mockAlerts.filter((alert) => {
-      if (config.alertLevel === 'all') return true;
-      if (config.alertLevel === 'warning')
-        return alert.level === 'warning' || alert.level === 'error' || alert.level === 'critical';
-      if (config.alertLevel === 'error')
-        return alert.level === 'error' || alert.level === 'critical';
-      if (config.alertLevel === 'critical') return alert.level === 'critical';
-      return true;
-    });
-
-    setMetrics({
-      timestamp: new Date().toISOString(),
-      system: {
-        cpu: filteredServices.reduce((sum, s) => sum + s.cpu, 0) / filteredServices.length,
-        memory: filteredServices.reduce((sum, s) => sum + s.memory, 0) / filteredServices.length,
-        disk: filteredServices.reduce((sum, s) => sum + s.disk, 0) / filteredServices.length,
-        network: {
-          inbound: filteredServices.reduce((sum, s) => sum + s.network.inbound, 0),
-          outbound: filteredServices.reduce((sum, s) => sum + s.network.outbound, 0),
+        system: {
+          cpu: cacheHitRate * 100,
+          memory: cacheHitRate * 100,
+          disk: 0,
+          network: {
+            inbound: totalRequests,
+            outbound: totalRequests,
+          },
+          uptime: formatUptime(uptimeSeconds),
         },
-        uptime: '2d 14h 32m',
-      },
-      services: filteredServices,
-      alerts: filteredAlerts,
-      performance: {
-        avgResponseTime:
-          filteredServices.reduce((sum, s) => sum + s.avgResponseTime, 0) / filteredServices.length,
-        requestsPerSecond: filteredServices.reduce((sum, s) => sum + s.requests, 0) / 60,
-        errorRate:
-          (filteredServices.reduce((sum, s) => sum + s.errors, 0) /
-            filteredServices.reduce((sum, s) => sum + s.requests, 0)) *
-          100,
-        throughput: filteredServices.reduce((sum, s) => sum + s.requests, 0),
-      },
-    });
-  }, [config.alertLevel, config.refreshRate, config.services]);
+        services: filteredServices,
+        alerts: filteredAlerts,
+        performance: {
+          avgResponseTime: avgResponseTime,
+          requestsPerSecond: uptimeSeconds > 0 ? totalRequests / uptimeSeconds : 0,
+          errorRate: totalReqs > 0 ? (totalErrs / totalReqs) * 100 : 0,
+          throughput: totalReqs,
+        },
+      });
+      setIsConnected(true);
+    } catch {
+      setIsConnected(false);
+    }
+  }, [config.alertLevel, config.services]);
 
-  // Mock WebSocket connection for demonstration
-  // In a real implementation this would connect to a WebSocket endpoint.
-  // For now we simulate with polling when autoRefresh is enabled.
   useEffect(() => {
-    setIsConnected(true);
-    generateMockMetrics();
+    fetchRealMetrics();
 
     if (!config.autoRefresh) {
       return;
     }
 
     const interval = setInterval(() => {
-      generateMockMetrics();
+      fetchRealMetrics();
     }, config.refreshRate);
 
     return () => clearInterval(interval);
-  }, [config.autoRefresh, config.refreshRate, generateMockMetrics]);
+  }, [config.autoRefresh, config.refreshRate, fetchRealMetrics]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -436,7 +417,7 @@ export default function RealTimeMonitoring() {
           </div>
           <Button
             variant="outline"
-            onClick={() => generateMockMetrics()}
+            onClick={() => fetchRealMetrics()}
             className="flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
@@ -699,7 +680,7 @@ export default function RealTimeMonitoring() {
                   className="pl-10 w-64"
                 />
               </div>
-              <Button variant="outline" size="sm" onClick={() => generateMockMetrics()}>
+              <Button variant="outline" size="sm" onClick={() => fetchRealMetrics()}>
                 <RefreshCw className="w-4 h-4" />
               </Button>
             </div>
