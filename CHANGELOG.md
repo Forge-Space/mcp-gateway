@@ -4,6 +4,18 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-03-15
+
+### Added
+- **Server Management API** — `GET /servers`, `GET /servers/{name}`, `PATCH /servers/{name}/enabled` endpoints to list and toggle virtual servers in `config/virtual-servers.txt` without manual file editing. All endpoints require admin role (`SYSTEM_ADMIN` permission). (#199)
+- **IDE Detection API** — `GET /ide/detect` returns which of Cursor, VSCode, Windsurf, Claude Desktop, and Zed are installed on the host, with their config file paths. Admin-only. (#199)
+- **`fastapi-common-bugs` skill** — Repo-local agent skill documenting 6 FastAPI bug patterns: unregistered routers, import shadowing, hardcoded timestamps, duplicate model names, deprecated `Query(regex=)`, and unclosed SQLite connections. (#200)
+
+### Fixed
+- **`scalar-fastapi` missing from main dependencies** — Was only listed under `[dev]` extras but is imported by `http_server.py` in production; moved to core `dependencies`. (#199)
+- **Deprecated `Query(regex=)` in cache_dashboard** — Updated to `Query(pattern=)` to eliminate `FastAPIDeprecationWarning` on every request. (#199)
+- **SQLite connection leak in `RAGManagerTool`** — Added `close()`, `__enter__`/`__exit__`, and `__del__` to prevent `ResourceWarning: unclosed database` during tests and file-handle leaks in production. (#200)
+
 ## [1.11.0] - 2026-03-15
 
 ### Added
