@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])
 
 
-class CacheMetricsResponse(BaseModel):
+class CacheHitRateResponse(BaseModel):
     """Cache layer performance metrics."""
 
     cache_hit_rate: float = Field(description="Overall hit rate (0.0-1.0)")
@@ -37,7 +37,7 @@ class SystemMetricsResponse(BaseModel):
 
     timestamp: float = Field(description="Unix timestamp")
     uptime: float = Field(description="Seconds since server start")
-    cache_metrics: CacheMetricsResponse
+    cache_metrics: CacheHitRateResponse
     feedback_metrics: dict[str, Any] = Field(description="Feedback store metrics")
     rate_limiter_metrics: dict[str, Any] = Field(description="Rate limiter state")
     query_cache_metrics: dict[str, Any] = Field(description="Database query cache stats")
@@ -113,15 +113,15 @@ async def health_check() -> MonitoringHealthResponse:
 
 @router.get(
     "/metrics/cache",
-    response_model=CacheMetricsResponse,
+    response_model=CacheHitRateResponse,
     summary="Cache metrics",
     description="Returns cache hit/miss rates, sizes, and breakdowns by cache type.",
 )
-async def get_cache_metrics() -> CacheMetricsResponse:
+async def get_cache_metrics() -> CacheHitRateResponse:
     try:
         metrics = _get_cache_metrics_data()
 
-        return CacheMetricsResponse(
+        return CacheHitRateResponse(
             cache_hit_rate=metrics.get("global", {}).get("hit_rate", 0.0),
             total_hits=metrics.get("global", {}).get("hits", 0),
             total_misses=metrics.get("global", {}).get("misses", 0),
@@ -148,7 +148,7 @@ async def get_system_metrics() -> SystemMetricsResponse:
     try:
         # Get cache metrics
         cache_metrics_data = _get_cache_metrics_data()
-        cache_metrics = CacheMetricsResponse(
+        cache_metrics = CacheHitRateResponse(
             cache_hit_rate=cache_metrics_data.get("global", {}).get("hit_rate", 0.0),
             total_hits=cache_metrics_data.get("global", {}).get("hits", 0),
             total_misses=cache_metrics_data.get("global", {}).get("misses", 0),
