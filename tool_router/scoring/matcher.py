@@ -3,6 +3,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from tool_router.ai.selector import OllamaSelector
+from tool_router.observability.tracing import SpanContext
 
 
 if TYPE_CHECKING:
@@ -104,11 +105,15 @@ def select_top_matching_tools(
     if not tools:
         return []
 
-    scored_tools = [(tool, calculate_tool_relevance_score(task, context or "", tool)) for tool in tools]
-    scored_tools.sort(key=lambda x: -x[1])
-
-    # Only return tools with positive scores
-    return [tool for tool, score in scored_tools if score > 0][:top_n]
+    with SpanContext(
+        "scoring.select_top_matching_tools",
+        **{"scoring.strategy": "keyword", "scoring.tools_count": len(tools), "scoring.top_n": top_n},
+    ) as span:
+        scored_tools = [(tool, calculate_tool_relevance_score(task, context or "", tool)) for tool in tools]
+        scored_tools.sort(key=lambda x: -x[1])
+        result = [tool for tool, score in scored_tools if score > 0][:top_n]
+        span.set_attribute("scoring.matched_count", len(result))
+        return result
 
 
 def select_top_matching_tools_hybrid(
@@ -128,6 +133,33 @@ def select_top_matching_tools_hybrid(
     if not tools:
         return []
 
+    with SpanContext(
+        "scoring.select_top_matching_tools_hybrid",
+        **{
+            "scoring.strategy": "hybrid",
+            "scoring.tools_count": len(tools),
+            "scoring.top_n": top_n,
+            "scoring.ai_weight": ai_weight,
+            "scoring.has_ai_selector": ai_selector is not None,
+            "scoring.has_feedback_store": feedback_store is not None,
+        },
+    ) as span:
+        return _select_top_matching_tools_hybrid_inner(
+            tools, task, context, top_n, ai_selector, ai_weight, feedback_store, span
+        )
+
+
+def _select_top_matching_tools_hybrid_inner(
+    tools: list[dict[str, Any]],
+    task: str,
+    context: str,
+    top_n: int,
+    ai_selector: OllamaSelector | None,
+    ai_weight: float,
+    feedback_store: Any,
+    span: Any,
+) -> list[dict[str, Any]]:
+    """Inner implementation of hybrid tool selection (called within OTel span)."""
     # Get keyword scores for all tools
     keyword_scores = {}
     for tool in tools:
@@ -193,7 +225,10 @@ def select_top_matching_tools_hybrid(
     hybrid_scores.sort(key=lambda x: -x[1])
 
     # Return tools with positive scores
-    return [tool for tool, score in hybrid_scores if score > 0][:top_n]
+    result = [tool for tool, score in hybrid_scores if score > 0][:top_n]
+    span.set_attribute("scoring.matched_count", len(result))
+    span.set_attribute("scoring.ai_selected", selected_tool_name or "")
+    return result
 
 
 def select_top_matching_tools_enhanced(
@@ -210,6 +245,37 @@ def select_top_matching_tools_enhanced(
     if not tools:
         return []
 
+    with SpanContext(
+        "scoring.select_top_matching_tools_enhanced",
+        **{
+            "scoring.strategy": "enhanced",
+            "scoring.tools_count": len(tools),
+            "scoring.top_n": top_n,
+            "scoring.ai_weight": ai_weight,
+            "scoring.has_ai_selector": ai_selector is not None,
+            "scoring.has_feedback_store": feedback_store is not None,
+            "scoring.use_nlp_hints": use_nlp_hints,
+        },
+    ) as span:
+        result = _select_top_matching_tools_enhanced_inner(
+            tools, task, context, top_n, ai_selector, ai_weight, feedback_store, use_nlp_hints, span
+        )
+        span.set_attribute("scoring.matched_count", len(result))
+        return result
+
+
+def _select_top_matching_tools_enhanced_inner(
+    tools: list[dict[str, Any]],
+    task: str,
+    context: str,
+    top_n: int,
+    ai_selector: OllamaSelector | None,
+    ai_weight: float,
+    feedback_store: FeedbackStore | None,
+    use_nlp_hints: bool,
+    span: Any,
+) -> list[dict[str, Any]]:
+    """Inner implementation of enhanced tool selection (called within OTel span)."""
     # Get keyword scores for all tools
     keyword_scores = {}
     for tool in tools:
@@ -278,4 +344,6 @@ def select_top_matching_tools_enhanced(
     enhanced_scores.sort(key=lambda x: -x[1])
 
     # Return tools with positive scores
-    return [tool for tool, score in enhanced_scores if score > 0][:top_n]
+    result = [tool for tool, score in enhanced_scores if score > 0][:top_n]
+    span.set_attribute("scoring.ai_selected", selected_tool_name or "")
+    return result
