@@ -4,6 +4,17 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-03-15
+
+### Added
+- **Structured OTel tracing** (`tool_router/observability/tracing.py`) — `SpanContext` context manager and `@trace` decorator that wrap hot paths in OTel spans, degrading gracefully to no-ops when the `opentelemetry` packages are absent.
+- **RPC endpoint tracing** — `POST /rpc` now emits a `rpc.request` span with `rpc.method`, `rpc.id`, `user.id`, `outcome`, and error details as span attributes.
+- **AI tool selection tracing** — `EnhancedAISelector.select_tool_with_cost_optimization` emits an `ai.tool_selection` span with `task_length`, `tool_count`, and `cost_preference`.
+- **14 new tests** in `tool_router/tests/unit/test_tracing.py` covering `SpanContext` and `@trace` in both sync and async modes.
+
+### Fixed
+- `asyncio.iscoroutinefunction` replaced with `inspect.iscoroutinefunction` in `tracing.py` (Python 3.14 deprecation).
+
 ## [1.13.1] - 2026-03-15
 
 ### Added
