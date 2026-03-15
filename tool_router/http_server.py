@@ -21,6 +21,8 @@ from tool_router.api.metrics_export import router as metrics_router
 from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
+from tool_router.api.server_mgmt import ide_router
+from tool_router.api.server_mgmt import router as server_mgmt_router
 from tool_router.api.streamable_http import router as mcp_router
 from tool_router.middleware.request_logger import RequestLoggingMiddleware
 from tool_router.observability.otel_setup import init_otel, instrument_fastapi
@@ -56,6 +58,8 @@ app = FastAPI(
         {"name": "monitoring", "description": "Performance metrics and system stats"},
         {"name": "metrics", "description": "Prometheus-compatible metrics export"},
         {"name": "cache-dashboard", "description": "Cache performance analytics and alerts"},
+        {"name": "Server Management", "description": "Virtual server enable/disable and listing"},
+        {"name": "IDE Detection", "description": "Detect installed IDEs and their config paths"},
     ],
 )
 
@@ -84,6 +88,8 @@ app.include_router(performance_router)
 app.include_router(metrics_router)
 app.include_router(mcp_router)
 app.include_router(cache_dashboard_router)
+app.include_router(server_mgmt_router)
+app.include_router(ide_router)
 
 
 @app.middleware("http")
