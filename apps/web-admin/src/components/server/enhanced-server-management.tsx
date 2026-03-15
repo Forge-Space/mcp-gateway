@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Progress } from '@/components/ui/progress'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
 import {
   Server,
   Plus,
@@ -44,266 +44,249 @@ import {
   BellOff,
   Maximize2,
   Minimize2,
-  X
-} from 'lucide-react'
+  X,
+} from 'lucide-react';
 
 interface VirtualServer {
-  id: string
-  name: string
-  enabled: boolean
-  gateways: string[]
-  description: string
-  status: 'running' | 'stopped' | 'error' | 'starting' | 'stopping'
-  cpuUsage: number
-  memoryUsage: number
-  uptime: string
-  lastRestart: string
-  healthScore: number
-  aiOptimized: boolean
-  autoScaling: boolean
-  replicas: number
-  createdAt: string
-  updatedAt: string
+  id: string;
+  name: string;
+  enabled: boolean;
+  gateways: string[];
+  description: string;
+  status: 'running' | 'stopped' | 'error' | 'starting' | 'stopping';
+  cpuUsage: number;
+  memoryUsage: number;
+  uptime: string;
+  lastRestart: string;
+  healthScore: number;
+  aiOptimized: boolean;
+  autoScaling: boolean;
+  replicas: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ServerMetrics {
-  totalServers: number
-  runningServers: number
-  stoppedServers: number
-  errorServers: number
-  avgCpuUsage: number
-  avgMemoryUsage: number
-  avgHealthScore: number
-  totalRequests: number
-  avgResponseTime: number
+  totalServers: number;
+  runningServers: number;
+  stoppedServers: number;
+  errorServers: number;
+  avgCpuUsage: number;
+  avgMemoryUsage: number;
+  avgHealthScore: number;
+  totalRequests: number;
+  avgResponseTime: number;
 }
 
 interface DeploymentConfig {
-  clusterName: string
-  namespace: string
-  replicas: number
-  image: string
-  port: number
+  clusterName: string;
+  namespace: string;
+  replicas: number;
+  image: string;
+  port: number;
   resources: {
-    cpu: string
-    memory: string
-  }
-  environment: Record<string, string>
+    cpu: string;
+    memory: string;
+  };
+  environment: Record<string, string>;
   autoScaling: {
-    enabled: boolean
-    minReplicas: number
-    maxReplicas: number
-    targetCpuUtilization: number
-  }
+    enabled: boolean;
+    minReplicas: number;
+    maxReplicas: number;
+    targetCpuUtilization: number;
+  };
   healthChecks: {
-    enabled: boolean
-    path: string
-    interval: number
-    timeout: number
-  }
+    enabled: boolean;
+    path: string;
+    interval: number;
+    timeout: number;
+  };
 }
 
 const secureRandom = () => {
-  const randomValues = new Uint32Array(1)
-  crypto.getRandomValues(randomValues)
-  return randomValues[0] / 4294967295
-}
+  const randomValues = new Uint32Array(1);
+  crypto.getRandomValues(randomValues);
+  return randomValues[0] / 4294967295;
+};
 
 export default function EnhancedServerManagement() {
-  const [servers, setServers] = useState<VirtualServer[]>([])
-  const [metrics, setMetrics] = useState<ServerMetrics | null>(null)
-  const [selectedServer, setSelectedServer] = useState<VirtualServer | null>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showDeployModal, setShowDeployModal] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [autoRefresh, setAutoRefresh] = useState(true)
-  const [refreshInterval, setRefreshInterval] = useState(5000)
+  const [servers, setServers] = useState<VirtualServer[]>([]);
+  const [metrics, setMetrics] = useState<ServerMetrics | null>(null);
+  const [selectedServer, setSelectedServer] = useState<VirtualServer | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30000);
 
-  // Mock data for demonstration
-  useEffect(() => {
-    const mockServers: VirtualServer[] = [
-    {
-      id: 'cursor-default',
-      name: 'Cursor Default',
-      enabled: true,
-      gateways: ['sequential-thinking', 'filesystem', 'tavily'],
-      description: 'Default cursor server with AI-enhanced tool selection',
-      status: 'running',
-      cpuUsage: 45,
-      memoryUsage: 62,
-      uptime: '2d 14h 32m',
-      lastRestart: '2025-02-16T10:30:00Z',
-      healthScore: 95,
-      aiOptimized: true,
-      autoScaling: true,
-      replicas: 2,
-      createdAt: '2025-02-14T09:00:00Z',
-      updatedAt: '2025-02-18T15:45:00Z'
-    },
-    {
-      id: 'cursor-router',
-      name: 'Cursor Router',
-      enabled: true,
-      gateways: ['tool-router', 'github'],
-      description: 'Optimized routing server with enhanced AI selection',
-      status: 'running',
-      cpuUsage: 38,
-      memoryUsage: 55,
-      uptime: '1d 8h 15m',
-      lastRestart: '2025-02-17T12:15:00Z',
-      healthScore: 92,
-      aiOptimized: true,
-      autoScaling: false,
-      replicas: 1,
-      createdAt: '2025-02-15T14:30:00Z',
-      updatedAt: '2025-02-18T09:20:00Z'
-    },
-    {
-      id: 'cursor-disabled',
-      name: 'Cursor Disabled',
-      enabled: false,
-      gateways: ['playwright', 'chrome-devtools'],
-      description: 'Browser automation server (currently disabled)',
-      status: 'stopped',
-      cpuUsage: 0,
-      memoryUsage: 0,
-      uptime: '0s',
-      lastRestart: '2025-02-16T08:00:00Z',
-      healthScore: 0,
-      aiOptimized: false,
-      autoScaling: false,
-      replicas: 0,
-      createdAt: '2025-02-14T11:00:00Z',
-      updatedAt: '2025-02-16T08:00:00Z'
-    },
-    {
-      id: 'legacy-server',
-      name: 'Legacy Server',
-      enabled: true,
-      gateways: ['tool-router', 'github'],
-      description: 'Legacy server for backward compatibility',
-      status: 'running',
-      cpuUsage: 28,
-      memoryUsage: 41,
-      uptime: '3d 2h 18m',
-      lastRestart: '2025-02-15T16:45:00Z',
-      healthScore: 88,
-      aiOptimized: false,
-      autoScaling: false,
-      replicas: 1,
-      createdAt: '2025-02-13T10:00:00Z',
-      updatedAt: '2025-02-17T14:30:00Z'
+  const fetchServers = async () => {
+    try {
+      const response = await fetch('/api/servers');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data: Array<{
+        name: string;
+        enabled: boolean;
+        gateways: string[];
+        description: string;
+      }> = await response.json();
+      const mapped: VirtualServer[] = data.map((s) => ({
+        id: s.name,
+        name: s.name,
+        enabled: s.enabled,
+        gateways: s.gateways,
+        description: s.description,
+        // runtime fields not provided by config API — show neutral defaults
+        status: s.enabled ? 'running' : 'stopped',
+        cpuUsage: 0,
+        memoryUsage: 0,
+        uptime: '—',
+        lastRestart: '—',
+        healthScore: s.enabled ? 100 : 0,
+        aiOptimized: false,
+        autoScaling: false,
+        replicas: s.enabled ? 1 : 0,
+        createdAt: '',
+        updatedAt: '',
+      }));
+      setServers(mapped);
+      setMetrics({
+        totalServers: mapped.length,
+        runningServers: mapped.filter((s) => s.enabled).length,
+        stoppedServers: mapped.filter((s) => !s.enabled).length,
+        errorServers: 0,
+        avgCpuUsage: 0,
+        avgMemoryUsage: 0,
+        avgHealthScore: mapped.length
+          ? mapped.reduce((a, s) => a + s.healthScore, 0) / mapped.length
+          : 0,
+        totalRequests: 0,
+        avgResponseTime: 0,
+      });
+    } catch (err) {
+      console.error('Failed to load servers:', err);
+    } finally {
+      setLoading(false);
     }
-  ]
-
-  const mockMetrics: ServerMetrics = {
-    totalServers: mockServers.length,
-    runningServers: mockServers.filter(s => s.status === 'running').length,
-    stoppedServers: mockServers.filter(s => s.status === 'stopped').length,
-    errorServers: mockServers.filter(s => s.status === 'error').length,
-    avgCpuUsage: mockServers.reduce((sum, s) => sum + s.cpuUsage, 0) / mockServers.length,
-    avgMemoryUsage: mockServers.reduce((sum, s) => sum + s.memoryUsage, 0) / mockServers.length,
-    avgHealthScore: mockServers.reduce((sum, s) => sum + s.healthScore, 0) / mockServers.length,
-    totalRequests: 15420,
-    avgResponseTime: 245
-  }
-
-  setServers(mockServers)
-  setMetrics(mockMetrics)
-  setLoading(false)
-  }, [])
+  };
 
   useEffect(() => {
-    if (!autoRefresh) return
+    fetchServers();
+  }, []);
 
-    const interval = setInterval(() => {
-      // Simulate real-time updates
-      setServers(prev => prev.map(server => ({
-        ...server,
-        cpuUsage: Math.max(0, Math.min(100, server.cpuUsage + (secureRandom() - 0.5) * 10)),
-        memoryUsage: Math.max(0, Math.min(100, server.memoryUsage + (secureRandom() - 0.5) * 8)),
-        healthScore: Math.max(0, Math.min(100, server.healthScore + (secureRandom() - 0.5) * 5))
-      })))
-    }, refreshInterval)
-
-    return () => clearInterval(interval)
-  }, [autoRefresh, refreshInterval])
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(fetchServers, refreshInterval);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval]);
 
   const handleServerAction = async (serverId: string, action: string) => {
-    setServers(prev => prev.map(server => {
-      if (server.id === serverId) {
-        switch (action) {
-          case 'start':
-            return { ...server, status: 'starting' }
-          case 'stop':
-            return { ...server, status: 'stopping' }
-          case 'restart':
-            return { ...server, status: 'starting' }
-          case 'toggle':
-            return { ...server, enabled: !server.enabled }
-          default:
-            return server
-        }
+    if (action === 'toggle') {
+      const server = servers.find((s) => s.id === serverId);
+      if (!server) return;
+      const newEnabled = !server.enabled;
+      // Optimistic update
+      setServers((prev) =>
+        prev.map((s) =>
+          s.id === serverId
+            ? { ...s, enabled: newEnabled, status: newEnabled ? 'running' : 'stopped' }
+            : s
+        )
+      );
+      try {
+        const response = await fetch(`/api/servers/${serverId}/enabled`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ enabled: newEnabled }),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      } catch (err) {
+        console.error('Failed to toggle server:', err);
+        // Revert on failure
+        setServers((prev) =>
+          prev.map((s) =>
+            s.id === serverId
+              ? { ...s, enabled: !newEnabled, status: !newEnabled ? 'running' : 'stopped' }
+              : s
+          )
+        );
       }
-      return server
-    }))
-
-    // Simulate action completion
-    setTimeout(() => {
-      setServers(prev => prev.map(server => {
+      return;
+    }
+    // start / stop / restart — update status locally (no gateway runtime API yet)
+    setServers((prev) =>
+      prev.map((server) => {
         if (server.id === serverId) {
           switch (action) {
             case 'start':
-            case 'restart':
-              return { ...server, status: 'running', lastRestart: new Date().toISOString() }
+              return { ...server, status: 'starting' };
             case 'stop':
-              return { ...server, status: 'stopped', cpuUsage: 0, memoryUsage: 0 }
+              return { ...server, status: 'stopping' };
+            case 'restart':
+              return { ...server, status: 'starting' };
             default:
-              return server
+              return server;
           }
         }
-        return server
-      }))
-    }, 2000)
-  }
+        return server;
+      })
+    );
+    setTimeout(() => {
+      setServers((prev) =>
+        prev.map((server) => {
+          if (server.id === serverId) {
+            switch (action) {
+              case 'start':
+              case 'restart':
+                return { ...server, status: 'running', lastRestart: new Date().toISOString() };
+              case 'stop':
+                return { ...server, status: 'stopped', cpuUsage: 0, memoryUsage: 0 };
+              default:
+                return server;
+            }
+          }
+          return server;
+        })
+      );
+    }, 2000);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'running':
-        return <CheckCircle className="w-4 h-4 text-green-500" />
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'stopped':
-        return <XCircle className="w-4 h-4 text-gray-500" />
+        return <XCircle className="w-4 h-4 text-gray-500" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'starting':
       case 'stopping':
-        return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+        return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-400" />
+        return <Clock className="w-4 h-4 text-gray-400" />;
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'running':
-        return 'bg-green-500'
+        return 'bg-green-500';
       case 'stopped':
-        return 'bg-gray-500'
+        return 'bg-gray-500';
       case 'error':
-        return 'bg-red-500'
+        return 'bg-red-500';
       case 'starting':
       case 'stopping':
-        return 'bg-blue-500'
+        return 'bg-blue-500';
       default:
-        return 'bg-gray-400'
+        return 'bg-gray-400';
     }
-  }
+  };
 
   const getHealthColor = (score: number) => {
-    if (score >= 90) return 'text-green-600'
-    if (score >= 70) return 'text-yellow-600'
-    return 'text-red-600'
-  }
+    if (score >= 90) return 'text-green-600';
+    if (score >= 70) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
   if (loading) {
     return (
@@ -322,7 +305,7 @@ export default function EnhancedServerManagement() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -337,10 +320,7 @@ export default function EnhancedServerManagement() {
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <Switch
-              checked={autoRefresh}
-              onCheckedChange={setAutoRefresh}
-            />
+            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
             <span className="text-sm">Auto-refresh</span>
           </div>
           <Button
@@ -351,10 +331,7 @@ export default function EnhancedServerManagement() {
             <Upload className="w-4 h-4" />
             Deploy Service
           </Button>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Create Server
           </Button>
@@ -410,7 +387,10 @@ export default function EnhancedServerManagement() {
                   <span className="text-sm">Memory</span>
                   <span className="text-sm font-medium">{metrics.avgMemoryUsage.toFixed(1)}%</span>
                 </div>
-                <Progress value={(metrics.avgCpuUsage + metrics.avgMemoryUsage) / 2} className="mt-2" />
+                <Progress
+                  value={(metrics.avgCpuUsage + metrics.avgMemoryUsage) / 2}
+                  className="mt-2"
+                />
               </div>
             </CardContent>
           </Card>
@@ -424,7 +404,9 @@ export default function EnhancedServerManagement() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Requests</span>
-                  <span className="text-sm font-medium">{metrics.totalRequests.toLocaleString()}</span>
+                  <span className="text-sm font-medium">
+                    {metrics.totalRequests.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Avg Response</span>
@@ -443,9 +425,7 @@ export default function EnhancedServerManagement() {
             <Server className="h-5 w-5" />
             Virtual Servers
           </CardTitle>
-          <CardDescription>
-            Manage and monitor virtual server instances
-          </CardDescription>
+          <CardDescription>Manage and monitor virtual server instances</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -459,8 +439,8 @@ export default function EnhancedServerManagement() {
                   <div>
                     <div className="flex items-center space-x-2">
                       <h3 className="font-medium">{server.name}</h3>
-                      <Badge variant={server.enabled ? "default" : "secondary"}>
-                        {server.enabled ? "Enabled" : "Disabled"}
+                      <Badge variant={server.enabled ? 'default' : 'secondary'}>
+                        {server.enabled ? 'Enabled' : 'Disabled'}
                       </Badge>
                       {server.aiOptimized && (
                         <Badge variant="outline" className="text-purple-600">
@@ -497,9 +477,7 @@ export default function EnhancedServerManagement() {
                       <div className={`text-sm font-medium ${getHealthColor(server.healthScore)}`}>
                         Health: {server.healthScore}%
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        Uptime: {server.uptime}
-                      </div>
+                      <div className="text-xs text-muted-foreground">Uptime: {server.uptime}</div>
                     </div>
                   </div>
 
@@ -526,13 +504,13 @@ export default function EnhancedServerManagement() {
                       size="sm"
                       onClick={() => handleServerAction(server.id, 'toggle')}
                     >
-                      {server.enabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      {server.enabled ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedServer(server)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setSelectedServer(server)}>
                       <Settings className="w-4 h-4" />
                     </Button>
                   </div>
@@ -549,10 +527,7 @@ export default function EnhancedServerManagement() {
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Deploy to Kubernetes</h3>
-              <Button
-                variant="outline"
-                onClick={() => setShowDeployModal(false)}
-              >
+              <Button variant="outline" onClick={() => setShowDeployModal(false)}>
                 ×
               </Button>
             </div>
@@ -560,7 +535,8 @@ export default function EnhancedServerManagement() {
               <Server className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h4 className="text-lg font-medium mb-2">Kubernetes Deployment</h4>
               <p className="text-muted-foreground mb-4">
-                Kubernetes deployment is not available. The MCP Gateway uses Docker Compose for optimal simplicity and efficiency.
+                Kubernetes deployment is not available. The MCP Gateway uses Docker Compose for
+                optimal simplicity and efficiency.
               </p>
               <div className="space-y-2 text-sm text-left max-w-md mx-auto">
                 <div className="flex items-center gap-2">
@@ -581,5 +557,5 @@ export default function EnhancedServerManagement() {
         </div>
       )}
     </div>
-  )
+  );
 }
