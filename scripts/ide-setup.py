@@ -10,6 +10,7 @@ Supported IDEs:
 - Windsurf (mcp.json)
 - VSCode (settings.json)
 - Claude Desktop (claude_desktop_config.json)
+- Zed (settings.json — context_servers)
 """
 
 from __future__ import annotations
@@ -21,10 +22,8 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
-UTC = timezone.utc
 
 
 @dataclass
@@ -89,7 +88,7 @@ class IDEManager:
             ),
             "claude": IDEConfig(
                 name="Claude Desktop",
-                config_path="~/Library/Application Support/Claude/claude_desktop_config.json",
+                config_path=self._claude_config_path(),
                 config_format="json",
                 wrapper_script="mcp-wrapper.sh",
                 env_vars={
@@ -99,34 +98,110 @@ class IDEManager:
                 },
                 example_profiles=["claude-default", "claude-router", "research"],
             ),
+            "zed": IDEConfig(
+                name="Zed",
+                config_path="~/.config/zed/settings.json",
+                config_format="json",
+                wrapper_script="mcp-wrapper.sh",
+                env_vars={
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "GitHub token (repo scope)",
+                    "SNYK_TOKEN": "Snyk API token",
+                    "TAVILY_API_KEY": "Tavily API key",
+                },
+                example_profiles=["zed-default", "zed-router"],
+            ),
         }
 
-    def detect_installed_ides(self) -> list[str]:
-        """Auto-detect which IDEs are installed on the system."""
-        detected = []
+    @staticmethod
+    def _claude_config_path() -> str:
+        """Return platform-correct Claude Desktop config path."""
+        import platform
 
-        # Check for Cursor
-        if Path("/Applications/Cursor.app").exists() or Path("~/Applications/Cursor.app").expanduser().exists():
+        system = platform.system()
+        if system == "Darwin":
+            return "~/Library/Application Support/Claude/claude_desktop_config.json"
+        if system == "Windows":
+            appdata = os.environ.get("APPDATA", "~")
+            return str(Path(appdata) / "Claude" / "claude_desktop_config.json")
+        # Linux / other
+        return "~/.config/claude/claude_desktop_config.json"
+
+    def detect_installed_ides(self) -> list[str]:
+        """Auto-detect which IDEs are installed on the system (macOS, Linux, Windows)."""
+        import platform
+
+        detected: list[str] = []
+        system = platform.system()
+
+        # ── Cursor ──────────────────────────────────────────────────────────
+        cursor_paths = [
+            Path("/Applications/Cursor.app"),
+            Path("~/Applications/Cursor.app").expanduser(),
+            Path("~/.cursor").expanduser(),  # config dir present means it ran at least once
+        ]
+        if system == "Windows":
+            cursor_paths += [
+                Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "cursor" / "Cursor.exe",
+                Path(os.environ.get("APPDATA", "")) / "Cursor",
+            ]
+        elif system == "Linux":
+            cursor_paths += [
+                Path("/usr/bin/cursor"),
+                Path("~/.local/share/applications/cursor.desktop").expanduser(),
+            ]
+        if any(p.exists() for p in cursor_paths) or shutil.which("cursor"):
             detected.append("cursor")
 
-        # Check for VSCode
-        if (
-            Path("/Applications/Visual Studio Code.app").exists()
-            or Path("/Applications/VSCode.app").exists()
-            or shutil.which("code")
-        ):
+        # ── VSCode ──────────────────────────────────────────────────────────
+        vscode_paths = [
+            Path("/Applications/Visual Studio Code.app"),
+            Path("/Applications/VSCode.app"),
+        ]
+        if system == "Windows":
+            vscode_paths += [
+                Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Microsoft VS Code" / "Code.exe",
+            ]
+        elif system == "Linux":
+            vscode_paths += [
+                Path("/usr/share/applications/code.desktop"),
+            ]
+        if any(p.exists() for p in vscode_paths) or shutil.which("code") or shutil.which("code-insiders"):
             detected.append("vscode")
 
-        # Check for Windsurf (often installed via npm)
-        try:
-            subprocess.run(["windsurf", "--version"], capture_output=True, check=False)
+        # ── Windsurf ────────────────────────────────────────────────────────
+        windsurf_paths = [
+            Path("/Applications/Windsurf.app"),
+            Path("~/Applications/Windsurf.app").expanduser(),
+            Path("~/.windsurf").expanduser(),
+        ]
+        if system == "Windows":
+            windsurf_paths += [
+                Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Windsurf" / "Windsurf.exe",
+            ]
+        elif system == "Linux":
+            windsurf_paths += [
+                Path("~/.local/share/applications/windsurf.desktop").expanduser(),
+            ]
+        if any(p.exists() for p in windsurf_paths) or shutil.which("windsurf"):
             detected.append("windsurf")
-        except (FileNotFoundError, subprocess.SubprocessError):
-            pass
 
-        # Check for Claude Desktop
-        if Path("~/Library/Application Support/Claude").expanduser().exists():
+        # ── Claude Desktop ──────────────────────────────────────────────────
+        claude_config = Path(self._claude_config_path()).expanduser().parent
+        if claude_config.exists():
             detected.append("claude")
+
+        # ── Zed ─────────────────────────────────────────────────────────────
+        zed_paths = [
+            Path("/Applications/Zed.app"),
+            Path("~/Applications/Zed.app").expanduser(),
+            Path("~/.config/zed").expanduser(),
+        ]
+        if system == "Linux":
+            zed_paths += [
+                Path("~/.local/share/applications/dev.zed.Zed.desktop").expanduser(),
+            ]
+        if any(p.exists() for p in zed_paths) or shutil.which("zed"):
+            detected.append("zed")
 
         return detected
 
@@ -192,6 +267,19 @@ class IDEManager:
         if "/servers/" not in server_url or "/mcp" not in server_url:
             raise ValueError(f"Invalid server URL format: {server_url}")
 
+        # Zed uses a different entry schema under "context_servers"
+        if ide == "zed":
+            zed_entry = {
+                "command": {"path": str(wrapper_path.absolute()), "args": []},
+                "settings": {},
+                "env": {"MCP_CLIENT_SERVER_URL": server_url},
+            }
+            for var_name in ide_config.env_vars:
+                env_value = os.environ.get(var_name)
+                if env_value:
+                    zed_entry["env"][var_name] = env_value
+            return {"context_servers": {server_name: zed_entry}}
+
         entry = {
             "command": str(wrapper_path.absolute()),
             "env": {"MCP_CLIENT_SERVER_URL": server_url},
@@ -203,7 +291,7 @@ class IDEManager:
 
         # Add environment variables if available
         env_vars = {}
-        for var_name, description in ide_config.env_vars.items():
+        for var_name in ide_config.env_vars:
             env_value = os.environ.get(var_name)
             if env_value:
                 env_vars[var_name] = env_value
@@ -235,16 +323,13 @@ class IDEManager:
                     print(f"⚠️  Invalid JSON in {config_path}, creating new config")
                     existing_config = {}
 
-            # Merge configurations
+            # Merge configurations (IDE-specific container keys)
             if ide == "vscode":
-                if "mcp.servers" in existing_config:
-                    existing_config["mcp.servers"].update(config["mcp.servers"])
-                else:
-                    existing_config.update(config)
-            elif "mcpServers" in existing_config:
-                existing_config["mcpServers"].update(config["mcpServers"])
+                existing_config.setdefault("mcp.servers", {}).update(config.get("mcp.servers", {}))
+            elif ide == "zed":
+                existing_config.setdefault("context_servers", {}).update(config.get("context_servers", {}))
             else:
-                existing_config.update(config)
+                existing_config.setdefault("mcpServers", {}).update(config.get("mcpServers", {}))
 
             # Write configuration
             with open(config_path, "w") as f:
@@ -335,7 +420,13 @@ class IDEManager:
                 with open(config_path) as f:
                     config_data = json.load(f)
 
-                servers = config_data.get("mcpServers", {})
+                # Zed uses context_servers, VSCode uses mcp.servers, others use mcpServers
+                if ide == "zed":
+                    servers = config_data.get("context_servers", {})
+                elif ide == "vscode":
+                    servers = config_data.get("mcp.servers", {})
+                else:
+                    servers = config_data.get("mcpServers", {})
                 status["servers_configured"] = list(servers.keys())
                 status["last_modified"] = datetime.fromtimestamp(config_path.stat().st_mtime, UTC).isoformat()
 
@@ -412,21 +503,22 @@ class IDEManager:
             return False
 
     def use_wrapper_script(self, ide: str) -> bool:
-        """Configure IDE to use wrapper script."""
-        if ide != "cursor":
-            print(f"Wrapper script is only supported for Cursor, not {ide}")
+        """Configure IDE to use wrapper script (all supported IDEs)."""
+        if ide not in self.ides:
+            print(f"❌ Unsupported IDE: {ide}")
             return False
 
-        config_path = Path.home() / ".cursor" / "mcp.json"
+        ide_config = self.ides[ide]
+        config_path = Path(ide_config.config_path).expanduser()
         wrapper_path = self.repo_root / "scripts" / "mcp-wrapper.sh"
 
-        if not config_path.exists():
-            print(f"❌ {config_path} not found")
+        if not wrapper_path.exists():
+            print(f"❌ {wrapper_path} not found. Run: chmod +x scripts/mcp-wrapper.sh")
             return False
 
-        if not wrapper_path.exists():
-            print(f"❌ {wrapper_path} not found")
-            return False
+        if not config_path.exists():
+            print(f"⚠️  {config_path} not found — creating new config")
+            config_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             explicit_url = os.environ.get("MCP_CLIENT_SERVER_URL", "").strip()
@@ -440,43 +532,58 @@ class IDEManager:
                 print("❌ Missing MCP URL. Run 'make register' or set MCP_CLIENT_SERVER_URL")
                 return False
 
-            # Load configuration
-            with open(config_path) as f:
-                config = json.load(f)
+            # Load existing config (empty dict if new file)
+            config: dict = {}
+            if config_path.exists():
+                try:
+                    with open(config_path) as f:
+                        config = json.load(f)
+                except json.JSONDecodeError:
+                    print(f"⚠️  Invalid JSON in {config_path}, starting fresh")
 
-            # Find or create context-forge key
-            context_forge_key = None
-            for key in config.keys():
-                if "context-forge" in key.lower():
-                    context_forge_key = key
-                    break
-
-            if not context_forge_key:
-                context_forge_key = "context-forge"
-
-            # Configure wrapper
-            wrapper_config = {
-                "command": str(wrapper_path),
-                "timeout": 120000,  # 2 minutes
-                "env": {"MCP_CLIENT_SERVER_URL": mcp_url},
-            }
-
-            if "mcpServers" in config:
-                config["mcpServers"][context_forge_key] = wrapper_config
+            # Build the wrapper entry in the IDE-specific format
+            timeout_ms = int(os.environ.get("CURSOR_MCP_TIMEOUT_MS", "120000"))
+            if ide == "zed":
+                entry_key = "context-forge"
+                wrapper_entry = {
+                    "command": {"path": str(wrapper_path), "args": []},
+                    "settings": {},
+                    "env": {"MCP_CLIENT_SERVER_URL": mcp_url},
+                }
+                config.setdefault("context_servers", {})[entry_key] = wrapper_entry
+                container_display = "context_servers"
+            elif ide == "vscode":
+                entry_key = "context-forge"
+                wrapper_entry = {
+                    "command": str(wrapper_path),
+                    "timeout": timeout_ms,
+                    "env": {"MCP_CLIENT_SERVER_URL": mcp_url},
+                }
+                config.setdefault("mcp.servers", {})[entry_key] = wrapper_entry
+                container_display = "mcp.servers"
             else:
-                config[context_forge_key] = wrapper_config
+                # cursor, windsurf, claude — all use mcpServers
+                entry_key = "context-forge"
+                wrapper_entry = {
+                    "command": str(wrapper_path),
+                    "timeout": timeout_ms,
+                    "env": {"MCP_CLIENT_SERVER_URL": mcp_url},
+                }
+                config.setdefault("mcpServers", {})[entry_key] = wrapper_entry
+                container_display = "mcpServers"
 
-            # Backup and update
-            backup_path = config_path.with_suffix(".json.bak")
-            shutil.copy2(config_path, backup_path)
+            # Backup and write
+            if config_path.exists():
+                backup_path = config_path.with_suffix(".json.bak")
+                shutil.copy2(config_path, backup_path)
+                print(f"   Backup saved to {backup_path}")
 
             with open(config_path, "w") as f:
                 json.dump(config, f, indent=2)
 
-            print(f"✅ Set '{context_forge_key}' to use wrapper script in {config_path}")
-            print(f"   Backup saved to {backup_path}")
-            print(f"   MCP URL source: {'MCP_CLIENT_SERVER_URL' if explicit_url else 'data/.mcp-client-url'}")
-            print("   Fully quit Cursor (Cmd+Q / Alt+F4) and reopen to use automatic JWT")
+            print(f"✅ Wrote '{entry_key}' under {container_display} in {config_path}")
+            print(f"   MCP URL source: {'MCP_CLIENT_SERVER_URL env' if explicit_url else 'data/.mcp-client-url'}")
+            print(f"   Restart {ide_config.name} to pick up the change")
             return True
 
         except Exception as e:
@@ -484,12 +591,13 @@ class IDEManager:
             return False
 
     def verify_setup(self, ide: str) -> bool:
-        """Verify IDE setup and configuration."""
-        if ide != "cursor":
-            print(f"Setup verification is only supported for Cursor, not {ide}")
+        """Verify IDE setup and configuration (all supported IDEs)."""
+        if ide not in self.ides:
+            print(f"❌ Unsupported IDE: {ide}")
             return False
 
-        print("🔍 Verifying Cursor setup...")
+        ide_config = self.ides[ide]
+        print(f"🔍 Verifying {ide_config.name} setup...")
         gateway_base = os.environ.get("GATEWAY_URL", f"http://localhost:{os.environ.get('PORT', '4444')}")
         gateway_base = gateway_base.rstrip("/")
         health_url = f"{gateway_base}/health"
@@ -523,9 +631,9 @@ class IDEManager:
             return False
 
         # Check configuration file
-        config_path = Path.home() / ".cursor" / "mcp.json"
+        config_path = Path(ide_config.config_path).expanduser()
         if not config_path.exists():
-            print(f"❌ {config_path} not found")
+            print(f"❌ {config_path} not found — run: python3 scripts/ide-setup.py setup {ide} --action use-wrapper")
             return False
 
         try:
@@ -534,34 +642,35 @@ class IDEManager:
             with open(config_path) as f:
                 config = json.load(f)
 
-            servers = config.get("mcpServers", {})
+            # Determine the container key for this IDE
+            if ide == "zed":
+                container_key = "context_servers"
+            elif ide == "vscode":
+                container_key = "mcp.servers"
+            else:
+                container_key = "mcpServers"
+
+            servers = config.get(container_key, {})
             if not isinstance(servers, dict):
-                print("❌ Invalid Cursor config: mcpServers must be an object")
+                print(f"❌ Invalid {ide_config.name} config: {container_key} must be an object")
                 return False
 
-            entry_key = next((key for key in servers if "context-forge" in key.lower()), None)
+            # Find the wrapper entry (search by key name or by command/env)
+            def _has_wrapper_url(v: dict) -> bool:
+                env = v.get("env", {})
+                if isinstance(env, dict) and env.get("MCP_CLIENT_SERVER_URL"):
+                    return True
+                cmd = v.get("command", {})
+                # Zed stores command as {"path": ..., "args": [...]}
+                if isinstance(cmd, dict):
+                    return str(cmd.get("path", "")).endswith("mcp-wrapper.sh")
+                return str(cmd).endswith("mcp-wrapper.sh")
+
+            entry_key = next((k for k in servers if "context-forge" in k.lower()), None)
             if not entry_key:
-                entry_key = next(
-                    (
-                        key
-                        for key, value in servers.items()
-                        if isinstance(value, dict) and str(value.get("command", "")).endswith("mcp-wrapper.sh")
-                    ),
-                    None,
-                )
+                entry_key = next((k for k, v in servers.items() if isinstance(v, dict) and _has_wrapper_url(v)), None)
             if not entry_key:
-                entry_key = next(
-                    (
-                        key
-                        for key, value in servers.items()
-                        if isinstance(value, dict)
-                        and isinstance(value.get("env"), dict)
-                        and bool(value["env"].get("MCP_CLIENT_SERVER_URL"))
-                    ),
-                    None,
-                )
-            if not entry_key:
-                print("❌ No wrapper-style MCP entry found in mcpServers")
+                print(f"❌ No wrapper-style MCP entry found in {container_key}")
                 return False
 
             print(f"✅ Found MCP entry: {entry_key}")
@@ -570,17 +679,19 @@ class IDEManager:
                 print("❌ Invalid MCP entry format")
                 return False
 
-            wrapper_path = entry.get("command")
-            if not wrapper_path:
-                print("❌ MCP entry does not use command-based wrapper setup")
+            # Resolve the command path (str for most IDEs, dict for Zed)
+            cmd = entry.get("command", "")
+            wrapper_cmd = cmd.get("path", "") if isinstance(cmd, dict) else cmd
+            if not wrapper_cmd:
+                print("❌ MCP entry does not specify a command")
                 return False
-            if not str(wrapper_path).endswith("mcp-wrapper.sh"):
-                print(f"❌ MCP entry points to unexpected command: {wrapper_path}")
+            if not str(wrapper_cmd).endswith("mcp-wrapper.sh"):
+                print(f"❌ MCP entry points to unexpected command: {wrapper_cmd}")
                 return False
-            if Path(wrapper_path).exists():
-                print(f"✅ Wrapper script exists: {wrapper_path}")
+            if Path(str(wrapper_cmd)).exists():
+                print(f"✅ Wrapper script exists: {wrapper_cmd}")
             else:
-                print(f"❌ Wrapper script not found: {wrapper_path}")
+                print(f"❌ Wrapper script not found: {wrapper_cmd}")
                 return False
 
             entry_env = entry.get("env", {})
@@ -608,9 +719,9 @@ class IDEManager:
                 return False
 
             if entry_mcp_url:
-                print("✅ Wrapper config includes MCP_CLIENT_SERVER_URL fallback")
+                print("✅ Wrapper config includes MCP_CLIENT_SERVER_URL")
 
-            print("✅ Cursor setup verification completed successfully")
+            print(f"✅ {ide_config.name} setup verification completed successfully")
             return True
 
         except json.JSONDecodeError:
@@ -716,7 +827,7 @@ Examples:
 
     parser.add_argument("command", choices=["setup", "detect", "list-servers"], help="Command to execute")
 
-    parser.add_argument("ide", nargs="?", help="IDE name (cursor, windsurf, vscode, claude, all)")
+    parser.add_argument("ide", nargs="?", help="IDE name (cursor, windsurf, vscode, claude, zed, all)")
 
     parser.add_argument(
         "--action",
@@ -762,7 +873,7 @@ Examples:
         elif args.command == "setup":
             if not args.ide:
                 print("❌ IDE name required for setup command")
-                print("Supported IDEs: cursor, windsurf, vscode, claude, all")
+                print("Supported IDEs: cursor, windsurf, vscode, claude, zed, all")
                 sys.exit(1)
 
             success = manager.setup_ide(args.ide, args.action, args.server_name, args.profile)

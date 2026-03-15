@@ -16,6 +16,7 @@ Features:
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -195,9 +196,23 @@ class SetupWizard:
         if (home / ".windsurf" / "settings.json").exists():
             detected.append("windsurf")
 
-        # Check for Claude Desktop
-        if (home / ".config" / "claude" / "claude_desktop_config.json").exists():
+        # Check for Claude Desktop (macOS, Linux, Windows)
+        import platform
+
+        system = platform.system()
+        if system == "Darwin":
+            claude_config = home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+        elif system == "Windows":
+            appdata = os.environ.get("APPDATA", str(home))
+            claude_config = Path(appdata) / "Claude" / "claude_desktop_config.json"
+        else:
+            claude_config = home / ".config" / "claude" / "claude_desktop_config.json"
+        if claude_config.exists():
             detected.append("claude")
+
+        # Check for Zed
+        if (home / ".config" / "zed" / "settings.json").exists():
+            detected.append("zed")
 
         return detected
 
@@ -344,7 +359,7 @@ Let's get started!
 
         # Detect installed IDEs
         detected = self._detect_ides()
-        available_ides = ["cursor", "vscode", "windsurf", "claude"]
+        available_ides = ["cursor", "vscode", "windsurf", "claude", "zed"]
 
         print(f"Detected IDEs: {', '.join(detected) if detected else 'None'}")
 
@@ -473,12 +488,19 @@ Configuration Summary:
         # Update .env file
         self._update_env_file()
 
-        # IDE configuration
+        # IDE configuration — use the unified ide-setup.py with correct sub-command
         if self.config.configure_ides and self.config.selected_ides:
             print("\n🔧 Configuring IDEs...")
             for ide in self.config.selected_ides:
                 success, _stdout, stderr = self._run_command(
-                    [sys.executable, str(self.scripts_dir / "ide-setup.py"), "--ide", ide]
+                    [
+                        sys.executable,
+                        str(self.scripts_dir / "ide-setup.py"),
+                        "setup",
+                        ide,
+                        "--action",
+                        "use-wrapper",
+                    ]
                 )
                 if success:
                     print(f"✅ {ide.title()} configured")
