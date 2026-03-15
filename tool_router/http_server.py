@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError, version as pkg_version
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +26,12 @@ from tool_router.observability.otel_setup import init_otel, instrument_fastapi
 
 logger = logging.getLogger(__name__)
 
+# Single-source the package version from pyproject.toml metadata
+try:
+    _SERVICE_VERSION = pkg_version("forge-mcp-gateway")
+except PackageNotFoundError:
+    _SERVICE_VERSION = "dev"
+
 # Bootstrap OpenTelemetry (no-op when packages are absent)
 init_otel()
 
@@ -37,7 +44,7 @@ app = FastAPI(
         "JWT authentication, RBAC, audit logging, "
         "and quality gates for AI-generated code."
     ),
-    version="1.11.0",
+    version=_SERVICE_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_tags=[
@@ -138,7 +145,7 @@ async def scalar_docs():
 async def root():
     return {
         "service": "Forge Space MCP Gateway",
-        "version": "1.11.0",
+        "version": _SERVICE_VERSION,
         "docs": "/docs",
         "redoc": "/redoc",
         "scalar": "/api-docs",
@@ -157,7 +164,7 @@ async def health_check():
         "status": "healthy",
         "service": "tool-router",
         "timestamp": datetime.now(UTC).isoformat(),
-        "version": "1.11.0",
+        "version": _SERVICE_VERSION,
     }
 
 

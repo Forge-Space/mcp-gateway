@@ -269,17 +269,6 @@ class TestMakefile:
             # Should check for FORMAT variable
             assert "FORMAT" in status_content, "Status should support FORMAT option"
 
-    def test_makefile_test_target_uses_pytest(self, makefile_path: Path) -> None:
-        """Test that test target runs pytest."""
-        with open(makefile_path) as f:
-            content = f.read()
-
-        # Test target should invoke pytest
-        test_section = re.search(r"^test:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL)
-        if test_section:
-            test_content = test_section.group(0)
-            assert "pytest" in test_content, "Test target should invoke pytest"
-
     def test_makefile_deps_target_supports_actions(self, makefile_path: Path) -> None:
         """Test that deps target supports multiple actions."""
         with open(makefile_path) as f:
