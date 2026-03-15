@@ -16,8 +16,8 @@ import requests
 
 
 @dataclass
-class TestConfig:
-    """Test configuration"""
+class ArchTestConfig:
+    """Test configuration for scalable architecture tests."""
 
     gateway_url: str = "http://localhost:4444"
     service_manager_url: str = "http://localhost:9000"
@@ -32,7 +32,7 @@ class TestConfig:
 class ScalableArchitectureTestSuite:
     """Test suite for scalable architecture"""
 
-    def __init__(self, config: TestConfig):
+    def __init__(self, config: ArchTestConfig):
         self.config = config
         self.test_results = []
 
@@ -589,7 +589,7 @@ class ScalableArchitectureTestSuite:
 # Test execution
 def main():
     """Main test execution function"""
-    config = TestConfig()
+    config = ArchTestConfig()
     test_suite = ScalableArchitectureTestSuite(config)
 
     # Run all tests

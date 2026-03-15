@@ -128,9 +128,7 @@ test: ## Run tests (replaces test, test-coverage)
 	pytest tool_router/tests/ dribbble_mcp/tests/ tests/ \
 		--ignore=tool_router/tests/performance \
 		--ignore=tests/test_rag_manager.py \
-		--ignore=tests/test_specialist_integration.py \
 		--ignore=tests/test_github_workflows.py \
-		--ignore=tests/test_scalable_architecture.py \
 		--timeout=30 --maxfail=10
 
 release: ## Automated release — usage: make release BUMP=patch|minor|major|--detect
