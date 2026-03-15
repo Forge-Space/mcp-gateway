@@ -4,6 +4,13 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-03-15
+
+### Added
+- **Phase 6 Multi-Cloud Admin UI** — new `/cloud` page in the Admin UI with full cloud provider management: list providers, register new providers, toggle enabled/disabled, delete providers, view health summary (healthy/degraded/unhealthy counts), and change routing strategy (failover/round_robin/latency_weighted/random) at runtime.
+- **Next.js proxy routes** — `apps/web-admin/src/app/api/cloud/` with routes for `GET/POST /cloud/providers`, `GET/DELETE /cloud/providers/[name]`, `PATCH /cloud/providers/[name]/enabled`, `GET /cloud/health`, and `PATCH /cloud/strategy`.
+- **Navigation link** — "Cloud Providers" added to the Admin UI sidebar navigation.
+
 ## [1.17.0] - 2026-03-15
 
 ### Added
