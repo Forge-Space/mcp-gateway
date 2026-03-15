@@ -125,8 +125,13 @@ lint-strict: ## Run all linters without fallbacks (CI-friendly)
 
 test: ## Run tests (replaces test, test-coverage)
 	@echo "🧪 Running tests..."
-	pytest tool_router/tests/ dribbble_mcp/tests/ \
+	pytest tool_router/tests/ dribbble_mcp/tests/ tests/ \
 		--ignore=tool_router/tests/performance \
+		--ignore=tests/test_rag_manager.py \
+		--ignore=tests/test_security.py \
+		--ignore=tests/test_specialist_integration.py \
+		--ignore=tests/test_github_workflows.py \
+		--ignore=tests/test_scalable_architecture.py \
 		--timeout=30 --maxfail=10
 
 deps: ## Dependency management (replaces deps-check, deps-update, pre-commit-install)

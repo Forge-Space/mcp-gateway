@@ -37,7 +37,7 @@ app = FastAPI(
         "JWT authentication, RBAC, audit logging, "
         "and quality gates for AI-generated code."
     ),
-    version="1.8.1",
+    version="1.11.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_tags=[
@@ -138,7 +138,7 @@ async def scalar_docs():
 async def root():
     return {
         "service": "Forge Space MCP Gateway",
-        "version": "1.8.1",
+        "version": "1.11.0",
         "docs": "/docs",
         "redoc": "/redoc",
         "scalar": "/api-docs",
@@ -157,7 +157,7 @@ async def health_check():
         "status": "healthy",
         "service": "tool-router",
         "timestamp": datetime.now(UTC).isoformat(),
-        "version": "1.8.1",
+        "version": "1.11.0",
     }
 
 

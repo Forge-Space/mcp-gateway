@@ -234,13 +234,13 @@ class TestDockerfiles:
         # Should copy tool_router directory
         assert "tool_router" in content, "Should copy tool_router application code"
 
-    def test_dockerfile_tool_router_runs_simple_server(self, dockerfile_tool_router: Path) -> None:
-        """Test that tool-router Dockerfile runs the simple server."""
+    def test_dockerfile_tool_router_runs_http_server(self, dockerfile_tool_router: Path) -> None:
+        """Test that tool-router Dockerfile runs the HTTP server."""
         with open(dockerfile_tool_router) as f:
             content = f.read()
 
-        # Should run simple_server.py
-        assert "simple_server.py" in content, "Should run simple_server.py"
+        # Dockerfile.tool-router runs http_server.py (migrated from simple_server.py)
+        assert "http_server.py" in content, "Should run http_server.py"
 
     def test_dockerfile_tool_router_exposes_port_or_curl_in_healthcheck(self, dockerfile_tool_router: Path) -> None:
         """Test that tool-router Dockerfile exposes port or uses curl in healthcheck."""

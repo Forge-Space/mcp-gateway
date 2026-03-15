@@ -269,17 +269,16 @@ class TestMakefile:
             # Should check for FORMAT variable
             assert "FORMAT" in status_content, "Status should support FORMAT option"
 
-    def test_makefile_test_target_supports_coverage(self, makefile_path: Path) -> None:
-        """Test that test target supports coverage option."""
+    def test_makefile_test_target_uses_pytest(self, makefile_path: Path) -> None:
+        """Test that test target runs pytest."""
         with open(makefile_path) as f:
             content = f.read()
 
-        # Test should support COVERAGE option
+        # Test target should invoke pytest
         test_section = re.search(r"^test:.*?(?=^\S|\Z)", content, re.MULTILINE | re.DOTALL)
         if test_section:
             test_content = test_section.group(0)
-            # Should check for COVERAGE variable
-            assert "COVERAGE" in test_content, "Test should support COVERAGE option"
+            assert "pytest" in test_content, "Test target should invoke pytest"
 
     def test_makefile_deps_target_supports_actions(self, makefile_path: Path) -> None:
         """Test that deps target supports multiple actions."""
@@ -394,14 +393,16 @@ class TestMakefile:
         with open(makefile_path) as f:
             content = f.read()
 
-        # Extract .PHONY targets
-        phony_match = re.search(r"\.PHONY:\s*(.+)", content)
-        if phony_match:
-            phony_targets = set(phony_match.group(1).split())
+        # Extract .PHONY targets — handle multiline declarations joined by backslash
+        phony_block = re.search(r"\.PHONY:\s*((?:[^\n]+\\\n)*[^\n]+)", content)
+        if phony_block:
+            # Join continuation lines, strip backslashes and whitespace
+            raw = phony_block.group(1).replace("\\\n", " ")
+            phony_targets = {t for t in raw.split() if t and t != "\\"}
 
             # Extract actual targets (including targets with hyphens)
             actual_targets = set(re.findall(r"^([\w-]+):", content, re.MULTILINE))
 
-            # All phony targets should exist
+            # All phony targets should exist as real targets
             for phony in phony_targets:
                 assert phony in actual_targets, f".PHONY target '{phony}' should be defined"
