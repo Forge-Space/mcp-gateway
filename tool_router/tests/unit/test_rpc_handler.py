@@ -5,6 +5,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from tool_router.api.rpc_handler import (
     JsonRpcRequest,
@@ -13,6 +15,9 @@ from tool_router.api.rpc_handler import (
     _handle_tools_call,
     _handle_tools_list,
     init_rpc_security,
+)
+from tool_router.api.rpc_handler import (
+    router as rpc_router,
 )
 from tool_router.security.security_middleware import SecurityContext
 
@@ -321,3 +326,139 @@ class TestStreamToolCall:
         assert "error" in types
         assert "complete" not in types
         assert events[-1]["message"] == "Tool execution failed"
+
+
+# ---------------------------------------------------------------------------
+# Tests: json_rpc_endpoint HTTP handler (lines 303-338)
+# ---------------------------------------------------------------------------
+
+
+class TestJsonRpcHttpEndpoint:
+    """Test the JSON-RPC HTTP endpoint via TestClient."""
+
+    def _make_app(self, security_context: SecurityContext) -> FastAPI:
+        from tool_router.api.dependencies import get_security_context
+
+        app = FastAPI()
+        app.include_router(rpc_router)
+
+        async def _mock_ctx() -> SecurityContext:
+            return security_context
+
+        app.dependency_overrides[get_security_context] = _mock_ctx
+        return app
+
+    def _ctx(self) -> SecurityContext:
+        return SecurityContext(
+            user_id="u1",
+            session_id="s1",
+            ip_address="127.0.0.1",
+            user_agent="pytest",
+            request_id="req-1",
+            endpoint="/rpc",
+            authentication_method="jwt",
+            user_role="developer",
+        )
+
+    def test_tools_list_via_http(self) -> None:
+        with patch("tool_router.api.rpc_handler._get_available_tools", return_value=[]):
+            app = self._make_app(self._ctx())
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "tools/list", "id": 1})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["id"] == 1
+        assert "tools" in data["result"]
+
+    def test_method_not_found_via_http(self) -> None:
+        app = self._make_app(self._ctx())
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "unknown/method", "id": 2})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["error"]["code"] == -32601
+
+    def test_tools_call_http_400_returns_rpc_error(self) -> None:
+        """HTTPException 400 from handler → JSON-RPC error -32602."""
+        from fastapi import HTTPException
+
+        def _raise(*_a, **_kw):
+            raise HTTPException(status_code=400, detail="bad params")
+
+        # Patch at the RPC_METHOD_HANDLERS level
+        from tool_router.api.rpc_handler import RPC_METHOD_HANDLERS
+
+        original = RPC_METHOD_HANDLERS.get("tools/call")
+        try:
+            RPC_METHOD_HANDLERS["tools/call"] = _raise
+            app = self._make_app(self._ctx())
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "tools/call", "id": 3, "params": {}})
+        finally:
+            if original is not None:
+                RPC_METHOD_HANDLERS["tools/call"] = original
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["error"] is not None
+        assert data["error"]["code"] == -32602
+
+    def test_generic_exception_returns_internal_error(self) -> None:
+        def _raise(*_a, **_kw):
+            raise RuntimeError("unexpected failure")
+
+        # Patch the dispatch table directly to guarantee the exception fires
+        with patch(
+            "tool_router.api.rpc_handler.RPC_METHOD_HANDLERS",
+            {"tools/list": _raise},
+        ):
+            with patch("tool_router.api.rpc_handler._get_available_tools", return_value=[]):
+                app = self._make_app(self._ctx())
+                client = TestClient(app, raise_server_exceptions=False)
+                resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "tools/list", "id": 4})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["id"] == 4
+        assert data["error"] is not None
+        assert data["error"]["code"] == -32603
+
+    def test_endpoint_responds_with_200(self) -> None:
+        """Verify the /rpc endpoint returns 200 for a valid request."""
+        with patch("tool_router.api.rpc_handler._get_available_tools", return_value=[]):
+            app = self._make_app(self._ctx())
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "tools/list", "id": 5})
+        assert resp.status_code == 200
+        # Rate limit headers are only present when security middleware is initialised
+        # (not in unit test context — that's tested in TestGetRateLimitHeaders)
+
+    def test_register_tool_dispatch(self) -> None:
+        from tool_router.api.rpc_handler import TOOL_DISPATCH, register_tool_dispatch
+
+        original = dict(TOOL_DISPATCH)
+        try:
+            register_tool_dispatch({"my_tool": lambda: "ok"})
+            assert "my_tool" in TOOL_DISPATCH
+        finally:
+            TOOL_DISPATCH.clear()
+            TOOL_DISPATCH.update(original)
+
+    def test_get_available_tools_returns_list(self) -> None:
+        from tool_router.api.rpc_handler import _get_available_tools
+
+        with patch("tool_router.gateway.client.get_tools", return_value=[{"name": "t"}]):
+            result = _get_available_tools()
+        assert isinstance(result, list)
+
+    def test_get_available_tools_handles_connection_error(self) -> None:
+        from tool_router.api.rpc_handler import _get_available_tools
+
+        with patch("tool_router.gateway.client.get_tools", side_effect=ConnectionError("down")):
+            result = _get_available_tools()
+        assert result == []
+
+    def test_call_tool_proxies_to_client(self) -> None:
+        from tool_router.api.rpc_handler import _call_tool
+
+        with patch("tool_router.gateway.client.call_tool", return_value="result"):
+            result = _call_tool("test", {})
+        assert result == "result"

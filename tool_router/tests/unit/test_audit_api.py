@@ -129,7 +129,7 @@ class TestAuditEventsAuth:
         client = TestClient(app, raise_server_exceptions=False)
         # Real get_security_context requires a JWT — missing header → 401/403
         resp = client.get("/audit/events")
-        assert resp.status_code in (401, 403, 422), f"Expected 401/403/422 got {resp.status_code}"
+        assert resp.status_code in (401, 403), f"Expected 401/403 got {resp.status_code}"
 
     def test_admin_events_are_paginated(self) -> None:
         app = _make_app(_make_ctx("admin"))
