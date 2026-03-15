@@ -4,6 +4,15 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-03-15
+
+### Added
+- **`rag_manager_handler` module-level export** — `from tool_router.mcp_tools.rag_manager import rag_manager_handler` now works (alias for `rag_manager_tool.rag_manager_handler`).
+
+### Fixed
+- **`tests/test_rag_manager.py` fully restored** — 26 tests rewritten against the current public handler API (`rag_manager_handler`); removed from CI ignore list. Tests now use handler dispatch instead of deleted private methods. (#206)
+- **CI test count** — 2166 tests (was 2140). `tests/test_rag_manager.py` is the last previously-ignored suite; only `tests/test_github_workflows.py` (requires GitHub API credentials) remains excluded.
+
 ### Added
 - **Release automation script** (`scripts/release.py`) — single command to bump version, update CHANGELOG, open PR, poll CI, merge, tag, and create GitHub Release. `make release BUMP=patch|minor|major|--detect`. (#203)
 - **`virtual-server-mgmt` skill updated** — REST API endpoints and Admin UI toggle documented. (#204)

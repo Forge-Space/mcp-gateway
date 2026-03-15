@@ -1040,3 +1040,6 @@ RAG_MANAGER_SCHEMA = {
 
 # Global instance
 rag_manager_tool = RAGManagerTool()
+
+# Module-level alias for backwards compatibility
+rag_manager_handler = rag_manager_tool.rag_manager_handler
