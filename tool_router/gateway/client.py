@@ -137,32 +137,41 @@ class HTTPGatewayClient:
         Note:
             Returns empty list gracefully on errors to allow system to continue functioning
         """
+        from tool_router.observability.tracing import SpanContext  # lazy: avoids circular import
+
         url = f"{self.config.url}/tools?limit=0&include_pagination=false"
 
-        try:
-            response_data = self._make_request(url, method="GET")
-        except ValueError as error:
-            # Business logic: handle JSON parsing errors gracefully
-            # This allows the system to continue functioning even with malformed responses
-            if "Invalid JSON response" in str(error):
-                return []
-            # Re-raise other ValueErrors (like HTTP errors) with original message format
-            msg = f"Failed to fetch tools: {error}"
-            raise ValueError(msg) from error
-        except (ConnectionError, CircuitOpenError) as error:
-            # Business logic: Convert connection errors from HTTP retries to ValueError
-            # This maintains backward compatibility with existing error handling
-            if "Failed after" in str(error) and "attempts" in str(error):
+        with SpanContext(
+            "gateway.get_tools",
+            **{"gateway.url": self.config.url, "rpc.method": "tools/list"},
+        ) as span:
+            try:
+                response_data = self._make_request(url, method="GET")
+            except ValueError as error:
+                span.set_attribute("outcome", "error")
+                span.set_attribute("error.message", str(error))
+                if "Invalid JSON response" in str(error):
+                    return []
                 msg = f"Failed to fetch tools: {error}"
                 raise ValueError(msg) from error
-            # Handle other connection errors gracefully
-            return []
+            except (ConnectionError, CircuitOpenError) as error:
+                span.set_attribute("outcome", "error")
+                span.set_attribute("error.message", str(error))
+                if "Failed after" in str(error) and "attempts" in str(error):
+                    msg = f"Failed to fetch tools: {error}"
+                    raise ValueError(msg) from error
+                return []
 
-        if isinstance(response_data, list):
-            return response_data
-        if isinstance(response_data, dict) and "tools" in response_data:
-            return response_data["tools"]
-        return []
+            if isinstance(response_data, list):
+                tools = response_data
+            elif isinstance(response_data, dict) and "tools" in response_data:
+                tools = response_data["tools"]
+            else:
+                tools = []
+
+            span.set_attribute("outcome", "success")
+            span.set_attribute("tools.count", len(tools))
+            return tools
 
     def call_tool(
         self,
@@ -180,6 +189,8 @@ class HTTPGatewayClient:
         Returns:
             Tool execution result as string
         """
+        from tool_router.observability.tracing import SpanContext  # lazy: avoids circular import
+
         url = f"{self.config.url}/rpc"
         params: dict[str, Any] = {"name": name, "arguments": arguments}
         if security:
@@ -191,20 +202,30 @@ class HTTPGatewayClient:
             "params": params,
         }
 
-        try:
-            json_rpc_response = self._make_request(url, method="POST", data=json.dumps(body).encode())
-        except (ValueError, ConnectionError, CircuitOpenError) as error:
-            return f"Failed to call tool: {error}"
+        with SpanContext(
+            "gateway.call_tool",
+            **{"gateway.url": self.config.url, "tool.name": name},
+        ) as span:
+            try:
+                json_rpc_response = self._make_request(url, method="POST", data=json.dumps(body).encode())
+            except (ValueError, ConnectionError, CircuitOpenError) as error:
+                span.set_attribute("outcome", "error")
+                span.set_attribute("error.message", str(error))
+                return f"Failed to call tool: {error}"
 
-        if "error" in json_rpc_response:
-            return f"Gateway error: {json_rpc_response['error']}"
-        content = json_rpc_response.get("result", {}).get("content", [])
-        texts = [
-            content_item.get("text", "")
-            for content_item in content
-            if isinstance(content_item, dict) and "text" in content_item
-        ]
-        return "\n".join(texts) if texts else json.dumps(json_rpc_response.get("result", {}))
+            if "error" in json_rpc_response:
+                span.set_attribute("outcome", "error")
+                span.set_attribute("error.message", str(json_rpc_response["error"]))
+                return f"Gateway error: {json_rpc_response['error']}"
+
+            content = json_rpc_response.get("result", {}).get("content", [])
+            texts = [
+                content_item.get("text", "")
+                for content_item in content
+                if isinstance(content_item, dict) and "text" in content_item
+            ]
+            span.set_attribute("outcome", "success")
+            return "\n".join(texts) if texts else json.dumps(json_rpc_response.get("result", {}))
 
 
 # Backward compatibility: module-level functions that use environment config

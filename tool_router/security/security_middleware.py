@@ -4,6 +4,8 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+from tool_router.observability.tracing import SpanContext
+
 from .audit_logger import SecurityAuditLogger
 from .input_validator import InputValidator, ValidationLevel
 from .rate_limiter import RateLimitConfig, RateLimiter
@@ -108,6 +110,26 @@ class SecurityMiddleware:
                 metadata={"security_disabled": True},
             )
 
+        with SpanContext(
+            "security.check_request",
+            **{
+                "security.user_id": context.user_id or "anonymous",
+                "security.endpoint": context.endpoint or "unknown",
+                "security.strict_mode": self.strict_mode,
+            },
+        ) as span:
+            return self._check_request_security_inner(context, task, category, context_str, user_preferences, span)
+
+    def _check_request_security_inner(
+        self,
+        context: SecurityContext,
+        task: str,
+        category: str,
+        context_str: str,
+        user_preferences: str,
+        span: Any,
+    ) -> SecurityCheckResult:
+        """Inner implementation of security check (called within OTel span)."""
         violations = []
         risk_score = 0.0
         sanitized_inputs = {}
@@ -277,9 +299,14 @@ class SecurityMiddleware:
             }
         )
 
+        final_risk_score = min(risk_score, 1.0)
+        span.set_attribute("security.outcome", "blocked" if blocked else "allowed")
+        span.set_attribute("security.risk_score", final_risk_score)
+        span.set_attribute("security.blocked", blocked)
+
         return SecurityCheckResult(
             allowed=not blocked,
-            risk_score=min(risk_score, 1.0),
+            risk_score=final_risk_score,
             violations=violations,
             sanitized_inputs=sanitized_inputs,
             metadata=metadata,
