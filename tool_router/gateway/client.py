@@ -13,7 +13,6 @@ from tool_router.gateway.circuit_breaker import (
     CircuitBreakerConfig,
     CircuitOpenError,
 )
-from tool_router.observability.tracing import SpanContext
 
 
 @dataclass
@@ -138,6 +137,8 @@ class HTTPGatewayClient:
         Note:
             Returns empty list gracefully on errors to allow system to continue functioning
         """
+        from tool_router.observability.tracing import SpanContext  # lazy: avoids circular import
+
         url = f"{self.config.url}/tools?limit=0&include_pagination=false"
 
         with SpanContext(
@@ -188,6 +189,8 @@ class HTTPGatewayClient:
         Returns:
             Tool execution result as string
         """
+        from tool_router.observability.tracing import SpanContext  # lazy: avoids circular import
+
         url = f"{self.config.url}/rpc"
         params: dict[str, Any] = {"name": name, "arguments": arguments}
         if security:
