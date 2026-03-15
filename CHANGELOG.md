@@ -4,6 +4,15 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-03-15
+
+### Added
+- **Phase 4 Multi-Cloud routing layer** (`tool_router/cloud/`) — `CloudProvider` wraps `HTTPGatewayClient` with per-provider metrics (requests, failures, latency) and health status (HEALTHY/DEGRADED/UNHEALTHY/UNKNOWN).
+- **`MultiCloudRouter`** — routes requests across providers using FAILOVER, ROUND_ROBIN, LATENCY_WEIGHTED, or RANDOM strategies; first-success-wins with DEGRADED fallback; OTel spans on routing decisions.
+- **`CloudProviderConfig` + `MultiCloudConfig`** — env-var driven configuration (`MULTI_CLOUD_ENABLED`, `MULTI_CLOUD_STRATEGY`, `CLOUD_PROVIDER_{N}_NAME/TYPE/REGION/URL/JWT/PRIORITY/WEIGHT/ENABLED/TIMEOUT_MS/MAX_RETRIES/RETRY_DELAY_MS`).
+- **Multi-Cloud REST API** — 7 admin-only endpoints: `GET/POST /cloud/providers`, `GET/DELETE /cloud/providers/{name}`, `PATCH /cloud/providers/{name}/enabled`, `GET /cloud/health`, `PATCH /cloud/strategy`.
+- **71 new tests** in `tool_router/tests/unit/test_multi_cloud_api.py` covering all endpoints, RBAC enforcement, metrics tracking, status transitions, and routing strategies. (#209)
+
 ## [1.14.0] - 2026-03-15
 
 ### Added
