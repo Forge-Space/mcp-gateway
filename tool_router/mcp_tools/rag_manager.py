@@ -848,6 +848,20 @@ class RAGManagerTool:
         """Handle cache statistics"""
         try:
             cursor = self.conn.cursor()
+
+            # Return empty stats if retrieval_cache table does not exist yet
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='retrieval_cache'")
+            if not cursor.fetchone():
+                return {
+                    "success": True,
+                    "data": {
+                        "by_level": {},
+                        "total_entries": 0,
+                        "total_hits": 0,
+                        "avg_hit_rate": 0.0,
+                    },
+                }
+
             cursor.execute("""
                 SELECT cache_level, COUNT(*) as entries,
                        AVG(hit_count) as avg_hits,
