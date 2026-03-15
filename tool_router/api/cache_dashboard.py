@@ -405,7 +405,7 @@ async def get_cache_health():
 
 
 @router.get("/export")
-async def export_metrics(format: str = Query(default="json", regex="^(json|csv)$")):
+async def export_metrics(format: str = Query(default="json", pattern="^(json|csv)$")):
     """Export metrics data."""
     try:
         dashboard = get_cache_performance_dashboard()
