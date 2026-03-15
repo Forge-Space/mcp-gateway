@@ -13,9 +13,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from scalar_fastapi import get_scalar_api_reference
 
+from tool_router.api.ai_performance import router as ai_performance_router
 from tool_router.api.audit import router as audit_router
 from tool_router.api.cache_dashboard import router as cache_dashboard_router
-from tool_router.api.ai_performance import router as ai_performance_router
 from tool_router.api.cloud import router as cloud_router
 from tool_router.api.health import router as health_router
 from tool_router.api.metrics_export import metrics
