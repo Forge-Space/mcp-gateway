@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
   Brain,
   TrendingUp,
@@ -14,219 +14,177 @@ import {
   XCircle,
   Zap,
   BarChart3,
-  PieChart
-} from 'lucide-react'
+  PieChart,
+} from 'lucide-react';
 
 interface AIMetrics {
-  provider: string
-  model: string
-  totalRequests: number
-  successfulRequests: number
-  failedRequests: number
-  averageResponseTime: number
-  averageConfidence: number
-  successRate: number
-  lastUpdated: string
+  provider: string;
+  model: string;
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  averageResponseTime: number;
+  averageConfidence: number;
+  successRate: number;
+  lastUpdated: string;
 }
 
 interface ProviderMetrics {
-  name: string
-  models: AIMetrics[]
-  totalRequests: number
-  successRate: number
-  averageResponseTime: number
-  status: 'healthy' | 'warning' | 'error'
+  name: string;
+  models: AIMetrics[];
+  totalRequests: number;
+  successRate: number;
+  averageResponseTime: number;
+  status: 'healthy' | 'warning' | 'error';
 }
 
 interface LearningMetrics {
-  taskType: string
-  totalTasks: number
-  successRate: number
-  averageConfidence: number
-  improvementRate: number
-  lastUpdated: string
+  taskType: string;
+  totalTasks: number;
+  successRate: number;
+  averageConfidence: number;
+  improvementRate: number;
+  lastUpdated: string;
 }
 
 export default function AIPerformanceDashboard() {
-  const [providerMetrics, setProviderMetrics] = useState<ProviderMetrics[]>([])
-  const [learningMetrics, setLearningMetrics] = useState<LearningMetrics[]>([])
-  const [selectedProvider, setSelectedProvider] = useState<string>('all')
-  const [timeRange, setTimeRange] = useState<string>('24h')
-  const [loading, setLoading] = useState(true)
+  const [providerMetrics, setProviderMetrics] = useState<ProviderMetrics[]>([]);
+  const [learningMetrics, setLearningMetrics] = useState<LearningMetrics[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<string>('all');
+  const [timeRange, setTimeRange] = useState<string>('24h');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching AI performance metrics
     const fetchMetrics = async () => {
-      setLoading(true)
+      setLoading(true);
+      try {
+        const response = await fetch('/api/ai/performance');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
 
-      // Mock data for demonstration
-      const mockProviderData: ProviderMetrics[] = [
-        {
-          name: 'Ollama',
-          models: [
-            {
-              provider: 'Ollama',
-              model: 'llama3.2:3b',
-              totalRequests: 1250,
-              successfulRequests: 1180,
-              failedRequests: 70,
-              averageResponseTime: 850,
-              averageConfidence: 0.82,
-              successRate: 94.4,
-              lastUpdated: new Date().toISOString()
-            },
-            {
-              provider: 'Ollama',
-              model: 'qwen2.5:7b',
-              totalRequests: 890,
-              successfulRequests: 845,
-              failedRequests: 45,
-              averageResponseTime: 1200,
-              averageConfidence: 0.88,
-              successRate: 94.9,
-              lastUpdated: new Date().toISOString()
-            }
-          ],
-          totalRequests: 2140,
-          successRate: 94.6,
-          averageResponseTime: 975,
-          status: 'healthy'
-        },
-        {
-          name: 'OpenAI',
-          models: [
-            {
-              provider: 'OpenAI',
-              model: 'gpt-4o-mini',
-              totalRequests: 2100,
-              successfulRequests: 2058,
-              failedRequests: 42,
-              averageResponseTime: 650,
-              averageConfidence: 0.91,
-              successRate: 98.0,
-              lastUpdated: new Date().toISOString()
-            }
-          ],
-          totalRequests: 2100,
-          successRate: 98.0,
-          averageResponseTime: 650,
-          status: 'healthy'
-        },
-        {
-          name: 'Anthropic',
-          models: [
-            {
-              provider: 'Anthropic',
-              model: 'claude-haiku',
-              totalRequests: 1680,
-              successfulRequests: 1596,
-              failedRequests: 84,
-              averageResponseTime: 720,
-              averageConfidence: 0.89,
-              successRate: 95.0,
-              lastUpdated: new Date().toISOString()
-            }
-          ],
-          totalRequests: 1680,
-          successRate: 95.0,
-          averageResponseTime: 720,
-          status: 'healthy'
-        }
-      ]
+        // Map backend snake_case to frontend camelCase
+        const providers: ProviderMetrics[] = (data.providers ?? []).map(
+          (p: {
+            name: string;
+            models: Array<{
+              provider: string;
+              model: string;
+              total_requests: number;
+              successful_requests: number;
+              failed_requests: number;
+              average_response_time: number;
+              average_confidence: number;
+              success_rate: number;
+              last_updated: string;
+            }>;
+            total_requests: number;
+            success_rate: number;
+            average_response_time: number;
+            status: string;
+          }) => ({
+            name: p.name,
+            models: (p.models ?? []).map((m) => ({
+              provider: m.provider,
+              model: m.model,
+              totalRequests: m.total_requests,
+              successfulRequests: m.successful_requests,
+              failedRequests: m.failed_requests,
+              averageResponseTime: m.average_response_time,
+              averageConfidence: m.average_confidence,
+              successRate: m.success_rate,
+              lastUpdated: m.last_updated,
+            })),
+            totalRequests: p.total_requests,
+            successRate: p.success_rate,
+            averageResponseTime: p.average_response_time,
+            status: (p.status as 'healthy' | 'warning' | 'error') ?? 'healthy',
+          })
+        );
 
-      const mockLearningData: LearningMetrics[] = [
-        {
-          taskType: 'file_operations',
-          totalTasks: 450,
-          successRate: 92.5,
-          averageConfidence: 0.85,
-          improvementRate: 5.2,
-          lastUpdated: new Date().toISOString()
-        },
-        {
-          taskType: 'data_analysis',
-          totalTasks: 320,
-          successRate: 88.7,
-          averageConfidence: 0.82,
-          improvementRate: 3.8,
-          lastUpdated: new Date().toISOString()
-        },
-        {
-          taskType: 'code_generation',
-          totalTasks: 280,
-          successRate: 85.3,
-          averageConfidence: 0.79,
-          improvementRate: 7.1,
-          lastUpdated: new Date().toISOString()
-        },
-        {
-          taskType: 'search_queries',
-          totalTasks: 890,
-          successRate: 96.2,
-          averageConfidence: 0.91,
-          improvementRate: 2.4,
-          lastUpdated: new Date().toISOString()
-        }
-      ]
+        const learning: LearningMetrics[] = (data.learning_metrics ?? []).map(
+          (l: {
+            task_type: string;
+            total_tasks: number;
+            success_rate: number;
+            average_confidence: number;
+            improvement_rate: number;
+            last_updated: string;
+          }) => ({
+            taskType: l.task_type,
+            totalTasks: l.total_tasks,
+            successRate: l.success_rate,
+            averageConfidence: l.average_confidence,
+            improvementRate: l.improvement_rate,
+            lastUpdated: l.last_updated,
+          })
+        );
 
-      setProviderMetrics(mockProviderData)
-      setLearningMetrics(mockLearningData)
-      setLoading(false)
-    }
+        setProviderMetrics(providers);
+        setLearningMetrics(learning);
+      } catch (err) {
+        console.error('Failed to fetch AI performance metrics:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    fetchMetrics()
+    fetchMetrics();
 
     // Set up real-time updates
-    const interval = setInterval(fetchMetrics, 30000) // Update every 30 seconds
+    const interval = setInterval(fetchMetrics, 30000); // Update every 30 seconds
 
-    return () => clearInterval(interval)
-  }, [timeRange])
+    return () => clearInterval(interval);
+  }, [timeRange]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
-        return 'bg-green-500'
+        return 'bg-green-500';
       case 'warning':
-        return 'bg-yellow-500'
+        return 'bg-yellow-500';
       case 'error':
-        return 'bg-red-500'
+        return 'bg-red-500';
       default:
-        return 'bg-gray-500'
+        return 'bg-gray-500';
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
-        return <CheckCircle className="w-4 h-4" />
+        return <CheckCircle className="w-4 h-4" />;
       case 'warning':
-        return <Activity className="w-4 h-4" />
+        return <Activity className="w-4 h-4" />;
       case 'error':
-        return <XCircle className="w-4 h-4" />
+        return <XCircle className="w-4 h-4" />;
       default:
-        return <Clock className="w-4 h-4" />
+        return <Clock className="w-4 h-4" />;
     }
-  }
+  };
 
   const getImprovementIcon = (rate: number) => {
     return rate > 0 ? (
       <TrendingUp className="w-4 h-4 text-green-500" />
     ) : (
       <TrendingDown className="w-4 h-4 text-red-500" />
-    )
-  }
+    );
+  };
 
-  const filteredProviders = selectedProvider === 'all'
-    ? providerMetrics
-    : providerMetrics.filter(p => p.name === selectedProvider)
+  const filteredProviders =
+    selectedProvider === 'all'
+      ? providerMetrics
+      : providerMetrics.filter((p) => p.name === selectedProvider);
 
-  const totalRequests = filteredProviders.reduce((sum, p) => sum + p.totalRequests, 0)
-  const averageSuccessRate = filteredProviders.length > 0
-    ? filteredProviders.reduce((sum, p) => sum + p.successRate, 0) / filteredProviders.length
-    : 0
-  const averageResponseTime = filteredProviders.length > 0
-    ? filteredProviders.reduce((sum, p) => sum + p.averageResponseTime, 0) / filteredProviders.length
-    : 0
+  const totalRequests = filteredProviders.reduce((sum, p) => sum + p.totalRequests, 0);
+  const averageSuccessRate =
+    filteredProviders.length > 0
+      ? filteredProviders.reduce((sum, p) => sum + p.successRate, 0) / filteredProviders.length
+      : 0;
+  const averageResponseTime =
+    filteredProviders.length > 0
+      ? filteredProviders.reduce((sum, p) => sum + p.averageResponseTime, 0) /
+        filteredProviders.length
+      : 0;
 
   if (loading) {
     return (
@@ -245,7 +203,7 @@ export default function AIPerformanceDashboard() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -291,9 +249,7 @@ export default function AIPerformanceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRequests.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all providers
-            </p>
+            <p className="text-xs text-muted-foreground">Across all providers</p>
           </CardContent>
         </Card>
 
@@ -315,9 +271,7 @@ export default function AIPerformanceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{averageResponseTime}ms</div>
-            <p className="text-xs text-muted-foreground">
-              Across all providers
-            </p>
+            <p className="text-xs text-muted-foreground">Across all providers</p>
           </CardContent>
         </Card>
 
@@ -330,9 +284,7 @@ export default function AIPerformanceDashboard() {
             <div className="text-2xl font-bold">
               {filteredProviders.reduce((sum, p) => sum + p.models.length, 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Currently active
-            </p>
+            <p className="text-xs text-muted-foreground">Currently active</p>
           </CardContent>
         </Card>
       </div>
@@ -345,9 +297,7 @@ export default function AIPerformanceDashboard() {
               <BarChart3 className="h-5 w-5" />
               Provider Performance
             </CardTitle>
-            <CardDescription>
-              Success rates and response times by provider
-            </CardDescription>
+            <CardDescription>Success rates and response times by provider</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -381,7 +331,9 @@ export default function AIPerformanceDashboard() {
                       <div className="mt-1 h-2 bg-gray-200 rounded">
                         <div
                           className="h-2 bg-blue-500 rounded"
-                          style={{ width: `${Math.min((provider.averageResponseTime / 2000) * 100, 100)}%` }}
+                          style={{
+                            width: `${Math.min((provider.averageResponseTime / 2000) * 100, 100)}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -398,20 +350,21 @@ export default function AIPerformanceDashboard() {
               <PieChart className="h-5 w-5" />
               Learning Progress
             </CardTitle>
-            <CardDescription>
-              Task type performance and improvement
-            </CardDescription>
+            <CardDescription>Task type performance and improvement</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {learningMetrics.map((metric) => (
                 <div key={metric.taskType} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium capitalize">{metric.taskType.replace('_', ' ')}</span>
+                    <span className="font-medium capitalize">
+                      {metric.taskType.replace('_', ' ')}
+                    </span>
                     <div className="flex items-center gap-1">
                       {getImprovementIcon(metric.improvementRate)}
                       <span className="text-sm text-muted-foreground">
-                        {metric.improvementRate > 0 ? '+' : ''}{metric.improvementRate.toFixed(1)}%
+                        {metric.improvementRate > 0 ? '+' : ''}
+                        {metric.improvementRate.toFixed(1)}%
                       </span>
                     </div>
                   </div>
@@ -426,7 +379,9 @@ export default function AIPerformanceDashboard() {
                     <div>
                       <div className="flex items-center justify-between">
                         <span>Confidence</span>
-                        <span className="font-medium">{(metric.averageConfidence * 100).toFixed(0)}%</span>
+                        <span className="font-medium">
+                          {(metric.averageConfidence * 100).toFixed(0)}%
+                        </span>
                       </div>
                       <div className="mt-1 h-2 bg-gray-200 rounded">
                         <div
@@ -450,9 +405,7 @@ export default function AIPerformanceDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Model Performance Details</CardTitle>
-          <CardDescription>
-            Detailed metrics for each AI model
-          </CardDescription>
+          <CardDescription>Detailed metrics for each AI model</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -469,22 +422,24 @@ export default function AIPerformanceDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredProviders.flatMap(provider =>
-                  provider.models.map(model => (
+                {filteredProviders.flatMap((provider) =>
+                  provider.models.map((model) => (
                     <tr key={`${provider.name}-${model.model}`} className="border-b">
                       <td className="py-2">{provider.name}</td>
                       <td className="py-2">{model.model}</td>
                       <td className="text-right py-2">{model.totalRequests}</td>
                       <td className="text-right py-2">
-                        <Badge variant={model.successRate > 90 ? "default" : "secondary"}>
+                        <Badge variant={model.successRate > 90 ? 'default' : 'secondary'}>
                           {model.successRate.toFixed(1)}%
                         </Badge>
                       </td>
                       <td className="text-right py-2">{model.averageResponseTime}ms</td>
-                      <td className="text-right py-2">{(model.averageConfidence * 100).toFixed(0)}%</td>
+                      <td className="text-right py-2">
+                        {(model.averageConfidence * 100).toFixed(0)}%
+                      </td>
                       <td className="text-center py-2">
-                        <Badge variant={model.successRate > 90 ? "default" : "destructive"}>
-                          {model.successRate > 90 ? "Good" : "Needs Attention"}
+                        <Badge variant={model.successRate > 90 ? 'default' : 'destructive'}>
+                          {model.successRate > 90 ? 'Good' : 'Needs Attention'}
                         </Badge>
                       </td>
                     </tr>
@@ -496,5 +451,5 @@ export default function AIPerformanceDashboard() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

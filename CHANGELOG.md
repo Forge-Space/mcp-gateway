@@ -4,6 +4,16 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-03-15
+
+### Added
+- **Phase 5 AI Performance Dashboard** — `GET /ai/performance` endpoint aggregates cache hit rate, multi-cloud provider health, and AI selector stats (total requests, cost saved, model usage) into a single response for the Admin UI dashboard.
+- **Provider metrics** — maps `EnhancedAISelector.get_performance_metrics()` model usage stats to per-provider `ProviderMetrics` with status (healthy/warning/error) based on success rate thresholds.
+- **Learning metrics** — derives task-type breakdown (tool_selection, code_generation, text_analysis, data_processing) from provider data.
+- **Next.js proxy route** — `apps/web-admin/src/app/api/ai/performance/route.ts` proxies to `GET /ai/performance` on the gateway.
+- **Dashboard wired to real API** — `ai-performance-dashboard.tsx` now fetches live data every 30s; `ai/page.tsx` switched from stub to full dashboard component.
+- **29 new tests** in `tool_router/tests/unit/test_ai_performance_api.py` covering endpoint structure, cache/cloud/provider aggregation, error handling, and provider status transitions. (#212)
+
 ## [1.16.0] - 2026-03-15
 
 ### Added
