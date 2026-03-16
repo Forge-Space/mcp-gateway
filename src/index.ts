@@ -101,7 +101,7 @@ async function sendGatewayRequest(
     }
 
     const contentType = response.headers.get("content-type");
-    if (!contentType?.includes("application/json")) {
+    if (contentType === null || !contentType.includes("application/json")) {
       throw new Error(
         `Gateway returned non-JSON response: ${contentType ?? "null"}`,
       );
@@ -150,7 +150,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       params: {},
     });
 
-    if (!response.result) {
+    if (response.result === undefined || response.result === null) {
       throw new Error("Invalid response from gateway");
     }
 
@@ -212,7 +212,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       },
     });
 
-    if (!response.result) {
+    if (response.result === undefined || response.result === null) {
       throw new Error("Invalid response from gateway: missing result");
     }
 
