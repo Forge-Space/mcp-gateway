@@ -1,89 +1,23 @@
-#!/usr/bin/env node
-
-/**
- * MCP Gateway Client - NPX wrapper for connecting to MCP Gateway
- *
- * This client connects to a running MCP Gateway instance and proxies
- * MCP protocol messages over HTTP/SSE transport.
- *
- * Usage (Local - No Auth):
- *   npx @forgespace/mcp-gateway-client --url http://localhost:4444/servers/<UUID>/mcp
- *
- * Usage (Remote - With Auth):
- *   npx @forgespace/mcp-gateway-client --url https://gateway.example.com/servers/<UUID>/mcp --token <JWT>
- *
- * Environment Variables:
- *   MCP_GATEWAY_URL - Gateway server URL (required)
- *   MCP_GATEWAY_TOKEN - JWT authentication token (optional, for remote/secured gateways)
- *   MCP_GATEWAY_TIMEOUT - Request timeout in ms (default: 120000)
- */
-
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+// MCP Gateway Client - bridges IDE MCP clients to the self-hosted gateway
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema,
-  ListPromptsRequestSchema,
-  GetPromptRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
-import fetch from 'node-fetch';
+} from "@modelcontextprotocol/sdk/types.js";
 
-// Helper function to parse CLI arguments safely
-function parseCliArg(argName: string): string | undefined {
-  const arg = process.argv.find((a) => a.startsWith(`--${argName}=`));
-  if (arg === undefined) {
-    return undefined;
-  }
-  const value = arg.split('=').slice(1).join('='); // Handle URLs with = in them
-  return value.length > 0 ? value : undefined;
+const GATEWAY_URL = process.env.GATEWAY_URL ?? "http://localhost:4444";
+const GATEWAY_TOKEN = process.env.GATEWAY_TOKEN;
+const REQUEST_TIMEOUT_MILLISECONDS = 30000;
+
+interface JsonRpcRequest {
+  jsonrpc: "2.0";
+  id: number;
+  method: string;
+  params?: unknown;
 }
 
-// Configuration from environment variables or CLI args
-const GATEWAY_URL = process.env.MCP_GATEWAY_URL ?? parseCliArg('url');
-const GATEWAY_TOKEN = process.env.MCP_GATEWAY_TOKEN ?? parseCliArg('token');
-const REQUEST_TIMEOUT_MILLISECONDS = parseInt(process.env.MCP_GATEWAY_TIMEOUT ?? '120000', 10);
-
-// Validate timeout is reasonable
-if (
-  isNaN(REQUEST_TIMEOUT_MILLISECONDS) ||
-  REQUEST_TIMEOUT_MILLISECONDS < 1000 ||
-  REQUEST_TIMEOUT_MILLISECONDS > 600000
-) {
-  console.error('Error: MCP_GATEWAY_TIMEOUT must be between 1000 and 600000 ms');
-  process.exit(1);
-}
-
-if (GATEWAY_URL === undefined || GATEWAY_URL.length === 0) {
-  console.error('Error: MCP_GATEWAY_URL is required');
-  console.error('\nUsage (Local):');
-  console.error('  npx @forgespace/mcp-gateway-client --url=http://localhost:4444/servers/<UUID>/mcp');
-  console.error('\nUsage (Remote with Auth):');
-  console.error('  npx @forgespace/mcp-gateway-client --url=<gateway-url> --token=<jwt>');
-  console.error('\nOr set environment variables:');
-  console.error('  MCP_GATEWAY_URL=http://localhost:4444/servers/<UUID>/mcp');
-  console.error('  MCP_GATEWAY_TOKEN=<jwt-token>  # Optional for local, required for remote');
-  process.exit(1);
-}
-
-// Create MCP server instance
-const server = new Server(
-  {
-    name: 'forge-mcp-gateway-client',
-    version: '0.1.0',
-  },
-  {
-    capabilities: {
-      tools: {},
-      resources: {},
-      prompts: {},
-    },
-  }
-);
-
-// Define response type for gateway requests
-interface GatewayResponse {
+interface JsonRpcResponse {
   jsonrpc: string;
   id: number;
   result?: unknown;
@@ -94,68 +28,113 @@ interface GatewayResponse {
   };
 }
 
-// Helper function to make requests to gateway (with optional authentication)
+interface ToolDefinition {
+  name: string;
+  description?: string;
+  inputSchema?: {
+    type: string;
+    properties?: Record<string, unknown>;
+    required?: string[];
+    [key: string]: unknown;
+  };
+}
+
+interface ListToolsResult {
+  tools: ToolDefinition[];
+}
+
+interface CallToolResult {
+  content: Array<{
+    type: string;
+    text?: string;
+    [key: string]: unknown;
+  }>;
+  isError?: boolean;
+}
+
+const server = new Server(
+  {
+    name: "mcp-gateway-client",
+    version: "1.28.2",
+  },
+  {
+    capabilities: {
+      tools: {},
+    },
+  },
+);
+
+// Helper to send requests to the gateway
 async function sendGatewayRequest(
   method: string,
-  endpoint: string,
-  body?: unknown
-): Promise<GatewayResponse> {
-  const url = `${GATEWAY_URL}${endpoint}`;
+  path: string,
+  body: JsonRpcRequest,
+): Promise<JsonRpcResponse> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MILLISECONDS);
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MILLISECONDS,
+  );
 
   try {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+      "Content-Type": "application/json",
     };
 
-    // Only add Authorization header if token is provided
-    if (GATEWAY_TOKEN !== undefined && GATEWAY_TOKEN.length > 0) {
-      headers.Authorization = `Bearer ${GATEWAY_TOKEN}`;
+    if (GATEWAY_TOKEN) {
+      headers["Authorization"] = `Bearer ${GATEWAY_TOKEN}`;
     }
 
-    const response = await fetch(url, {
-      method,
+    const response = await fetch(`${GATEWAY_URL}/${method}${path}`, {
+      method: "POST",
       headers,
-      body: body !== undefined ? JSON.stringify(body) : null,
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const errorText = await response.text();
       throw new Error(
-        `Gateway request failed: ${response.status} ${response.statusText}\n${errorText}`
+        `Gateway returned HTTP ${response.status}: ${response.statusText}`,
       );
     }
 
-    const contentType = response.headers.get('content-type');
-    if (contentType === null || contentType.includes('application/json') === false) {
-      throw new Error(`Gateway returned non-JSON response: ${contentType ?? 'null'}`);
+    const contentType = response.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      throw new Error(
+        `Gateway returned non-JSON response: ${contentType ?? "null"}`,
+      );
     }
 
-    const responseData = (await response.json()) as GatewayResponse;
+    const data: unknown = await response.json();
 
-    // Validate JSON-RPC response structure
-    if (typeof responseData !== 'object' || responseData === null) {
-      throw new Error('Gateway returned invalid response: not an object');
+    if (typeof data !== "object" || data === null) {
+      throw new Error("Gateway returned invalid response: not an object");
     }
 
-    if (typeof responseData.jsonrpc !== 'string' || responseData.jsonrpc !== '2.0') {
-      throw new Error(`Gateway returned invalid JSON-RPC version: ${String(responseData.jsonrpc)}`);
+    const responseData = data as JsonRpcResponse;
+
+    if (responseData.jsonrpc !== "2.0") {
+      throw new Error(
+        `Gateway returned invalid JSON-RPC version: ${String(responseData.jsonrpc)}`,
+      );
     }
 
-    if ('error' in responseData && responseData.error !== undefined) {
-      throw new Error(`Gateway returned error: ${JSON.stringify(responseData.error)}`);
+    if (responseData.error) {
+      throw new Error(
+        `Gateway returned error: ${JSON.stringify(responseData.error)}`,
+      );
     }
 
     return responseData;
   } catch (error) {
     clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Gateway request timeout after ${REQUEST_TIMEOUT_MILLISECONDS}ms`);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(
+        `Gateway request timeout after ${REQUEST_TIMEOUT_MILLISECONDS}ms`,
+        { cause: error },
+      );
     }
     throw error;
   }
@@ -164,157 +143,99 @@ async function sendGatewayRequest(
 // List available tools from gateway
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   try {
-    const response = await sendGatewayRequest('POST', '', {
-      jsonrpc: '2.0',
+    const response = await sendGatewayRequest("POST", "", {
+      jsonrpc: "2.0",
       id: Date.now(),
-      method: 'tools/list',
+      method: "tools/list",
+      params: {},
     });
 
-    if (typeof response !== 'object' || response === null) {
-      throw new Error('Invalid response from gateway');
+    if (!response.result) {
+      throw new Error("Invalid response from gateway");
     }
 
-    return (response.result ?? { tools: [] }) as { tools: unknown[] };
+    const result = response.result as ListToolsResult;
+
+    return {
+      tools: result.tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description ?? "",
+        inputSchema: tool.inputSchema ?? {
+          type: "object",
+          properties: {},
+        },
+      })),
+    };
   } catch (error) {
-    console.error('Error listing tools:', error);
-    return { tools: [] };
+    const message =
+      error instanceof Error ? error.message : "Unknown error listing tools";
+    return {
+      tools: [
+        {
+          name: "gateway_error",
+          description: `Failed to connect to MCP gateway: ${message}`,
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
+      ],
+    };
   }
 });
 
-// Call a tool via gateway
+// Forward tool calls to gateway
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+
+  // Handle the error tool gracefully
+  if (name === "gateway_error") {
+    return {
+      content: [
+        {
+          type: "text",
+          text: "Cannot execute tools: MCP gateway is not accessible. Please check that the gateway is running and GATEWAY_URL is configured correctly.",
+        },
+      ],
+      isError: true,
+    };
+  }
+
   try {
-    const response = await sendGatewayRequest('POST', '', {
-      jsonrpc: '2.0',
+    const response = await sendGatewayRequest("POST", "", {
+      jsonrpc: "2.0",
       id: Date.now(),
-      method: 'tools/call',
+      method: "tools/call",
       params: {
-        name: request.params.name,
-        arguments: request.params.arguments,
+        name,
+        arguments: args ?? {},
       },
     });
 
-    if (typeof response !== 'object' || response.result === undefined) {
-      throw new Error('Invalid response from gateway: missing result');
+    if (!response.result) {
+      throw new Error("Invalid response from gateway: missing result");
     }
 
-    return response.result as {
-      content: { type: string; text?: string; [key: string]: unknown }[];
-      isError?: boolean;
+    const result = response.result as CallToolResult;
+    return {
+      content: result.content,
+      isError: result.isError,
     };
   } catch (error) {
-    console.error('Error calling tool:', error);
-    throw error;
-  }
-});
-
-// List available resources from gateway
-server.setRequestHandler(ListResourcesRequestSchema, async () => {
-  try {
-    const response = await sendGatewayRequest('POST', '', {
-      jsonrpc: '2.0',
-      id: Date.now(),
-      method: 'resources/list',
-    });
-    return (response.result ?? { resources: [] }) as { resources: unknown[] };
-  } catch (error) {
-    console.error('Error listing resources:', error);
-    return { resources: [] };
-  }
-});
-
-// Read a resource via gateway
-server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-  try {
-    const response = await sendGatewayRequest('POST', '', {
-      jsonrpc: '2.0',
-      id: Date.now(),
-      method: 'resources/read',
-      params: {
-        uri: request.params.uri,
-      },
-    });
-    if (response.result === undefined) {
-      throw new Error('Invalid response from gateway: missing result');
-    }
-
-    return response.result as {
-      contents: {
-        uri: string;
-        mimeType?: string;
-        text?: string;
-        blob?: string;
-        [key: string]: unknown;
-      }[];
+    const message =
+      error instanceof Error ? error.message : "Unknown error calling tool";
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Error calling tool ${name}: ${message}`,
+        },
+      ],
+      isError: true,
     };
-  } catch (error) {
-    console.error('Error reading resource:', error);
-    throw error;
   }
 });
 
-// List available prompts from gateway
-server.setRequestHandler(ListPromptsRequestSchema, async () => {
-  try {
-    const response = await sendGatewayRequest('POST', '', {
-      jsonrpc: '2.0',
-      id: Date.now(),
-      method: 'prompts/list',
-    });
-    return (response.result ?? { prompts: [] }) as { prompts: unknown[] };
-  } catch (error) {
-    console.error('Error listing prompts:', error);
-    return { prompts: [] };
-  }
-});
-
-// Get a specific prompt via gateway
-server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-  try {
-    const response = await sendGatewayRequest('POST', '', {
-      jsonrpc: '2.0',
-      id: Date.now(),
-      method: 'prompts/get',
-      params: {
-        name: request.params.name,
-        arguments: request.params.arguments,
-      },
-    });
-    if (response.result === undefined) {
-      throw new Error('Invalid response from gateway: missing result');
-    }
-
-    return response.result as {
-      description?: string;
-      messages: {
-        role: string;
-        content: { type: string; text?: string; [key: string]: unknown };
-        [key: string]: unknown;
-      }[];
-    };
-  } catch (error) {
-    console.error('Error getting prompt:', error);
-    throw error;
-  }
-});
-
-// Start the server with stdio transport
-async function main(): Promise<void> {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-
-  console.error(`MCP Gateway Client connected to: ${GATEWAY_URL}`);
-  console.error(
-    `Authentication: ${
-      GATEWAY_TOKEN !== undefined && GATEWAY_TOKEN.length > 0
-        ? 'Enabled (JWT)'
-        : 'Disabled (Local mode)'
-    }`
-  );
-  console.error(`Timeout: ${REQUEST_TIMEOUT_MILLISECONDS}ms`);
-}
-
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+// Start the server
+const transport = new StdioServerTransport();
+await server.connect(transport);
