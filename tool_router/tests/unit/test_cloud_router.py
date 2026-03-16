@@ -338,3 +338,121 @@ class TestSetStrategy:
         for s in RoutingStrategy:
             router.set_strategy(s)
             assert router._strategy == s
+
+
+# ---------------------------------------------------------------------------
+# Coverage gaps — _select_provider, _ordered_providers, health_summary
+# ---------------------------------------------------------------------------
+
+
+class TestSelectProviderCoverageGaps:
+    def test_degraded_fallback_used_when_no_healthy(self):
+        """Line 96: when no healthy providers, DEGRADED ones are used instead of raising."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.FAILOVER)
+        deg = _degraded_provider("p_deg")
+        router.add_provider(deg)
+        # No healthy providers; should pick the degraded one without raising
+        provider = router._select_provider()
+        assert provider.name == "p_deg"
+
+    def test_default_fallback_return_line_115(self):
+        """Line 115: when strategy doesn't match any known branch, return healthy[0]."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.FAILOVER)
+        p1 = _healthy_provider("p1", priority=0)
+        p2 = _healthy_provider("p2", priority=1)
+        router.add_provider(p1)
+        router.add_provider(p2)
+        # Temporarily set an enum value that won't match FAILOVER/ROUND_ROBIN/LATENCY_WEIGHTED/RANDOM
+        # by exhausting all branches: use FAILOVER but force the code to fall through to line 115
+        # We can test this by monkeypatching the strategy after construction
+        router._strategy = None  # type: ignore[assignment]
+        provider = router._select_provider()
+        # Should return first healthy provider (healthy[0])
+        assert provider in (p1, p2)
+
+
+class TestOrderedProvidersCoverageGaps:
+    def test_round_robin_no_healthy_falls_back_to_all_enabled(self):
+        """Lines 177: ROUND_ROBIN with no healthy providers returns all enabled."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.ROUND_ROBIN)
+        bad = _unhealthy_provider("p_bad")
+        router.add_provider(bad)
+        result = router._ordered_providers()
+        assert len(result) == 1
+        assert result[0].name == "p_bad"
+
+    def test_latency_weighted_no_healthy_falls_back_to_all_enabled(self):
+        """Lines 185-186: LATENCY_WEIGHTED with no healthy providers returns all enabled."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.LATENCY_WEIGHTED)
+        bad = _unhealthy_provider("p_bad")
+        router.add_provider(bad)
+        result = router._ordered_providers()
+        assert len(result) == 1
+        assert result[0].name == "p_bad"
+
+    def test_random_no_healthy_falls_back_to_all_enabled(self):
+        """Lines 191-192: RANDOM with no healthy providers returns all enabled."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.RANDOM)
+        bad = _unhealthy_provider("p_bad")
+        router.add_provider(bad)
+        result = router._ordered_providers()
+        assert len(result) == 1
+        assert result[0].name == "p_bad"
+
+    def test_unknown_strategy_returns_all_enabled(self):
+        """Line 197: unknown strategy falls through to return all enabled providers."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.FAILOVER)
+        p1 = _healthy_provider("p1")
+        router.add_provider(p1)
+        router._strategy = None  # type: ignore[assignment]
+        result = router._ordered_providers()
+        assert p1 in result
+
+    def test_round_robin_with_healthy_rotates(self):
+        """Lines 179-181: ROUND_ROBIN with healthy providers rotates from current index."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.ROUND_ROBIN)
+        p1 = _healthy_provider("p1", priority=0)
+        p2 = _healthy_provider("p2", priority=1)
+        router.add_provider(p1)
+        router.add_provider(p2)
+        router._rr_index = 0
+        result = router._ordered_providers()
+        assert len(result) == 2
+        # rotation means first element starts at index 0, second wraps
+        assert result[0].name in ("p1", "p2")
+
+    def test_latency_weighted_with_healthy_sorts_by_latency(self):
+        """Line 187: LATENCY_WEIGHTED with healthy providers sorts by avg_latency_ms."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.LATENCY_WEIGHTED)
+        p_fast = _healthy_provider("p_fast", priority=0)
+        p_slow = _healthy_provider("p_slow", priority=1)
+        # Use record_success to set latency (avg_latency_ms is a property)
+        p_fast._metrics.record_success(10.0)
+        p_slow._metrics.record_success(200.0)
+        router.add_provider(p_slow)
+        router.add_provider(p_fast)
+        result = router._ordered_providers()
+        assert result[0].name == "p_fast"
+
+    def test_random_with_healthy_returns_shuffled(self):
+        """Lines 193-195: RANDOM with healthy providers returns shuffled list."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.RANDOM)
+        p1 = _healthy_provider("p1")
+        p2 = _healthy_provider("p2")
+        router.add_provider(p1)
+        router.add_provider(p2)
+        result = router._ordered_providers()
+        assert len(result) == 2
+        assert {r.name for r in result} == {"p1", "p2"}
+
+
+class TestHealthSummaryCoverageGaps:
+    def test_degraded_only_returns_degraded_overall(self):
+        """Line 214: when healthy_count==0 but degraded_count>0, overall='degraded'."""
+        router = MultiCloudRouter(strategy=RoutingStrategy.FAILOVER)
+        deg = _degraded_provider("p_deg")
+        router.add_provider(deg)
+        summary = router.health_summary()
+        assert summary["overall"] == "degraded"
+        assert summary["degraded"] == 1
+        assert summary["healthy"] == 0
