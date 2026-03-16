@@ -4,6 +4,12 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.28.0] - 2026-03-16
+
+### Added
+
+- **Cloud module unit tests** — 51 tests across `test_cloud_provider.py` (27 tests: `CloudProviderMetrics`, `CloudProviderStatus` logic, `CloudProvider` get_tools/call_tool/health_check/to_dict) and `test_cloud_router.py` (24 tests: all 4 routing strategies, fallback, `NoHealthyProviderError`, `health_summary`). (#235)
+
 ## [1.27.0] - 2026-03-16
 
 ### Added
