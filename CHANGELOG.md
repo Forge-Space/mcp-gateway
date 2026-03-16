@@ -4,6 +4,11 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.30.0] - 2026-03-16
+
+### Added
+- RAG Manager unit tests — 73 tests covering QueryAnalysis, RetrievalResult dataclasses, RAGManagerTool lifecycle (init, close, context manager), all 10 sync helpers (classify_intent, extract_keywords, assess_complexity, etc.), all async handlers (analyze_query, retrieve_knowledge, rank_results, inject_context, get_cache_stats, optimize_performance), module-level schema validation. (#239)
+
 ## [1.29.0] - 2026-03-16
 
 ### Added
