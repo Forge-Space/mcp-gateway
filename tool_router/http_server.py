@@ -28,6 +28,7 @@ from tool_router.api.security_stats import router as security_stats_router
 from tool_router.api.server_mgmt import ide_router
 from tool_router.api.server_mgmt import router as server_mgmt_router
 from tool_router.api.streamable_http import router as mcp_router
+from tool_router.api.users import router as users_router
 from tool_router.middleware.request_logger import RequestLoggingMiddleware
 from tool_router.observability.otel_setup import init_otel, instrument_fastapi
 
@@ -68,6 +69,7 @@ app = FastAPI(
         {"name": "AI Performance", "description": "AI selector performance metrics and provider analytics"},
         {"name": "security", "description": "Security statistics, policy status, and compliance aggregation"},
         {"name": "features", "description": "Feature flags and runtime feature states"},
+        {"name": "users", "description": "RBAC role catalog and permission matrix"},
     ],
 )
 
@@ -102,6 +104,7 @@ app.include_router(cloud_router)
 app.include_router(ai_performance_router)
 app.include_router(features_router)
 app.include_router(security_stats_router)
+app.include_router(users_router)
 
 
 @app.middleware("http")
