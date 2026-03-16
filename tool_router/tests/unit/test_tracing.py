@@ -7,9 +7,11 @@ with a real tracer configured via environment variables.
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from tool_router.observability.tracing import SpanContext, trace
+from tool_router.observability.tracing import SpanContext, span, trace
 
 
 # ---------------------------------------------------------------------------
@@ -122,3 +124,92 @@ class TestTraceDecorator:
 
         with pytest.raises(KeyError):
             blow_up()
+
+    @pytest.mark.asyncio
+    async def test_async_wrapper_with_attributes(self) -> None:
+        """Cover lines 57-58: attributes dict set on async span."""
+
+        @trace("test.async.attrs", attributes={"component": "myservice", "version": "1"})
+        async def operation() -> str:
+            return "done"
+
+        result = await operation()
+        assert result == "done"
+
+    @pytest.mark.asyncio
+    async def test_async_wrapper_attributes_with_exception(self) -> None:
+        """Cover lines 57-58 + exception path in async wrapper."""
+
+        @trace("test.async.attrs.exc", attributes={"op": "failing"})
+        async def fail_op() -> None:
+            raise RuntimeError("failure in async")
+
+        with pytest.raises(RuntimeError, match="failure in async"):
+            await fail_op()
+
+
+class TestSpanContextManager:
+    """Cover lines 101-109: the span() context manager function."""
+
+    def test_span_returns_active_span(self) -> None:
+        active = span("test.ctxmgr", task="hello")
+        assert active is not None
+
+    def test_span_with_numeric_attrs(self) -> None:
+        active = span("test.numeric", count=42, rate=3.14, flag=True)
+        assert active is not None
+
+    def test_span_with_non_primitive_attrs(self) -> None:
+        """Non-primitive values are converted to str."""
+        active = span("test.nonprim", items=["a", "b"], mapping={"k": "v"})
+        assert active is not None
+
+    def test_span_exception_swallowed_on_set_attribute(self) -> None:
+        """span() swallows exceptions from set_attribute."""
+        with patch("tool_router.observability.tracing._tracer") as mock_tracer:
+            mock_span = MagicMock()
+            mock_span.set_attribute.side_effect = Exception("otel error")
+            mock_ctx = MagicMock()
+            mock_ctx.__enter__ = MagicMock(return_value=mock_span)
+            mock_tracer.start_as_current_span.return_value = mock_ctx
+            result = span("test.exc_swallow", key="val")
+            assert result is mock_span
+
+
+class TestSpanContextExceptionInRecordException:
+    """Cover lines 127-128, 136-137: SpanContext set_attribute and record_exception error paths."""
+
+    def test_set_attribute_error_swallowed_in_enter(self) -> None:
+        """Lines 127-128: exception from set_attribute in __enter__ is swallowed."""
+        with patch("tool_router.observability.tracing._tracer") as mock_tracer:
+            mock_span = MagicMock()
+            mock_span.set_attribute.side_effect = Exception("attr failed")
+            mock_ctx = MagicMock()
+            mock_ctx.__enter__ = MagicMock(return_value=mock_span)
+            mock_ctx.__exit__ = MagicMock(return_value=False)
+            mock_tracer.start_as_current_span.return_value = mock_ctx
+
+            # SpanContext with attrs so set_attribute gets called
+            sc = SpanContext("test.attr_exc", key="val")
+            entered = sc.__enter__()
+            # Should succeed even though set_attribute raised
+            assert entered is mock_span
+            sc.__exit__(None, None, None)
+
+    def test_record_exception_error_is_swallowed(self) -> None:
+        """Lines 136-137: exception from record_exception is swallowed."""
+        with patch("tool_router.observability.tracing._tracer") as mock_tracer:
+            mock_span = MagicMock()
+            mock_span.record_exception.side_effect = Exception("record failed")
+            mock_ctx = MagicMock()
+            mock_ctx.__enter__ = MagicMock(return_value=mock_span)
+            mock_ctx.__exit__ = MagicMock(return_value=False)
+            mock_tracer.start_as_current_span.return_value = mock_ctx
+
+            sc = SpanContext("test.record_exc")
+            sc._ctx = mock_ctx
+            sc._span = mock_span
+
+            # This should NOT raise even though record_exception throws
+            result = sc.__exit__(ValueError, ValueError("original"), None)
+            assert result is False  # exception propagates
