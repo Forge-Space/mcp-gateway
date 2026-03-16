@@ -4,6 +4,12 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-03-16
+
+### Added
+- **Security module unit tests** — 75 tests covering `security/authorization.py` (Role/Permission enums, ROLE_PERMISSIONS mapping, RBACEvaluator full API) and `security/auth.py` (JWT validation, token extraction, JWKS caching, error paths) at 100% coverage. (#230)
+- **Cache layer unit tests** — 160 tests across 5 new test files covering `cache/types.py`, `cache/cache_manager.py`, `cache/invalidation.py`, `cache/security.py`, and `cache/retention.py`; validates encryption, GDPR compliance, retention policies, lifecycle management, and tag/event/dependency invalidation strategies. (#231)
+
 ## [1.25.0] - 2026-03-16
 
 ### Added
