@@ -4,6 +4,15 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-03-15
+
+### Added
+- **`GET /features` endpoint** — returns 11 runtime feature flags derived from environment variables (DEBUG, BETA_FEATURES, ENHANCED_LOGGING, RATE_LIMITING_ENABLED, SECURITY_HEADERS_ENABLED, OTEL_ENABLED, CACHE_ENABLED, AI_CHAT_ENABLED, TEMPLATE_MANAGEMENT_ENABLED, DARK_MODE_ENABLED, ADVANCED_ANALYTICS_ENABLED); protected by `AUDIT_READ` or `SYSTEM_ADMIN` RBAC; 19 tests in `tool_router/tests/unit/test_features_api.py`. (#219)
+- **Cache Store page (database)** — Admin UI `/database` page rewritten as Cache Store; fetches live metrics from `/api/cache/dashboard/snapshot` and `/api/cache/dashboard/status`; shows per-cache hit/miss stats, health status, Redis info, active alerts, and dashboard config; all hardcoded Supabase/PostgreSQL references removed.
+- **Virtual Servers page (templates)** — Admin UI `/templates` page rewritten to show virtual server configurations from `GET /servers`; searchable, shows enabled/disabled status and gateway assignments; Supabase `server_templates` dependency removed.
+- **Feature Toggles page** — `feature-toggles.tsx` component rewritten to fetch live data from `/api/features`; shows feature cards with enabled/disabled badge, source (env/default), category filter buttons (global, mcp-gateway, uiforge-mcp, uiforge-webapp), and loading skeletons; hardcoded `useState` feature array removed.
+- **New Next.js proxies** — `/api/cache/snapshot`, `/api/cache/status`, `/api/features` routes added to Admin UI.
+
 ## [1.21.0] - 2026-03-15
 
 ### Added
