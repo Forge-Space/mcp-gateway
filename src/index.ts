@@ -81,7 +81,7 @@ async function sendGatewayRequest(
       "Content-Type": "application/json",
     };
 
-    if (GATEWAY_TOKEN) {
+    if (GATEWAY_TOKEN !== undefined && GATEWAY_TOKEN.length > 0) {
       headers["Authorization"] = `Bearer ${GATEWAY_TOKEN}`;
     }
 
@@ -101,7 +101,7 @@ async function sendGatewayRequest(
     }
 
     const contentType = response.headers.get("content-type");
-    if (contentType === null || !contentType.includes("application/json")) {
+    if (!(contentType?.includes("application/json") === true)) {
       throw new Error(
         `Gateway returned non-JSON response: ${contentType ?? "null"}`,
       );
