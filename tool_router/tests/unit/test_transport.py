@@ -376,7 +376,7 @@ async def test_stdio_transport_send_returns_parsed_response() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, **_: Any) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
