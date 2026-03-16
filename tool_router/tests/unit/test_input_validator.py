@@ -616,3 +616,25 @@ class TestInputValidator:
         result3 = validator.validate_context("a" * 5001)
         assert result3.is_valid is True  # 0.2 < 0.4 threshold
         assert result3.risk_score >= 0.2
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: UnicodeError path in validate_prompt() (lines 124-126)
+# ---------------------------------------------------------------------------
+
+
+class TestInputValidatorUnicodePath:
+    """Cover UnicodeError exception path inside validate_prompt."""
+
+    def test_unicode_error_adds_violation(self) -> None:
+        from tool_router.security.input_validator import InputValidator
+
+        class BadStr(str):
+            def encode(self, *args: object, **kwargs: object) -> bytes:  # type: ignore[override]
+                raise UnicodeError("bad encoding")
+
+        validator = InputValidator()
+        result = validator.validate_prompt(BadStr("test prompt"))
+
+        assert any("Invalid encoding" in v for v in result.violations)
+        assert result.risk_score >= 0.4

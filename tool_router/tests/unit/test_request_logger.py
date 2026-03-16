@@ -136,3 +136,22 @@ class TestRequestLoggingMiddleware:
 
         log = next(r for r in caplog.records if "request completed" in r.message)
         assert len(log.request_id) == 12  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: _is_enabled() returns False — early return path (line 25-26)
+# ---------------------------------------------------------------------------
+
+
+class TestRequestLoggingDisabledPath:
+    """Cover the early return when REQUEST_LOGGING is disabled."""
+
+    def test_disabled_logging_passes_through(self) -> None:
+        app = _make_app()
+        client = TestClient(app)
+
+        with patch("tool_router.middleware.request_logger._is_enabled", return_value=False):
+            resp = client.get("/test")
+
+        assert resp.status_code == 200
+        assert resp.json() == {"ok": True}
