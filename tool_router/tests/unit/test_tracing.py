@@ -7,9 +7,11 @@ with a real tracer configured via environment variables.
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from tool_router.observability.tracing import SpanContext, trace
+from tool_router.observability.tracing import SpanContext, span, trace
 
 
 # ---------------------------------------------------------------------------
@@ -150,30 +152,20 @@ class TestSpanContextManager:
     """Cover lines 101-109: the span() context manager function."""
 
     def test_span_returns_active_span(self) -> None:
-        from tool_router.observability.tracing import span
-
         active = span("test.ctxmgr", task="hello")
         assert active is not None
 
     def test_span_with_numeric_attrs(self) -> None:
-        from tool_router.observability.tracing import span
-
         active = span("test.numeric", count=42, rate=3.14, flag=True)
         assert active is not None
 
     def test_span_with_non_primitive_attrs(self) -> None:
         """Non-primitive values are converted to str."""
-        from tool_router.observability.tracing import span
-
         active = span("test.nonprim", items=["a", "b"], mapping={"k": "v"})
         assert active is not None
 
     def test_span_exception_swallowed_on_set_attribute(self) -> None:
         """span() swallows exceptions from set_attribute."""
-        from unittest.mock import MagicMock, patch
-
-        from tool_router.observability.tracing import span
-
         with patch("tool_router.observability.tracing._tracer") as mock_tracer:
             mock_span = MagicMock()
             mock_span.set_attribute.side_effect = Exception("otel error")
@@ -189,10 +181,6 @@ class TestSpanContextExceptionInRecordException:
 
     def test_set_attribute_error_swallowed_in_enter(self) -> None:
         """Lines 127-128: exception from set_attribute in __enter__ is swallowed."""
-        from unittest.mock import MagicMock, patch
-
-        from tool_router.observability.tracing import SpanContext
-
         with patch("tool_router.observability.tracing._tracer") as mock_tracer:
             mock_span = MagicMock()
             mock_span.set_attribute.side_effect = Exception("attr failed")
@@ -210,10 +198,6 @@ class TestSpanContextExceptionInRecordException:
 
     def test_record_exception_error_is_swallowed(self) -> None:
         """Lines 136-137: exception from record_exception is swallowed."""
-        from unittest.mock import MagicMock, patch
-
-        from tool_router.observability.tracing import SpanContext
-
         with patch("tool_router.observability.tracing._tracer") as mock_tracer:
             mock_span = MagicMock()
             mock_span.record_exception.side_effect = Exception("record failed")

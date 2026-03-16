@@ -342,7 +342,7 @@ class TestJsonRpcHttpEndpoint:
         app = FastAPI()
         app.include_router(rpc_router)
 
-        async def _mock_ctx() -> SecurityContext:
+        def _mock_ctx() -> SecurityContext:
             return security_context
 
         app.dependency_overrides[get_security_context] = _mock_ctx
@@ -540,7 +540,7 @@ class TestJsonRpcStreamEndpoint:
         app = FastAPI()
         app.include_router(rpc_router)
 
-        async def _mock_ctx() -> SecurityContext:
+        def _mock_ctx() -> SecurityContext:
             return security_context
 
         app.dependency_overrides[get_security_context] = _mock_ctx
