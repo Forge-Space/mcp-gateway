@@ -376,7 +376,7 @@ async def test_stdio_transport_send_returns_parsed_response() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, _timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -406,7 +406,7 @@ async def test_stdio_transport_send_assigns_id_if_missing() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, _timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -431,7 +431,7 @@ async def test_stdio_transport_send_raises_on_empty_line() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, _timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
