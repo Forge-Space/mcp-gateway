@@ -1,275 +1,239 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useServerStore } from '@/lib/store'
+import { useCallback, useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Globe,
-  Code,
   Server,
   Activity,
-  Shield,
-  Package,
   Settings,
-  Plus,
-  Download,
-  Upload,
-  Zap,
-  Database
-} from 'lucide-react'
+  Search,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  Layers,
+} from 'lucide-react';
+
+interface VirtualServer {
+  name: string;
+  enabled: boolean;
+  gateways: string[];
+  description: string;
+}
+
+function GatewayBadge({ gateway }: { gateway: string }) {
+  const colorMap: Record<string, string> = {
+    cloud: 'bg-blue-100 text-blue-800',
+    local: 'bg-green-100 text-green-800',
+    homelab: 'bg-purple-100 text-purple-800',
+    dev: 'bg-yellow-100 text-yellow-800',
+  };
+  const cls = colorMap[gateway] ?? 'bg-gray-100 text-gray-800';
+  return <Badge className={cls}>{gateway}</Badge>;
+}
 
 export default function TemplatesPage() {
-  const { templates, loading, fetchTemplates } = useServerStore()
+  const [servers, setServers] = useState<VirtualServer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/servers');
+      if (!res.ok) throw new Error(`Server list error: ${res.status}`);
+      const data: VirtualServer[] = await res.json();
+      setServers(data);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load server templates');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchTemplates()
-  }, [fetchTemplates])
+    fetchData();
+  }, [fetchData]);
 
-  const getCategoryIcon = (category: string): React.ReactElement => {
-    switch (category) {
-      case 'development': return <Code className="h-4 w-4" />
-      case 'production': return <Server className="h-4 w-4" />
-      case 'monitoring': return <Activity className="h-4 w-4" />
-      case 'security': return <Shield className="h-4 w-4" />
-      default: return <Package className="h-4 w-4" />
-    }
-  }
+  const filtered = servers.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.gateways.some((g) => g.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'database': return 'bg-blue-100 text-blue-800'
-      case 'security': return 'bg-red-100 text-red-800'
-      case 'networking': return 'bg-green-100 text-green-800'
-      case 'development': return 'bg-purple-100 text-purple-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const stats = [
-    {
-      title: 'Total Templates',
-      value: templates.length,
-      icon: Settings,
-      color: 'text-blue-600'
-    },
-    {
-      title: 'Categories',
-      value: new Set(templates.map(t => t.category)).size,
-      icon: Database,
-      color: 'text-green-600'
-    },
-    {
-      title: 'Total Tools',
-      value: templates.reduce((acc, template) => acc + template.tools.length, 0),
-      icon: Zap,
-      color: 'text-purple-600'
-    },
-    {
-      title: 'Deployments',
-      value: templates.reduce((acc, template) => acc + 3, 0),
-      icon: Server,
-      color: 'text-orange-600'
-    }
-  ]
+  const enabledCount = servers.filter((s) => s.enabled).length;
+  const gatewaySet = new Set(servers.flatMap((s) => s.gateways));
+  const totalGateways = gatewaySet.size;
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Server Templates</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Virtual Server Templates</h2>
           <p className="text-muted-foreground">
-            Manage and deploy server templates for quick MCP gateway setup
+            Virtual server configurations registered in the MCP Gateway
+            {lastUpdated && (
+              <span className="ml-2 text-xs">— updated {lastUpdated.toLocaleTimeString()}</span>
+            )}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Import
-          </Button>
-          <Button variant="outline">
-            <Upload className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Template
-          </Button>
-        </div>
+        <Button variant="outline" onClick={fetchData} disabled={loading}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
+
+      {error && (
+        <div className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          )
-        })}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Servers</CardTitle>
+            <Server className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? '—' : servers.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Enabled</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? '—' : `${enabledCount}/${servers.length}`}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Gateways</CardTitle>
+            <Globe className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? '—' : totalGateways}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Disabled</CardTitle>
+            <XCircle className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? '—' : servers.length - enabledCount}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Categories Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from(new Set(templates.map(t => t.category))).map((category) => {
-          const categoryTemplates = templates.filter(t => t.category === category)
-          return (
-            <Card key={category}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium capitalize">
-                  {category}
-                </CardTitle>
-                <span className="text-muted-foreground">{getCategoryIcon(category)}</span>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{categoryTemplates.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  {categoryTemplates.reduce((acc, t) => acc + t.tools.length, 0)} tools total
-                </p>
-              </CardContent>
-            </Card>
-          )
-        })}
+      {/* Search */}
+      <div className="flex items-center space-x-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search servers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <Layers className="h-4 w-4" />
+          <span>MCP Gateway virtual servers</span>
+        </div>
       </div>
 
-      {/* Templates List */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          templates.map((template) => (
-            <Card key={template.id} className="relative">
-              <CardHeader>
+      {/* Server List */}
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="h-6 bg-muted rounded animate-pulse mb-2 w-1/3" />
+                <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((server) => (
+            <Card key={server.name}>
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Settings className="h-6 w-6 text-muted-foreground" />
+                    <Settings className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <CardTitle className="text-lg">{template.name}</CardTitle>
-                      <CardDescription>{template.description}</CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className={getCategoryColor(template.category)}>
-                      {getCategoryIcon(template.category)}
-                      <span className="ml-1 capitalize">{template.category}</span>
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <h4 className="font-medium mb-2">Template Details</h4>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div>• Version: {template.version || '1.0.0'}</div>
-                      <div>• Tools: {template.tools.length}</div>
-                      <div>• Deployments: {template.deployments || 0}</div>
-                      <div>• Created: {new Date(template.created_at).toLocaleDateString()}</div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Included Tools</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {template.tools.slice(0, 8).map((tool) => (
-                        <Badge key={tool} variant="outline" className="text-xs">
-                          {tool}
-                        </Badge>
-                      ))}
-                      {template.tools.length > 8 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{template.tools.length - 8} more
-                        </Badge>
+                      <CardTitle className="text-base font-mono">{server.name}</CardTitle>
+                      {server.description && (
+                        <CardDescription>{server.description}</CardDescription>
                       )}
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Settings className="h-4 w-4" />
-                    <span>Last updated: {new Date(template.updated_at).toLocaleString()}</span>
-                  </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                    <Button size="sm">
-                      <Server className="mr-2 h-4 w-4" />
-                      Deploy
-                    </Button>
+                    {server.enabled ? (
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Enabled
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Disabled
+                      </Badge>
+                    )}
                   </div>
                 </div>
+              </CardHeader>
+              {server.gateways.length > 0 && (
+                <CardContent className="pt-0">
+                  <div className="flex items-center space-x-2">
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Gateways:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {server.gateways.map((g) => (
+                        <GatewayBadge key={g} gateway={g} />
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          ))}
+
+          {filtered.length === 0 && !error && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <Server className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No servers found</h3>
+                <p className="text-muted-foreground text-center">
+                  {searchTerm
+                    ? 'Try adjusting your search terms'
+                    : 'No virtual server configurations available from the gateway'}
+                </p>
               </CardContent>
             </Card>
-          ))
-        )}
-        {templates.length === 0 && !loading && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <Settings className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No templates available</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                Create your first server template to streamline MCP gateway deployments.
-              </p>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Template
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Template Management Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Settings className="h-5 w-5" />
-            <span>Template Management</span>
-          </CardTitle>
-          <CardDescription>
-            Create, import, and deploy server templates for consistent configurations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <h4 className="font-medium mb-2">Available Actions</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <div><code className="bg-muted px-1 rounded">mcp template list</code> - List templates</div>
-                <div><code className="bg-muted px-1 rounded">mcp template create</code> - Create template</div>
-                <div><code className="bg-muted px-1 rounded">mcp template deploy &lt;template&gt;</code> - Deploy template</div>
-                <div><code className="bg-muted px-1 rounded">mcp template import &lt;file&gt;</code> - Import template</div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Template Features</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <div>• Pre-configured tool sets</div>
-                <div>• Environment variables</div>
-                <div>• Security policies</div>
-                <div>• Performance tuning</div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </div>
+      )}
     </div>
-  )
+  );
 }

@@ -17,6 +17,7 @@ from tool_router.api.ai_performance import router as ai_performance_router
 from tool_router.api.audit import router as audit_router
 from tool_router.api.cache_dashboard import router as cache_dashboard_router
 from tool_router.api.cloud import router as cloud_router
+from tool_router.api.features import router as features_router
 from tool_router.api.health import router as health_router
 from tool_router.api.metrics_export import metrics
 from tool_router.api.metrics_export import router as metrics_router
@@ -66,6 +67,7 @@ app = FastAPI(
         {"name": "Multi-Cloud", "description": "Multi-cloud provider registry and routing strategy"},
         {"name": "AI Performance", "description": "AI selector performance metrics and provider analytics"},
         {"name": "security", "description": "Security statistics, policy status, and compliance aggregation"},
+        {"name": "features", "description": "Feature flags and runtime feature states"},
     ],
 )
 
@@ -98,6 +100,7 @@ app.include_router(server_mgmt_router)
 app.include_router(ide_router)
 app.include_router(cloud_router)
 app.include_router(ai_performance_router)
+app.include_router(features_router)
 app.include_router(security_stats_router)
 
 
