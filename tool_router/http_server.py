@@ -23,6 +23,7 @@ from tool_router.api.metrics_export import router as metrics_router
 from tool_router.api.performance import router as performance_router
 from tool_router.api.rpc_handler import init_rpc_security
 from tool_router.api.rpc_handler import router as rpc_router
+from tool_router.api.security_stats import router as security_stats_router
 from tool_router.api.server_mgmt import ide_router
 from tool_router.api.server_mgmt import router as server_mgmt_router
 from tool_router.api.streamable_http import router as mcp_router
@@ -64,6 +65,7 @@ app = FastAPI(
         {"name": "IDE Detection", "description": "Detect installed IDEs and their config paths"},
         {"name": "Multi-Cloud", "description": "Multi-cloud provider registry and routing strategy"},
         {"name": "AI Performance", "description": "AI selector performance metrics and provider analytics"},
+        {"name": "security", "description": "Security statistics, policy status, and compliance aggregation"},
     ],
 )
 
@@ -96,6 +98,7 @@ app.include_router(server_mgmt_router)
 app.include_router(ide_router)
 app.include_router(cloud_router)
 app.include_router(ai_performance_router)
+app.include_router(security_stats_router)
 
 
 @app.middleware("http")

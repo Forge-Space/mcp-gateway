@@ -4,6 +4,14 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-03-15
+
+### Added
+- **`GET /security/stats` endpoint** — aggregates `SecurityAuditLogger` summary, active security policy config, and compliance score into a single JSON response; protected by `AUDIT_READ` or `SYSTEM_ADMIN` RBAC; 22 tests in `tool_router/tests/unit/test_security_stats_api.py`. (#217)
+- **Security page live data** — Admin UI `/security` page rewritten to fetch from `/api/security/stats` proxy; shows compliance score, policy status icons (active/inactive), loading skeletons, error banner, and inline refresh button; all hardcoded dates removed.
+- **Analytics page live data** — Admin UI `/analytics` page rewritten to fetch from `/api/analytics/performance` proxy backed by `GET /monitoring/performance`; shows cache hit rates, uptime, query cache stats, and gateway recommendations; Supabase `usage_analytics` dependency removed.
+- **CI/trust badges** — README updated with CI status, coverage, and PyPI badges. (#216)
+
 ## [1.20.0] - 2026-03-15
 
 ### Added

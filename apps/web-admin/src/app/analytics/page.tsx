@@ -1,102 +1,142 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useAnalyticsStore } from '@/lib/store'
+import { useEffect, useState, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   BarChart3,
   Activity,
   TrendingUp,
-  Users,
   Server,
   Zap,
-  Download,
-  Calendar
-} from 'lucide-react'
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Database,
+} from 'lucide-react';
+
+interface PerformanceSummary {
+  timestamp: number;
+  uptime_seconds: number;
+  cache_performance: {
+    overall_hit_rate: number;
+    total_requests: number;
+    total_cache_size: number;
+  };
+  query_cache: {
+    enabled: boolean;
+    cache_size: number;
+    hit_rate: number;
+  };
+  recommendations: string[];
+}
+
+function formatUptime(seconds: number): string {
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${Math.floor(seconds % 60)}s`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${h}h ${m}m`;
+}
+
+function formatPercent(rate: number): string {
+  return `${(rate * 100).toFixed(1)}%`;
+}
+
+const TIME_RANGES = [
+  { value: '1h', label: 'Last Hour' },
+  { value: '24h', label: 'Last 24 Hours' },
+  { value: '7d', label: 'Last 7 Days' },
+  { value: '30d', label: 'Last 30 Days' },
+];
 
 export default function AnalyticsPage() {
-  const { analytics, loading, fetchAnalytics } = useAnalyticsStore()
-  const [timeRange, setTimeRange] = useState('24h')
+  const [data, setData] = useState<PerformanceSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState('24h');
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/analytics/performance?period=${timeRange}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.detail ?? `HTTP ${res.status}`);
+      }
+      const json: PerformanceSummary = await res.json();
+      setData(json);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load performance data');
+    } finally {
+      setLoading(false);
+    }
+  }, [timeRange]);
 
   useEffect(() => {
-    fetchAnalytics(timeRange)
-  }, [fetchAnalytics, timeRange])
+    fetchData();
+  }, [fetchData]);
 
-  const timeRanges = [
-    { value: '1h', label: 'Last Hour' },
-    { value: '24h', label: 'Last 24 Hours' },
-    { value: '7d', label: 'Last 7 Days' },
-    { value: '30d', label: 'Last 30 Days' }
-  ]
-
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'server_request': return <Server className="h-4 w-4" />
-      case 'tool_execution': return <Zap className="h-4 w-4" />
-      case 'user_login': return <Users className="h-4 w-4" />
-      case 'feature_toggle': return <Activity className="h-4 w-4" />
-      default: return <Activity className="h-4 w-4" />
-    }
-  }
-
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case 'server_request': return 'bg-blue-100 text-blue-800'
-      case 'tool_execution': return 'bg-green-100 text-green-800'
-      case 'user_login': return 'bg-purple-100 text-purple-800'
-      case 'feature_toggle': return 'bg-orange-100 text-orange-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
+  const cacheHitRate = data?.cache_performance.overall_hit_rate ?? 0;
+  const queryCacheHitRate = data?.query_cache.hit_rate ?? 0;
 
   const stats = [
     {
-      title: 'Total Events',
-      value: analytics.length,
-      icon: Activity,
+      title: 'Uptime',
+      value: data ? formatUptime(data.uptime_seconds) : '—',
+      icon: Clock,
       color: 'text-blue-600',
-      change: '+12%'
+      sub: data ? new Date(data.timestamp * 1000).toLocaleTimeString() : 'Loading…',
     },
     {
-      title: 'Server Requests',
-      value: analytics.filter(a => a.action === 'server_request').length,
+      title: 'Cache Hit Rate',
+      value: data ? formatPercent(cacheHitRate) : '—',
       icon: Server,
-      color: 'text-green-600',
-      change: '+8%'
+      color:
+        cacheHitRate >= 0.8
+          ? 'text-green-600'
+          : cacheHitRate >= 0.5
+            ? 'text-yellow-600'
+            : 'text-red-600',
+      sub: data
+        ? `${data.cache_performance.total_requests.toLocaleString()} total requests`
+        : 'Loading…',
     },
     {
-      title: 'Tool Executions',
-      value: analytics.filter(a => a.action === 'tool_execution').length,
+      title: 'Query Cache Hit Rate',
+      value: data ? formatPercent(queryCacheHitRate) : '—',
+      icon: Database,
+      color: queryCacheHitRate >= 0.5 ? 'text-green-600' : 'text-yellow-600',
+      sub: data ? `Size: ${data.query_cache.cache_size}` : 'Loading…',
+    },
+    {
+      title: 'Total Cache Size',
+      value: data ? data.cache_performance.total_cache_size.toLocaleString() : '—',
       icon: Zap,
       color: 'text-purple-600',
-      change: '+15%'
+      sub: data?.query_cache.enabled ? 'Query cache: enabled' : 'Query cache: disabled',
     },
-    {
-      title: 'Active Users',
-      value: new Set(analytics.filter(a => a.user_id).map(a => a.user_id)).size,
-      icon: Users,
-      color: 'text-orange-600',
-      change: '+5%'
-    }
-  ]
+  ];
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
+      {/* Header */}
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Usage Analytics</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Performance Analytics</h2>
           <p className="text-muted-foreground">
-            Monitor gateway usage, performance metrics, and user activity
+            Gateway cache performance, query metrics, and system health
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-1">
-            {timeRanges.map((range) => (
+            {TIME_RANGES.map((range) => (
               <Button
                 key={range.value}
-                variant={timeRange === range.value ? "default" : "outline"}
+                variant={timeRange === range.value ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setTimeRange(range.value)}
               >
@@ -104,57 +144,82 @@ export default function AnalyticsPage() {
               </Button>
             ))}
           </div>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-center space-x-2 rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => {
-          const Icon = stat.icon
+          const Icon = stat.icon;
           return (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                 <Icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1 text-green-600" />
-                  {stat.change} from last period
-                </p>
+                {loading ? (
+                  <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+                ) : (
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
 
-      {/* Charts Section */}
+      {/* Cache breakdown */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart3 className="h-5 w-5" />
-              <span>Activity Timeline</span>
+              <span>Cache Performance</span>
             </CardTitle>
-            <CardDescription>
-              System activity over the selected time period
-            </CardDescription>
+            <CardDescription>Hit rate and request volume breakdown</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center text-muted-foreground border rounded-lg">
-              <div className="text-center">
-                <BarChart3 className="h-12 w-12 mx-auto mb-2" />
-                <p>Chart visualization would go here</p>
-                <p className="text-sm">Integration with charting library needed</p>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2].map((i) => (
+                  <div key={i} className="h-6 animate-pulse rounded bg-muted" />
+                ))}
               </div>
-            </div>
+            ) : data ? (
+              <div className="space-y-4">
+                {[
+                  { label: 'Overall Cache Hit Rate', rate: cacheHitRate },
+                  { label: 'Query Cache Hit Rate', rate: queryCacheHitRate },
+                ].map(({ label, rate }) => (
+                  <div key={label} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{label}</span>
+                      <span className="text-muted-foreground">{formatPercent(rate)}</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${rate >= 0.8 ? 'bg-green-500' : rate >= 0.5 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min(rate * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -162,125 +227,91 @@ export default function AnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Activity className="h-5 w-5" />
-              <span>Action Distribution</span>
+              <span>System Status</span>
             </CardTitle>
-            <CardDescription>
-              Breakdown of different action types
-            </CardDescription>
+            <CardDescription>Current system configuration and state</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {['server_request', 'tool_execution', 'user_login', 'feature_toggle'].map((action) => {
-                const count = analytics.filter(a => a.action === action).length
-                const percentage = analytics.length > 0 ? (count / analytics.length * 100).toFixed(1) : '0'
-                return (
-                  <div key={action} className="flex items-center justify-between">
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-6 animate-pulse rounded bg-muted" />
+                ))}
+              </div>
+            ) : data ? (
+              <div className="space-y-3">
+                {[
+                  {
+                    label: 'Query Cache',
+                    active: data.query_cache.enabled,
+                    detail: `${data.query_cache.cache_size} entries`,
+                  },
+                  {
+                    label: 'Cache Layer',
+                    active: data.cache_performance.total_cache_size > 0,
+                    detail: `${data.cache_performance.total_cache_size} total entries`,
+                  },
+                  {
+                    label: 'Metrics Collection',
+                    active: true,
+                    detail: `${data.cache_performance.total_requests.toLocaleString()} requests tracked`,
+                  },
+                ].map(({ label, active, detail }) => (
+                  <div key={label} className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      {getActionIcon(action)}
-                      <span className="text-sm font-medium capitalize">{action.replace('_', ' ')}</span>
+                      {active ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="text-sm font-medium">{label}</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-24 bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm text-muted-foreground w-12 text-right">{percentage}%</span>
-                    </div>
+                    <Badge variant={active ? 'default' : 'secondary'} className="text-xs">
+                      {detail}
+                    </Badge>
                   </div>
-                )
-              })}
-            </div>
+                ))}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recommendations */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Activity className="h-5 w-5" />
-            <span>Recent Activity</span>
+            <TrendingUp className="h-5 w-5" />
+            <span>Performance Recommendations</span>
           </CardTitle>
           <CardDescription>
-            Latest system events and user actions
+            Auto-generated tuning suggestions based on current metrics
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              analytics.slice(0, 10).map((event, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      {getActionIcon(event.action)}
-                      <Badge className={getActionColor(event.action)}>
-                        {event.action.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="font-medium">{String(event.metadata?.description ?? 'System event')}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.user_id ? `User ${event.user_id}` : 'System'} • {event.server_id ? `Server ${event.server_id}` : 'Global'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(event.timestamp).toLocaleString()}</span>
-                  </div>
-                </div>
-              ))
-            )}
-            {analytics.length === 0 && !loading && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Activity className="h-12 w-12 mx-auto mb-2" />
-                <p>No activity data available</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Analytics Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <BarChart3 className="h-5 w-5" />
-            <span>Analytics Configuration</span>
-          </CardTitle>
-          <CardDescription>
-            Configure data collection and monitoring settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <h4 className="font-medium mb-2">Data Collection</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <div>• Collection Mode: Real-time</div>
-                <div>• Retention Period: 30 days</div>
-                <div>• Sampling Rate: 100%</div>
-                <div>• Data Source: Gateway logs</div>
-              </div>
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-10 animate-pulse rounded bg-muted" />
+              ))}
             </div>
-            <div>
-              <h4 className="font-medium mb-2">Monitoring</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <div>• Performance Metrics: Enabled</div>
-                <div>• Error Tracking: Enabled</div>
-                <div>• User Analytics: Enabled</div>
-                <div>• System Health: Enabled</div>
-              </div>
+          ) : data?.recommendations?.length ? (
+            <ul className="space-y-2">
+              {data.recommendations.map((rec, i) => (
+                <li key={i} className="flex items-start space-x-2 text-sm p-3 border rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                  <span>{rec}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <TrendingUp className="h-12 w-12 mx-auto mb-2" />
+              <p>No recommendations at this time</p>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
