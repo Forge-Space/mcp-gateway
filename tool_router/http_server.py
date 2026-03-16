@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from scalar_fastapi import get_scalar_api_reference
 
+from tool_router.api.ai_experiments import router as ai_experiments_router
 from tool_router.api.ai_performance import router as ai_performance_router
 from tool_router.api.audit import router as audit_router
 from tool_router.api.cache_dashboard import router as cache_dashboard_router
@@ -70,6 +71,7 @@ app = FastAPI(
         {"name": "security", "description": "Security statistics, policy status, and compliance aggregation"},
         {"name": "features", "description": "Feature flags and runtime feature states"},
         {"name": "users", "description": "RBAC role catalog and permission matrix"},
+        {"name": "ai-experiments", "description": "A/B test experiments and variant performance"},
     ],
 )
 
@@ -102,6 +104,7 @@ app.include_router(server_mgmt_router)
 app.include_router(ide_router)
 app.include_router(cloud_router)
 app.include_router(ai_performance_router)
+app.include_router(ai_experiments_router)
 app.include_router(features_router)
 app.include_router(security_stats_router)
 app.include_router(users_router)
