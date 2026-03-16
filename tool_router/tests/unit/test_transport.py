@@ -13,7 +13,6 @@ Covers:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import urllib.error
 import urllib.request
@@ -24,7 +23,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from tool_router.transport import HttpTransport, StdioTransport, Transport, TransportMode
-from tool_router.transport.transport import Transport as TransportBase
 
 
 # ---------------------------------------------------------------------------
@@ -377,7 +375,7 @@ async def test_stdio_transport_send_returns_parsed_response() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, **_: Any) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -407,7 +405,7 @@ async def test_stdio_transport_send_assigns_id_if_missing() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, **_: Any) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -432,7 +430,7 @@ async def test_stdio_transport_send_raises_on_empty_line() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, **_: Any) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -446,12 +444,12 @@ async def test_stdio_transport_send_raises_on_empty_line() -> None:
 
 
 def test_transport_module_exports() -> None:
-    from tool_router.transport import HttpTransport as HT
-    from tool_router.transport import StdioTransport as ST
-    from tool_router.transport import Transport as T
-    from tool_router.transport import TransportMode as TM
+    from tool_router.transport import HttpTransport as HttpTransportExport
+    from tool_router.transport import StdioTransport as StdioTransportExport
+    from tool_router.transport import Transport as TransportExport
+    from tool_router.transport import TransportMode as TransportModeExport
 
-    assert HT is HttpTransport
-    assert ST is StdioTransport
-    assert TM is TransportMode
-    assert T is TransportBase
+    assert HttpTransportExport is HttpTransport
+    assert StdioTransportExport is StdioTransport
+    assert TransportModeExport is TransportMode
+    assert TransportExport is Transport
