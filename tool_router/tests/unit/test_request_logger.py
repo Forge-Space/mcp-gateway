@@ -155,3 +155,28 @@ class TestRequestLoggingDisabledPath:
 
         assert resp.status_code == 200
         assert resp.json() == {"ok": True}
+
+    def test_is_enabled_returns_false_by_default(self) -> None:
+        """Call _is_enabled() directly so line 20 executes (env var not set)."""
+        import os
+
+        from tool_router.middleware.request_logger import _is_enabled
+
+        env_bak = os.environ.pop("REQUEST_LOGGING", None)
+        try:
+            assert _is_enabled() is False
+        finally:
+            if env_bak is not None:
+                os.environ["REQUEST_LOGGING"] = env_bak
+
+    def test_is_enabled_returns_true_when_env_set(self) -> None:
+        """Call _is_enabled() directly with env var true."""
+        import os
+
+        from tool_router.middleware.request_logger import _is_enabled
+
+        os.environ["REQUEST_LOGGING"] = "true"
+        try:
+            assert _is_enabled() is True
+        finally:
+            del os.environ["REQUEST_LOGGING"]

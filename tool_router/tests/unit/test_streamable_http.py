@@ -209,3 +209,40 @@ class TestAsStrDetailAndGenericException:
         data = resp.json()
         assert data["error"]["code"] == -32603
         assert data["error"]["message"] == "Internal error"
+
+    def test_http_exception_400_returns_32602(self, client):
+        from fastapi import HTTPException
+
+        def raising_handler(params, ctx):
+            raise HTTPException(status_code=400, detail="Bad request input")
+
+        with patch(
+            "tool_router.api.streamable_http.RPC_METHOD_HANDLERS",
+            {"tools/list": raising_handler},
+        ):
+            resp = client.post(
+                "/mcp",
+                json={"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1},
+            )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["error"]["code"] == -32602
+        assert "Bad request input" in data["error"]["message"]
+
+    def test_http_exception_500_returns_32603(self, client):
+        from fastapi import HTTPException
+
+        def raising_handler(params, ctx):
+            raise HTTPException(status_code=500, detail="Server error")
+
+        with patch(
+            "tool_router.api.streamable_http.RPC_METHOD_HANDLERS",
+            {"tools/list": raising_handler},
+        ):
+            resp = client.post(
+                "/mcp",
+                json={"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1},
+            )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["error"]["code"] == -32603

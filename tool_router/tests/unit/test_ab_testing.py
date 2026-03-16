@@ -146,3 +146,81 @@ class TestPersistence:
 
         mgr2 = ABTestManager(experiments=[experiment], storage_path=path)
         assert len(mgr2._outcomes) > 0
+
+
+class TestABTestingCoverageGaps:
+    """Cover missing lines 79, 88, 145-146, 150 in ab_testing.py."""
+
+    def test_assign_variant_zero_weight_returns_first(self):
+        """Line 79: total_weight <= 0 returns variants[0]."""
+        exp = Experiment(
+            id="w_test",
+            variants=[
+                Variant(name="a", weight=0.0),
+                Variant(name="b", weight=0.0),
+            ],
+        )
+        mgr = ABTestManager(experiments=[exp])
+        result = mgr.assign_variant("user1", "w_test")
+        assert result is not None
+        assert result.name == "a"
+
+    def test_assign_variant_cumulative_fallback(self):
+        """Line 88: cumulative loop exhausted, return variants[-1]."""
+        exp = Experiment(
+            id="c_test",
+            variants=[
+                Variant(name="a", weight=0.001),
+                Variant(name="b", weight=0.001),
+            ],
+        )
+        mgr = ABTestManager(experiments=[exp])
+        # Try many users to find one where target >= cumulative
+        found = False
+        for i in range(1000):
+            r = mgr.assign_variant(f"u{i}", "c_test")
+            if r and r.name == "b":
+                found = True
+                break
+        assert found
+
+    def test_persist_outcomes_oserror(self):
+        """Lines 145-146: OSError during _persist_outcomes."""
+        from pathlib import Path
+
+        exp = Experiment(
+            id="p_test",
+            variants=[Variant(name="a", weight=1.0)],
+        )
+        mgr = ABTestManager(
+            experiments=[exp],
+            storage_path=Path("/nonexistent/dir/file.json"),
+        )
+        mgr._storage = Path("/nonexistent/dir/file.json")
+        for i in range(50):
+            mgr.record_outcome(
+                ExperimentOutcome(
+                    experiment_id="p_test",
+                    variant_name="a",
+                    user_id=f"u{i}",
+                    quality_score=7.0,
+                    latency_ms=100,
+                    success=True,
+                )
+            )
+        # No exception raised; warning logged
+
+    def test_load_outcomes_storage_not_exists(self):
+        """Line 150: storage set but file doesn't exist."""
+        from pathlib import Path
+
+        exp = Experiment(
+            id="l_test",
+            variants=[Variant(name="a", weight=1.0)],
+        )
+        mgr = ABTestManager(
+            experiments=[exp],
+            storage_path=Path("/tmp/nonexistent_ab_test_xyz.json"),
+        )
+        # _load_outcomes called in __init__ with non-existent file -> returns early
+        assert mgr._outcomes == []
