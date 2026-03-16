@@ -4,6 +4,14 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-03-16
+
+### Added
+- **`GET /ai/experiments` endpoint** — returns A/B test experiments with per-variant stats (count, avg_score, avg_latency_ms, success_rate, min/max_score) and winner detection; protected by `AUDIT_READ` or `SYSTEM_ADMIN` RBAC; 19 tests in `tool_router/tests/unit/test_ai_experiments_api.py`. (#224)
+- **AI Experiments section in Admin UI** — `/ai` page now shows live A/B test experiments with variant performance stats, winner badge (Trophy icon), and animate-pulse loading skeletons; fetches from `/api/ai/experiments`. (#224)
+- **New Next.js proxy** — `/api/ai/experiments` route proxies to `GET /ai/experiments` on the gateway. (#224)
+- **Transport module tests** — 29 tests covering `HttpTransport`, `StdioTransport`, and `TransportMode` across lifecycle, send/receive, error handling, and retry logic; coverage improved from 80.03% to 82.41%. (#224)
+
 ## [1.23.0] - 2026-03-15
 
 ### Added
