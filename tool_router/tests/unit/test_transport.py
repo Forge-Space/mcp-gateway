@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from tool_router.transport import HttpTransport, StdioTransport, Transport, TransportMode
+from tool_router.transport.transport import Transport as TransportBase
 
 
 # ---------------------------------------------------------------------------
@@ -444,12 +445,12 @@ async def test_stdio_transport_send_raises_on_empty_line() -> None:
 
 
 def test_transport_module_exports() -> None:
-    from tool_router.transport import HttpTransport as HttpTransportExport
-    from tool_router.transport import StdioTransport as StdioTransportExport
-    from tool_router.transport import Transport as TransportExport
-    from tool_router.transport import TransportMode as TransportModeExport
+    from tool_router.transport import HttpTransport as ExportedHttpTransport
+    from tool_router.transport import StdioTransport as ExportedStdioTransport
+    from tool_router.transport import Transport as ExportedTransport
+    from tool_router.transport import TransportMode as ExportedTransportMode
 
-    assert HttpTransportExport is HttpTransport
-    assert StdioTransportExport is StdioTransport
-    assert TransportModeExport is TransportMode
-    assert TransportExport is Transport
+    assert ExportedHttpTransport is HttpTransport
+    assert ExportedStdioTransport is StdioTransport
+    assert ExportedTransportMode is TransportMode
+    assert ExportedTransport is TransportBase
