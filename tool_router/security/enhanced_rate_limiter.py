@@ -308,7 +308,7 @@ class EnhancedRateLimiter:
         # Fallback to memory storage
         with self._lock:
             burst_key = f"burst:{identifier}"
-            if burst_key not in self._memory_storage:
+            if burst_key not in self._memory_storage[identifier]:
                 self._memory_storage[identifier][burst_key] = deque()
 
             requests = self._memory_storage[identifier][burst_key]

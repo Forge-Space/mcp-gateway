@@ -1,8 +1,10 @@
 """Test Enhanced Rate Limiter - Multi-strategy rate limiting with configurable caching."""
 
+from __future__ import annotations
+
 import threading
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from tool_router.security.enhanced_rate_limiter import (
     EnhancedRateLimiter,
@@ -516,3 +518,313 @@ class TestEnhancedRateLimiter:
         result3 = self.limiter.check_rate_limit(identifier)
         # Note: may be same as result2 if still within cache window
         assert result3.remaining <= result2.remaining
+
+
+class TestEnhancedRateLimiterCoverageGaps:
+    """Tests targeting specific uncovered lines for 100% coverage."""
+
+    def setup_method(self):
+        self.config = RateLimitConfig(
+            requests_per_minute=100,
+            requests_per_hour=1000,
+            requests_per_day=10000,
+            burst_capacity=50,
+            cache_ttl=1,
+            adaptive_scaling=False,
+        )
+        self.limiter = EnhancedRateLimiter(config=self.config)
+
+    # --- Line 150: burst limit not allowed sets most_restrictive ---
+    def test_burst_limit_exceeded_sets_most_restrictive(self):
+        """Cover line 150: burst result not allowed replaces most_restrictive."""
+        config = RateLimitConfig(
+            requests_per_minute=1000,
+            requests_per_hour=10000,
+            requests_per_day=100000,
+            burst_capacity=1,
+            cache_ttl=0,
+            adaptive_scaling=False,
+        )
+        limiter = EnhancedRateLimiter(config=config)
+        identifier = "burst_test_user_unique_9f"
+
+        import collections
+
+        current_time = int(time.time())
+        # _check_burst_limit uses key f"burst:{identifier}" inside _memory_storage[identifier]
+        burst_storage_key = f"burst:{identifier}"
+        # Pre-populate so burst is already at capacity
+        limiter._memory_storage[identifier] = {
+            burst_storage_key: collections.deque([current_time]),
+        }
+        result = limiter._check_burst_limit(identifier, 1, current_time)
+        assert not result.allowed
+
+    # --- Lines 212-220: Redis window limit (check_redis_window_limit) ---
+    def test_redis_window_limit_success(self):
+        """Cover lines 212-220: Redis window limit path."""
+        with patch("tool_router.security.enhanced_rate_limiter.REDIS_AVAILABLE", True):
+            with patch("redis.from_url") as mock_from_url:
+                mock_client = MagicMock()
+                mock_client.ping.return_value = True
+                mock_pipe = MagicMock()
+                mock_pipe.execute.return_value = [5, True]
+                mock_client.pipeline.return_value = mock_pipe
+                mock_from_url.return_value = mock_client
+
+                limiter = EnhancedRateLimiter(use_redis=True, redis_url="redis://localhost")
+                limiter.use_redis = True
+                limiter.redis_client = mock_client
+
+                result = limiter._check_redis_window_limit("user1", LimitType.PER_MINUTE, 100, 1000, 1060, 1030)
+                assert result.allowed
+                assert result.remaining == 95
+
+    def test_redis_window_limit_exceeded(self):
+        """Cover Redis window limit when count > max."""
+        mock_client = MagicMock()
+        mock_pipe = MagicMock()
+        mock_pipe.execute.return_value = [101, True]
+        mock_client.pipeline.return_value = mock_pipe
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        result = limiter._check_redis_window_limit("user1", LimitType.PER_MINUTE, 100, 1000, 1060, 1030)
+        assert not result.allowed
+        assert result.remaining == 0
+
+    def test_redis_window_limit_exception_falls_back_to_memory(self):
+        """Cover line 232: Redis exception falls back to memory."""
+        mock_client = MagicMock()
+        mock_client.pipeline.side_effect = Exception("Redis down")
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        result = limiter._check_redis_window_limit("user1", LimitType.PER_MINUTE, 100, 1000, 1060, 1030)
+        assert result.allowed  # Falls back to memory, 0 requests recorded
+
+    # --- Line 262: memory window allowed = count < max (boundary) ---
+    def test_memory_window_limit_exactly_at_max(self):
+        """Cover line 262: count < max boundary in memory window."""
+        import collections
+
+        config = RateLimitConfig(requests_per_minute=5, cache_ttl=0, adaptive_scaling=False)
+        limiter = EnhancedRateLimiter(config=config)
+        identifier = "exact_max_user"
+        current_time = int(time.time())
+        window_start = current_time - (current_time % 60)
+        window_end = window_start + 60
+
+        # Pre-populate exactly at max
+        limiter._memory_storage[identifier]["minute"] = collections.deque([current_time] * 5)
+
+        result = limiter._check_memory_window_limit(
+            identifier, LimitType.PER_MINUTE, 5, window_start, window_end, current_time
+        )
+        assert not result.allowed
+        assert result.remaining == 0
+
+    # --- Lines 288-295: Redis burst limit success ---
+    def test_redis_burst_limit_success(self):
+        """Cover lines 288-295: Redis burst capacity check."""
+        mock_client = MagicMock()
+        mock_pipe = MagicMock()
+        mock_pipe.execute.return_value = [3, True]
+        mock_client.pipeline.return_value = mock_pipe
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        result = limiter._check_burst_limit("user1", 10, int(time.time()))
+        assert result.allowed
+        assert result.remaining == 7
+
+    def test_redis_burst_limit_exceeded(self):
+        """Cover Redis burst exceeded path."""
+        mock_client = MagicMock()
+        mock_pipe = MagicMock()
+        mock_pipe.execute.return_value = [11, True]
+        mock_client.pipeline.return_value = mock_pipe
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        result = limiter._check_burst_limit("user1", 10, int(time.time()))
+        assert not result.allowed
+
+    def test_redis_burst_limit_exception_falls_back(self):
+        """Cover line 305-306: Redis burst exception falls back to memory."""
+        mock_client = MagicMock()
+        mock_client.pipeline.side_effect = Exception("Redis error")
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        result = limiter._check_burst_limit("user1", 10, int(time.time()))
+        assert result.allowed  # Falls back to in-memory with 0 burst requests
+
+    # --- Line 318: burst memory storage key init ---
+    def test_burst_memory_storage_initialized_on_first_access(self):
+        """Cover line 318: burst storage for identifier initialized."""
+        limiter = EnhancedRateLimiter()
+        identifier = "brand_new_burst_user"
+        # identifier not in _memory_storage yet
+        assert identifier not in limiter._memory_storage
+        result = limiter._check_burst_limit(identifier, 10, int(time.time()))
+        assert result.allowed
+
+    # --- Line 355: Redis record_request is a pass ---
+    def test_record_request_with_redis_is_noop(self):
+        """Cover line 355: Redis record request is a no-op (pass statement)."""
+        mock_client = MagicMock()
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        # Should not raise
+        limiter._record_request("user1", int(time.time()))
+        # Redis client should NOT be called (it's a pass in Redis mode)
+        mock_client.pipeline.assert_not_called()
+
+    # --- Line 364: record_request LimitType loop append ---
+    def test_record_request_appends_to_all_windows(self):
+        """Cover line 364: record_request appends to all window types."""
+        limiter = EnhancedRateLimiter()
+        identifier = "record_user"
+        current_time = int(time.time())
+
+        limiter._record_request(identifier, current_time)
+
+        assert "minute" in limiter._memory_storage[identifier]
+        assert "hour" in limiter._memory_storage[identifier]
+        assert "day" in limiter._memory_storage[identifier]
+        assert "burst" in limiter._memory_storage[identifier]
+        assert current_time in limiter._memory_storage[identifier]["minute"]
+
+    # --- Line 384: penalty cache deletion when expired ---
+    def test_is_penalized_removes_expired_penalty_from_cache(self):
+        """Cover line 384: penalty_cache entry deleted when expired."""
+        limiter = EnhancedRateLimiter()
+        identifier = "penalty_cache_user"
+        past_time = int(time.time()) - 100
+        # Manually insert expired penalty into penalty cache
+        limiter._penalty_cache[identifier] = past_time
+        limiter._penalties[identifier] = past_time
+
+        result = limiter._is_penalized(identifier, int(time.time()))
+        assert not result
+        assert identifier not in limiter._penalty_cache
+
+    # --- Lines 398-401: Redis apply_penalty ---
+    def test_apply_penalty_with_redis(self):
+        """Cover lines 398-401: Redis setex for penalty."""
+        mock_client = MagicMock()
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        limiter.apply_penalty("user1", 300)
+        mock_client.setex.assert_called_once()
+
+    def test_apply_penalty_redis_exception_silenced(self):
+        """Cover Redis penalty apply exception silencing."""
+        mock_client = MagicMock()
+        mock_client.setex.side_effect = Exception("Redis error")
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        # Should not raise
+        limiter.apply_penalty("user1", 300)
+
+    # --- Lines 413-416: Redis clear_penalties ---
+    def test_clear_penalties_with_redis(self):
+        """Cover lines 413-416: Redis delete for clear_penalties."""
+        mock_client = MagicMock()
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+        limiter._penalties["user1"] = int(time.time()) + 300
+
+        limiter.clear_penalties("user1")
+        mock_client.delete.assert_called_once_with("penalty:user1")
+
+    def test_clear_penalties_redis_exception_silenced(self):
+        """Cover Redis clear_penalties exception silencing."""
+        mock_client = MagicMock()
+        mock_client.delete.side_effect = Exception("Redis error")
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+        limiter._penalties["user1"] = int(time.time()) + 300
+
+        # Should not raise
+        limiter.clear_penalties("user1")
+
+    # --- Lines 442-451: Redis get_usage_stats ---
+    def test_get_usage_stats_with_redis(self):
+        """Cover lines 442-451: Redis get_usage_stats path."""
+        mock_client = MagicMock()
+        mock_client.get.return_value = "5"
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        stats = limiter.get_usage_stats("user1")
+        assert "minute" in stats
+        assert stats["minute"]["count"] == 5
+
+    def test_get_usage_stats_redis_exception_uses_zero(self):
+        """Cover Redis get_usage_stats exception path (returns 0)."""
+        mock_client = MagicMock()
+        mock_client.get.side_effect = Exception("Redis error")
+
+        limiter = EnhancedRateLimiter()
+        limiter.use_redis = True
+        limiter.redis_client = mock_client
+
+        stats = limiter.get_usage_stats("user1")
+        assert stats["minute"]["count"] == 0
+
+    # --- Lines 533, 541: cleanup_expired_data removes empty windows/identifiers ---
+    def test_cleanup_removes_empty_windows_and_identifiers(self):
+        """Cover lines 533, 541: cleanup removes empty windows and empty identifiers."""
+        import collections
+
+        limiter = EnhancedRateLimiter()
+        identifier = "cleanup_user"
+        # Add old request (>24h ago) to trigger cleanup
+        old_time = int(time.time()) - 90000  # 25 hours ago
+        limiter._memory_storage[identifier] = {
+            "minute": collections.deque([old_time]),
+            "burst": collections.deque([old_time]),
+        }
+
+        limiter.cleanup_expired_data()
+
+        # All old windows removed; identifier entry should also be gone
+        assert identifier not in limiter._memory_storage
+
+    def test_cleanup_removes_expired_penalties(self):
+        """Cover cleanup_expired_data for expired penalties."""
+        limiter = EnhancedRateLimiter()
+        identifier = "expired_penalty_user"
+        past_time = int(time.time()) - 10
+        limiter._penalties[identifier] = past_time
+        limiter._penalty_cache[identifier] = past_time
+
+        limiter.cleanup_expired_data()
+
+        assert identifier not in limiter._penalties
