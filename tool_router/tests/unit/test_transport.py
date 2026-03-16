@@ -209,6 +209,49 @@ async def test_http_transport_4xx_raises_value_error() -> None:
 
 
 @pytest.mark.asyncio
+async def test_http_transport_4xx_unreadable_body_falls_back() -> None:
+    """Covers lines 67-68: OSError when reading HTTPError body → '<unreadable>'."""
+    t = HttpTransport(base_url="http://localhost:9999", jwt="tok", max_retries=1)
+
+    fp = MagicMock()
+    fp.read.side_effect = OSError("disk error")
+    err = urllib.error.HTTPError(
+        url="http://localhost:9999/rpc",
+        code=422,
+        msg="Unprocessable",
+        hdrs=None,  # type: ignore[arg-type]
+        fp=fp,
+    )
+
+    with patch("urllib.request.urlopen", side_effect=err):
+        with pytest.raises(ValueError, match="HTTP 422: <unreadable>"):
+            await t.send({"method": "ping"})
+
+
+@pytest.mark.asyncio
+async def test_http_transport_4xx_unicode_decode_error_falls_back() -> None:
+    """Covers lines 67-68: UnicodeDecodeError when decoding HTTPError body → '<unreadable>'."""
+    t = HttpTransport(base_url="http://localhost:9999", jwt="tok", max_retries=1)
+
+    # fp.read() returns bytes whose .decode("utf-8") raises UnicodeDecodeError
+    raw = MagicMock(spec=bytes)
+    raw.decode.side_effect = UnicodeDecodeError("utf-8", b"", 0, 1, "invalid byte")
+    fp = MagicMock()
+    fp.read.return_value = raw
+    err = urllib.error.HTTPError(
+        url="http://localhost:9999/rpc",
+        code=400,
+        msg="Bad Request",
+        hdrs=None,  # type: ignore[arg-type]
+        fp=fp,
+    )
+
+    with patch("urllib.request.urlopen", side_effect=err):
+        with pytest.raises(ValueError, match="HTTP 400: <unreadable>"):
+            await t.send({"method": "ping"})
+
+
+@pytest.mark.asyncio
 async def test_http_transport_5xx_retries_then_raises_value_error_on_last() -> None:
     """On last retry a 5xx raises ValueError (not ConnectionError) because
     the retry guard `attempt < max_retries - 1` is False on the last attempt."""
