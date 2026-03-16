@@ -229,3 +229,104 @@ class TestRequireAuditReadDependency:
         with pytest.raises(HTTPException) as exc_info:
             _require_audit_read(ctx)
         assert exc_info.value.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Tests: filter branches (lines 126, 128, 130) and error paths (107-109, 157-159)
+# ---------------------------------------------------------------------------
+
+
+class TestAuditEventsFilters:
+    """Cover event_type, severity, user_id filter branches and 500 error."""
+
+    def _summary_with_events(self) -> dict[str, Any]:
+        return {
+            "total_events": 3,
+            "recent_events": [
+                {
+                    "timestamp": "2026-01-01T00:00:00Z",
+                    "event_type": "request",
+                    "severity": "info",
+                    "user_id": "user-abc",
+                    "request_id": "req-1",
+                    "ip_address": "1.2.3.4",
+                    "details": {},
+                },
+                {
+                    "timestamp": "2026-01-02T00:00:00Z",
+                    "event_type": "security",
+                    "severity": "warning",
+                    "user_id": "user-xyz",
+                    "request_id": "req-2",
+                    "ip_address": "5.6.7.8",
+                    "details": {},
+                },
+            ],
+        }
+
+    def test_event_type_filter_excludes_non_matching(self) -> None:
+        """Line 126: if event_type and event.event_type != event_type: continue."""
+        app = _make_app(_make_ctx("admin"))
+        client = TestClient(app, raise_server_exceptions=False)
+        with patch(
+            "tool_router.api.audit._get_audit_logger",
+            return_value=MagicMock(get_security_summary=MagicMock(return_value=self._summary_with_events())),
+        ):
+            resp = client.get("/audit/events?event_type=request")
+        assert resp.status_code == 200
+        data = resp.json()
+        events = data["events"]
+        assert all(e["event_type"] == "request" for e in events)
+        assert len(events) == 1
+
+    def test_severity_filter_excludes_non_matching(self) -> None:
+        """Line 128: if severity and event.severity != severity: continue."""
+        app = _make_app(_make_ctx("admin"))
+        client = TestClient(app, raise_server_exceptions=False)
+        with patch(
+            "tool_router.api.audit._get_audit_logger",
+            return_value=MagicMock(get_security_summary=MagicMock(return_value=self._summary_with_events())),
+        ):
+            resp = client.get("/audit/events?severity=warning")
+        assert resp.status_code == 200
+        data = resp.json()
+        events = data["events"]
+        assert len(events) == 1
+        assert events[0]["severity"] == "warning"
+
+    def test_user_id_filter_excludes_non_matching(self) -> None:
+        """Line 130: if user_id and event.user_id != user_id: continue."""
+        app = _make_app(_make_ctx("admin"))
+        client = TestClient(app, raise_server_exceptions=False)
+        with patch(
+            "tool_router.api.audit._get_audit_logger",
+            return_value=MagicMock(get_security_summary=MagicMock(return_value=self._summary_with_events())),
+        ):
+            resp = client.get("/audit/events?user_id=user-abc")
+        assert resp.status_code == 200
+        data = resp.json()
+        events = data["events"]
+        assert len(events) == 1
+        assert events[0]["user_id"] == "user-abc"
+
+    def test_events_500_on_exception(self) -> None:
+        """Lines 107-109: except clause → 500."""
+        app = _make_app(_make_ctx("admin"))
+        client = TestClient(app, raise_server_exceptions=False)
+        with patch(
+            "tool_router.api.audit._get_audit_logger",
+            return_value=MagicMock(get_security_summary=MagicMock(side_effect=RuntimeError("DB failure"))),
+        ):
+            resp = client.get("/audit/events")
+        assert resp.status_code == 500
+
+    def test_summary_500_on_exception(self) -> None:
+        """Lines 157-159: except clause in get_audit_summary → 500."""
+        app = _make_app(_make_ctx("admin"))
+        client = TestClient(app, raise_server_exceptions=False)
+        with patch(
+            "tool_router.api.audit._get_audit_logger",
+            return_value=MagicMock(get_security_summary=MagicMock(side_effect=RuntimeError("failure"))),
+        ):
+            resp = client.get("/audit/summary")
+        assert resp.status_code == 500

@@ -462,3 +462,217 @@ class TestJsonRpcHttpEndpoint:
         with patch("tool_router.gateway.client.call_tool", return_value="result"):
             result = _call_tool("test", {})
         assert result == "result"
+
+
+class TestHandleToolsListWithAuditLogger:
+    """Cover line 190: _audit_logger.log_request_received in _handle_tools_list."""
+
+    @patch("tool_router.api.rpc_handler._get_available_tools")
+    def test_audit_logger_called_when_set(self, mock_tools: MagicMock, security_context: SecurityContext) -> None:
+        mock_tools.return_value = []
+        mock_audit = MagicMock()
+        init_rpc_security(None, mock_audit)
+        try:
+            _handle_tools_list({}, security_context)
+            mock_audit.log_request_received.assert_called_once()
+        finally:
+            init_rpc_security(None, None)
+
+    @patch("tool_router.api.rpc_handler._get_available_tools")
+    def test_no_audit_logger_does_not_fail(self, mock_tools: MagicMock, security_context: SecurityContext) -> None:
+        mock_tools.return_value = []
+        init_rpc_security(None, None)
+        result = _handle_tools_list({}, security_context)
+        assert "tools" in result
+
+
+class TestHandleToolsCallAuditPaths:
+    """Cover lines 240 (audit log when blocked) and audited tools/call path."""
+
+    @patch("tool_router.api.rpc_handler._call_tool")
+    @patch("tool_router.api.rpc_handler._run_security_check")
+    def test_audit_logger_called_on_block(
+        self,
+        mock_security: MagicMock,
+        mock_call: MagicMock,
+        security_context: SecurityContext,
+    ) -> None:
+        from fastapi import HTTPException
+
+        mock_security.return_value = (False, "Injection detected", {})
+        mock_audit = MagicMock()
+        init_rpc_security(MagicMock(), mock_audit)
+        try:
+            with pytest.raises(HTTPException) as exc_info:
+                _handle_tools_call(
+                    {"name": "execute_task", "arguments": {"task": "bad"}},
+                    security_context,
+                )
+            assert exc_info.value.status_code == 403
+            mock_audit.log_request_blocked.assert_called_once()
+        finally:
+            init_rpc_security(None, None)
+
+    @patch("tool_router.api.rpc_handler._call_tool")
+    def test_audit_logger_called_on_successful_tools_call(
+        self, mock_call: MagicMock, security_context: SecurityContext
+    ) -> None:
+        mock_call.return_value = "ok"
+        mock_audit = MagicMock()
+        init_rpc_security(None, mock_audit)
+        try:
+            result = _handle_tools_call(
+                {"name": "execute_task", "arguments": {"task": "build button"}},
+                security_context,
+            )
+            assert result["content"][0]["text"] == "ok"
+            mock_audit.log_request_received.assert_called_once()
+        finally:
+            init_rpc_security(None, None)
+
+
+class TestJsonRpcStreamEndpoint:
+    """Cover lines 441-519: json_rpc_stream_endpoint."""
+
+    def _make_app(self, security_context: SecurityContext) -> FastAPI:
+        from tool_router.api.dependencies import get_security_context
+
+        app = FastAPI()
+        app.include_router(rpc_router)
+
+        async def _mock_ctx() -> SecurityContext:
+            return security_context
+
+        app.dependency_overrides[get_security_context] = _mock_ctx
+        return app
+
+    def _ctx(self) -> SecurityContext:
+        return SecurityContext(
+            user_id="u1",
+            session_id="s1",
+            ip_address="127.0.0.1",
+            user_agent="pytest",
+            request_id="req-stream",
+            endpoint="/rpc/stream",
+            authentication_method="jwt",
+            user_role="developer",
+        )
+
+    @patch("tool_router.api.rpc_handler._call_tool")
+    def test_stream_tools_call_returns_event_stream(self, mock_call: MagicMock) -> None:
+        mock_call.return_value = "stream result"
+        app = self._make_app(self._ctx())
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/rpc/stream",
+            json={
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {"name": "execute_task", "arguments": {"task": "hello"}},
+                "id": 1,
+            },
+        )
+        assert resp.status_code == 200
+        assert "text/event-stream" in resp.headers.get("content-type", "")
+
+    def test_stream_wrong_method_returns_error_stream(self) -> None:
+        app = self._make_app(self._ctx())
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/rpc/stream",
+            json={
+                "jsonrpc": "2.0",
+                "method": "tools/list",
+                "params": {},
+                "id": 2,
+            },
+        )
+        assert resp.status_code == 200
+        assert "text/event-stream" in resp.headers.get("content-type", "")
+        content = resp.text
+        assert "error" in content
+
+    def test_stream_missing_name_returns_400(self) -> None:
+        app = self._make_app(self._ctx())
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/rpc/stream",
+            json={
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {"arguments": {}},
+                "id": 3,
+            },
+        )
+        assert resp.status_code == 400
+
+    @patch("tool_router.api.rpc_handler._call_tool")
+    @patch("tool_router.api.rpc_handler._run_security_check")
+    def test_stream_blocked_by_security_returns_403(
+        self,
+        mock_security: MagicMock,
+        mock_call: MagicMock,
+    ) -> None:
+        mock_security.return_value = (False, "Blocked for testing", {})
+        app = self._make_app(self._ctx())
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/rpc/stream",
+            json={
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {"name": "execute_task", "arguments": {"task": "bad input"}},
+                "id": 4,
+            },
+        )
+        assert resp.status_code == 403
+
+    @patch("tool_router.api.rpc_handler._call_tool")
+    @patch("tool_router.api.rpc_handler._run_security_check")
+    def test_stream_blocked_logs_to_audit(
+        self,
+        mock_security: MagicMock,
+        mock_call: MagicMock,
+    ) -> None:
+
+        mock_security.return_value = (False, "Injection", {})
+        mock_audit = MagicMock()
+        init_rpc_security(MagicMock(), mock_audit)
+        try:
+            app = self._make_app(self._ctx())
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.post(
+                "/rpc/stream",
+                json={
+                    "jsonrpc": "2.0",
+                    "method": "tools/call",
+                    "params": {"name": "execute_task", "arguments": {"task": "bad"}},
+                    "id": 5,
+                },
+            )
+            assert resp.status_code == 403
+            mock_audit.log_request_blocked.assert_called_once()
+        finally:
+            init_rpc_security(None, None)
+
+    @patch("tool_router.api.rpc_handler._call_tool")
+    def test_stream_audit_logger_called_on_success(self, mock_call: MagicMock) -> None:
+        mock_call.return_value = "ok"
+        mock_audit = MagicMock()
+        init_rpc_security(None, mock_audit)
+        try:
+            app = self._make_app(self._ctx())
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.post(
+                "/rpc/stream",
+                json={
+                    "jsonrpc": "2.0",
+                    "method": "tools/call",
+                    "params": {"name": "execute_task", "arguments": {"task": "hello"}},
+                    "id": 6,
+                },
+            )
+            assert resp.status_code == 200
+            mock_audit.log_request_received.assert_called_once()
+        finally:
+            init_rpc_security(None, None)
