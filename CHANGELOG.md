@@ -4,6 +4,13 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-03-16
+
+### Added
+- **`GET /ai/ml-metrics` endpoint** — returns ML monitoring metrics including feedback stats (per-tool success rates, confidence scores, top task types), selector metrics (cost savings, response times, model usage breakdown), and learning health indicators (top performing tools, low-confidence tools, most used task types); protected by `AUDIT_READ` or `SYSTEM_ADMIN` RBAC; 23 tests in `tool_router/tests/unit/test_ai_ml_metrics_api.py`. (#228)
+- **ML Metrics section in Admin UI** — `/ai` page now shows ML monitoring dashboard with feedback stats, model usage table, and learning health indicators; fetches from `/api/ai/ml-metrics`. (#228)
+- **New Next.js proxy** — `/api/ai/ml-metrics` route proxies to `GET /ai/ml-metrics` on the gateway. (#228)
+
 ## [1.24.0] - 2026-03-16
 
 ### Added
