@@ -436,7 +436,7 @@ class TestReadServersCoverageGaps:
         """When _CONFIG_FILE does not exist, _read_servers returns [] (line 118)."""
         non_existent = tmp_path / "virtual-servers.txt"
         with patch("tool_router.api.server_mgmt._CONFIG_FILE", non_existent):
-            from tool_router.api.server_mgmt import _read_servers  # noqa: PLC0415
+            from tool_router.api.server_mgmt import _read_servers
 
             result = _read_servers()
         assert result == []
@@ -541,7 +541,7 @@ class TestPatchServerEnabledFailure:
         # 404 means _read_servers didn't find the server — need to also patch _read_servers
         # The config file IS patched but the module-level _CONFIG_FILE is already resolved;
         # patch _read_servers directly to return a known server list
-        from tool_router.api.server_mgmt import VirtualServer  # noqa: PLC0415
+        from tool_router.api.server_mgmt import VirtualServer
 
         fake_server = VirtualServer(name="cursor-default", enabled=True, gateways=["filesystem"], description="desc")
 
