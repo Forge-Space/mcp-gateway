@@ -4,6 +4,11 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.31.0] - 2026-03-16
+
+### Added
+- UI Specialist v2 unit tests — 53 tests for `specialists/ui_specialist_v2.py` (86% coverage) covering EnhancedUISpecialist init, generate_component, all 4 framework code generators (React/Vue/Angular/Svelte), accessibility enhancements, performance optimization, TypeScript types generation, validate_component, get_component_recommendations. (#241)
+
 ## [1.30.0] - 2026-03-16
 
 ### Added
