@@ -409,3 +409,147 @@ class TestDetectIdesUnit:
         for ide in result.detected:
             if not ide.detected:
                 assert ide.config_path is None
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: _parse_servers — name-only line (no pipe) → continue
+# ---------------------------------------------------------------------------
+
+
+class TestParseServersCoverageGaps:
+    def test_name_only_line_is_skipped(self) -> None:
+        """A line with no '|' has only 1 part → falls into the else: continue branch (line 104)."""
+        text = "bare-name-no-pipe\ncursor-default|true|filesystem|desc\n"
+        servers = _parse_servers(text)
+        # Only the valid server is returned; the bare line is skipped
+        assert len(servers) == 1
+        assert servers[0].name == "cursor-default"
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: _read_servers — config file missing → return []
+# ---------------------------------------------------------------------------
+
+
+class TestReadServersCoverageGaps:
+    def test_returns_empty_list_when_config_missing(self, tmp_path: Path) -> None:
+        """When _CONFIG_FILE does not exist, _read_servers returns [] (line 118)."""
+        non_existent = tmp_path / "virtual-servers.txt"
+        with patch("tool_router.api.server_mgmt._CONFIG_FILE", non_existent):
+            from tool_router.api.server_mgmt import _read_servers
+
+            result = _read_servers()
+        assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: _detect_ides — Windows / Linux platform branches
+# ---------------------------------------------------------------------------
+
+
+class TestDetectIdesWindowsLinux:
+    def test_windows_cursor_path_appended(self) -> None:
+        """On Windows, LOCALAPPDATA path for Cursor.exe is added (line 161)."""
+        with (
+            patch("platform.system", return_value="Windows"),
+            patch("shutil.which", return_value=None),
+            patch("pathlib.Path.exists", return_value=False),
+            patch(
+                "os.environ.get",
+                side_effect=lambda k, d="": "C:\\Users\\user\\AppData\\Local" if k == "LOCALAPPDATA" else d,
+            ),
+        ):
+            result = _detect_ides()
+        # Should return without error and include cursor in detected list
+        cursor_ide = next(ide for ide in result.detected if ide.id == "cursor")
+        assert cursor_ide is not None
+
+    def test_linux_cursor_path_appended(self) -> None:
+        """On Linux, /usr/bin/cursor path is added (line 163)."""
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch("shutil.which", return_value=None),
+            patch("pathlib.Path.exists", return_value=False),
+        ):
+            result = _detect_ides()
+        cursor_ide = next(ide for ide in result.detected if ide.id == "cursor")
+        assert cursor_ide is not None
+
+    def test_windows_vscode_path_appended(self) -> None:
+        """On Windows, LOCALAPPDATA path for VS Code is added (line 172)."""
+        with (
+            patch("platform.system", return_value="Windows"),
+            patch("shutil.which", return_value=None),
+            patch("pathlib.Path.exists", return_value=False),
+            patch(
+                "os.environ.get",
+                side_effect=lambda k, d="": "C:\\Users\\user\\AppData\\Local" if k == "LOCALAPPDATA" else d,
+            ),
+        ):
+            result = _detect_ides()
+        vscode_ide = next(ide for ide in result.detected if ide.id == "vscode")
+        assert vscode_ide is not None
+
+    def test_windows_claude_cfg_dir(self) -> None:
+        """On Windows, APPDATA path for Claude Desktop config is used (lines 186-187)."""
+        with (
+            patch("platform.system", return_value="Windows"),
+            patch("shutil.which", return_value=None),
+            patch("pathlib.Path.exists", return_value=False),
+            patch(
+                "os.environ.get",
+                side_effect=lambda k, d="": "C:\\Users\\user\\AppData\\Roaming" if k == "APPDATA" else d,
+            ),
+        ):
+            result = _detect_ides()
+        claude_ide = next(ide for ide in result.detected if ide.id == "claude")
+        assert claude_ide is not None
+
+    def test_linux_claude_cfg_dir(self) -> None:
+        """On Linux, ~/.config/claude is used as Claude Desktop config dir (lines 188-189)."""
+        with (
+            patch("platform.system", return_value="Linux"),
+            patch("shutil.which", return_value=None),
+            patch("pathlib.Path.exists", return_value=False),
+        ):
+            result = _detect_ides()
+        claude_ide = next(ide for ide in result.detected if ide.id == "claude")
+        assert claude_ide is not None
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: patch_server_enabled — _set_server_enabled returns False → 500
+# ---------------------------------------------------------------------------
+
+
+class TestPatchServerEnabledFailure:
+    def test_returns_500_when_set_enabled_fails(self, tmp_path: Path) -> None:
+        """When _set_server_enabled returns False the endpoint raises HTTP 500 (line 282)."""
+        cfg = tmp_path / "virtual-servers.txt"
+        # Write a config where the server exists; enabled=True so disabling it is a real change
+        cfg.write_text("cursor-default|true|filesystem|desc\n")
+
+        with (
+            patch("tool_router.api.server_mgmt._CONFIG_FILE", cfg),
+            # Force _set_server_enabled to return False even though the file exists
+            patch("tool_router.api.server_mgmt._set_server_enabled", return_value=False),
+        ):
+            client = TestClient(_make_app("admin"), raise_server_exceptions=False)
+            # The router is mounted without prefix, so path is relative to its own root
+            resp = client.patch("/cursor-default/enabled", json={"enabled": False})
+
+        # 404 means _read_servers didn't find the server — need to also patch _read_servers
+        # The config file IS patched but the module-level _CONFIG_FILE is already resolved;
+        # patch _read_servers directly to return a known server list
+        from tool_router.api.server_mgmt import VirtualServer
+
+        fake_server = VirtualServer(name="cursor-default", enabled=True, gateways=["filesystem"], description="desc")
+
+        with (
+            patch("tool_router.api.server_mgmt._read_servers", return_value=[fake_server]),
+            patch("tool_router.api.server_mgmt._set_server_enabled", return_value=False),
+        ):
+            client2 = TestClient(_make_app("admin"), raise_server_exceptions=False)
+            resp2 = client2.patch("/servers/cursor-default/enabled", json={"enabled": False})
+
+        assert resp2.status_code == 500

@@ -459,3 +459,231 @@ class TestGetComponentRecommendations:
         mock_kb.search_knowledge.return_value = [p, p, p]
         result = s.get_component_recommendations("button", "react")
         assert any("performance" in r.lower() for r in result)
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap tests — lines 76,79,82-85 (generate_component accessibility/perf/ts)
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateComponentBranches:
+    def test_enhance_accessibility_called_and_adds_key(self):
+        """Line 76: _enhance_accessibility is called inside generate_component."""
+        s, mock_kb = _make_specialist()
+        mock_kb.search_knowledge.return_value = []
+        result = s.generate_component(
+            {"component_type": "button", "framework": "react", "requirements": ["accessibility"]}
+        )
+        assert "accessibility" in result
+
+    def test_optimize_performance_called_and_adds_key(self):
+        """Line 79: _optimize_performance is called inside generate_component."""
+        s, mock_kb = _make_specialist()
+        mock_kb.search_knowledge.return_value = []
+        result = s.generate_component({"component_type": "button", "framework": "react", "requirements": []})
+        assert "performance" in result
+
+    def test_typescript_types_generated_when_in_requirements(self):
+        """Lines 82-83: typescript_types key created when 'typescript' in requirements."""
+        s, mock_kb = _make_specialist()
+        mock_kb.search_knowledge.return_value = []
+        result = s.generate_component(
+            {"component_type": "button", "framework": "react", "requirements": ["typescript"]}
+        )
+        assert "typescript_types" in result
+        assert "interface" in result["typescript_types"]
+
+    def test_no_typescript_types_without_requirement(self):
+        """Line 85: typescript_types NOT added when not in requirements."""
+        s, mock_kb = _make_specialist()
+        mock_kb.search_knowledge.return_value = []
+        result = s.generate_component({"component_type": "button", "framework": "react", "requirements": []})
+        assert "typescript_types" not in result
+
+    def test_build_component_returns_dict(self):
+        """Line 153: _build_component returns the assembled component dict."""
+        s, _ = _make_specialist()
+        component = s._build_component("button", "react", [], {}, [])
+        assert isinstance(component, dict)
+        assert component["type"] == "button"
+        assert component["framework"] == "react"
+
+    def test_generate_component_code_vue(self):
+        """Line 160: vue branch of _generate_component_code."""
+        s, _ = _make_specialist()
+        code = s._generate_component_code("button", "vue", [])
+        assert isinstance(code, str)
+        assert len(code) > 0
+
+    def test_generate_component_code_angular(self):
+        """Line 162: angular branch of _generate_component_code."""
+        s, _ = _make_specialist()
+        code = s._generate_component_code("input", "angular", [])
+        assert isinstance(code, str)
+
+    def test_generate_component_code_svelte(self):
+        """Line 164: svelte branch of _generate_component_code."""
+        s, _ = _make_specialist()
+        code = s._generate_component_code("button", "svelte", [])
+        assert isinstance(code, str)
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap tests — _generate_component_props list append (line 528)
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateComponentProps:
+    def test_generic_component_returns_base_props(self):
+        """Line 524/528: base_props returned for unknown component type."""
+        s, _ = _make_specialist()
+        props = s._generate_component_props("generic", [])
+        assert isinstance(props, list)
+
+    def test_form_component_adds_submit_and_loading_props(self):
+        """Lines 510-522: form type appends onSubmit and loading to props."""
+        s, _ = _make_specialist()
+        props = s._generate_component_props("form", [])
+        names = [p["name"] for p in props]
+        assert "onSubmit" in names
+        assert "loading" in names
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap tests — _generate_dependencies (lines 557, 566)
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateDependenciesGaps:
+    def test_vue_typescript_adds_vue_tsc(self):
+        """Line 557: vue + typescript adds vue-tsc."""
+        s, _ = _make_specialist()
+        deps = s._generate_dependencies("vue", ["typescript"])
+        assert "vue-tsc" in deps
+
+    def test_svelte_typescript_adds_svelte_check(self):
+        """Line 566: svelte + typescript adds svelte-check."""
+        s, _ = _make_specialist()
+        deps = s._generate_dependencies("svelte", ["typescript"])
+        assert "svelte-check" in deps
+
+    def test_angular_always_adds_core(self):
+        """Line 560: angular adds @angular/core."""
+        s, _ = _make_specialist()
+        deps = s._generate_dependencies("angular", [])
+        assert "@angular/core" in deps
+
+    def test_react_styling_requirement_adds_tailwind(self):
+        """Line 562: react + styling adds tailwindcss and class-variance-authority."""
+        s, _ = _make_specialist()
+        deps = s._generate_dependencies("react", ["styling"])
+        assert "tailwindcss" in deps
+        assert "class-variance-authority" in deps
+
+    def test_react_forms_requirement_adds_hook_form(self):
+        """Line 565: react + forms adds react-hook-form and zod."""
+        s, _ = _make_specialist()
+        deps = s._generate_dependencies("react", ["forms"])
+        assert "react-hook-form" in deps
+        assert "zod" in deps
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap tests — _enhance_accessibility (lines 592-595, 612, 620)
+# ---------------------------------------------------------------------------
+
+
+class TestEnhanceAccessibilityGaps:
+    def test_button_accessibility_transforms_code(self):
+        """Lines 590-591: button branch calls _add_button_accessibility."""
+        s, _ = _make_specialist()
+        component = {
+            "type": "button",
+            "code": "className={cn(base)}",
+        }
+        result = s._enhance_accessibility(component, ["accessibility"])
+        assert "aria-label" in result["code"]
+
+    def test_form_accessibility_transforms_code(self):
+        """Lines 592-593/612: form branch calls _add_form_accessibility."""
+        s, _ = _make_specialist()
+        component = {
+            "type": "form",
+            "code": 'placeholder="Enter your email"',
+        }
+        result = s._enhance_accessibility(component, ["accessibility"])
+        assert "aria-label" in result["code"]
+
+    def test_input_accessibility_transforms_code(self):
+        """Lines 594-595/620: input branch calls _add_input_accessibility."""
+        s, _ = _make_specialist()
+        component = {
+            "type": "input",
+            "code": "<Input name='email' />",
+        }
+        result = s._enhance_accessibility(component, ["accessibility"])
+        assert "aria-label" in result["code"]
+
+    def test_no_enhancement_without_accessibility_requirement(self):
+        """Line 572-573: returns unchanged if accessibility not in requirements."""
+        s, _ = _make_specialist()
+        component = {"type": "button", "code": "original"}
+        result = s._enhance_accessibility(component, [])
+        assert result["code"] == "original"
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap tests — _optimize_performance React.memo wrapping (lines 641-642)
+# ---------------------------------------------------------------------------
+
+
+class TestOptimizePerformanceGaps:
+    def test_react_memo_wraps_forwardref_component(self):
+        """Lines 641-642: React.memo wrapping when React.forwardRef in code and no React.memo."""
+        s, _ = _make_specialist()
+        component = {
+            "framework": "react",
+            "code": "export const Btn = React.forwardRef((props, ref) => {\n  return <button ref={ref} />;\n});",
+        }
+        result = s._optimize_performance(component, "react")
+        assert "React.memo" in result["code"]
+
+    def test_non_react_no_memo(self):
+        """Performance key added for all frameworks, no memo for non-react."""
+        s, _ = _make_specialist()
+        component = {"framework": "vue", "code": "<template></template>"}
+        result = s._optimize_performance(component, "vue")
+        assert "performance" in result
+        assert "React.memo" not in result["code"]
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap tests — get_component_recommendations (line 706) and
+# validate_component TypeScript check (lines 751-752)
+# ---------------------------------------------------------------------------
+
+
+class TestGetRecommendationsAndValidate:
+    def test_few_high_confidence_patterns_triggers_recommendation(self):
+        """Line 706: < 3 high-confidence patterns triggers extra recommendation."""
+        s, mock_kb = _make_specialist()
+        # Only 1 high-confidence pattern
+        p_high = _make_pattern("H", 0.9, ["styling"])
+        p_low = _make_pattern("L", 0.5, ["styling"])
+        mock_kb.search_knowledge.return_value = [p_high, p_low, p_low]
+        result = s.get_component_recommendations("button", "react")
+        assert any("high-quality" in r.lower() or "pattern" in r.lower() for r in result)
+
+    def test_validate_typescript_requirement_missing_interface(self):
+        """Lines 750-752: typescript requirement but no 'interface' in code → issue added."""
+        s, _ = _make_specialist()
+        component = {
+            "type": "button",
+            "framework": "react",
+            "code": "const Btn = () => <button />;",
+            "props": [],
+            "requirements": ["typescript"],
+        }
+        result = s.validate_component(component)
+        assert any("TypeScript" in issue for issue in result["issues"])
+        assert any("TypeScript" in rec for rec in result["recommendations"])

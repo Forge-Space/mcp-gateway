@@ -228,3 +228,61 @@ class TestSelectOptimalModelFallback:
         sel.hardware_constraints = {"max_model_ram_gb": 0.1}
         result = sel.select_optimal_model("complex", "balanced")
         assert result == AIModel.TINYLLAMA.value
+
+
+class TestOllamaSelectorSelectMultiToolNull:
+    """Cover OllamaSelector.select_tools_multi when _call_ollama returns None (line 269)."""
+
+    def test_select_tools_multi_returns_none_when_ollama_empty(self) -> None:
+        sel = _make_ollama()
+        with patch("httpx.Client") as mc:
+            mc.return_value.__enter__.return_value.post.return_value = _make_httpx_response({"response": ""})
+            result = sel.select_tools_multi("task", [{"name": "a", "description": "a"}])
+        assert result is None
+
+
+class TestParseResponseExceptions:
+    """Cover _parse_response exception branches (lines 334-339)."""
+
+    def test_json_decode_error_returns_none(self) -> None:
+        sel = _make_ollama()
+        result = sel._parse_response("{invalid json{{")
+        assert result is None
+
+    def test_generic_exception_returns_none(self) -> None:
+        import json
+
+        sel = _make_ollama()
+        with patch.object(json, "loads", side_effect=ValueError("boom")):
+            result = sel._parse_response('{"tool_name":"a","confidence":0.8,"reasoning":"x"}')
+        assert result is None
+
+
+class TestParseMultiResponseGenericException:
+    """Cover _parse_multi_response generic exception branch (lines 377-379)."""
+
+    def test_generic_exception_returns_none(self) -> None:
+        import json
+
+        sel = _make_ollama()
+        available = [{"name": "a"}]
+        with patch.object(json, "loads", side_effect=ValueError("boom")):
+            result = sel._parse_multi_response('{"tools":["a"],"confidence":0.8,"reasoning":"x"}', available)
+        assert result is None
+
+
+class TestSelectToolWithMatchingProvider:
+    """Cover select_tool_with_cost_optimization when provider.model == optimal_model (lines 617-618)."""
+
+    def test_matching_provider_used_directly(self) -> None:
+        ollama = _make_ollama()
+        sel = EnhancedAISelector(providers=[ollama])
+        optimal = sel.select_optimal_model("simple", "balanced")
+        ollama.model = optimal
+
+        resp = _make_httpx_response({"response": '{"tool_name": "a", "confidence": 0.8, "reasoning": "x"}'})
+        with patch("httpx.Client") as mc:
+            mc.return_value.__enter__.return_value.post.return_value = resp
+            result = sel.select_tool_with_cost_optimization("task", [{"name": "a", "description": "a"}])
+        assert result is not None
+        assert result.get("model_used") == optimal

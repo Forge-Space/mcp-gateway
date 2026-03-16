@@ -464,6 +464,20 @@ export class {component_type.title()}Component {{
   }}
 </style>"""
 
+    def _generate_generic_component(self, component_type: str, patterns: list[dict[str, Any]]) -> str:
+        """Generate a generic/fallback component for unsupported frameworks."""
+        cap = component_type.capitalize()
+        return f"""// Generic {component_type} component
+// Replace with framework-specific implementation
+
+function {cap}(props) {{
+  return <div className="{component_type}">{cap} content</div>;
+}}
+
+export default {cap};"""
+
+    def _generate_component_props(self, component_type: str, patterns: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Generate props list for the component based on type and patterns."""
         base_props = [
             {
                 "name": "children",
