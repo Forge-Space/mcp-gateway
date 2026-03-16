@@ -4,6 +4,13 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-03-15
+
+### Added
+- **`GET /users` endpoint** — returns RBAC role catalog with 4 roles (admin, developer, user, guest), permission matrix (16 permissions), and privilege flags; protected by `AUDIT_READ` or `SYSTEM_ADMIN` RBAC; 19 tests in `tool_router/tests/unit/test_users_api.py`. (#221)
+- **Access Control page (users)** — Admin UI `/users` page rewritten as RBAC Access Control hub; fetches live role catalog from `/api/users`; shows 4 stat cards (total roles, total permissions, privileged roles, standard roles), per-role cards with permission matrix grouped by category, access summary checklist, filter by All/Privileged/Standard; Supabase `users` table dependency removed.
+- **New Next.js proxy** — `/api/users` route proxies to `GET /users` on the gateway.
+
 ## [1.22.0] - 2026-03-15
 
 ### Added
