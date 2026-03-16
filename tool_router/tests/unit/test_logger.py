@@ -413,7 +413,7 @@ class TestStructuredFormatterTraceContext:
 
     def test_format_with_trace_context(self) -> None:
         import logging
-        from unittest.mock import patch
+        from unittest.mock import MagicMock, patch
 
         from tool_router.observability.logger import StructuredFormatter
 
@@ -429,11 +429,33 @@ class TestStructuredFormatterTraceContext:
         )
 
         trace_data = {"trace_id": "abc123", "span_id": "def456"}
-        with patch(
-            "tool_router.observability.otel_setup.get_trace_context",
-            return_value=trace_data,
-        ):
+        mock_module = MagicMock()
+        mock_module.get_trace_context.return_value = trace_data
+        with patch.dict("sys.modules", {"tool_router.observability.otel_setup": mock_module}):
             result = formatter.format(record)
 
         assert "trace_id=abc123" in result
         assert "span_id=def456" in result
+
+    def test_format_handles_import_error(self) -> None:
+        """Cover lines 36-37: except ImportError: pass when otel_setup unavailable."""
+        import logging
+        from unittest.mock import patch
+
+        from tool_router.observability.logger import StructuredFormatter
+
+        formatter = StructuredFormatter()
+        record = logging.LogRecord(
+            name="test_logger",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=1,
+            msg="import error test",
+            args=(),
+            exc_info=None,
+        )
+
+        with patch.dict("sys.modules", {"tool_router.observability.otel_setup": None}):
+            result = formatter.format(record)
+
+        assert "import error test" in result
