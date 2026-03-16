@@ -4,6 +4,11 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.27.0] - 2026-03-16
+
+### Added
+- **Transport adapter 100% coverage** — 2 additional tests covering the `OSError` and `UnicodeDecodeError` fallback paths in `HttpTransport.send()` (`http_adapter.py` lines 67-68); transport module now at 100% coverage with 31 total tests. (#233)
+
 ## [1.26.0] - 2026-03-16
 
 ### Added
