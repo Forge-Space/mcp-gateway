@@ -13,7 +13,6 @@ Covers:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import urllib.error
 import urllib.request
@@ -377,7 +376,7 @@ async def test_stdio_transport_send_returns_parsed_response() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, _timeout: float) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -407,7 +406,7 @@ async def test_stdio_transport_send_assigns_id_if_missing() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, _timeout: float) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -432,7 +431,7 @@ async def test_stdio_transport_send_raises_on_empty_line() -> None:
 
     t._process = mock_proc
 
-    async def _fake_wait_for(coro: Any, timeout: float) -> Any:
+    async def _fake_wait_for(coro: Any, _timeout: float) -> Any:
         return await coro
 
     with patch("asyncio.wait_for", side_effect=_fake_wait_for):
@@ -446,12 +445,12 @@ async def test_stdio_transport_send_raises_on_empty_line() -> None:
 
 
 def test_transport_module_exports() -> None:
-    from tool_router.transport import HttpTransport as HT
-    from tool_router.transport import StdioTransport as ST
-    from tool_router.transport import Transport as T
-    from tool_router.transport import TransportMode as TM
+    from tool_router.transport import HttpTransport as ExportedHttpTransport
+    from tool_router.transport import StdioTransport as ExportedStdioTransport
+    from tool_router.transport import Transport as ExportedTransport
+    from tool_router.transport import TransportMode as ExportedTransportMode
 
-    assert HT is HttpTransport
-    assert ST is StdioTransport
-    assert TM is TransportMode
-    assert T is TransportBase
+    assert ExportedHttpTransport is HttpTransport
+    assert ExportedStdioTransport is StdioTransport
+    assert ExportedTransportMode is TransportMode
+    assert ExportedTransport is TransportBase
