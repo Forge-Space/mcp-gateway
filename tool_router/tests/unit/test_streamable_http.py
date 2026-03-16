@@ -175,3 +175,37 @@ class TestSessionPruning:
 
         asyncio.run(_prune_sessions())
         assert len(_sessions) == _MAX_SESSIONS
+
+
+# ---------------------------------------------------------------------------
+# Coverage gaps: _as_str_detail non-str (line 92) and
+# generic Exception handler (lines 156-158)
+# ---------------------------------------------------------------------------
+
+
+class TestAsStrDetailAndGenericException:
+    """Cover _as_str_detail with non-str and generic except path."""
+
+    def test_as_str_detail_with_non_string(self):
+        from tool_router.api.streamable_http import _as_str_detail
+
+        result = _as_str_detail({"key": "value"})
+        assert isinstance(result, str)
+        assert "key" in result
+
+    def test_generic_exception_returns_internal_error(self, client):
+        def raising_handler(params, ctx):
+            raise RuntimeError("Unexpected boom")
+
+        with patch(
+            "tool_router.api.streamable_http.RPC_METHOD_HANDLERS",
+            {"tools/list": raising_handler},
+        ):
+            resp = client.post(
+                "/mcp",
+                json={"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1},
+            )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["error"]["code"] == -32603
+        assert data["error"]["message"] == "Internal error"

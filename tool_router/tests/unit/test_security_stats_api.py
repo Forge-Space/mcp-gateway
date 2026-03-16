@@ -324,3 +324,39 @@ class TestRequireSecurityReadDependency:
         with pytest.raises(HTTPException) as exc_info:
             _require_security_read(ctx)
         assert exc_info.value.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: _get_audit_logger import path (lines 54-56)
+# and get_security_stats exception path (lines 132-134)
+# ---------------------------------------------------------------------------
+
+
+class TestGetAuditLoggerAndExceptionPath:
+    """Cover _get_audit_logger import path and get_security_stats 500 path."""
+
+    def test_get_audit_logger_returns_instance(self) -> None:
+        from tool_router.api.security_stats import _get_audit_logger
+        from tool_router.security.audit_logger import SecurityAuditLogger
+
+        result = _get_audit_logger()
+        assert isinstance(result, SecurityAuditLogger)
+
+    def test_get_security_stats_returns_500_on_exception(self) -> None:
+        from unittest.mock import MagicMock
+
+        ctx = _make_ctx("admin")
+        app = _make_app(ctx)
+        client = TestClient(app, raise_server_exceptions=False)
+
+        mock_logger = MagicMock()
+        mock_logger.get_security_summary.side_effect = RuntimeError("DB error")
+
+        with patch(
+            "tool_router.api.security_stats._get_audit_logger",
+            return_value=mock_logger,
+        ):
+            resp = client.get("/security/stats")
+
+        assert resp.status_code == 500
+        assert "Failed" in resp.json()["detail"]

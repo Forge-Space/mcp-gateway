@@ -119,3 +119,25 @@ class TestLearningIntegration:
         optimizer = PromptOptimizer(feedback_store=None, enable_learning=True)
         result = optimizer.optimize("test")
         assert isinstance(result, OptimizationResult)
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: _apply_learning_insights Exception path (lines 150-151)
+# ---------------------------------------------------------------------------
+
+
+class TestPromptOptimizerLearningException:
+    """Cover the except Exception path in _apply_learning_insights."""
+
+    def test_exception_in_get_learning_insights_is_swallowed(self) -> None:
+        from tool_router.ai.prompt_optimizer import PromptOptimizer
+
+        class FailingFeedback:
+            def get_learning_insights(self, prompt: str) -> dict:
+                raise RuntimeError("DB gone")
+
+        optimizer = PromptOptimizer(feedback_store=FailingFeedback(), enable_learning=True)
+        result = optimizer.optimize("Build a form")
+        # Should not raise; learning just silently skipped
+        assert result is not None
+        assert result.original_prompt == "Build a form"

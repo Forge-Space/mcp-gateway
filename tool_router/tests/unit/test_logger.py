@@ -401,3 +401,39 @@ class TestLogContext:
 
         with LogContext(logger, **extra_fields) as adapter:
             assert adapter.extra == extra_fields
+
+
+# ---------------------------------------------------------------------------
+# Coverage gap: StructuredFormatter trace context branch (lines 34-35)
+# ---------------------------------------------------------------------------
+
+
+class TestStructuredFormatterTraceContext:
+    """Cover the if trace_ctx: branch that updates log_data with trace info."""
+
+    def test_format_with_trace_context(self) -> None:
+        import logging
+        from unittest.mock import patch
+
+        from tool_router.observability.logger import StructuredFormatter
+
+        formatter = StructuredFormatter()
+        record = logging.LogRecord(
+            name="test_logger",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=1,
+            msg="trace test",
+            args=(),
+            exc_info=None,
+        )
+
+        trace_data = {"trace_id": "abc123", "span_id": "def456"}
+        with patch(
+            "tool_router.observability.otel_setup.get_trace_context",
+            return_value=trace_data,
+        ):
+            result = formatter.format(record)
+
+        assert "trace_id=abc123" in result
+        assert "span_id=def456" in result
