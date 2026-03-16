@@ -6,6 +6,12 @@
   <p>AI-powered MCP tool routing hub — part of the <a href="https://github.com/Forge-Space">Forge Space</a> open developer workspace.</p>
 </div>
 
+[![CI Pipeline](https://github.com/Forge-Space/mcp-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/Forge-Space/mcp-gateway/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
+
 Self-hosted gateway using [IBM Context Forge](https://github.com/IBM/mcp-context-forge) with AI-driven optimization, predictive scaling, ML monitoring, and enterprise security. Connect any MCP server, route intelligently, manage via admin UI.
 
 **One connection from Cursor (or other MCP clients) to the gateway; add upstream MCP servers via the Admin UI.**
