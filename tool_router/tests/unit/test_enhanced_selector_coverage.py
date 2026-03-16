@@ -286,3 +286,16 @@ class TestSelectToolWithMatchingProvider:
             result = sel.select_tool_with_cost_optimization("task", [{"name": "a", "description": "a"}])
         assert result is not None
         assert result.get("model_used") == optimal
+
+
+class TestParseResponseJsonDecodeError:
+    """Cover lines 334-336: json.JSONDecodeError branch in _parse_response."""
+
+    def test_invalid_json_returns_none(self) -> None:
+        """Trigger JSONDecodeError by returning invalid JSON in response."""
+        sel = _make_ollama()
+        resp = _make_httpx_response({"response": "{ invalid json "})
+        with patch("httpx.Client") as mc:
+            mc.return_value.__enter__.return_value.post.return_value = resp
+            result = sel.select_tool("task", [{"name": "a", "description": "desc"}])
+        assert result is None

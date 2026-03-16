@@ -115,3 +115,12 @@ class TestRefineCode:
         result = refine_code("x", "task", lambda p: good_code)
         assert isinstance(result.score_delta, float)
         assert result.final_score == result.initial_score + result.score_delta
+
+
+class TestRefinementLoopCoverageGaps:
+    """Cover line 110: short string break."""
+
+    def test_stops_on_short_refinement(self):
+        """Line 110: refined is truthy but stripped length < 20."""
+        result = refine_code("x", "task", lambda p: "short", RefinementConfig(max_iterations=3))
+        assert result.iterations <= 1

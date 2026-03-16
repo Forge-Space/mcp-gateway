@@ -704,3 +704,20 @@ class TestPromptArchitect:
         architect._prompt_cache["key1"] = {"data": "value1"}
         stats = architect.get_optimization_stats()
         assert stats["cache_size"] == 1
+
+
+class TestPromptArchitectConstraints:
+    """Cover lines 599-601: requirement constraints loop."""
+
+    def test_requirements_with_constraints(self) -> None:
+        """Lines 599-601: _enhance_for_quality with constraints list non-empty."""
+        architect = PromptArchitect()
+        req = Requirement(
+            type=RequirementType.PERFORMANCE,
+            description="Use TypeScript",
+            priority="high",
+            constraints=["No any types", "Strict null checks"],
+        )
+        result = architect._enhance_for_quality("Write a function", TaskType.CODE_GENERATION, [req])
+        assert "No any types" in result
+        assert "Strict null checks" in result
