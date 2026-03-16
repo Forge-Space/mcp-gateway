@@ -13,6 +13,7 @@ from tool_router.security.security_middleware import SecurityContext
 
 from .dependencies import get_security_context
 
+
 router = APIRouter(prefix="/ai", tags=["AI Performance"])
 
 _rbac = RBACEvaluator()

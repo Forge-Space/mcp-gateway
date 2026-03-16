@@ -13,12 +13,11 @@ Verifies:
 
 from __future__ import annotations
 
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from tool_router.ai.ab_testing import ABTestManager, Experiment, ExperimentOutcome, Variant
-from tool_router.api.ai_experiments import ExperimentsResponse, router as ai_experiments_router
+from tool_router.api.ai_experiments import router as ai_experiments_router
 from tool_router.api.dependencies import get_security_context
 from tool_router.security.security_middleware import SecurityContext
 
@@ -43,7 +42,7 @@ def _make_app(security_context: SecurityContext | None, manager: ABTestManager |
     if manager is not None:
         import tool_router.api.ai_experiments as ai_exp_module
 
-        ai_exp_module._manager = manager  # noqa: SLF001
+        ai_exp_module._manager = manager
 
     return app
 
