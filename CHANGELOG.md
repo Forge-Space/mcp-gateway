@@ -4,6 +4,12 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-03-16
+
+### Added
+
+- **Core server unit tests** — 33 tests for `core/server.py` covering `initialize_ai`, `execute_task`, `execute_tasks`, `record_feedback`, `search_tools`, `execute_specialist_task`, `get_specialist_stats`, and `optimize_prompt` with full mock isolation. (#237)
+
 ## [1.28.0] - 2026-03-16
 
 ### Added
