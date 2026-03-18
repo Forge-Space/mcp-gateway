@@ -1,5 +1,7 @@
 """Tests for generate-review-refine loop."""
 
+from unittest.mock import patch
+
 from tool_router.ai.refinement_loop import (
     RefinementConfig,
     build_refinement_prompt,
@@ -124,3 +126,32 @@ class TestRefinementLoopCoverageGaps:
         """Line 110: refined is truthy but stripped length < 20."""
         result = refine_code("x", "task", lambda p: "short", RefinementConfig(max_iterations=3))
         assert result.iterations <= 1
+
+    def test_short_refinement_branch_with_forced_failing_gate(self):
+        """Deterministically enter loop and break on short refined output (line 110)."""
+        failing_report = QualityReport(
+            passed=False,
+            score=0.1,
+            results=[GateResult(gate="security", passed=False, issues=["x"], severity="error")],
+        )
+
+        with patch("tool_router.ai.refinement_loop.run_quality_gates", return_value=failing_report):
+            result = refine_code("const a=1", "task", lambda p: "short", RefinementConfig(max_iterations=2))
+
+        assert result.iterations == 0
+
+    def test_exception_branch_with_forced_failing_gate(self):
+        """Deterministically enter loop and hit exception branch (lines 112-114)."""
+        failing_report = QualityReport(
+            passed=False,
+            score=0.1,
+            results=[GateResult(gate="security", passed=False, issues=["x"], severity="error")],
+        )
+
+        def _raise(_prompt):
+            raise RuntimeError("boom")
+
+        with patch("tool_router.ai.refinement_loop.run_quality_gates", return_value=failing_report):
+            result = refine_code("const a=1", "task", _raise, RefinementConfig(max_iterations=2))
+
+        assert result.iterations == 0

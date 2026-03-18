@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
-from tool_router.api.metrics_export import MetricsCollector
+from tool_router.api.metrics_export import MetricsCollector, router
 
 
 @pytest.fixture
@@ -59,7 +61,16 @@ class TestMetricsCollector:
 class TestMetricsEndpointIntegration:
     def test_metrics_endpoint_registered(self):
         """Verify endpoint is importable and registered."""
-        from tool_router.api.metrics_export import router
-
         routes = [r.path for r in router.routes]
         assert "/metrics" in routes
+
+    def test_get_metrics_endpoint_returns_prometheus_payload(self) -> None:
+        app = FastAPI()
+        app.include_router(router)
+
+        with TestClient(app) as client:
+            resp = client.get("/metrics")
+
+        assert resp.status_code == 200
+        assert "text/plain" in resp.headers.get("content-type", "")
+        assert "gateway_uptime_seconds" in resp.text

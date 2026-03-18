@@ -11,6 +11,7 @@ from tool_router.core.config import GatewayConfig
 from tool_router.gateway.client import (
     GatewayClient,
     HTTPGatewayClient,
+    SecurityMetadata,
     call_tool,
     get_tools,
 )
@@ -387,6 +388,59 @@ class TestGatewayClientProtocol:
         assert hasattr(gateway_client, "call_tool")
         assert callable(gateway_client.get_tools)
         assert callable(gateway_client.call_tool)
+
+
+class TestGatewayClientCoverageGaps:
+    """Deterministic tests for remaining client branches."""
+
+    def test_security_metadata_to_dict_filters_none_values(self) -> None:
+        metadata = SecurityMetadata(user_id="u1", role="admin", permissions=None, request_id="req-1")
+
+        assert metadata.to_dict() == {
+            "user_id": "u1",
+            "role": "admin",
+            "request_id": "req-1",
+        }
+
+    def test_handle_http_error_unreadable_body_uses_fallback_message(self) -> None:
+        config = GatewayConfig(url="http" + "://test:4444", jwt="token")
+        client = HTTPGatewayClient(config)
+
+        error = urllib.error.HTTPError(
+            url="http" + "://test:4444/test",
+            code=400,
+            msg="Bad Request",
+            hdrs={},
+            fp=None,
+        )
+
+        def _broken_read(n: int = -1) -> bytes:
+            raise OSError("stream closed")
+
+        error.read = _broken_read
+
+        with pytest.raises(ValueError, match=r"<unable to read response body>"):
+            client._handle_http_error(error, attempt=0)
+
+    def test_call_tool_includes_security_metadata_in_payload(self) -> None:
+        config = GatewayConfig(url="http" + "://test:4444", jwt="token")
+        client = HTTPGatewayClient(config)
+
+        mock_response = {"jsonrpc": "2.0", "id": 1, "result": {"content": []}}
+        metadata = SecurityMetadata(user_id="u1", role="user", permissions=["read"], request_id="r-1")
+
+        with patch.object(client, "_make_request", return_value=mock_response) as mock_request:
+            client.call_tool("test_tool", {"arg": "value"}, security=metadata)
+
+        request_data = json.loads(mock_request.call_args.kwargs["data"].decode())
+        assert request_data["params"]["_metadata"] == {
+            "security": {
+                "user_id": "u1",
+                "role": "user",
+                "permissions": ["read"],
+                "request_id": "r-1",
+            }
+        }
 
 
 def test_get_tools_raises_when_gateway_jwt_unset() -> None:

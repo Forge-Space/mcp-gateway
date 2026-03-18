@@ -253,6 +253,19 @@ class TestRegisterCloudProvider:
             client.post("/cloud/providers", json=self._payload("new-one"))
         assert cloud_module._multi_cloud_router.get_provider("new-one") is not None
 
+    def test_409_when_router_add_provider_raises_value_error(self) -> None:
+        app = _make_app()
+        mock_router = MagicMock()
+        mock_router.get_provider.return_value = None
+        mock_router.add_provider.side_effect = ValueError("Provider exists")
+
+        with patch("tool_router.api.cloud._get_router", return_value=mock_router):
+            with TestClient(app) as client:
+                resp = client.post("/cloud/providers", json=self._payload("existing-via-add"))
+
+        assert resp.status_code == 409
+        assert "Provider exists" in resp.json()["detail"]
+
 
 # ---------------------------------------------------------------------------
 # DELETE /cloud/providers/{name}

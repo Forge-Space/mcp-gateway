@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import importlib
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -97,6 +98,15 @@ class TestScreenshotCapture:
 
         with patch("dribbble_mcp.screenshot.sync_playwright", return_value=mock_pw):
             with pytest.raises(RuntimeError, match="Screenshot capture failed"):
+                capture.capture_shot("https://dribbble.com/shots/123-test")
+
+    def test_value_error_passthrough(self, capture: ScreenshotCapture) -> None:
+        mock_pw = _make_sync_pw_mock(MagicMock())
+        with (
+            patch("dribbble_mcp.screenshot.sync_playwright", return_value=mock_pw),
+            patch.object(capture, "_do_capture", side_effect=ValueError("invalid shot")),
+        ):
+            with pytest.raises(ValueError, match="invalid shot"):
                 capture.capture_shot("https://dribbble.com/shots/123-test")
 
     def test_browser_closed_on_success(self, capture: ScreenshotCapture) -> None:
@@ -233,3 +243,22 @@ class TestCaptureShotAsync:
             result = await capture_shot_async("https://dribbble.com/shots/123-test")
 
         assert isinstance(result, str)
+
+
+class TestScreenshotImportFallback:
+    def test_import_error_sets_playwright_symbols_to_none(self) -> None:
+        import dribbble_mcp.screenshot as screenshot_module
+
+        real_import = __import__
+
+        def fake_import(name, *args, **kwargs):
+            if name.startswith("playwright."):
+                raise ImportError("missing playwright")
+            return real_import(name, *args, **kwargs)
+
+        with patch("builtins.__import__", side_effect=fake_import):
+            reloaded = importlib.reload(screenshot_module)
+
+        assert reloaded.sync_playwright is None
+        assert reloaded.async_playwright is None
+        importlib.reload(screenshot_module)

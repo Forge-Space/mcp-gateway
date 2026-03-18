@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+import builtins
+import importlib.util
 import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import httpx
+import pytest
 
 from dribbble_mcp.server import (
+    _get_screenshot,
     analyze_image,
     collect_references,
     get_shot_details,
+    main,
     screenshot_shot,
     search_dribbble,
 )
@@ -208,6 +214,17 @@ class TestScreenshotShot:
 
         mock_cap.capture_shot.assert_called_once_with("https://dribbble.com/shots/123-dark", full_page=True)
 
+    def test_generic_exception_returns_error(self) -> None:
+        with patch("dribbble_mcp.server._get_screenshot") as mock_cap_fn:
+            mock_cap = MagicMock()
+            mock_cap.capture_shot.side_effect = Exception("unexpected")
+            mock_cap_fn.return_value = mock_cap
+
+            result = screenshot_shot("https://dribbble.com/shots/123-dark")
+
+        data = json.loads(result)
+        assert data["error"] == "Screenshot failed: unexpected"
+
 
 class TestAnalyzeImage:
     def test_returns_analysis(self) -> None:
@@ -244,6 +261,17 @@ class TestAnalyzeImage:
 
         data = json.loads(result)
         assert "error" in data
+
+    def test_generic_exception_returns_error(self) -> None:
+        with patch("dribbble_mcp.server._get_analyzer") as mock_analyzer_fn:
+            mock_analyzer = MagicMock()
+            mock_analyzer.analyze_from_url.side_effect = Exception("unexpected")
+            mock_analyzer_fn.return_value = mock_analyzer
+
+            result = analyze_image("https://cdn.dribbble.com/img.jpg")
+
+        data = json.loads(result)
+        assert data["error"] == "Image analysis failed: unexpected"
 
 
 class TestCollectReferences:
@@ -344,6 +372,17 @@ class TestCollectReferences:
         data = json.loads(result)
         assert "error" in data
 
+    def test_value_error_returns_error_json(self) -> None:
+        with patch("dribbble_mcp.server._get_scraper") as mock_scraper_fn:
+            mock_scraper = MagicMock()
+            mock_scraper.search_shots.side_effect = ValueError("query must not be empty")
+            mock_scraper_fn.return_value = mock_scraper
+
+            result = collect_references("")
+
+        data = json.loads(result)
+        assert data["error"] == "query must not be empty"
+
     def test_returns_valid_json(self) -> None:
         with patch("dribbble_mcp.server._get_scraper") as mock_scraper_fn:
             mock_scraper = MagicMock()
@@ -355,3 +394,40 @@ class TestCollectReferences:
         parsed = json.loads(result)
         assert isinstance(parsed, dict)
         assert "references" in parsed
+
+
+class TestServerInternalsCoverage:
+    def test_get_screenshot_uses_timeout_env_value(self) -> None:
+        with patch("dribbble_mcp.server._SCREENSHOT_TIMEOUT_MS", 4321):
+            cap = _get_screenshot()
+        assert cap._timeout == 4321
+
+    def test_main_runs_stdio_transport(self) -> None:
+        with (
+            patch("dribbble_mcp.server.logging.basicConfig") as basic_config,
+            patch("dribbble_mcp.server.logger.info") as info_log,
+            patch("dribbble_mcp.server.mcp.run") as run,
+        ):
+            main()
+
+        basic_config.assert_called_once()
+        info_log.assert_called_once()
+        run.assert_called_once_with(transport="stdio")
+
+    def test_import_error_for_mcp_sdk_has_friendly_message(self) -> None:
+        server_path = Path(__file__).resolve().parents[1] / "server.py"
+        spec = importlib.util.spec_from_file_location("_server_missing_mcp", server_path)
+        assert spec is not None
+        assert spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+
+        real_import = builtins.__import__
+
+        def fake_import(name, globals_=None, locals_=None, fromlist=(), level=0):
+            if name == "mcp.server.fastmcp":
+                raise ImportError("no mcp")
+            return real_import(name, globals_, locals_, fromlist, level)
+
+        with patch("builtins.__import__", side_effect=fake_import):
+            with pytest.raises(ImportError, match="Install the MCP SDK"):
+                spec.loader.exec_module(module)

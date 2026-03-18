@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import io
 from unittest.mock import MagicMock, patch
 
@@ -159,3 +160,44 @@ class TestExtractDominantColors:
         mock_img.convert.side_effect = RuntimeError("bad image")
         colors = _extract_dominant_colors(mock_img)
         assert colors == []
+
+
+class TestImageAnalyzerCoverageGaps:
+    def test_analyze_from_bytes_without_pillow_raises_runtime_error(self, analyzer: ImageAnalyzer) -> None:
+        original_import = builtins.__import__
+
+        def _fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "PIL":
+                raise ImportError("No module named PIL")
+            return original_import(name, globals, locals, fromlist, level)
+
+        with patch("builtins.__import__", side_effect=_fake_import):
+            with pytest.raises(RuntimeError, match="Pillow is required"):
+                analyzer.analyze_from_bytes(b"fake-image-bytes")
+
+    def test_download_rejects_oversized_content(self, analyzer: ImageAnalyzer) -> None:
+        mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock()
+        mock_response.content = b"x" * (10 * 1024 * 1024 + 1)
+
+        with patch("httpx.Client") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.__enter__ = MagicMock(return_value=mock_client)
+            mock_client.__exit__ = MagicMock(return_value=False)
+            mock_client.get.return_value = mock_response
+            mock_client_cls.return_value = mock_client
+
+            with pytest.raises(RuntimeError, match="Image too large"):
+                analyzer._download("https://cdn.dribbble.com/large-image.png")
+
+    def test_extract_dominant_colors_with_empty_palette_returns_empty(self) -> None:
+        mock_quantized = MagicMock()
+        mock_quantized.getpalette.return_value = None
+
+        mock_rgb = MagicMock()
+        mock_rgb.quantize.return_value = mock_quantized
+
+        mock_img = MagicMock()
+        mock_img.convert.return_value = mock_rgb
+
+        assert _extract_dominant_colors(mock_img) == []

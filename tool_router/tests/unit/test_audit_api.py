@@ -315,3 +315,17 @@ class TestAuditEventsFilters:
         ):
             resp = client.get("/audit/summary")
         assert resp.status_code == 500
+
+
+class TestAuditLoggerFactoryCoverage:
+    """Cover direct _get_audit_logger() import-and-return branch."""
+
+    def test_get_audit_logger_returns_security_audit_logger_instance(self) -> None:
+        from tool_router.api.audit import _get_audit_logger
+
+        sentinel = MagicMock(name="security_audit_logger")
+        with patch("tool_router.security.SecurityAuditLogger", return_value=sentinel) as mock_cls:
+            logger_instance = _get_audit_logger()
+
+        assert logger_instance is sentinel
+        mock_cls.assert_called_once_with()

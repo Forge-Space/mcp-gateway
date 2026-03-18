@@ -65,6 +65,25 @@ def scraper() -> DribbbleScraper:
 
 
 class TestDribbbleScraper:
+    def test_get_uses_httpx_client(self, scraper: DribbbleScraper) -> None:
+        mock_response = MagicMock()
+        mock_response.text = "<html>ok</html>"
+
+        mock_client = MagicMock()
+        mock_client.get.return_value = mock_response
+
+        with (
+            patch.object(scraper, "_throttle") as mock_throttle,
+            patch("dribbble_mcp.scraper.httpx.Client") as mock_client_cls,
+        ):
+            mock_client_cls.return_value.__enter__.return_value = mock_client
+            html = scraper._get("https://dribbble.com/search/shots?q=ui")
+
+        assert html == "<html>ok</html>"
+        mock_throttle.assert_called_once()
+        mock_client.get.assert_called_once()
+        mock_response.raise_for_status.assert_called_once()
+
     def test_search_shots_returns_shots(self, scraper: DribbbleScraper) -> None:
         with patch.object(scraper, "_get", return_value=SEARCH_HTML):
             shots = scraper.search_shots("dark dashboard")
@@ -141,6 +160,39 @@ class TestDribbbleScraper:
             shots = scraper.search_shots("ui")
         assert shots == []
 
+    def test_extract_shot_from_item_without_link_returns_none(self, scraper: DribbbleScraper) -> None:
+        item = MagicMock()
+        item.select_one.return_value = None
+        assert scraper._extract_shot_from_list_item(item) is None
+
+    def test_extract_shot_from_item_invalid_shot_url_returns_none(self, scraper: DribbbleScraper) -> None:
+        html = '<li class="shot-thumbnail"><a class="shot-thumbnail-link" href="/designers/jane">Jane</a></li>'
+        from bs4 import BeautifulSoup
+
+        item = BeautifulSoup(html, "lxml").select_one("li")
+        assert item is not None
+        assert scraper._extract_shot_from_list_item(item) is None
+
+    def test_extract_shot_from_item_sets_designer_url(self, scraper: DribbbleScraper) -> None:
+        html = (
+            '<li class="shot-thumbnail">'
+            '<a href="/designers/jane">Jane Doe</a>'
+            '<a class="shot-thumbnail-link" href="/shots/123-design" title="Design"></a>'
+            '<span class="shot-title">Design</span>'
+            '<span class="display-name">Jane Doe</span>'
+            "</li>"
+        )
+        from bs4 import BeautifulSoup
+
+        item = BeautifulSoup(html, "lxml").select_one("li")
+        assert item is not None
+        shot = scraper._extract_shot_from_list_item(item)
+        assert shot is not None
+        assert shot["designer_url"] == "https://dribbble.com/designers/jane"
+
+    def test_extract_shot_from_item_attribute_error_returns_none(self, scraper: DribbbleScraper) -> None:
+        assert scraper._extract_shot_from_list_item(None) is None
+
     def test_search_shots_data_src_image(self, scraper: DribbbleScraper) -> None:
         with patch.object(scraper, "_get", return_value=SEARCH_HTML):
             shots = scraper.search_shots("ui")
@@ -179,6 +231,16 @@ class TestDribbbleScraper:
             with pytest.raises(httpx.HTTPStatusError):
                 scraper.get_shot_details("https://dribbble.com/shots/999-gone")
 
+    def test_get_shot_details_request_error_propagates(self, scraper: DribbbleScraper) -> None:
+        with patch.object(scraper, "_get", side_effect=httpx.RequestError("timeout")):
+            with pytest.raises(httpx.RequestError):
+                scraper.get_shot_details("https://dribbble.com/shots/999-gone")
+
+    def test_parse_shot_page_normalizes_title_suffix(self, scraper: DribbbleScraper) -> None:
+        html = "<html><head><title>My Shot on Dribbble</title></head><body></body></html>"
+        details = scraper._parse_shot_page(html, "https://dribbble.com/shots/123")
+        assert details["title"] == "My Shot"
+
     def test_session_cookie_added_to_headers(self) -> None:
         scraper_with_cookie = DribbbleScraper(session_cookie="abc123", rate_limit_ms=0)
         headers = scraper_with_cookie._build_headers()
@@ -212,6 +274,9 @@ class TestParseCount:
 
     def test_k_suffix_uppercase(self) -> None:
         assert _parse_count("5K") == 5000
+
+    def test_k_suffix_invalid_number(self) -> None:
+        assert _parse_count("notk") == 0
 
     def test_zero(self) -> None:
         assert _parse_count("0") == 0

@@ -134,3 +134,27 @@ class TestSecuritySpokeReport:
         assert report.security_spoke is not None
         assert report.security_spoke["scanner"]["execution"] == "error"
         assert report.security_spoke["summary"]["total_findings"] == 0
+
+
+class TestQualityGateCoverageGaps:
+    def test_collect_evidence_caps_at_three_entries(self) -> None:
+        from tool_router.api import quality_gates
+
+        code = "\n".join(["eval('x')"] * 10)
+        report = quality_gates.run_quality_gates(code)
+
+        assert report.security_spoke is not None
+        finding = next(f for f in report.security_spoke["findings"] if f["rule_id"] == "SEC-INJ-001")
+        assert len(finding["evidence"]) == 3
+
+    def test_template_exec_heuristic_is_reported(self) -> None:
+        code = "export const run = () => `${exec('ls')}`"
+        report = run_quality_gates(code)
+        security = next(r for r in report.results if r.gate == "security")
+        assert any("template expression with exec" in issue for issue in security.issues)
+
+    def test_injection_pattern_literal_is_reported(self) -> None:
+        code = "const fs = require('fs'); export default fs"
+        report = run_quality_gates(code)
+        security = next(r for r in report.results if r.gate == "security")
+        assert any("require('fs')" in issue for issue in security.issues)

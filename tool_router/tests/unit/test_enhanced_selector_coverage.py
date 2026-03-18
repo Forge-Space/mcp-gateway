@@ -299,3 +299,9 @@ class TestParseResponseJsonDecodeError:
             mc.return_value.__enter__.return_value.post.return_value = resp
             result = sel.select_tool("task", [{"name": "a", "description": "desc"}])
         assert result is None
+
+    def test_json_with_braces_decode_error_returns_none(self) -> None:
+        """Force json.JSONDecodeError branch with explicit malformed JSON object."""
+        sel = _make_ollama()
+        result = sel._parse_response('{"tool_name":}')
+        assert result is None

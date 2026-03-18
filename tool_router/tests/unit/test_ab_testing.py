@@ -1,6 +1,7 @@
 """Tests for A/B testing manager."""
 
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -212,8 +213,6 @@ class TestABTestingCoverageGaps:
 
     def test_load_outcomes_storage_not_exists(self):
         """Line 150: storage set but file doesn't exist."""
-        from pathlib import Path
-
         exp = Experiment(
             id="l_test",
             variants=[Variant(name="a", weight=1.0)],
@@ -224,3 +223,38 @@ class TestABTestingCoverageGaps:
         )
         # _load_outcomes called in __init__ with non-existent file -> returns early
         assert mgr._outcomes == []
+
+    def test_assign_variant_fallback_returns_last_variant_deterministically(self):
+        """Line 88: fallback return when NaN comparisons bypass loop return."""
+        exp = Experiment(
+            id="nan_test",
+            variants=[Variant(name="first", weight=float("nan")), Variant(name="last", weight=1.0)],
+        )
+        mgr = ABTestManager(experiments=[exp])
+
+        result = mgr.assign_variant("user-1", "nan_test")
+        assert result is not None
+        assert result.name == "last"
+
+    def test_load_outcomes_direct_call_missing_storage_returns_early(self):
+        """Line 150: direct _load_outcomes early-return when file does not exist."""
+        exp = Experiment(
+            id="direct_load_test",
+            variants=[Variant(name="a", weight=1.0)],
+        )
+        missing_path = Path("/tmp/nonexistent_ab_test_direct_call_xyz.json")
+        mgr = ABTestManager(experiments=[exp], storage_path=str(missing_path))
+
+        mgr._outcomes.append(
+            ExperimentOutcome(
+                experiment_id="direct_load_test",
+                variant_name="a",
+                user_id="u1",
+                quality_score=1.0,
+                latency_ms=1,
+                success=True,
+            )
+        )
+
+        mgr._load_outcomes()
+        assert len(mgr._outcomes) == 1

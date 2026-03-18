@@ -599,3 +599,19 @@ class TestGetCacheMetrics:
             "last_health_check",
         }
         assert expected_fields.issubset(data.keys())
+
+
+class TestCacheDashboardCoverageGaps:
+    @pytest.mark.asyncio
+    async def test_export_metrics_unsupported_format_hits_branch(self) -> None:
+        from fastapi import HTTPException
+
+        from tool_router.api.cache_dashboard import export_metrics
+
+        with pytest.raises(HTTPException) as exc_info:
+            await export_metrics("xml")
+
+        # The function-level unsupported-format raise is wrapped by the
+        # broad exception handler and returned as a 500.
+        assert exc_info.value.status_code == 500
+        assert exc_info.value.detail == "Failed to export metrics"
