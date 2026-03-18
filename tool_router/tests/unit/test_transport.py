@@ -352,7 +352,10 @@ async def test_stdio_transport_stop_terminates_process() -> None:
 
     t._process = mock_proc
 
-    with patch("asyncio.wait_for", new_callable=AsyncMock):
+    async def _await_coro(coro: Any, **_: Any) -> Any:
+        return await coro
+
+    with patch("asyncio.wait_for", side_effect=_await_coro):
         await t.stop()
 
     mock_proc.terminate.assert_called_once()
@@ -382,7 +385,8 @@ async def test_stdio_transport_stop_kills_on_timeout() -> None:
 
     t._process = mock_proc
 
-    async def _raise_timeout(*args: Any, **kwargs: Any) -> None:
+    async def _raise_timeout(coro: Any, **_: Any) -> None:
+        coro.close()
         raise TimeoutError
 
     with patch("asyncio.wait_for", side_effect=_raise_timeout):
