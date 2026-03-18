@@ -676,3 +676,104 @@ class TestJsonRpcStreamEndpoint:
             mock_audit.log_request_received.assert_called_once()
         finally:
             init_rpc_security(None, None)
+
+
+class TestRpcHandlerCoverageGaps:
+    def _make_app(self, security_context: SecurityContext) -> FastAPI:
+        from tool_router.api.dependencies import get_security_context
+
+        app = FastAPI()
+        app.include_router(rpc_router)
+
+        def _mock_ctx() -> SecurityContext:
+            return security_context
+
+        app.dependency_overrides[get_security_context] = _mock_ctx
+        return app
+
+    def _ctx(self, endpoint: str = "/rpc") -> SecurityContext:
+        return SecurityContext(
+            user_id="u-coverage",
+            session_id="s-coverage",
+            ip_address="127.0.0.1",
+            user_agent="pytest",
+            request_id="req-coverage",
+            endpoint=endpoint,
+            authentication_method="jwt",
+            user_role="developer",
+        )
+
+    def test_run_security_check_returns_blocked_tuple(self) -> None:
+        from tool_router.api.rpc_handler import _run_security_check
+
+        mock_mw = MagicMock()
+        mock_mw.check_request_security.return_value = MagicMock(
+            allowed=False,
+            blocked_reason="blocked",
+            sanitized_inputs={"task": "clean task", "context": "clean context"},
+        )
+        init_rpc_security(mock_mw, MagicMock())
+        try:
+            allowed, reason, sanitized = _run_security_check(
+                self._ctx(),
+                "raw task",
+                "specialist",
+                "raw context",
+                "",
+            )
+            assert allowed is False
+            assert reason == "blocked"
+            assert sanitized["task"] == "clean task"
+        finally:
+            init_rpc_security(None, None)
+
+    def test_http_endpoint_propagates_rate_limit_headers(self) -> None:
+        app = self._make_app(self._ctx(endpoint="/rpc"))
+        client = TestClient(app, raise_server_exceptions=False)
+
+        with patch("tool_router.api.rpc_handler._get_available_tools", return_value=[]):
+            with patch(
+                "tool_router.api.rpc_handler._get_rate_limit_headers",
+                return_value={"X-RateLimit-Limit": "60", "X-RateLimit-Remaining": "59"},
+            ):
+                resp = client.post("/rpc", json={"jsonrpc": "2.0", "method": "tools/list", "id": 77})
+
+        assert resp.status_code == 200
+        assert resp.headers["X-RateLimit-Limit"] == "60"
+        assert resp.headers["X-RateLimit-Remaining"] == "59"
+
+    @patch("tool_router.api.rpc_handler._run_security_check")
+    @patch("tool_router.api.rpc_handler._call_tool")
+    def test_stream_endpoint_applies_sanitized_context(
+        self,
+        mock_call: MagicMock,
+        mock_security: MagicMock,
+    ) -> None:
+        mock_call.return_value = "stream result"
+        mock_security.return_value = (
+            True,
+            None,
+            {"task": "sanitized task", "context": "sanitized context"},
+        )
+
+        app = self._make_app(self._ctx(endpoint="/rpc/stream"))
+        client = TestClient(app, raise_server_exceptions=False)
+
+        resp = client.post(
+            "/rpc/stream",
+            json={
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {
+                    "name": "execute_task",
+                    "arguments": {"task": "raw task", "context": "raw context"},
+                },
+                "id": 101,
+            },
+        )
+
+        assert resp.status_code == 200
+        _ = resp.text
+        called_args = mock_call.call_args[0][1]
+        assert called_args["task"] == "sanitized task"
+        assert called_args["context"] == "sanitized context"

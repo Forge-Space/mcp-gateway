@@ -375,3 +375,90 @@ class TestAIPerformanceProviders:
             with TestClient(_make_app()) as client:
                 response = client.get("/ai/performance")
         assert response.json()["providers"] == []
+
+
+class TestAIPerformanceCoverageGaps:
+    """Deterministic tests for remaining ai_performance branches."""
+
+    def test_cloud_health_unknown_when_no_providers(self) -> None:
+        mock_router = ai_perf_module._multi_cloud_router
+        with patch.object(mock_router, "health_summary", return_value={"providers": {}}):
+            with TestClient(_make_app()) as client:
+                response = client.get("/ai/performance")
+
+        cloud = response.json()["cloud_health"]
+        assert cloud["overall_status"] == "unknown"
+        assert cloud["total_providers"] == 0
+
+    def test_provider_mapping_google_xai_and_unknown(self) -> None:
+        perf = {
+            "cache_hit_rate": 0.4,
+            "total_requests": 30,
+            "total_cost_saved": 1.0,
+            "average_response_time": 250.0,
+            "cost_optimization_enabled": True,
+            "model_usage_stats": {
+                "gemini-1.5-flash": {
+                    "count": 10,
+                    "success_rate": 99.0,
+                    "average_response_time": 220.0,
+                    "average_confidence": 0.92,
+                },
+                "grok-2-mini": {
+                    "count": 10,
+                    "success_rate": 98.0,
+                    "average_response_time": 260.0,
+                    "average_confidence": 0.91,
+                },
+                "mystery-model": {
+                    "count": 10,
+                    "success_rate": 90.0,
+                    "average_response_time": 300.0,
+                    "average_confidence": 0.85,
+                },
+            },
+            "hardware_constraints": {},
+        }
+        with patch.object(ai_perf_module, "EnhancedAISelector") as mock_selector:
+            mock_selector.return_value.get_performance_metrics.return_value = perf
+            with TestClient(_make_app()) as client:
+                response = client.get("/ai/performance")
+
+        names = {provider["name"] for provider in response.json()["providers"]}
+        assert "Google" in names
+        assert "xAI" in names
+        assert "Unknown" in names
+
+    def test_system_status_healthy_when_cloud_healthy_and_cache_good(self) -> None:
+        mock_router = ai_perf_module._multi_cloud_router
+        with (
+            patch.object(
+                ai_perf_module,
+                "_get_cache_metrics_data",
+                return_value={
+                    "cache_hit_rate": 0.9,
+                    "total_hits": 90,
+                    "total_misses": 10,
+                    "total_requests": 100,
+                },
+            ),
+            patch.object(
+                mock_router,
+                "health_summary",
+                return_value={"providers": {"aws": {"status": "healthy"}}},
+            ),
+            patch.object(ai_perf_module, "EnhancedAISelector") as mock_selector,
+        ):
+            mock_selector.return_value.get_performance_metrics.return_value = {
+                "cache_hit_rate": 0.0,
+                "total_requests": 0,
+                "total_cost_saved": 0.0,
+                "average_response_time": 0.0,
+                "cost_optimization_enabled": False,
+                "model_usage_stats": {},
+            }
+            with TestClient(_make_app()) as client:
+                response = client.get("/ai/performance")
+
+        assert response.status_code == 200
+        assert response.json()["system_status"] == "healthy"

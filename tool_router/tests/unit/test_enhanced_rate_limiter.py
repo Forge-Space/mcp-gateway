@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import threading
 import time
+from collections import deque
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 from tool_router.security.enhanced_rate_limiter import (
@@ -828,3 +830,90 @@ class TestEnhancedRateLimiterCoverageGaps:
         limiter.cleanup_expired_data()
 
         assert identifier not in limiter._penalties
+
+
+class TestEnhancedRateLimiterFinalCoverageGaps:
+    """Deterministic tests for last uncovered branches."""
+
+    def test_check_rate_limit_uses_burst_result_when_blocked(self):
+        """Hit line 150: blocked burst result replaces most restrictive."""
+        limiter = EnhancedRateLimiter(use_redis=False, config=RateLimitConfig(cache_ttl=0, adaptive_scaling=False))
+
+        blocked_burst = RateLimitResult(
+            allowed=False,
+            remaining=0,
+            reset_time=int(time.time()) + 10,
+            metadata={"window_type": "burst"},
+        )
+
+        with patch.object(
+            limiter, "_check_window_limit", return_value=RateLimitResult(True, 10, int(time.time()) + 60)
+        ):
+            with patch.object(limiter, "_check_burst_limit", return_value=blocked_burst):
+                result = limiter.check_rate_limit("burst-line-150-user")
+
+        assert result.allowed is False
+        assert result.metadata["window_type"] == "burst"
+
+    def test_burst_cleanup_loop_removes_expired_requests(self):
+        """Hit line 318 by forcing old burst entries cleanup."""
+        limiter = EnhancedRateLimiter(use_redis=False)
+        identifier = "burst-cleanup-user"
+        now = int(time.time())
+
+        burst_key = f"burst:{identifier}"
+        limiter._memory_storage[identifier][burst_key] = deque([now - 20, now - 15, now])
+
+        result = limiter._check_burst_limit(identifier, burst_capacity=10, current_time=now)
+
+        assert result.allowed
+        # Old entries were removed; only current-time request remains in window
+        assert len(limiter._memory_storage[identifier][burst_key]) == 1
+
+    def test_memory_window_cleanup_loop_removes_expired_requests(self):
+        """Hit line 262 by forcing old window entries cleanup."""
+        limiter = EnhancedRateLimiter(use_redis=False)
+        identifier = "window-cleanup-user"
+        now = int(time.time())
+        window_start = now - (now % 60)
+
+        limiter._memory_storage[identifier][LimitType.PER_MINUTE.value] = deque([window_start - 5, now])
+
+        result = limiter._check_memory_window_limit(
+            identifier,
+            LimitType.PER_MINUTE,
+            max_requests=10,
+            window_start=window_start,
+            window_end=window_start + 60,
+            current_time=now,
+        )
+
+        assert result.allowed
+        assert len(limiter._memory_storage[identifier][LimitType.PER_MINUTE.value]) == 1
+
+    def test_module_sets_redis_available_false_when_import_fails(self):
+        """Hit lines 16-17 by reloading module with redis ImportError."""
+        import builtins
+        import importlib.util
+        import sys
+
+        module_path = Path(__file__).resolve().parents[2] / "security" / "enhanced_rate_limiter.py"
+        spec = importlib.util.spec_from_file_location("enhanced_rate_limiter_no_redis", module_path)
+        assert spec is not None and spec.loader is not None
+
+        real_import = builtins.__import__
+
+        def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "redis":
+                raise ImportError("redis unavailable")
+            return real_import(name, globals, locals, fromlist, level)
+
+        with patch("builtins.__import__", side_effect=fake_import):
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = module
+            try:
+                spec.loader.exec_module(module)
+            finally:
+                sys.modules.pop(spec.name, None)
+
+        assert module.REDIS_AVAILABLE is False
