@@ -8,387 +8,167 @@ import pytest
 import yaml
 
 
+def _load_yaml(path: Path) -> dict:
+    with path.open(encoding="utf-8") as handle:
+        data = yaml.safe_load(handle)
+    assert isinstance(data, dict)
+    return data
+
+
+def _workflow_on(data: dict) -> dict:
+    return data.get("on", data.get(True, {}))
+
+
 class TestGitHubWorkflows:
-    """Test GitHub Actions workflow configuration."""
+    """Validate workflow files against current CI contracts."""
 
     @pytest.fixture
-    def workflows_dir(self) -> Path:
-        """Get the workflows directory path."""
-        return Path(__file__).parent.parent / ".github" / "workflows"
+    def repo_root(self) -> Path:
+        return Path(__file__).parent.parent
 
     @pytest.fixture
-    def reusable_dir(self) -> Path:
-        """Get the reusable workflows directory path."""
-        return Path(__file__).parent.parent / ".github" / "workflows" / "reusable"
+    def workflows_dir(self, repo_root: Path) -> Path:
+        return repo_root / ".github" / "workflows"
 
-    def test_workflows_directory_exists(self, workflows_dir: Path) -> None:
-        """Test that the workflows directory exists."""
-        assert workflows_dir.exists(), ".github/workflows should exist"
-        assert workflows_dir.is_dir(), ".github/workflows should be a directory"
+    @pytest.fixture
+    def reusable_dir(self, workflows_dir: Path) -> Path:
+        return workflows_dir / "reusable"
 
-    def test_ci_workflow_exists(self, workflows_dir: Path) -> None:
-        """Test that the main CI workflow file exists."""
+    @pytest.fixture
+    def ci_data(self, workflows_dir: Path) -> dict:
+        return _load_yaml(workflows_dir / "ci.yml")
+
+    @pytest.fixture
+    def release_data(self, workflows_dir: Path) -> dict:
+        return _load_yaml(workflows_dir / "release-automation.yml")
+
+    def test_workflows_directory_exists(self, workflows_dir: Path, reusable_dir: Path) -> None:
+        assert workflows_dir.exists() and workflows_dir.is_dir()
+        assert reusable_dir.exists() and reusable_dir.is_dir()
+
+    def test_ci_workflow_exists_and_valid_yaml(self, workflows_dir: Path, ci_data: dict) -> None:
         ci_file = workflows_dir / "ci.yml"
-        assert ci_file.exists(), "ci.yml should exist"
-        assert ci_file.is_file(), "ci.yml should be a file"
-
-    def test_ci_workflow_valid_yaml(self, workflows_dir: Path) -> None:
-        """Test that ci.yml is valid YAML."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        assert data is not None, "ci.yml should contain valid YAML"
-        assert isinstance(data, dict), "ci.yml should be a YAML dictionary"
-
-    def test_ci_workflow_has_name(self, workflows_dir: Path) -> None:
-        """Test that ci.yml has a workflow name."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        assert "name" in data, "Workflow should have a name"
-        assert data["name"], "Workflow name should not be empty"
-
-    def test_ci_workflow_has_triggers(self, workflows_dir: Path) -> None:
-        """Test that ci.yml has appropriate triggers."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        # YAML may parse "on" as True (boolean), so check for both
-        assert "on" in data or True in data, "Workflow should have triggers (on)"
-        on_config = data.get("on", data.get(True, {}))
-
-        # Should have push and/or pull_request triggers
-        has_triggers = "push" in on_config or "pull_request" in on_config or "workflow_dispatch" in on_config
-        assert has_triggers, "Workflow should have push, pull_request, or workflow_dispatch triggers"
-
-    def test_ci_workflow_has_jobs(self, workflows_dir: Path) -> None:
-        """Test that ci.yml defines jobs."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        assert "jobs" in data, "Workflow should have jobs"
-        assert data["jobs"], "Jobs should not be empty"
-        assert isinstance(data["jobs"], dict), "Jobs should be a dictionary"
-
-    def test_ci_workflow_environment_variables(self, workflows_dir: Path) -> None:
-        """Test that ci.yml defines required environment variables."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        # Check for env section
-        if "env" in data:
-            env = data["env"]
-            assert isinstance(env, dict), "env should be a dictionary"
-
-            # Should define key versions
-            expected_vars = ["NODE_VERSION", "PYTHON_VERSION"]
-            for var in expected_vars:
-                if var in env:
-                    assert env[var], f"{var} should not be empty"
-
-    def test_ci_workflow_uses_shared_template(self, workflows_dir: Path) -> None:
-        """Test that ci.yml uses shared workflow template."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-
-        # Check if any job uses a reusable workflow
-        uses_reusable = False
-        for job_name, job_config in jobs.items():
-            if isinstance(job_config, dict) and "uses" in job_config:
-                uses_reusable = True
-                break
-
-        # CI workflow should use reusable workflows or define steps
-        assert uses_reusable or any("steps" in job for job in jobs.values() if isinstance(job, dict)), (
-            "Jobs should either use reusable workflows or define steps"
-        )
-
-    def test_ci_workflow_has_test_job(self, workflows_dir: Path) -> None:
-        """Test that ci.yml includes testing jobs."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-
-        # Should have test-related jobs
-        test_jobs = [name for name in jobs.keys() if "test" in name.lower() or "ci" in name.lower()]
-        assert test_jobs, "Workflow should have test-related jobs"
-
-    def test_reusable_workflows_directory_exists(self, reusable_dir: Path) -> None:
-        """Test that reusable workflows directory exists."""
-        assert reusable_dir.exists(), "reusable workflows directory should exist"
-        assert reusable_dir.is_dir(), "reusable should be a directory"
-
-    def test_setup_node_workflow_exists(self, reusable_dir: Path) -> None:
-        """Test that setup-node.yml exists."""
-        setup_node = reusable_dir / "setup-node.yml"
-        assert setup_node.exists(), "setup-node.yml should exist"
-
-    def test_setup_node_workflow_valid(self, reusable_dir: Path) -> None:
-        """Test that setup-node.yml is valid and reusable."""
-        setup_node = reusable_dir / "setup-node.yml"
-
-        with open(setup_node) as f:
-            data = yaml.safe_load(f)
-
-        assert data is not None, "setup-node.yml should be valid YAML"
-        # YAML may parse "on" as True (boolean), so check for both
-        assert "on" in data or True in data, "Reusable workflow should have 'on' trigger"
-        on_config = data.get("on", data.get(True, {}))
-        assert "workflow_call" in on_config, "Reusable workflow should use workflow_call"
-
-    def test_setup_node_workflow_has_inputs(self, reusable_dir: Path) -> None:
-        """Test that setup-node.yml defines inputs."""
-        setup_node = reusable_dir / "setup-node.yml"
-
-        with open(setup_node) as f:
-            data = yaml.safe_load(f)
-
-        on_config = data.get("on", data.get(True, {}))
-        workflow_call = on_config.get("workflow_call", {})
-
-        # Should have inputs for node version
-        if "inputs" in workflow_call:
-            inputs = workflow_call["inputs"]
-            assert isinstance(inputs, dict), "inputs should be a dictionary"
-
-    def test_setup_node_workflow_installs_dependencies(self, reusable_dir: Path) -> None:
-        """Test that setup-node.yml installs Node.js dependencies."""
-        setup_node = reusable_dir / "setup-node.yml"
-
-        with open(setup_node) as f:
-            content = f.read()
-
-        # Should contain npm install commands
-        assert "npm" in content.lower(), "Should use npm for Node.js setup"
-        assert "install" in content.lower() or "ci" in content.lower(), "Should install dependencies"
-
-    def test_setup_python_workflow_exists(self, reusable_dir: Path) -> None:
-        """Test that setup-python.yml exists."""
-        setup_python = reusable_dir / "setup-python.yml"
-        assert setup_python.exists(), "setup-python.yml should exist"
-
-    def test_setup_python_workflow_valid(self, reusable_dir: Path) -> None:
-        """Test that setup-python.yml is valid and reusable."""
-        setup_python = reusable_dir / "setup-python.yml"
-
-        with open(setup_python) as f:
-            data = yaml.safe_load(f)
-
-        assert data is not None, "setup-python.yml should be valid YAML"
-        # YAML may parse "on" as True (boolean), so check for both
-        assert "on" in data or True in data, "Reusable workflow should have 'on' trigger"
-        on_config = data.get("on", data.get(True, {}))
-        assert "workflow_call" in on_config, "Reusable workflow should use workflow_call"
-
-    def test_setup_python_workflow_has_inputs(self, reusable_dir: Path) -> None:
-        """Test that setup-python.yml defines inputs."""
-        setup_python = reusable_dir / "setup-python.yml"
-
-        with open(setup_python) as f:
-            data = yaml.safe_load(f)
-
-        on_config = data.get("on", data.get(True, {}))
-        workflow_call = on_config.get("workflow_call", {})
-
-        # Should have inputs for Python version
-        if "inputs" in workflow_call:
-            inputs = workflow_call["inputs"]
-            assert isinstance(inputs, dict), "inputs should be a dictionary"
-
-    def test_setup_python_workflow_installs_dependencies(self, reusable_dir: Path) -> None:
-        """Test that setup-python.yml installs Python dependencies."""
-        setup_python = reusable_dir / "setup-python.yml"
-
-        with open(setup_python) as f:
-            content = f.read()
-
-        # Should contain pip install commands
-        assert "pip" in content.lower(), "Should use pip for Python setup"
-        assert "install" in content.lower(), "Should install dependencies"
-
-    def test_setup_python_workflow_installs_test_tools(self, reusable_dir: Path) -> None:
-        """Test that setup-python.yml installs testing tools."""
-        setup_python = reusable_dir / "setup-python.yml"
-
-        with open(setup_python) as f:
-            content = f.read()
-
-        # Should install pytest and related tools
-        test_tools = ["pytest", "black", "flake8", "mypy"]
-        has_test_tools = any(tool in content.lower() for tool in test_tools)
-        assert has_test_tools, "Should install testing/linting tools"
-
-    def test_upload_coverage_workflow_exists(self, reusable_dir: Path) -> None:
-        """Test that upload-coverage.yml exists."""
-        upload_coverage = reusable_dir / "upload-coverage.yml"
-        assert upload_coverage.exists(), "upload-coverage.yml should exist"
-
-    def test_upload_coverage_workflow_valid(self, reusable_dir: Path) -> None:
-        """Test that upload-coverage.yml is valid and reusable."""
-        upload_coverage = reusable_dir / "upload-coverage.yml"
-
-        with open(upload_coverage) as f:
-            data = yaml.safe_load(f)
-
-        assert data is not None, "upload-coverage.yml should be valid YAML"
-        # YAML may parse "on" as True (boolean), so check for both
-        assert "on" in data or True in data, "Reusable workflow should have 'on' trigger"
-        on_config = data.get("on", data.get(True, {}))
-        assert "workflow_call" in on_config, "Reusable workflow should use workflow_call"
-
-    def test_upload_coverage_workflow_has_secrets(self, reusable_dir: Path) -> None:
-        """Test that upload-coverage.yml requires CODECOV_TOKEN secret."""
-        upload_coverage = reusable_dir / "upload-coverage.yml"
-
-        with open(upload_coverage) as f:
-            data = yaml.safe_load(f)
-
-        on_config = data.get("on", data.get(True, {}))
-        workflow_call = on_config.get("workflow_call", {})
-
-        # Should require secrets for code coverage
-        if "secrets" in workflow_call:
-            secrets = workflow_call["secrets"]
-            assert isinstance(secrets, dict), "secrets should be a dictionary"
-            assert "CODECOV_TOKEN" in secrets, "Should require CODECOV_TOKEN"
-
-    def test_upload_coverage_workflow_uses_codecov_action(self, reusable_dir: Path) -> None:
-        """Test that upload-coverage.yml uses Codecov action."""
-        upload_coverage = reusable_dir / "upload-coverage.yml"
-
-        with open(upload_coverage) as f:
-            content = f.read()
-
-        # Should use codecov action
-        assert "codecov" in content.lower(), "Should use Codecov for coverage upload"
-
-    def test_all_workflows_have_timeouts(self, workflows_dir: Path, reusable_dir: Path) -> None:
-        """Test that workflow jobs have timeout configurations."""
-        workflow_files = []
-
-        # Collect all workflow files
-        if workflows_dir.exists():
-            workflow_files.extend(workflows_dir.glob("*.yml"))
-        if reusable_dir.exists():
-            workflow_files.extend(reusable_dir.glob("*.yml"))
-
+        assert ci_file.exists() and ci_file.is_file()
+        assert ci_data["name"] == "CI Pipeline"
+
+    def test_ci_workflow_has_expected_triggers_and_branch_prefixes(self, ci_data: dict) -> None:
+        on_cfg = _workflow_on(ci_data)
+        for trigger in ["push", "pull_request"]:
+            assert trigger in on_cfg
+            branches = on_cfg[trigger].get("branches", [])
+            for expected in [
+                "main",
+                "dev",
+                "release/*",
+                "feature/*",
+                "feat/*",
+                "fix/*",
+                "chore/*",
+                "test/*",
+                "refactor/*",
+                "ci/*",
+                "docs/*",
+            ]:
+                assert expected in branches
+
+    def test_ci_workflow_has_required_jobs(self, ci_data: dict) -> None:
+        jobs = ci_data.get("jobs", {})
+        expected_jobs = {
+            "tenant-decoupling",
+            "lint",
+            "test",
+            "build",
+            "typecheck",
+            "security",
+            "test-autogen-warn",
+            "workflow-summary",
+        }
+        assert expected_jobs.issubset(set(jobs))
+
+    def test_ci_workflow_uses_sha_pinned_actions(self, workflows_dir: Path) -> None:
+        ci_content = (workflows_dir / "ci.yml").read_text(encoding="utf-8")
+        uses_lines = [line.strip() for line in ci_content.splitlines() if "uses:" in line]
+        assert uses_lines
+        for line in uses_lines:
+            uses = line.split("uses:", maxsplit=1)[1].strip()
+            if "${{" in uses:
+                continue
+            if uses.startswith("docker://"):
+                continue
+            if "@" not in uses:
+                continue
+            ref = uses.rsplit("@", maxsplit=1)[1]
+            is_sha = len(ref) == 40 and all(ch in "0123456789abcdef" for ch in ref.lower())
+            assert is_sha, f"Action must be SHA pinned: {uses}"
+
+    def test_ci_build_depends_on_lint_and_test(self, ci_data: dict) -> None:
+        build_needs = ci_data["jobs"]["build"].get("needs", [])
+        assert "lint" in build_needs
+        assert "test" in build_needs
+
+    def test_ci_workflow_summary_depends_on_all_jobs(self, ci_data: dict) -> None:
+        summary_needs = set(ci_data["jobs"]["workflow-summary"].get("needs", []))
+        assert summary_needs == {
+            "tenant-decoupling",
+            "lint",
+            "test",
+            "build",
+            "typecheck",
+            "security",
+            "test-autogen-warn",
+        }
+
+    def test_ci_test_job_includes_workflow_test_file(self, ci_data: dict) -> None:
+        run_script = ci_data["jobs"]["test"]["steps"][-1]["run"]
+        assert "tests/" in run_script
+        assert "--ignore=tests/test_github_workflows.py" not in run_script
+
+    def test_release_workflow_exists_and_uses_make_test(self, workflows_dir: Path, release_data: dict) -> None:
+        release_file = workflows_dir / "release-automation.yml"
+        assert release_file.exists() and release_file.is_file()
+        assert release_data["name"] == "Automated Release Pipeline"
+
+        release_content = release_file.read_text(encoding="utf-8")
+        assert "make test" in release_content
+
+    def test_release_workflow_has_main_push_trigger(self, release_data: dict) -> None:
+        on_cfg = _workflow_on(release_data)
+        assert "push" in on_cfg
+        push_branches = on_cfg["push"].get("branches", [])
+        assert "main" in push_branches
+
+    def test_reusable_workflow_files_exist_and_are_valid(self, reusable_dir: Path) -> None:
+        expected = ["setup-node.yml", "setup-python.yml", "upload-coverage.yml"]
+        for name in expected:
+            path = reusable_dir / name
+            assert path.exists() and path.is_file()
+            data = _load_yaml(path)
+            on_cfg = _workflow_on(data)
+            assert "workflow_call" in on_cfg
+
+    def test_setup_node_reusable_installs_dependencies(self, reusable_dir: Path) -> None:
+        content = (reusable_dir / "setup-node.yml").read_text(encoding="utf-8").lower()
+        assert "npm" in content
+        assert "install" in content or "ci" in content
+
+    def test_setup_python_reusable_installs_dependencies_and_tools(self, reusable_dir: Path) -> None:
+        content = (reusable_dir / "setup-python.yml").read_text(encoding="utf-8").lower()
+        assert "pip" in content
+        assert "install" in content
+        for tool in ["pytest", "mypy", "flake8"]:
+            assert tool in content
+
+    def test_upload_coverage_reusable_references_codecov(self, reusable_dir: Path) -> None:
+        content = (reusable_dir / "upload-coverage.yml").read_text(encoding="utf-8").lower()
+        assert "codecov" in content
+
+    def test_all_workflow_jobs_use_timeout_minutes(self, workflows_dir: Path, reusable_dir: Path) -> None:
+        workflow_files = [
+            workflows_dir / "ci.yml",
+            workflows_dir / "release-automation.yml",
+        ]
         for workflow_file in workflow_files:
-            with open(workflow_file) as f:
-                data = yaml.safe_load(f)
-
-            if "jobs" in data:
-                for job_name, job_config in data["jobs"].items():
-                    if isinstance(job_config, dict):
-                        # Timeout is recommended but not always required
-                        # Just check the structure is valid
-                        assert isinstance(job_config, dict), f"Job {job_name} should be a dict"
-
-    def test_workflows_use_recent_actions_versions(self, workflows_dir: Path) -> None:
-        """Test that workflows use reasonably recent action versions."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            content = f.read()
-
-        # Should use v4+ for checkout action (if present)
-        if "actions/checkout@" in content:
-            # Extract version
-            assert "actions/checkout@v" in content, "Should use versioned checkout action"
-
-    def test_ci_workflow_has_pattern_validation(self, workflows_dir: Path) -> None:
-        """Test that ci.yml includes pattern validation job."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-
-        # Should have pattern validation job
-        has_pattern_job = "pattern-validation" in jobs or "pattern_validation" in jobs
-        assert has_pattern_job, "CI should include pattern validation"
-
-    def test_ci_workflow_has_integration_tests(self, workflows_dir: Path) -> None:
-        """Test that ci.yml includes integration test job."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-
-        # Should have integration test job
-        has_integration = "integration-test" in jobs or "integration_test" in jobs
-        assert has_integration, "CI should include integration tests"
-
-    def test_integration_test_job_uses_postgres(self, workflows_dir: Path) -> None:
-        """Test that integration test job configures PostgreSQL service."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-        integration_job = jobs.get("integration-test") or jobs.get("integration_test")
-
-        if integration_job:
-            # Should define services with postgres
-            assert "services" in integration_job, "Integration tests should use services"
-            services = integration_job["services"]
-            assert "postgres" in services, "Should configure PostgreSQL service"
-
-    def test_ci_workflow_has_performance_tests(self, workflows_dir: Path) -> None:
-        """Test that ci.yml includes performance test job."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-
-        # Should have performance test job
-        has_performance = "performance-test" in jobs or "performance_test" in jobs
-        assert has_performance, "CI should include performance tests"
-
-    def test_ci_workflow_has_docs_check(self, workflows_dir: Path) -> None:
-        """Test that ci.yml includes documentation check job."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-
-        # Should have docs check job
-        has_docs = "docs-check" in jobs or "docs_check" in jobs
-        assert has_docs, "CI should include documentation checks"
-
-    def test_ci_workflow_has_summary(self, workflows_dir: Path) -> None:
-        """Test that ci.yml includes workflow summary job."""
-        ci_file = workflows_dir / "ci.yml"
-
-        with open(ci_file) as f:
-            data = yaml.safe_load(f)
-
-        jobs = data.get("jobs", {})
-
-        # Should have summary job
-        has_summary = any("summary" in job.lower() for job in jobs.keys())
-        assert has_summary, "CI should include workflow summary"
+            data = _load_yaml(workflow_file)
+            for job in data.get("jobs", {}).values():
+                if isinstance(job, dict) and "uses" not in job:
+                    assert "timeout-minutes" in job, f"Missing timeout in {workflow_file.name}"
