@@ -127,7 +127,6 @@ test: ## Run tests (replaces test, test-coverage)
 	@echo "🧪 Running tests..."
 	pytest tool_router/tests/ dribbble_mcp/tests/ tests/ \
 		--ignore=tool_router/tests/performance \
-		--ignore=tests/test_github_workflows.py \
 		--timeout=30 --maxfail=10
 
 release: ## Automated release — usage: make release BUMP=patch|minor|major|--detect
