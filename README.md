@@ -512,6 +512,17 @@ Some gateways are commented out in `config/gateways.txt` so `make register` succ
 
 **Authentication checklist:** Local gateways that need keys: **Tavily** → `TAVILY_API_KEY` in `.env`; **Snyk** → `SNYK_TOKEN`; **GitHub** → `GITHUB_PERSONAL_ACCESS_TOKEN`. Remote gateways **Context7, v0, apify-dribbble, cloudflare-\*** → configure Passthrough Headers or OAuth in Admin UI (do not put secrets in `config/gateways.txt` or the repo).
 
+## GitHub Workflow
+
+This repository follows the shared Forge Space GitHub work-management baseline:
+
+- Discussions for ideas, RFCs, Q&A, and announcements
+- Issues for actionable delivery work
+- Projects for roadmap visibility and cross-repo reporting
+
+See [Forge-Space/.github `GOVERNANCE.md`](https://github.com/Forge-Space/.github/blob/main/GOVERNANCE.md)
+for the org-wide contract.
+
 ## Contributing / Forking
 
 You can fork this repo to run your own MCP gateway stack. After forking: copy `.env.example` to `.env`, set secrets (`make generate-secrets`), then `make start` and `make register`. To contribute back: run `make lint` and `make test`, open a PR with a clear description; see [CHANGELOG.md](CHANGELOG.md) for the project’s change conventions.
