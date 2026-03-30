@@ -10,6 +10,12 @@ All notable changes to the MCP Gateway project will be documented in this file.
   for intake, Issues for actionable delivery work, and Projects for
   roadmap/reporting.
 
+## [1.32.0] - 2026-03-29
+
+### Added
+
+- **Per-tenant token budget middleware** — `tool_router/middleware/token_budget.py` enforces rolling token budgets via Redis (in-memory fallback). Returns `429` when exhausted with `Retry-After` header. Injects `X-Token-Budget-{Used,Limit,Remaining,Window-Sec}` on every response. Enabled via `TOKEN_BUDGET_ENABLED=true`.
+
 ## [1.31.0] - 2026-03-16
 
 ### Added

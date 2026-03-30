@@ -32,6 +32,7 @@ from tool_router.api.server_mgmt import router as server_mgmt_router
 from tool_router.api.streamable_http import router as mcp_router
 from tool_router.api.users import router as users_router
 from tool_router.middleware.request_logger import RequestLoggingMiddleware
+from tool_router.middleware.token_budget import TokenBudgetMiddleware
 from tool_router.observability.otel_setup import init_otel, instrument_fastapi
 
 
@@ -90,6 +91,8 @@ app.add_middleware(
 
 # Register request logging middleware (before routers, toggled via REQUEST_LOGGING env)
 app.add_middleware(RequestLoggingMiddleware)
+# Per-tenant token budget enforcement (toggled via TOKEN_BUDGET_ENABLED env)
+app.add_middleware(TokenBudgetMiddleware)
 
 # Instrument FastAPI with OpenTelemetry (no-op when packages are absent)
 instrument_fastapi(app)
