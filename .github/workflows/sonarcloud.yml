@@ -1,0 +1,54 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [main, dev, release/*, feature/*, feat/*, fix/*, chore/*, test/*, refactor/*, ci/*, docs/*]
+  pull_request:
+    branches: [main, dev, release/*, feature/*, feat/*, fix/*, chore/*, test/*, refactor/*, ci/*, docs/*]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SONAR_TOKEN_PRESENT: ${{ secrets.SONAR_TOKEN != '' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: Forge-Space/.github/.github/actions/setup-python@6fbe56bc610ddf84b70f213c752b95196bcadd95
+        with:
+          python-version: "3.12"
+
+      - name: Run Python tests with coverage (XML format)
+        run: |
+          pytest tool_router/tests/ dribbble_mcp/tests/ tests/ \
+            --ignore=tool_router/tests/performance \
+            --timeout=30 --maxfail=10 \
+            --cov=tool_router --cov=dribbble_mcp \
+            --cov-report=xml --cov-report=term-missing
+        continue-on-error: true
+
+      - name: Validate Sonar token policy
+        if: env.SONAR_TOKEN_PRESENT != 'true' && github.actor != 'dependabot[bot]'
+        run: |
+          echo "::error::SONAR_TOKEN is required for non-Dependabot runs."
+          exit 1
+
+      - name: Skip Sonar scan for Dependabot without token
+        if: env.SONAR_TOKEN_PRESENT != 'true' && github.actor == 'dependabot[bot]'
+        run: echo "Skipping SonarCloud scan for Dependabot context."
+
+      - name: SonarCloud Scan
+        if: env.SONAR_TOKEN_PRESENT == 'true'
+        uses: SonarSource/sonarqube-scan-action@v7
+        with:
+          args: -Dsonar.qualitygate.wait=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
