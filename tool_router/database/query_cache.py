@@ -128,7 +128,7 @@ class DatabaseQueryCache:
             self._cache.pop(key, None)
 
         if keys_to_remove:
-            logger.info(f"Invalidated {len(keys_to_remove)} cache entries for table: {table}")
+            logger.info("Invalidated %d cache entries for table: %s", len(keys_to_remove), str(table)[:100])
 
     def invalidate_all(self) -> None:
         """Invalidate all cached queries."""

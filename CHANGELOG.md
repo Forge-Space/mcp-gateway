@@ -4,6 +4,9 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **SonarCloud security issues** — Resolve BLOCKER vulnerability: bind HTTP server to `127.0.0.1` by default instead of `0.0.0.0`; allow override via `HOST` environment variable for Docker/cloud deployments. Sanitize user-controlled data in logger calls across `cloud.py`, `performance.py`, and `query_cache.py` to prevent log injection. Remove duplicate if-elif-else branches in `ui_specialist.py::_apply_accessibility_features` that did nothing (S1871 bug).
+
 ### Changed
 - This repo now inherits the Forge Space org-level GitHub issue forms and
   work-management governance from `Forge-Space/.github`, keeping Discussions

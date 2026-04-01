@@ -249,7 +249,9 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     logger.info("Starting Tool Router HTTP server on port 8030")
 
-    uvicorn.run(app, host="0.0.0.0", port=8030, log_level="info")
+    # Get host from environment or default to localhost for security
+    host = os.getenv("HOST", "127.0.0.1")
+    uvicorn.run(app, host=host, port=8030, log_level="info")
 
 
 if __name__ == "__main__":

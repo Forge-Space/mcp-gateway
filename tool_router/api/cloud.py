@@ -211,7 +211,7 @@ async def register_cloud_provider(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    logger.info("Registered cloud provider via API: %s", body.name)
+    logger.info("Registered cloud provider via API: %s", str(body.name)[:100])
     return _provider_to_response(provider)
 
 
@@ -225,7 +225,7 @@ async def remove_cloud_provider(
     removed = cloud_router.remove_provider(name)
     if not removed:
         raise HTTPException(status_code=404, detail=f"Provider '{name}' not found.")
-    logger.info("Removed cloud provider via API: %s", name)
+    logger.info("Removed cloud provider via API: %s", str(name)[:100])
 
 
 @router.patch("/providers/{name}/enabled", response_model=CloudProviderResponse)
@@ -240,7 +240,7 @@ async def toggle_cloud_provider(
     if provider is None:
         raise HTTPException(status_code=404, detail=f"Provider '{name}' not found.")
     provider.enabled = body.enabled
-    logger.info("Provider '%s' enabled=%s via API", name, body.enabled)
+    logger.info("Provider enabled=%s via API (name truncated for safety)", body.enabled)
     return _provider_to_response(provider)
 
 
@@ -263,5 +263,5 @@ async def update_routing_strategy(
     cloud_router = _get_router()
     strategy = RoutingStrategy(body.strategy)
     cloud_router.set_strategy(strategy)
-    logger.info("Routing strategy changed to '%s' via API", body.strategy)
+    logger.info("Routing strategy changed via API (strategy: %s)", str(body.strategy)[:100])
     return {"strategy": body.strategy, "status": "updated"}
