@@ -131,7 +131,7 @@ async def get_cache_metrics() -> CacheHitRateResponse:
             misses_by_type=metrics.get("global", {}).get("misses_by_type", {}),
         )
     except Exception as e:
-        logger.error(f"Failed to get cache metrics: {e}")
+        logger.error("Failed to get cache metrics: %s", str(e)[:200])
         raise HTTPException(status_code=500, detail="Failed to retrieve cache metrics")
 
 
@@ -186,7 +186,7 @@ async def get_system_metrics() -> SystemMetricsResponse:
         )
 
     except Exception as e:
-        logger.error(f"Failed to get system metrics: {e}")
+        logger.error("Failed to get system metrics: %s", str(e)[:200])
         raise HTTPException(status_code=500, detail="Failed to retrieve system metrics")
 
 
@@ -200,7 +200,7 @@ async def reset_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
     try:
         _reset_cache_metrics_data(cache_name)
 
-        message = f"Reset metrics for cache: {cache_name}" if cache_name else "Reset all cache metrics"
+        message = f"Reset metrics for cache: {str(cache_name)[:100]}" if cache_name else "Reset all cache metrics"
         logger.info(message)
 
         return {
@@ -209,7 +209,7 @@ async def reset_cache_metrics(cache_name: str | None = None) -> dict[str, Any]:
             "timestamp": time.time(),
         }
     except Exception as e:
-        logger.error(f"Failed to reset cache metrics: {e}")
+        logger.error("Failed to reset cache metrics: %s", str(e)[:200])
         raise HTTPException(status_code=500, detail="Failed to reset cache metrics")
 
 
@@ -225,7 +225,7 @@ async def clear_cache(cache_name: str | None = None) -> dict[str, Any]:
             from ..cache import clear_cache as clear_specific_cache
 
             clear_specific_cache(cache_name)
-            message = f"Cleared cache: {cache_name}"
+            message = f"Cleared cache: {str(cache_name)[:100]}"
         else:
             from ..cache import clear_all_caches
 
@@ -240,7 +240,7 @@ async def clear_cache(cache_name: str | None = None) -> dict[str, Any]:
             "timestamp": time.time(),
         }
     except Exception as e:
-        logger.error(f"Failed to clear cache: {e}")
+        logger.error("Failed to clear cache: %s", str(e)[:200])
         raise HTTPException(status_code=500, detail="Failed to clear cache")
 
 
@@ -253,7 +253,7 @@ async def get_cache_info() -> dict[str, Any]:
     try:
         return cache_manager.get_cache_info()
     except Exception as e:
-        logger.error(f"Failed to get cache info: {e}")
+        logger.error("Failed to get cache info: %s", str(e)[:200])
         raise HTTPException(status_code=500, detail="Failed to retrieve cache information")
 
 
@@ -269,7 +269,7 @@ async def invalidate_query_cache(table: str | None = None) -> dict[str, Any]:
 
         if table:
             query_cache.invalidate_table(table)
-            message = f"Invalidated query cache for table: {table}"
+            message = f"Invalidated query cache for table: {str(table)[:100]}"
         else:
             query_cache.invalidate_all()
             message = "Invalidated all query cache entries"
@@ -282,7 +282,7 @@ async def invalidate_query_cache(table: str | None = None) -> dict[str, Any]:
             "timestamp": time.time(),
         }
     except Exception as e:
-        logger.error(f"Failed to invalidate query cache: {e}")
+        logger.error("Failed to invalidate query cache: %s", str(e)[:200])
         raise HTTPException(status_code=500, detail="Failed to invalidate query cache")
 
 
@@ -328,7 +328,7 @@ async def get_performance_summary() -> dict[str, Any]:
         return performance_summary
 
     except Exception as e:
-        logger.error(f"Failed to get performance summary: {e}")
+        logger.error("Failed to get performance summary: %s", str(e)[:200])
         raise HTTPException(status_code=500, detail="Failed to retrieve performance summary")
 
 

@@ -474,17 +474,8 @@ export default {spec.name}Form;
 
     def _apply_accessibility_features(self, code: str, level: AccessibilityLevel) -> str:
         """Apply accessibility features based on level."""
-        # Add ARIA labels, semantic HTML, etc.
-        if level == AccessibilityLevel.AA:
-            # Add comprehensive accessibility features
-            pass
-        elif level == AccessibilityLevel.AAA:
-            # Add enhanced accessibility features
-            pass
-        else:
-            # Add basic accessibility features
-            pass
-
+        # TODO: Implement accessibility features based on WCAG level
+        # This is a placeholder for future enhancement
         return code
 
     def _apply_responsive_design(self, code: str, responsive: bool) -> str:
