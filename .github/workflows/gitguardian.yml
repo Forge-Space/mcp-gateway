@@ -36,7 +36,7 @@ jobs:
           fetch-depth: 0
 
       - name: GitGuardian Scan
-        uses: GitGuardian/gg-shield-action@50c99a7fbe0e313f962dc5bb74d8271e02543c3a
+        uses: GitGuardian/gg-shield-action@ea5c945e66dc6436d976d4c70519c4ff7cadf9ba
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
@@ -78,7 +78,7 @@ jobs:
           fetch-depth: 0
 
       - name: GitGuardian Monitoring
-        uses: GitGuardian/gg-shield-action@50c99a7fbe0e313f962dc5bb74d8271e02543c3a
+        uses: GitGuardian/gg-shield-action@ea5c945e66dc6436d976d4c70519c4ff7cadf9ba
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
           GITGUARDIAN_API_URL: ${{ env.GITGUARDIAN_API_URL }}
