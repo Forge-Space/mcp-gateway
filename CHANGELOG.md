@@ -4,6 +4,15 @@ All notable changes to the MCP Gateway project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.32.2] - 2026-04-07
+
+### Changed
+
+- **Dependency bumps** (no functional changes):
+  - **TypeScript/Node**: `@modelcontextprotocol/sdk` 1.27.1 → 1.29.0, `hono` 4.12.8 → 4.12.10, `@types/node` 25.5.0 → 25.5.2, `@typescript-eslint/*` 8.57.1 → 8.58.0, `eslint` 10.1.0 → 10.2.0, `npm-check-updates` 19.6.5 → 20.0.0 (#294, #296).
+  - **Python**: `fastapi` 0.135.2 → 0.135.3, `uvicorn` minor bump (#297).
+  - **GitHub Actions**: `actions/cache` 5.0.3 → 5.0.4 (#290), `codecov/codecov-action` 5.5.3 → 6.0.0 (#293), `trufflesecurity/trufflehog` 3.94.0 → 3.94.2 (#291), `GitGuardian/gg-shield-action` 1.48.0 → 1.49.0 (#292).
+
 ## [1.32.1] - 2026-04-04
 
 - Internal: refresh release checks context.
