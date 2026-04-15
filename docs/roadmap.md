@@ -1,4 +1,4 @@
-# Roadmap - mcp-gateway
+# Roadmap — mcp-gateway
 
 _Auto-regenerated 2026-04-15 from `docs/specs/`._
 
@@ -8,7 +8,8 @@ _(none)_
 
 ## Next (proposed)
 
-- **2026-04-15-gateway-roadmap-specs** _(proposed)_ `roadmap,specs,gateway`
+- **2026-04-15-roadmap-placeholder**  _(proposed)_  `placeholder`
+- **2026-04-15-gateway-roadmap-specs**  _(proposed)_  `roadmap,specs,gateway`
 
 ## Recently shipped
 
